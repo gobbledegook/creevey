@@ -15,7 +15,6 @@
 #import "DYImageCache.h"
 #import "RBSplitView.h"
 #import "DYWrappingMatrix.h"
-#import "DYExiftags.h"
 
 @interface CreeveyMainWindowController (Private)
 - (void)updateStatusFld;
@@ -105,8 +104,22 @@
 	return [imgMatrix selectedIndexes];
 }
 
-- (void)openFiles:(NSArray *)a {
-	[filesBeingOpened addObjectsFromArray:a];
+- (void)openFiles:(NSArray *)a withSlideshow:(BOOL)doSlides{
+	if (doSlides) {
+		startSlideshowWhenReady = YES;
+		NSSet *filetypes = [[NSApp delegate] filetypes];
+		unsigned int i, n = [a count];
+		NSString *theFile;
+		for (i=0; i<n; ++i) {
+			theFile = [a objectAtIndex:i];
+			if ([filetypes containsObject:[theFile pathExtension]] || [filetypes containsObject:NSHFSTypeOfFile(theFile)])
+				[filesBeingOpened addObject:theFile];
+		}
+	} else {
+		startSlideshowWhenReady = NO;
+		[filesBeingOpened addObjectsFromArray:a];
+	}
+
 	[self setPath:[a objectAtIndex:0]];
 }
 
@@ -231,8 +244,8 @@
 			}
 			if (!showInvisibles && isInvisible)
 				continue; // skip invisible files
-			if (([filetypes containsObject:[theFile pathExtension]]
-				 || [filetypes containsObject:NSHFSTypeOfFile(theFile)]))
+			if ([filetypes containsObject:[theFile pathExtension]]
+				 || [filetypes containsObject:NSHFSTypeOfFile(theFile)])
 			{	
 				[filenames addObject:aPath];
 				if (++i % 100 == 0)
@@ -262,6 +275,11 @@
 					[displayedFilenames addObject:origPath];
 			}
 		}
+	}
+	if (startSlideshowWhenReady && [filesBeingOpened count]) {
+		[[NSApp delegate] performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
+										   withObject:[filesBeingOpened allObjects] // make a copy
+										waitUntilDone:NO];
 	}
 	filenamesDone = YES;
 
@@ -478,70 +496,30 @@
 	[sender adjustSubviewsExcepting:[sender subviewAtPosition:0]];
 }
 
-#define TAB(x,y)	[[[NSTextTab alloc] initWithType:x location:y] autorelease]
 - (void)updateExifInfo:(id)sender {
 	NSTextView *exifTextView = [[NSApp delegate] exifTextView];
 	NSButton *moreBtn = [[[exifTextView window] contentView] viewWithTag:1];
-	DYImageInfo *i;
-	id s, path, origPath;
+	NSMutableAttributedString *attStr;
 	id selectedIndexes = [imgMatrix selectedIndexes];
 	if ([[exifTextView window] isVisible]) {
-		switch ([selectedIndexes count]) {
-			case 0:
-				s = NSLocalizedString(@"No images selected.", @"");
-				break;
-			case 1:
-				origPath = [imgMatrix firstSelectedFilename];
-				path = ResolveAliasToPath(origPath);
-				s = [[NSMutableString alloc] initWithString:[origPath lastPathComponent]];
-				if (path != origPath)
-					[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
-				i = [[[NSApp delegate] thumbsCache] infoForKey:path];
-				if (i) {
-					id exifStr = [DYExiftags tagsForFile:path moreTags:[moreBtn state]];
-					[s appendFormat:@"\n%@ (%qu bytes)\n%@: %d %@: %d",
-						FileSize2String(i->fileSize), i->fileSize,
-						NSLocalizedString(@"Width", @""), (int)i->pixelSize.width,
-						NSLocalizedString(@"Height", @""), (int)i->pixelSize.height];
-					if (exifStr)
-						[s appendFormat:@"\n%@", exifStr];
-				} else {
-					unsigned long long fsize;
-					fsize = [[[NSFileManager defaultManager] fileAttributesAtPath:path traverseLink:YES] fileSize];
-					[s appendFormat:@"\n%@ (%qu bytes)\n%@",
-						FileSize2String(fsize), fsize,
-						NSLocalizedString(@"Unable to read file", @"")];
-				}
-				break;
-			default:
-				s = [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
-					[selectedIndexes count]];
-				break;
-		}
-
-		
-		NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
-					[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
-		NSMutableAttributedString *attStr =
-			[[NSMutableAttributedString alloc] initWithString:s
-												   attributes:atts];
-		NSRange r = [s rangeOfString:NSLocalizedString(@"Camera-Specific Properties:\n", @"")];
-			// ** this may not be optimal
-		if (r.location != NSNotFound) {
-			float x = 160;
-			NSMutableParagraphStyle *styl = [[[NSMutableParagraphStyle alloc] init] autorelease];
-			[styl setHeadIndent:x];
-			[styl setTabStops:[NSArray arrayWithObjects:TAB(NSRightTabStopType,x-5),
-				TAB(NSLeftTabStopType,x), nil]];
-			[styl setDefaultTabInterval:5];
-
-			[atts setObject:styl forKey:NSParagraphStyleAttributeName];
-			[attStr setAttributes:atts range:NSMakeRange(r.location,[s length]-r.location)];
+		if ([selectedIndexes count] == 1) {
+				attStr = Fileinfo2EXIFString([imgMatrix firstSelectedFilename],
+											 [[NSApp delegate] thumbsCache],
+											 [moreBtn state], YES);
+		} else {
+			id s = [selectedIndexes count]
+			? [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
+				[selectedIndexes count]]
+			: NSLocalizedString(@"No images selected.", @"");
+			NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
+												[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
+			attStr =
+				[[[NSMutableAttributedString alloc] initWithString:s
+													   attributes:atts] autorelease];
 		}
 		[exifTextView replaceCharactersInRange:NSMakeRange(0,[[exifTextView string] length])
 									   withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
 												 documentAttributes:nil]];
-		[attStr release];
 	}
 }
 

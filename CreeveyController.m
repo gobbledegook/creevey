@@ -17,6 +17,7 @@
 #import "SlideshowWindow.h"
 #import "DYJpegtranPanel.h"
 #import "DYVersChecker.h"
+#import "DYExiftags.h"
 
 #define MAX_THUMBS 2000
 #define DYVERSCHECKINTERVAL 604800
@@ -24,6 +25,59 @@
 inline BOOL FileIsJPEG(NSString *s) {
 	return [[[s pathExtension] lowercaseString] isEqualToString:@"jpg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
+}
+
+#define TAB(x,y)	[[[NSTextTab alloc] initWithType:x location:y] autorelease]
+NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache,
+											   BOOL moreExif, BOOL basicInfo) {
+	// basicInfo was added for the slideshow view
+	// it's defunct now that i've decided to stick the filename in
+	id s, path;
+	path = ResolveAliasToPath(origPath);
+	s = [[NSMutableString alloc] init];
+	if (basicInfo) [s appendString:[origPath lastPathComponent]];
+	if (path != origPath)
+		[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
+	DYImageInfo *i = [cache infoForKey:path];
+	if (i) {
+		id exifStr = [DYExiftags tagsForFile:path moreTags:moreExif];
+		if (basicInfo)
+			[s appendFormat:@"\n%@ (%qu bytes)\n%@: %d %@: %d",
+				FileSize2String(i->fileSize), i->fileSize,
+				NSLocalizedString(@"Width", @""), (int)i->pixelSize.width,
+				NSLocalizedString(@"Height", @""), (int)i->pixelSize.height];
+		if (exifStr) {
+			if (basicInfo) [s appendString:@"\n"];
+			[s appendString:exifStr];
+		}
+	} else if (basicInfo) {
+		unsigned long long fsize;
+		fsize = [[[NSFileManager defaultManager] fileAttributesAtPath:path traverseLink:YES] fileSize];
+		[s appendFormat:@"\n%@ (%qu bytes)\n%@",
+			FileSize2String(fsize), fsize,
+			NSLocalizedString(@"Unable to read file", @"")];
+	}
+	
+	NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
+										[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
+	NSMutableAttributedString *attStr =
+		[[NSMutableAttributedString alloc] initWithString:s
+											   attributes:atts];
+	NSRange r = [s rangeOfString:NSLocalizedString(@"Camera-Specific Properties:\n", @"")];
+	// ** this may not be optimal
+	if (r.location != NSNotFound) {
+		float x = 160;
+		NSMutableParagraphStyle *styl = [[[NSMutableParagraphStyle alloc] init] autorelease];
+		[styl setHeadIndent:x];
+		[styl setTabStops:[NSArray arrayWithObjects:TAB(NSRightTabStopType,x-5),
+			TAB(NSLeftTabStopType,x), nil]];
+		[styl setDefaultTabInterval:5];
+		
+		[atts setObject:styl forKey:NSParagraphStyleAttributeName];
+		[attStr setAttributes:atts range:NSMakeRange(r.location,[s length]-r.location)];
+	}
+	[s release];
+	return [attStr autorelease];
 }
 
 @interface TimeIntervalPlusWeekToStringTransformer : NSObject
@@ -54,6 +108,7 @@ inline BOOL FileIsJPEG(NSString *s) {
 	[dict setObject:[NSNumber numberWithFloat:120] forKey:@"thumbCellWidth"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"getInfoVisible"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoVersCheck"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"jpegPreserveModDate"];
     [defaults registerDefaults:dict];
 
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
@@ -101,6 +156,18 @@ inline BOOL FileIsJPEG(NSString *s) {
 	[super dealloc];
 }
 
+- (void)slideshowFromAppOpen:(NSArray *)files {
+	[slidesWindow setBasePath:[frontWindow path]];
+	[slidesWindow setFilenames:[files count] > 1
+		? [files sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)]
+			// ** use smarter sorting here?
+		: [frontWindow displayedFilenames]];
+	[slidesWindow startSlideshowAtIndex: [files count] == 1
+		? [[frontWindow displayedFilenames] indexOfObject:[files objectAtIndex:0]]
+			// here's a fun (and SLOW) linear search
+		: -1];
+}
+
 - (void)startSlideshow {
 	// check for nil?
 	// clever disabling of items should be ok
@@ -122,7 +189,7 @@ inline BOOL FileIsJPEG(NSString *s) {
 }
 
 - (IBAction)revealSelectedFilesInFinder:(id)sender {
-	if ([slidesWindow isKeyWindow]) {
+	if ([slidesWindow isMainWindow]) {
 		RevealItemsInFinder([NSArray arrayWithObject:[slidesWindow currentFile]]);
 	} else {
 		NSArray *a = [frontWindow currentSelection];
@@ -135,7 +202,7 @@ inline BOOL FileIsJPEG(NSString *s) {
 
 
 - (IBAction)setDesktopPicture:(id)sender {
-	NSString *s = [slidesWindow isKeyWindow]
+	NSString *s = [slidesWindow isMainWindow]
 		? [slidesWindow currentFile]
 		: [[frontWindow currentSelection] objectAtIndex:0];
 	OSErr err = SetDesktopPicture(ResolveAliasToPath(s),0);
@@ -154,12 +221,16 @@ inline BOOL FileIsJPEG(NSString *s) {
 		if (!jpegController)
 			if (![NSBundle loadNibNamed:@"DYJpegtranPanel" owner:self]) return;
 		if (![jpegController runOptionsPanel:&jinfo]) return;
-		if (jinfo.tinfo.force_grayscale || jinfo.cp != JCOPYOPT_ALL || jinfo.tinfo.trim)
+		if (jinfo.tinfo.force_grayscale || jinfo.cp != JCOPYOPT_ALL || jinfo.tinfo.trim) {
 			if (NSRunCriticalAlertPanel(NSLocalizedString(@"Warning", @""),
 									NSLocalizedString(@"This operation cannot be undone! Are you sure you want to continue?", @""),
 									NSLocalizedString(@"Continue", @""), NSLocalizedString(@"Cancel", @""), nil)
 				!= NSAlertDefaultReturn)
 				return; // user cancelled
+			jinfo.preserveModificationDate = NO;
+		} else {
+			jinfo.preserveModificationDate = [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"];
+		}
 	} else {
 		jinfo.tinfo.transform = t < DYJPEGTRAN_XFORM_PROGRESSIVE ? t : JXFORM_NONE;
 		jinfo.tinfo.trim = FALSE;
@@ -167,10 +238,11 @@ inline BOOL FileIsJPEG(NSString *s) {
 		jinfo.cp = JCOPYOPT_ALL;
 		jinfo.progressive = t == DYJPEGTRAN_XFORM_PROGRESSIVE;
 		jinfo.optimize = 0;
+		jinfo.preserveModificationDate = [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"];
 	}
 	
 	NSArray *a;
-	BOOL slidesWasKey = [slidesWindow isKeyWindow];
+	BOOL slidesWasKey = [slidesWindow isMainWindow]; // ** test for main is better
 	a = slidesWasKey
 		? [NSArray arrayWithObject:[slidesWindow currentFile]]
 		: [frontWindow currentSelection];
@@ -238,7 +310,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 }
 
 - (IBAction)moveToTrash:(id)sender {
-	if ([slidesWindow isKeyWindow]) {
+	if ([slidesWindow isMainWindow]) {
 		NSString *s = [slidesWindow currentFile];
 		if ([self trashFile:s numLeft:1]) {
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:s];
@@ -296,7 +368,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	if ([creeveyWindows count])
 		[frontWindow updateDefaults];
-	[u setBool:([slidesWindow isKeyWindow] || [creeveyWindows count] == 0) ? exifWasVisible : [[exifTextView window] isVisible]
+	[u setBool:([slidesWindow isMainWindow] || [creeveyWindows count] == 0) ? exifWasVisible : [[exifTextView window] isVisible]
 		forKey:@"getInfoVisible"];
 	[u synchronize];
 }
@@ -309,7 +381,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 - (BOOL)application:(NSApplication *)sender
 		   openFile:(NSString *)filename {
 	if (![creeveyWindows count]) [self newWindow:nil];
-	[frontWindow openFiles:[NSArray arrayWithObject:filename]];
+	[frontWindow openFiles:[NSArray arrayWithObject:filename] withSlideshow:YES];
 	if (sender) {
 		[[frontWindow window] makeKeyAndOrderFront:nil];
 		//[sender activateIgnoringOtherApps:YES]; // for expose'
@@ -320,7 +392,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 - (void)application:(NSApplication *)sender
 		  openFiles:(NSArray *)files {
 	if (![creeveyWindows count]) [self newWindow:nil];
-	[frontWindow openFiles:files];
+	[frontWindow openFiles:files withSlideshow:YES];
 	if (sender) {
 		[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 		[[frontWindow window] makeKeyAndOrderFront:nil];
@@ -357,7 +429,7 @@ enum {
 	}
 	if (t>JPEG_OP) t=JPEG_OP;
 	if (![creeveyWindows count]) frontWindow = nil;
-	unsigned int numSelected = [[frontWindow selectedIndexes] count];
+	unsigned int numSelected = frontWindow ? [[frontWindow selectedIndexes] count] : 0;
 	BOOL writable, isjpeg;
 	
 	switch (t) {
@@ -365,14 +437,14 @@ enum {
 		case JPEG_OP:
 			// only when slides isn't loading cache!
 			// only if writeable (we just test the first file in the list)
-			writable = [slidesWindow isKeyWindow]
+			writable = [slidesWindow isMainWindow]
 				? [slidesWindow currentImageLoaded] &&
 					[[NSFileManager defaultManager] isDeletableFileAtPath:
 						[slidesWindow currentFile]]
-				: numSelected > 0 && [frontWindow currentFilesDeletable];
-			isjpeg = [slidesWindow isKeyWindow]
+				: numSelected > 0 && frontWindow && [frontWindow currentFilesDeletable];
+			isjpeg = [slidesWindow isMainWindow]
 				? FileIsJPEG([slidesWindow currentFile])
-				: numSelected > 0 && FileIsJPEG([frontWindow firstSelectedFilename]);
+				: numSelected > 0 && frontWindow && FileIsJPEG([frontWindow firstSelectedFilename]);
 			
 			if (t == JPEG_OP) return writable && isjpeg;
 			return writable;
@@ -381,10 +453,12 @@ enum {
 		case REVEAL_IN_FINDER:
 			return YES;
 		case BEGIN_SLIDESHOW:
-			if ([slidesWindow isKeyWindow] ) return NO;
-			return [frontWindow filenamesDone] && [[frontWindow displayedFilenames] count];
+			if ([slidesWindow isMainWindow] ) return NO;
+			return frontWindow && [frontWindow filenamesDone] && [[frontWindow displayedFilenames] count];
 		case SET_DESKTOP:
-			return [slidesWindow isKeyWindow] || numSelected == 1;
+			return [slidesWindow isMainWindow] || numSelected == 1;
+		case GET_INFO:
+			return ![slidesWindow isMainWindow];
 		default:
 			return YES;
 	}
@@ -440,28 +514,27 @@ enum {
 
 
 
-
-
+#pragma mark new window stuff
 - (IBAction)openGetInfoPanel:(id)sender {
 	NSWindow *w = [exifTextView window];
 	if ([w isVisible])
 		[w orderOut:self];
 	else {
 		[w orderFront:self];
-		if ([creeveyWindows count]) [frontWindow updateExifInfo]; // ** validate if count
+		if ([creeveyWindows count]) [frontWindow updateExifInfo];
 	}
 }
 
 - (IBAction)newWindow:(id)sender {
 	if (![creeveyWindows count]) {
 		if (exifWasVisible)
-			[[exifTextView window] orderFront:self];
+			[[exifTextView window] orderFront:self]; // only check for first window
 	}
 	id wc = [[CreeveyMainWindowController alloc] initWithWindowNibName:@"CreeveyWindow"];
 	[creeveyWindows addObject:wc];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowClosed:) name:NSWindowWillCloseNotification object:[wc window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
-	[wc showWindow:self]; // or override wdidload
+	[wc showWindow:nil]; // or override wdidload
 	if (sender)
 		[wc setDefaultPath];
 }
@@ -469,16 +542,16 @@ enum {
 - (void)windowClosed:(NSNotification *)n {
 	id wc = [[n object] windowController];
 	if ([creeveyWindows indexOfObjectIdenticalTo:wc] != NSNotFound) {
+		frontWindow = nil; // ** in case something funny happens between her and wChanged?
 		if ([creeveyWindows count] == 1) {
-			[frontWindow updateDefaults];
+			[[creeveyWindows objectAtIndex:0] updateDefaults];
 			if (exifWasVisible = [[exifTextView window] isVisible]) {
-				[[exifTextView window] orderOut:self];
+				[[exifTextView window] orderOut:nil];
 			}
-			frontWindow = nil;
 		}
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:[wc window]];
 		[creeveyWindows removeObject:wc];
-		[wc autorelease];
+		[wc autorelease]; // retained from newWindow:
 	}
 }
 
@@ -496,13 +569,14 @@ enum {
 }
 
 #pragma mark slideshow window delegate method
-- (void)windowDidBecomeKey:(NSNotification *)aNotification {
-	if (exifWasVisible = [[exifTextView window] isVisible])
+- (void)windowDidBecomeMain:(NSNotification *)aNotification {
+	if ([creeveyWindows count] && (exifWasVisible = [[exifTextView window] isVisible]))
 		[[exifTextView window] orderOut:nil];
 	// only needed in case user cycles through windows; see startSlideshow above
 }
-- (void)windowDidResignKey:(NSNotification *)aNotification {
-	if (exifWasVisible)
+- (void)windowDidResignMain:(NSNotification *)aNotification {
+	// do this here, not in windowChanged, to avoid app switch problems
+	if ([creeveyWindows count] && exifWasVisible)
 		[[exifTextView window] orderFront:nil];
 }
 

@@ -157,7 +157,9 @@ _my_error_handler(j_common_ptr cinfo)
 	}
 	fclose(output_file);
 	
-	NSArray *fkeys = [NSArray arrayWithObjects:NSFileCreationDate, NSFileHFSCreatorCode, NSFileHFSTypeCode, nil];
+	NSMutableArray *fkeys = [NSMutableArray arrayWithObjects:NSFileCreationDate, NSFileHFSCreatorCode, NSFileHFSTypeCode, nil];
+	if (i->preserveModificationDate)
+		[fkeys addObject:NSFileModificationDate];
 	NSArray *fatts = [[[NSFileManager defaultManager] fileAttributesAtPath:thePath traverseLink:YES]
 		objectsForKeys:fkeys notFoundMarker:[NSNull null]];
 	//NSLog(@"%@", [fatts objectAtIndex:0]);

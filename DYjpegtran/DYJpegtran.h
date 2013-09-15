@@ -19,7 +19,7 @@
 typedef struct {
 	jpeg_transform_info tinfo;
 	JCOPY_OPTION cp;
-	BOOL progressive, optimize;
+	BOOL progressive, optimize, preserveModificationDate;
 } DYJpegtranInfo;
 
 @interface DYJpegtran : NSObject

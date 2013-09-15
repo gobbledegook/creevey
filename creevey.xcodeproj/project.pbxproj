@@ -25,7 +25,6 @@
 		F21F1A7B08079DF100A77552 /* NSArrayIndexSetExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F21F1A7908079DF100A77552 /* NSArrayIndexSetExtension.m */; };
 		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
 		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
-		F23FD4030889B80A00E1D57C /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F23FD4020889B80A00E1D57C /* libjpeg.a */; };
 		F254E82908917BA600DE9C38 /* DYJpegtranPanel.nib in Resources */ = {isa = PBXBuildFile; fileRef = F254E82808917BA600DE9C38 /* DYJpegtranPanel.nib */; };
 		F254E96F08919E2B00DE9C38 /* makers.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E96D08919E2B00DE9C38 /* makers.h */; };
 		F254E97008919E2B00DE9C38 /* makers.c in Sources */ = {isa = PBXBuildFile; fileRef = F254E96E08919E2B00DE9C38 /* makers.c */; };
@@ -58,6 +57,7 @@
 		F2AE890F07EB9BB7008F2193 /* CreeveyController.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE890D07EB9BB7008F2193 /* CreeveyController.m */; };
 		F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */ = {isa = PBXBuildFile; fileRef = F2C940B508200F6F0019D0D3 /* multipledocs.gif */; };
 		F2D2AC63080B82840075532A /* brokendoc.tif in Resources */ = {isa = PBXBuildFile; fileRef = F2D2AC62080B82840075532A /* brokendoc.tif */; };
+		F2EFCFC20963D99F0033F328 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F2EFCFC10963D99F0033F328 /* libjpeg.a */; };
 		F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = F2F2641307EEA114006164BF /* SlideshowWindow.h */; };
 		F2F3B48307F7939100D9C639 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2F3B48207F7939100D9C639 /* Carbon.framework */; };
 		F2F3B72207F7B49400D9C639 /* SlideshowWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */; };
@@ -159,9 +159,16 @@
 		F21E90930892BA9F007B65EF /* German */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = German; path = German.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F21F1A7808079DF100A77552 /* NSArrayIndexSetExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSArrayIndexSetExtension.h; sourceTree = "<group>"; };
 		F21F1A7908079DF100A77552 /* NSArrayIndexSetExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSArrayIndexSetExtension.m; sourceTree = "<group>"; };
+		F221AA51096089D5002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = Spanish; path = Spanish.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
+		F221AA6109608C31002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Spanish; path = "Spanish.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
+		F221AA6409608C70002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Spanish; path = Spanish.lproj/EXIF.strings; sourceTree = "<group>"; };
+		F221AA6509608C70002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Spanish; path = Spanish.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F221AAAB0960A924002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Spanish; path = Spanish.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F221AAAF0960A969002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Spanish; path = Spanish.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
+		F221AAB00960A969002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Spanish; path = Spanish.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		F221AAB10960A969002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Spanish; path = Spanish.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
-		F23FD4020889B80A00E1D57C /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = libjpeg/libjpeg.a; sourceTree = "<group>"; };
 		F254E85D08917C5400DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
 		F254E86008917C5E00DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
 		F254E96D08919E2B00DE9C38 /* makers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = makers.h; path = exiftags/makers.h; sourceTree = "<group>"; };
@@ -201,6 +208,7 @@
 		F2AE890D07EB9BB7008F2193 /* CreeveyController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyController.m; sourceTree = "<group>"; };
 		F2C940B508200F6F0019D0D3 /* multipledocs.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = multipledocs.gif; sourceTree = "<group>"; };
 		F2D2AC62080B82840075532A /* brokendoc.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = brokendoc.tif; sourceTree = "<group>"; };
+		F2EFCFC10963D99F0033F328 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = libjpeg/libjpeg.a; sourceTree = "<group>"; };
 		F2F2641307EEA114006164BF /* SlideshowWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowWindow.h; sourceTree = "<group>"; };
 		F2F3B48207F7939100D9C639 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SlideshowWindow.m; sourceTree = "<group>"; };
@@ -256,7 +264,7 @@
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				F2F3B48307F7939100D9C639 /* Carbon.framework in Frameworks */,
 				F2FE4FA508842F1400550533 /* libRBSplitView.a in Frameworks */,
-				F23FD4030889B80A00E1D57C /* libjpeg.a in Frameworks */,
+				F2EFCFC20963D99F0033F328 /* libjpeg.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,7 +446,7 @@
 		F2FE4FA808842F2600550533 /* libjpeg */ = {
 			isa = PBXGroup;
 			children = (
-				F23FD4020889B80A00E1D57C /* libjpeg.a */,
+				F2EFCFC10963D99F0033F328 /* libjpeg.a */,
 				F2FE4FB408842F3500550533 /* jpeglib.h */,
 				F2FE4FB508842F3500550533 /* jmorecfg.h */,
 				F2FE4FB608842F3500550533 /* jconfig.h */,
@@ -588,6 +596,7 @@
 				French,
 				German,
 				zh_TW,
+				Spanish,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* creevey */;
 			projectDirPath = "";
@@ -677,6 +686,7 @@
 			children = (
 				F21E90930892BA9F007B65EF /* German */,
 				F26268BA08987A500045DEFC /* zh_TW */,
+				F221AAAB0960A924002B38F5 /* Spanish */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -687,6 +697,7 @@
 				29B97319FDCFA39411CA2CEA /* English */,
 				F2910A840819A2E400D3878C /* zh_TW */,
 				F21AD0B70892AC1E0054EA35 /* German */,
+				F221AAB00960A969002B38F5 /* Spanish */,
 			);
 			name = MainMenu.nib;
 			sourceTree = "<group>";
@@ -697,6 +708,7 @@
 				F20DC2940886251000986105 /* English */,
 				F254E85D08917C5400DE9C38 /* zh_TW */,
 				F21AD0BA0892AC380054EA35 /* German */,
+				F221AAB10960A969002B38F5 /* Spanish */,
 			);
 			name = CreeveyWindow.nib;
 			sourceTree = "<group>";
@@ -707,6 +719,7 @@
 				F2097598081F3C4400AD4E00 /* English */,
 				F21AD0D90892B4AB0054EA35 /* German */,
 				F25C834D0895D35D009C0A03 /* zh_TW */,
+				F221AA6109608C31002B38F5 /* Spanish */,
 			);
 			name = "Phoenix Slides Help";
 			sourceTree = "<group>";
@@ -717,6 +730,7 @@
 				F20ACC0A088E010B004CFE14 /* English */,
 				F254E86008917C5E00DE9C38 /* zh_TW */,
 				F21AD0BB0892AC3E0054EA35 /* German */,
+				F221AAAF0960A969002B38F5 /* Spanish */,
 			);
 			name = DYJpegtranPanel.nib;
 			sourceTree = "<group>";
@@ -727,6 +741,7 @@
 				F254E98F0891A7E100DE9C38 /* English */,
 				F254E9950891A80400DE9C38 /* zh_TW */,
 				F21AD0BC0892AC440054EA35 /* German */,
+				F221AA6409608C70002B38F5 /* Spanish */,
 			);
 			name = EXIF.strings;
 			sourceTree = "<group>";
@@ -737,6 +752,7 @@
 				F2910A4108198D2900D3878C /* English */,
 				F2910A4B08198D6100D3878C /* zh_TW */,
 				F21AD0BD0892AC4C0054EA35 /* German */,
+				F221AA6509608C70002B38F5 /* Spanish */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -747,6 +763,7 @@
 				F2AC5BEB0819F61700E5E5E6 /* zh_TW */,
 				F2AC5BEF0819F62C00E5E5E6 /* English */,
 				F21AD0C00892AC700054EA35 /* German */,
+				F221AA51096089D5002B38F5 /* Spanish */,
 			);
 			name = creeveyhelp.rtf;
 			sourceTree = "<group>";
@@ -781,7 +798,7 @@
 					"$(SRCROOT)/RBSplitView",
 					"$(SRCROOT)/libjpeg",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -800,8 +817,12 @@
 		F25EA23E08672CB4003728C2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
 				COPY_PHASE_STRIP = YES;
-				FRAMEWORK_SEARCH_PATHS = /Users/dom/dev/creevey;
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
@@ -821,7 +842,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
-					/Users/dom/dev/creevey,
+					"$(SRCROOT)",
 					"$(SRCROOT)/Epeg",
 					"$(SRCROOT)/RBSplitView",
 					"$(SRCROOT)/libjpeg",
@@ -865,7 +886,7 @@
 					"$(SRCROOT)/RBSplitView",
 					"$(SRCROOT)/libjpeg",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "Phoenix Slides";
@@ -882,18 +903,24 @@
 		F25EA24108672CB4003728C2 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};
 			name = Development;
 		};
 		F25EA24208672CB4003728C2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};
 			name = Deployment;
 		};
 		F25EA24308672CB4003728C2 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};
 			name = Default;
 		};

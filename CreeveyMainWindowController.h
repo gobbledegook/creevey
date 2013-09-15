@@ -19,10 +19,12 @@
 	IBOutlet NSTextField *statusFld, *bottomStatusFld;
 	
 	NSMutableArray *filenames, *displayedFilenames;
-	NSLock *loadImageLock; BOOL stopCaching; NSTimeInterval lastThreadTime;
+	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
+	volatile BOOL stopCaching;
 	
 	BOOL currentFilesDeletable;
-	BOOL filenamesDone, loadingDone; // loadingDone only meaningful if filenamesDone is true, always check both!
+	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
+		startSlideshowWhenReady;
 	NSMutableSet *filesBeingOpened; // to be selected
 	BOOL recurseSubfolders;
 	BOOL showInvisibles;
@@ -45,7 +47,7 @@
 //other
 - (void)setDefaultPath;
 - (void)updateDefaults;
-- (void)openFiles:(NSArray *)a;
+- (void)openFiles:(NSArray *)a withSlideshow:(BOOL)b;
 
 // notifiers
 - (void)fileWasChanged:(NSString *)s;

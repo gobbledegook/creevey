@@ -38,7 +38,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 	
 	NSSize boundingSize;
 	unsigned int maxImages;
-	BOOL cachingShouldStop;
+	volatile BOOL cachingShouldStop;
 	
 	NSFileManager *fm;
 	NSImageInterpolation interpolationType;

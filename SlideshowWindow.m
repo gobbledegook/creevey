@@ -22,6 +22,9 @@
 - (void)runTimer;
 - (void)killTimer;
 - (void)updateInfoFld;
+- (void)updateExifFld;
+
+- (void)saveZoomInfo;
 
 // cat methods
 - (void)displayCats;
@@ -51,10 +54,11 @@
 	if (self = [super initWithContentRect:r styleMask:NSBorderlessWindowMask backing:b defer:d]) {
 		filenames = [[NSMutableArray alloc] init];
 		rotations = [[NSMutableDictionary alloc] init];
+		zooms = [[NSMutableDictionary alloc] init];
 		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
 		
  		[self setBackgroundColor:[NSColor blackColor]];
-		currentIndex = -1;
+		currentIndex = -1;//blurr=8;
    }
     return self;
 }
@@ -64,7 +68,7 @@
 	[self setContentView:imgView]; // image now fills entire window
 	[imgView release]; // the prev line retained it
 	
-	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,300,20)];
+	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld]; [infoFld release];
 	[infoFld setBackgroundColor:[NSColor grayColor]];
 	[infoFld setBezeled:NO];
@@ -76,11 +80,32 @@
 	[catsFld setBezeled:NO];
 	[catsFld setEditable:NO]; // **
 	[catsFld setHidden:YES];
+	
+	NSSize s = [self frame].size;
+	NSScrollView *sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(s.width-360,0,360,s.height-20)];
+	[imgView addSubview:sv]; [sv release];
+	[sv setAutoresizingMask:NSViewHeightSizable | NSViewMinXMargin];
+	
+	exifFld = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,[sv contentSize].width,20)];
+	[sv setDocumentView:exifFld]; [exifFld release];
+	[exifFld setAutoresizingMask:NSViewHeightSizable | NSViewWidthSizable];
+
+	[sv setDrawsBackground:NO];
+	[sv setHasVerticalScroller:YES];
+	[sv setVerticalScroller:[[[NSScroller alloc] init] autorelease]];
+	[[sv verticalScroller] setControlSize:NSSmallControlSize];
+	[sv setAutohidesScrollers:YES];
+	//[exifFld setEditable:NO];
+	[exifFld setDrawsBackground:NO];
+	[exifFld setSelectable:NO];
+	//[exifFld setVerticallyResizable:NO];
+	[sv setHidden:YES];
 }
 
 - (void)dealloc {
 	[filenames release];
 	[rotations release];
+	[zooms release];
 	[imgCache release];
 	[helpFld release];
 	[super dealloc];
@@ -101,6 +126,9 @@
 }
 
 - (void)setBasePath:(NSString *)s {
+	if (currentIndex != -1)
+		[self saveZoomInfo]; // in case we're called without endSlideshow being called
+	
 	[basePath release];
 	if ([s characterAtIndex:[s length]-1] != '/')
 		basePath = [[s stringByAppendingString:@"/"] retain];
@@ -114,6 +142,8 @@
 }
 
 - (void)endSlideshow {
+	[self saveZoomInfo];
+
 	currentIndex = -1;
 	[self killTimer];
 	[self orderOut:nil];
@@ -132,11 +162,15 @@
 	
 	screenRect = [[NSScreen mainScreen] frame];
 	[imgCache setBoundingSize:screenRect.size];
+	// ** caching issues?
+	// if oldBoundingSize != or < newSize, delete cache
+
 	// this may need to change as screen res changes
 	// we assume user won't change screen resolution during a show
+	// ** but they might!
 	
 	[self setContentSize:screenRect.size];
-	[self setFrameOrigin:NSZeroPoint];
+	[self setFrameOrigin:screenRect.origin];
 	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
 	// ** OR set springiness on awake
 	
@@ -158,6 +192,7 @@
 	currentIndex = startIndex;
 	[self setTimer:0]; // reset the timer, in case running
 	if (helpFld) [helpFld setHidden:YES];
+	[exifFld setString:@""];
 	[imgCache beginCaching];
 	[imgView setImage:nil];
 	[self displayImage];
@@ -253,6 +288,34 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 }
 
+- (void)updateExifFld {
+	NSMutableAttributedString *attStr;
+	attStr = Fileinfo2EXIFString([filenames objectAtIndex:currentIndex],
+								 imgCache,moreExif,YES);
+	NSRange r = NSMakeRange(0,[attStr length]);
+	NSShadow *shdw = [[[NSShadow alloc] init] autorelease];
+	[shdw setShadowColor:[NSColor blackColor]];
+	[shdw setShadowBlurRadius:7]; // 7 or 8 is good
+	[attStr addAttribute:NSShadowAttributeName
+				   value:shdw
+				   range:r];
+//	[attStr addAttribute:NSStrokeColorAttributeName
+//				   value:[NSColor blackColor]
+//				   range:r];
+//	[attStr addAttribute:NSStrokeWidthAttributeName
+//				   value:[NSNumber numberWithFloat:-3]
+//				   range:r];
+//	[attStr addAttribute:NSExpansionAttributeName
+//				   value:[NSNumber numberWithFloat:0.1]
+//				   range:r];
+	[exifFld replaceCharactersInRange:NSMakeRange(0,[[exifFld string] length])
+							  withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
+										documentAttributes:nil]];
+	[exifFld setTextColor:[NSColor whiteColor]];
+	//NSLog(@"%i",blurr);
+}
+
+
 // display image number "currentIndex"
 // if it's not cached, say "Loading" and spin off a thread to cache it
 - (void)updateInfoFldWithRotation:(int)r {
@@ -295,17 +358,30 @@ scheduledTimerWithTimeInterval:timerIntvl
 									// not necessary if s/isActive/isKeyWindow/
 	NSString *theFile = [filenames objectAtIndex:currentIndex];
 	NSImage *img = [self loadFromCache:theFile];
-	if ([self isKeyWindow])
+	if ([self isMainWindow])
 		[NSCursor setHiddenUntilMouseMoves:YES];
 	[self displayCats];
 	if (img) {
 		//NSLog(@"displaying %d", currentIndex);
 		NSNumber *rot = [rotations objectForKey:theFile];
+		DYImageViewZoomInfo *zoomInfo = [zooms objectForKey:theFile];
 		int r = rot ? [rot intValue] : 0;
 		if (hideInfoFld) [infoFld setHidden:YES]; // this must happen before setImage, for redraw purposes
 		[imgView setImage:img];
 		if (r) [imgView setRotation:r];
+		// ** see keyDown for specifics
+		// if zoomed in, we need to set a different image
+		// here, copy-pasted from keyDown
+		DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
+		if (zoomInfo || ([imgView showActualSize] &&
+						 !(info->pixelSize.width < [imgView bounds].size.width &&
+						   info->pixelSize.height < [imgView bounds].size.height))) {
+			[imgView setImage:[[[NSImage alloc] initByReferencingFile:ResolveAliasToPath(theFile)] autorelease]
+					   zoomIn:2];
+			if (zoomInfo) [imgView setZoomInfo:zoomInfo];
+		}
 		[self updateInfoFldWithRotation:r];
+		if (![[exifFld enclosingScrollView] isHidden]) [self updateExifFld];
 		if (timerIntvl) [self runTimer];
 	} else {
 		if (hideInfoFld) [infoFld setHidden:NO];
@@ -341,8 +417,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)jumpTo:(int)n {
 	//NSLog(@"jumping to %d", n);
 	[self killTimer];
+	// we rely on this only being called when changing pics, not at startup
+	[self saveZoomInfo];
+	// above code is repeated in endSlideshow, setBasePath
+	
 	currentIndex = n < 0 ? 0 : n >= [filenames count] ? [filenames count] - 1 : n;
 	[self displayImage];
+}
+
+- (void)saveZoomInfo {
+	if ([imgView zoomInfoNeedsSaving])
+		[zooms setObject:[imgView zoomInfo]
+				  forKey:[filenames objectAtIndex:currentIndex]];
 }
 
 - (void)setRotation:(int)n {
@@ -352,12 +438,17 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self updateInfoFldWithRotation:n];
 }
 
+- (void)toggleExif {
+	[[exifFld enclosingScrollView] setHidden:![[exifFld enclosingScrollView] isHidden]];
+	if (![[exifFld enclosingScrollView] isHidden])
+		[self updateExifFld];
+}
 
 - (void)toggleHelp {
 	if (!helpFld) {
 		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect]; //NSMakeRect(0,0,310,265)
 		[[self contentView] addSubview:helpFld]; [helpFld release];
-		[helpFld setHorizontallyResizable:YES]; // NO by default
+//		[helpFld setHorizontallyResizable:YES]; // NO by default
 //		[helpFld setVerticallyResizable:NO]; // YES by default
 //		[helpFld sizeToFit]; //doesn't do anything?
 		if (![helpFld readRTFDFromFile:
@@ -365,13 +456,21 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSLog(@"couldn't load cheat sheet!");
 		[helpFld setBackgroundColor:[NSColor lightGrayColor]];
 		[helpFld setSelectable:NO];
+//		NSLayoutManager *lm = [helpFld layoutManager];
+//		NSRange rnge = [lm glyphRangeForCharacterRange:NSMakeRange(0,[[helpFld textStorage] length])
+//								  actualCharacterRange:NULL];
+//		NSSize s = [lm boundingRectForGlyphRange:rnge
+//								 inTextContainer:[lm textContainerForGlyphAtIndex:0
+//																   effectiveRange:NULL]].size;
+//			//[[helpFld textStorage] size];
+//		NSLog(NSStringFromRange(rnge));
 		NSSize s = [[helpFld textStorage] size];
-		NSRect r = NSMakeRect(0,0,s.width+12,s.height);
+		NSRect r = NSMakeRect(0,0,s.width+10,s.height);
 		// width must be bigger than text, or wrappage will occur
 		s = [[self contentView] frame].size;
 		r.origin.x = s.width - r.size.width - 50;
 		r.origin.y = s.height - r.size.height - 55;
-		[helpFld setFrame:r];
+		[helpFld setFrame:NSIntegralRect(r)];
 		return;
 	}
 	[helpFld setHidden:![helpFld isHidden]];
@@ -405,8 +504,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 			} else {
 				char x,y;
 				c -= '0';
-				if (c<=3) y = 1; else if (c>=7) y = -1;
-				if (c%3 == 0) x = -1; else if (c%3 == 1) x = 1;
+				if (c<=3) y = 1; else if (c>=7) y = -1; else y = 0;
+				if (c%3 == 0) x = -1; else if (c%3 == 1) x = 1; else x=0;
 				[imgView fakeDragX:([imgView bounds].size.width/2)*x
 								 y:([imgView bounds].size.height/2)*y];
 			}
@@ -467,7 +566,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[self endSlideshow];
 			break;
 		case 'i':
-			hideInfoFld = ![infoFld isHidden];
+			// cycles three ways: info, info + exif, none
+			hideInfoFld = ![infoFld isHidden] && ![[exifFld enclosingScrollView] isHidden];
+			if (![infoFld isHidden])
+				[self toggleExif];
 			[infoFld setHidden:hideInfoFld]; // 10.3 or later!
 			break;
 		case 'h':
@@ -476,15 +578,36 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case NSHelpFunctionKey: // doesn't work, trapped at a higher level?
 			[self toggleHelp];
 			break;
+		case 'I':
+			if ([[exifFld enclosingScrollView] isHidden]) {
+				moreExif = YES;
+				hideInfoFld = NO;
+				[self toggleExif];
+				[infoFld setHidden:NO];
+			} else {
+				moreExif = !moreExif;
+				[self updateExifFld];
+			}
+			break;
+//		case 'e':
+//			[self toggleExif];
+//			break;
+//		case 'j': blurr--; [self updateExifFld]; break;
+//		case 'k': blurr++; [self updateExifFld]; break;
 		case 'l':
 			[self setRotation:90];
 			break;
 		case 'r':
 			[self setRotation:-90];
 			break;
+		case '=':
+			//if ([imgView showActualSize])
+			//	[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
+			// actually, '=' doesn't center the pic, so this is wrong
+			// if you zoom or move a pic while in actualsize mode, you're basically stuck with a non-default zoom
+			// intentional fall-through to next cases
 		case '+':
 		case '-':
-		case '=':
 			if (obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]]) {
 				if (obj->image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {
@@ -498,9 +621,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 				}
 				[self updateInfoFld];
 			}
+			// can't save zooms here, save when leaving the pict; see jumpTo
+			// for important comments
 			break;
 		case '*':
 			[imgView zoomOff];
+			if (![imgView showActualSize])
+				[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
 			[self updateInfoFld];
 			break;
 		default:
@@ -603,11 +730,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 #pragma mark menu methods
 - (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
-	if ([menuItem tag] == 3) // Loop
+	if ([menuItem tag] == 3) // Loop, Scale Up
 		return YES;
 	if ([menuItem tag] == 7) // random
 		return ![self isActive];
-	return [self isActive];
+	// check if the item's menu is the slideshow menu
+	return [[menuItem menu] itemWithTag:3] ? [self isActive]
+										   : [super validateMenuItem:menuItem];
 }
 
 - (IBAction)endSlideshow:(id)sender {
@@ -620,7 +749,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 - (IBAction)toggleCheatSheet:(id)sender {
 	[self toggleHelp];
-	[sender setState:![helpFld isHidden]];
+	//[sender setState:![helpFld isHidden]]; // ** wrong if user hits 'h'
 }
 - (IBAction)toggleScalesUp:(id)sender {
 	BOOL b = ![sender state];
@@ -632,6 +761,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (IBAction)toggleRandom:(id)sender {
 	randomMode = !randomMode;
 	[sender setState:randomMode];
+}
+- (IBAction)toggleShowActualSize:(id)sender {
+	BOOL b = ![sender state];
+	// save zoomInfo, if any, BEFORE changing the vars
+	if (currentIndex != -1) {
+		[self killTimer];
+		[self saveZoomInfo];
+	}
+	// then change vars and re-display
+	[sender setState:b];
+	[imgView setShowActualSize:b];
+	if (currentIndex != -1) [self displayImage]; 
 }
 
 @end

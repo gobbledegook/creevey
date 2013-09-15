@@ -19,7 +19,9 @@
 {
 	NSMutableSet **cats;
     DYImageView *imgView;
-	NSTextField *infoFld, *catsFld; BOOL hideInfoFld;
+	NSTextField *infoFld, *catsFld; BOOL hideInfoFld, moreExif;
+	NSTextView *exifFld;
+//	int blurr;
 	
 	DYImageCache *imgCache;
 	
@@ -27,7 +29,7 @@
 	NSTimer *autoTimer;
 	
 	NSMutableArray *filenames;
-	NSMutableDictionary *rotations;
+	NSMutableDictionary *rotations, *zooms;
 	
 	NSString *basePath;
 	NSRect screenRect;
@@ -59,6 +61,7 @@
 - (IBAction)toggleLoopMode:(id)sender;
 - (IBAction)toggleCheatSheet:(id)sender;
 - (IBAction)toggleScalesUp:(id)sender;
+- (IBAction)toggleShowActualSize:(id)sender;
 - (IBAction)toggleRandom:(id)sender;
 
 @end

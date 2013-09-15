@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2005 August 3
+modified 2006 January 3
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -32,10 +32,25 @@ Enjoy!
 
 Version History
 ---------------
+1.2.1
+-----
+show EXIF info during slideshow ('i' cycles; shift-i for more EXIF)
+fixed 2 4 6 8 to not scroll orthogonal to intended dir (uninitialized vars.)
+fixed incorrectly enabled menu items during slideshow
+fixed drawing glitch when hiding cheat sheet (non-integral coords)
+made vars volatile where necessary (i.e., when accessed from multiple threads)
+zoom sticks until quit (like rotations)
+show all at actual size
+fat(x86) binary - especially useful: TN2137
+opening a file starts slideshow immediately
+option to not change mod dates for lossless jpeg (grayscale/markers still does)
+fixed multiple monitor bug - dimensions but not lower left corner were used for mainScreen (the one with the key window)
+
 1.2
 ---
 lossless jpeg rotation and other transformations
 get info window: name, alias, size, progressive, jpeg comments, exif info
+- localizations from /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/
 multiple windows! (this was a cr@pload of work)
 save prefs on exit (i forgot to call synchronize)
 tried to make thumbnail loading faster, but can't seem to make significant

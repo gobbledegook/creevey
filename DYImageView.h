@@ -12,12 +12,19 @@
 
 #import <Cocoa/Cocoa.h>
 
+@interface DYImageViewZoomInfo : NSObject {
+	@public
+	NSRect sourceRect;
+	NSSize destSize;
+	float zoomF;
+}
+@end
 
 @interface DYImageView : NSView {
 	NSImage *image;
 	NSTimer *gifTimer;
 	int rotation;
-	BOOL scalesUp;
+	BOOL scalesUp, showActualSize;
 	NSRect sourceRect;
 	NSSize destSize;
 	float zoomF;
@@ -33,6 +40,8 @@
 //- (float)zoom;
 - (BOOL)scalesUp;
 - (void)setScalesUp:(BOOL)b;
+- (BOOL)showActualSize;
+- (void)setShowActualSize:(BOOL)b;
 
 - (void)zoomOff;
 - (void)zoomActualSize;
@@ -41,7 +50,10 @@
 - (void)fakeDragX:(float)x y:(float)y;
 
 - (BOOL)zoomMode;
+- (BOOL)zoomInfoNeedsSaving;
 - (float)zoomF;
 
+- (DYImageViewZoomInfo *)zoomInfo;
+- (void)setZoomInfo:(DYImageViewZoomInfo *)i;
 
 @end

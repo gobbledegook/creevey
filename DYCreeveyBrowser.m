@@ -160,7 +160,7 @@
 		
         if (sourceDragMask & NSDragOperationGeneric) {
 			
-            [[[self window] delegate] openFiles:files]; // **
+            [[[self window] delegate] openFiles:files withSlideshow:NO]; // **
 			
         }
 		

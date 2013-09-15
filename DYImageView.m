@@ -11,6 +11,10 @@
 
 #import "DYImageView.h"
 
+@implementation DYImageViewZoomInfo
+@end
+
+
 @interface DYImageView (Private)
 - (void)setZoomAndCenter:(BOOL)center;
 @end
@@ -274,6 +278,12 @@
 	scalesUp = b;
 	[self setNeedsDisplay:YES];
 }
+- (BOOL)showActualSize { return showActualSize; }
+- (void)setShowActualSize:(BOOL)b {
+	if (showActualSize == b) return;
+	showActualSize = b;
+	[self setNeedsDisplay:YES];
+}
 
 - (void)zoomActualSize { // toggles
 	if (zoomF != 1) {
@@ -303,7 +313,7 @@
 	}
 	// new size
 	NSSize s = destSize = bSize;
-	NSLog(@"zoom %f, modf %f", zoomF, modff(log2f(zoomF),&tmp));
+	//NSLog(@"zoom %f, modf %f", zoomF, modff(log2f(zoomF),&tmp));
 	zoomF = fabsf(modff(log2f(zoomF),&tmp)) < 0.000001 ? 1.5*zoomF : zoomF/.75;
 		// not precise enough to give 0 // *= M_SQRT2
 	s.width  = (int)(s.width/zoomF); // always make dims integral; not nec origins
@@ -414,7 +424,34 @@
 	}
 }
 
-- (BOOL)zoomMode {return zoomF != 0;}
+- (DYImageViewZoomInfo *)zoomInfo {
+	if (!showActualSize && zoomF == 0) return nil;
+	DYImageViewZoomInfo *i = [[DYImageViewZoomInfo alloc] init];
+	i->zoomF = zoomF;
+	i->sourceRect = sourceRect;
+	i->destSize = destSize;
+	return [i autorelease];
+}
+- (void)setZoomInfo:(DYImageViewZoomInfo *)i {
+	zoomF = i->zoomF;
+	sourceRect = i->sourceRect;
+	destSize = i->destSize;
+	[self setNeedsDisplay:YES];
+}
+
+- (BOOL)zoomInfoNeedsSaving {
+	if (showActualSize) {
+		if (zoomF != 1) return YES;
+		
+		NSSize imgSize = [image size];
+		return (sourceRect.origin.x != sourceRect.size.width > imgSize.width ? 0 : (imgSize.width - sourceRect.size.width)/2)
+			|| (sourceRect.origin.y != sourceRect.size.height > imgSize.height ? 0 : (imgSize.height - sourceRect.size.height)/2);
+	} else {
+		return zoomF != 0;
+	}
+}
+
+- (BOOL)zoomMode { return zoomF != 0; }
 - (float)zoomF {return zoomF;}
 - (NSImage *)image {return image;}
 @end

@@ -50,6 +50,7 @@
                 toggleLoopMode = id; 
                 toggleRandom = id; 
                 toggleScalesUp = id; 
+                toggleShowActualSize = id; 
             }; 
             CLASS = SlideshowWindow; 
             LANGUAGE = ObjC; 

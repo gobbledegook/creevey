@@ -90,6 +90,7 @@ Contents:
 <tr><td>!</td><td>每半秒自動往前</td></tr>
 <tr><td>h, ?</td><td>顯示∕隱藏輔助說明</td></tr>
 <tr><td>i</td><td>顯示∕隱藏檔案名稱</td></tr>
+<tr><td>&#8679;I</td><td>顯示更多EXIF屬性</td></tr>
 <tr><td>F2-F12</td><td>放進組ｎ</td></tr>
 <tr><td>&#8984;F2-F12</td><td>調換群組類別</td></tr>
 <tr><td>F1</td><td>忘記群組類別</td></tr>
@@ -155,6 +156,9 @@ Phoenix Slides就這樣生成了。</p>
 
 <p>謝謝Thomas Steg (德國 Karlsruhe) - 德文翻譯</p>
 
+<p>謝謝 C&eacute;sar Pi&ntilde;era - 西班牙文翻譯</p>
+
+
 <p>感謝open source軟體的開發者，包括 rasterman (Epeg)、
 Allan Hsu (Magic Lantern)、Marc Liyanage (EpegWrapper)、及
 Rainer Brockerhoff (RBSplitView)。
@@ -179,6 +183,21 @@ programming help or making a donation along the lines of books
 </p>
 
 <h2><a name="vers"></a>版本歷史(英文)</h2>
+2006.01.03 1.2.1
+<ul>
+	<li>added - show EXIF info during slideshow</li>
+	<li>added - show all images at actual size in slideshow</li>
+	<li>opening files now starts a slideshow immediately</li>
+	<li>zoom settings now stick around until you quit</li>
+	<li>option to preserve file modification date when performing lossless JPEG transformations</li>
+	<li>fixed incorrectly enabled menu items during slideshow</li>
+	<li>fixed scrolling bug with numeric keypad 2, 4, 6, 8</li>
+	<li>fixed drawing glitch when hiding slideshow cheat sheet</li>
+	<li>fixed bug where slideshow showed up in the wrong location with multiple monitors</li>
+	<li>compiled to run on both ppc and x86 architecture</li>
+	<li>Spanish localization</li>
+</ul>
+
 2005.08.03 1.2
 <ul>
 	<li>zoom in/out in slideshow</li>
@@ -234,7 +253,7 @@ This work is licensed under a <a rel="license" href="http://creativecommons.org/
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 <Work rdf:about="">
    <dc:title>Phoenix Slides</dc:title>
-   <dc:date>2005</dc:date>
+   <dc:date>2005-2006</dc:date>
    <dc:rights><Agent>
       <dc:title>Dominic Yu</dc:title>
    </Agent></dc:rights>
@@ -256,7 +275,9 @@ This work is licensed under a <a rel="license" href="http://creativecommons.org/
 -->
 
 <p>
-Copyright 2005 by Dominic Yu. This software is free and open source.
+此軟體是免費、開放的，可以為非商業性用途重製、散布或創作衍生作品。
+惟需保留我的姓名標示、用相同的授權方式分享（除非您取得著作權人之許可）。<br>
+Copyright 2005-2006 by Dominic Yu. This software is free and open source.
 You are free to use it for non-commercial
 purposes. Derivative works must give proper credit to me and be shared under
 the same license, unless I give written permission stating otherwise.</p>
