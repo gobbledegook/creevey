@@ -83,7 +83,7 @@
 	[catsFld setEditable:NO]; // **
 	[catsFld setHidden:YES];
 	
-	NSSize s = [self frame].size;
+	NSSize s = [imgView bounds].size;
 	NSScrollView *sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(s.width-360,0,360,s.height-20)];
 	[imgView addSubview:sv]; [sv release];
 	[sv setAutoresizingMask:NSViewHeightSizable | NSViewMinXMargin];
@@ -164,7 +164,7 @@
 	}
 	
 	screenRect = [[NSScreen mainScreen] frame];
-	[imgCache setBoundingSize:screenRect.size];
+	[imgCache setBoundingSize:screenRect.size]; // boundingSize for the cache is actually in pixels
 	// ** caching issues?
 	// if oldBoundingSize != or < newSize, delete cache
 
@@ -172,8 +172,9 @@
 	// we assume user won't change screen resolution during a show
 	// ** but they might!
 	
-	[self setContentSize:screenRect.size];
-	[self setFrameOrigin:screenRect.origin];
+	//[self setContentSize:screenRect.size];
+	//[self setFrameOrigin:screenRect.origin];
+	[self setFrame:screenRect display:NO];
 	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
 	// ** OR set springiness on awake
 	
@@ -280,7 +281,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 #pragma mark display stuff
 - (float)calcZoom:(NSSize)sourceSize {
 	// calc here b/c larger images have already been cached & shrunk!
-	NSRect boundsRect = [imgView bounds];
+	NSRect boundsRect = [imgView convertRect:[imgView bounds] toView:nil]; // get pixels, not points
 	int rotation = [imgView rotation];
 	float tmp;
 	if (rotation == 90 || rotation == -90) {

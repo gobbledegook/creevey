@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2006 October 25
+modified 2007 May 1
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -33,6 +33,14 @@ Enjoy!
 
 Version History
 ---------------
+1.2.4
+-----
+possible fix for intel hanging (same nsbrowser bug as 1.0)
+- we should check if it happens in 10.5
+worked around non-standard EXIF header crash
+got rid of extra white line on some thumbnails
+resolution independence stuff (percent means pixels)
+
 1.2.3
 -----
 changes:

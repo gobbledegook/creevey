@@ -282,6 +282,7 @@
 							<array>
 								<string>29B97314FDCFA39411CA2CEA</string>
 								<string>080E96DDFE201D6D7F000001</string>
+								<string>29B97315FDCFA39411CA2CEA</string>
 								<string>29B97317FDCFA39411CA2CEA</string>
 								<string>1C37FBAC04509CD000000102</string>
 								<string>1C08E77C0454961000C914BD</string>
@@ -290,7 +291,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>42</integer>
+									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -313,7 +314,7 @@
 							<real>189</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>9 55 926 883 0 0 1440 938 </string>
+						<string>9 55 920 883 0 0 1440 938 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -329,7 +330,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>README</string>
+								<string>DYCreeveyBrowser.m</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -337,34 +338,39 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>README</string>
+										<string>DYCreeveyBrowser.m</string>
 										<key>_historyCapacity</key>
 										<integer>10</integer>
 										<key>bookmark</key>
-										<string>F28DC59A0BD9CC70007FA2C3</string>
+										<string>F22072000BE719DC003B815A</string>
 										<key>history</key>
 										<array>
-											<string>F219FDBB0BD9CB51004CBD15</string>
-											<string>F219FDBD0BD9CB51004CBD15</string>
-											<string>F219FDBF0BD9CB51004CBD15</string>
-											<string>F219FDC10BD9CB51004CBD15</string>
-											<string>F219FDC30BD9CB51004CBD15</string>
-											<string>F219FDC40BD9CB51004CBD15</string>
-											<string>F219FDC50BD9CB51004CBD15</string>
-											<string>F219FDC60BD9CB51004CBD15</string>
-											<string>F219FDFB0BD9CBFD004CBD15</string>
+											<string>F22071CB0BE71962003B815A</string>
+											<string>F22071CD0BE71962003B815A</string>
+											<string>F22071CF0BE71962003B815A</string>
+											<string>F22071D10BE71962003B815A</string>
+											<string>F22071D30BE71962003B815A</string>
+											<string>F22071D50BE71962003B815A</string>
+											<string>F22071D60BE71962003B815A</string>
+											<string>F22071D70BE71962003B815A</string>
+											<string>F22071FD0BE719DC003B815A</string>
+											<string>F22071FE0BE719DC003B815A</string>
 										</array>
 										<key>prevStack</key>
 										<array>
-											<string>F219FDC80BD9CB51004CBD15</string>
-											<string>F219FDCC0BD9CB51004CBD15</string>
-											<string>F219FDD00BD9CB51004CBD15</string>
-											<string>F219FDD20BD9CB51004CBD15</string>
-											<string>F219FDDA0BD9CB51004CBD15</string>
-											<string>F219FDDD0BD9CB51004CBD15</string>
-											<string>F219FDEF0BD9CB51004CBD15</string>
-											<string>F219FDF00BD9CB51004CBD15</string>
-											<string>F219FDF20BD9CB51004CBD15</string>
+											<string>F29C26CE0BE6F23F00CA9CDC</string>
+											<string>F22071DA0BE71962003B815A</string>
+											<string>F22071DB0BE71962003B815A</string>
+											<string>F22071DD0BE71962003B815A</string>
+											<string>F22071DF0BE71962003B815A</string>
+											<string>F22071E10BE71962003B815A</string>
+											<string>F22071E30BE71962003B815A</string>
+											<string>F22071E50BE71962003B815A</string>
+											<string>F22071E70BE71962003B815A</string>
+											<string>F22071E80BE71962003B815A</string>
+											<string>F22071E90BE71962003B815A</string>
+											<string>F22071EA0BE71962003B815A</string>
+											<string>F22071FF0BE719DC003B815A</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -376,9 +382,9 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {715, 734}}</string>
+								<string>{{0, 0}, {709, 734}}</string>
 								<key>RubberWindowFrame</key>
-								<string>9 55 926 883 0 0 1440 938 </string>
+								<string>9 55 920 883 0 0 1440 938 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -396,9 +402,9 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 739}, {715, 103}}</string>
+								<string>{{0, 739}, {709, 103}}</string>
 								<key>RubberWindowFrame</key>
-								<string>9 55 926 883 0 0 1440 938 </string>
+								<string>9 55 920 883 0 0 1440 938 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
@@ -407,7 +413,7 @@
 						</dict>
 					</array>
 					<key>Proportion</key>
-					<string>715pt</string>
+					<string>709pt</string>
 				</dict>
 			</array>
 			<key>Name</key>
@@ -422,9 +428,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>F28DC59B0BD9CC70007FA2C3</string>
+				<string>F22071EC0BE71962003B815A</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>F28DC59C0BD9CC70007FA2C3</string>
+				<string>F22071ED0BE71962003B815A</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -543,7 +549,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>198823024.44888899</real>
+	<real>199694812.51489601</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -558,11 +564,12 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>1C0AD2B3069F1EA900FABCE6</string>
 		<string>F2B2C57908A070D000B603F6</string>
 		<string>/Users/dom/dev/creevey/creevey.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>9 55 926 883 0 0 1440 938 </string>
+	<string>9 55 920 883 0 0 1440 938 </string>
 	<key>WindowTools</key>
 	<array>
 		<dict>
@@ -600,6 +607,8 @@
 							<string>187pt</string>
 						</dict>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -639,7 +648,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>F2B2C57908A070D000B603F6</string>
-				<string>F28DC59D0BD9CC70007FA2C3</string>
+				<string>F22071EE0BE71962003B815A</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
@@ -681,8 +690,8 @@
 										<string>yes</string>
 										<key>sizes</key>
 										<array>
-											<string>{{0, 0}, {454, 442}}</string>
-											<string>{{454, 0}, {599, 442}}</string>
+											<string>{{0, 0}, {448, 442}}</string>
+											<string>{{448, 0}, {605, 442}}</string>
 										</array>
 									</dict>
 									<key>VerticalSplitView</key>
@@ -745,14 +754,14 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1CD10A99069EF8BA00B06720</string>
-				<string>F254E1080BD30C150053F673</string>
+				<string>F29C267F0BE6D04600CA9CDC</string>
 				<string>1C162984064C10D400B95A72</string>
-				<string>F254E1090BD30C150053F673</string>
-				<string>F254E10A0BD30C150053F673</string>
-				<string>F254E10B0BD30C150053F673</string>
-				<string>F254E10C0BD30C150053F673</string>
-				<string>F254E10D0BD30C150053F673</string>
-				<string>F254E10E0BD30C150053F673</string>
+				<string>F29C26800BE6D04600CA9CDC</string>
+				<string>F29C26810BE6D04600CA9CDC</string>
+				<string>F29C26820BE6D04600CA9CDC</string>
+				<string>F29C26830BE6D04600CA9CDC</string>
+				<string>F29C26840BE6D04600CA9CDC</string>
+				<string>F29C26850BE6D04600CA9CDC</string>
 			</array>
 			<key>ToolbarConfiguration</key>
 			<string>xcode.toolbar.config.debug</string>
@@ -784,7 +793,7 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CDD528C0622207200134675</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>CreeveyMainWindowController.m</string>
+										<string>DYExiftags.m</string>
 										<key>StatusBarVisibility</key>
 										<true/>
 									</dict>
@@ -842,8 +851,8 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C530D57069F1CE1000CFCEE</string>
-				<string>F2D63F060BD43EC70000B44E</string>
-				<string>F2D63F070BD43EC70000B44E</string>
+				<string>F22403280BE47C2200479AA1</string>
+				<string>F22403290BE47C2200479AA1</string>
 				<string>1CDD528C0622207200134675</string>
 				<string>1CD0528E0623707200166675</string>
 			</array>
@@ -906,7 +915,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>F2D5C5CC0866458C006B41FD</string>
-				<string>F254E10F0BD30C150053F673</string>
+				<string>F29C26860BE6D04600CA9CDC</string>
 				<string>1C78EAAC065D492600B07095</string>
 			</array>
 			<key>WindowString</key>
@@ -1001,9 +1010,9 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C0AD2B3069F1EA900FABCE6</string>
-				<string>F2B7C0290BD55BE900A441D3</string>
+				<string>F22071F30BE719CF003B815A</string>
 				<string>1CD0528B0623707200166675</string>
-				<string>F2B7C02A0BD55BE900A441D3</string>
+				<string>F22071F40BE719CF003B815A</string>
 			</array>
 			<key>ToolbarConfiguration</key>
 			<string>xcode.toolbar.config.run</string>

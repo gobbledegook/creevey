@@ -48,7 +48,8 @@ struct __BrcshFlags {
 + (void)load {
 	// only load for 10.3
 	// i've only tested for 10.3.8, though
-	if (floor(NSAppKitVersionNumber) == 743)
+	//*** this might also be the cause of a hang on intel machines in 10.4?
+	//if (floor(NSAppKitVersionNumber) == 743)
 		[_NSBrowserColumnScrollHelper2 poseAsClass:[_NSBrowserColumnScrollHelper class]];
 	// 10.3.2 is 743.14
 	// 10.3.3 is 743.2

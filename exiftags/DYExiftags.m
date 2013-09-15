@@ -419,6 +419,9 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthum
 	unsigned n = exif4byte(b,o); // offset of next IFD
 	if (n == 0)
 		return NULL;
+	// check for non-standard EXIF - will not have offset to next IFD!
+	if (n > len-6)
+		return NULL;
 	b = b0 + n;
 
 	unsigned ifd1offset = n + 6; // save IFD1 offset
@@ -482,7 +485,7 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthum
 						// short
 						byte2exif(tmp,b+8,o);
 						byte2exif(0,b+10,o);
-						NSLog(@"just wrote a short!");
+						//NSLog(@"just wrote a short!");
 					} else {
 						// long
 						byte4exif(tmp,b+8,o);

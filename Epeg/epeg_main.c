@@ -785,7 +785,9 @@ unsigned char *epeg_exif_thumb(Epeg_Image *im,unsigned long *outsize)
 
 static void _dy_locate_exif_thumb(Epeg_Image *im, unsigned char *b, unsigned len)
 {
-	if (memcmp(b, "Exif\0\0", 6)) {
+	// 6 bytes for exif header; 2 bytes for endian; 2 for TIFF header;
+	// 4 for 0th IFD
+	if (len >= 14 && memcmp(b, "Exif\0\0", 6)) {
 		return;
 	}
 	b += 6;
@@ -814,11 +816,24 @@ static void _dy_locate_exif_thumb(Epeg_Image *im, unsigned char *b, unsigned len
 	
 	/* Get the 0th IFD, where all of the good stuff should start. */
 	b = b0 + exif4byte(b, o);
+	//if (b > b0 + len - 2)
+	//	return; // sanity check
+	// *** i suppose to be safe we should check to see if it's out of bounds here,
+	// but not even exiftags does this, so why should we?
+	
 	/* skip the 0th IFD */
 	b += 12*exif2byte(b,o);
 	b += 2; // don't forget the two bytes you read in the last line!
+	//if (b > b0 + len - 4)
+	//	return; // sanity check *** see note above
+	
 	unsigned n = exif4byte(b,o); // offset of next IFD
 	if (n == 0)
+		return;
+	// non-standard EXIF will not have offset to next IFD!
+	// make sure n points to a valid place in memory; add 2 for num tags,
+	// then 4 for the first tag (assuming there's at least one)
+	if (n > len-6)
 		return;
 	b = b0 + n;
 	n = exif2byte(b,o); // number of tags in IFD1

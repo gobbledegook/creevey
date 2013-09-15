@@ -24,8 +24,8 @@
 // helper method to calculate appropriate zoom factor
 - (float)zoomForFit {
 	float tmp;
-	NSSize imgSize = [image size];
-	NSSize bSize = [self bounds].size;
+	NSSize imgSize = [image size]; // in pixels
+	NSSize bSize = [self convertRect:[self bounds] toView:nil].size; // in pixels (window units)
 	if (rotation == 90 || rotation == -90) {
 		tmp = bSize.width;
 		bSize.width = bSize.height;
@@ -54,8 +54,8 @@
 	
 	NSRect srcRect, destinationRect;
 	float zoom = zoomF;
-	NSRect boundsRect = [self bounds]; float tmp;
-	float centerX, centerY;
+	NSRect boundsRect = [self convertRect:[self bounds] toView:nil];
+	float centerX, centerY; float tmp;
 	centerX = boundsRect.size.width/2;
 	centerY = boundsRect.size.height/2;
 	if (zoomF) {
@@ -104,6 +104,9 @@
 		[transform translateXBy:-centerX yBy:-centerY];
 		[transform concat];
 	}
+	
+	// now, convert destinationRect to view coords
+	destinationRect = [self convertRect:destinationRect fromView:nil];
 
 	[[NSColor whiteColor] set]; // make a nice background for transparent gifs, etc.
 	[NSBezierPath fillRect:destinationRect];
@@ -176,7 +179,7 @@
 	if (!image) return; 
 	NSSize imgSize = [image size];
 	float tmp;
-	NSSize bSize = [self bounds].size;
+	NSSize bSize = [self convertRect:[self bounds] toView:nil].size;
 	if (rotation == 90 || rotation == -90) {
 		tmp = bSize.height;
 		bSize.height = bSize.width;
@@ -309,7 +312,7 @@
 	NSSize imgSize = [image size];
 
 	float tmp;
-	NSSize bSize = [self bounds].size;
+	NSSize bSize = [self convertRect:[self bounds] toView:nil].size;
 	if (rotation == 90 || rotation == -90) {
 		tmp = bSize.height;
 		bSize.height = bSize.width;

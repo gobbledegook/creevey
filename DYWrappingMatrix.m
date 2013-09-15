@@ -48,10 +48,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	
 	// origin
-	destinationRect.origin.x = NSMidX(boundsRect) - destinationRect.size.width/2;
-	destinationRect.origin.y = NSMidY(boundsRect) - destinationRect.size.height/2;
-	return NSIntegralRect(destinationRect);
-	//return destinationRect;
+	destinationRect.origin.x = (int)(NSMidX(boundsRect) - destinationRect.size.width/2);
+	destinationRect.origin.y = (int)(NSMidY(boundsRect) - destinationRect.size.height/2);
+	//return NSIntegralRect(destinationRect);
+	return destinationRect;
 }
 
 @interface DYWrappingMatrix (Private)
@@ -413,12 +413,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		col = i%numCols;
 		areaRect.origin = NSMakePoint(area_w*col, area_h*row);
 		if (![self needsToDrawRect:areaRect rectListBounds:rect]) continue; // 10.3
+		// color the selection
 		if ([selectedIndexes containsIndex:i]) {
 			[([myWindow firstResponder] == self && [myWindow isKeyWindow]
 			  ? [NSColor selectedTextBackgroundColor]
 			  : [NSColor lightGrayColor]) set];
 			[NSBezierPath fillRect:areaRect];
 		}
+		// calculate drawing area for thumb
 		cellRect = [self imageRectForIndex:i];
 		if (![self needsToDrawRect:cellRect	rectListBounds:rect]) {
 			//NSLog(@"skipped cell %i", i);
