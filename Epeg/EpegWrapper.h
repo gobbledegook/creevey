@@ -13,6 +13,10 @@
 
 + (NSImage *)imageWithPath:(NSString *)path
 			   boundingBox:(NSSize)boundingBox 
-				   getSize:(NSSize *)pixSize;
+				   getSize:(NSSize *)pixSize
+				 exifThumb:(BOOL)wantExifThumb;
 //+ (NSString *)jpegErrorMessage;
+
++ (NSImage *)exifThumbForPath:(NSString *)path;
+
 @end

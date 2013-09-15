@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2006 January 3
+modified 2006 October 25
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -30,8 +30,31 @@ TO DO:
 
 Enjoy!
 
+
 Version History
 ---------------
+1.2.2
+-----
+jpeg rotations (not grayscale) now also apply to exif thumbs
+(there seems to be some extraneous stuff in the ifd1 of the exif, seems safe to delete)
+can reset orientation tag and auto-rotate by them
+rotating resets orientation tag
+better prefs window
+left- and right-click now go next/back
+dbl-click to end
+scroll wheel to navigate, but it conflicts with scroll wheel to scroll zoomed images
++-= w/ cmd key held down can now zoom (= on numeric keypad only)
+hand cursor shows up for dragging zoomed images
+set bg color, transparency for slideshow
+fixed: jpeg files with non-EXIF APP1 tags would cause problems with selection/info display
+fixed: jpeg rotation during slideshow didn't update if "don't change modification date" was checked
+fixed: rotating and trashing in thumbs window will now cause slideshow to update too
+fixed crash when exiting slideshow with images waiting to be cached (also made currentIndex volatile)
+changed supported file types from imageFileTypes to imageUnfilteredFileTypes
+ (seems to make no difference, 106 types both ways)
+'@' to auto-advance 1.5 secs (not official... try to have better interface in future)
+made columns resizable
+
 1.2.1
 -----
 show EXIF info during slideshow ('i' cycles; shift-i for more EXIF)

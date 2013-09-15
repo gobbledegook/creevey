@@ -2,8 +2,10 @@
     IBClasses = (
         {
             ACTIONS = {
+                applySlideshowPrefs = id; 
                 changeStartupOption = id; 
                 chooseStartupDir = id; 
+                exifRegenerate = id; 
                 moveToTrash = id; 
                 newWindow = id; 
                 openAboutPanel = id; 
@@ -15,16 +17,20 @@
                 sendFeedback = id; 
                 setDesktopPicture = id; 
                 slideshow = id; 
+                slideshowDefaultsChanged = id; 
                 stopModal = id; 
+                toggleExifThumbnail = id; 
                 versionCheck = id; 
             }; 
             CLASS = CreeveyController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 exifTextView = NSTextView; 
+                exifThumbnailDiscloseBtn = NSButton; 
                 jpegProgressBar = NSProgressIndicator; 
                 prefsWin = NSPanel; 
                 slidesWindow = SlideshowWindow; 
+                slideshowApplyBtn = NSButton; 
                 startupDirFld = NSTextField; 
                 startupOptionMatrix = NSMatrix; 
             }; 
@@ -55,6 +61,13 @@
             CLASS = SlideshowWindow; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSWindow; 
+        }, 
+        {
+            ACTIONS = {changePanes = id; orderFrontPrefsPanel = id; }; 
+            CLASS = UKPrefsPanel; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {tabView = NSTabView; }; 
+            SUPERCLASS = NSObject; 
         }
     ); 
     IBVersion = 1; 

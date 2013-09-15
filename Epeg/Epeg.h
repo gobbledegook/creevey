@@ -48,6 +48,7 @@ extern "C" {
    void          epeg_close                     (Epeg_Image *im);
 //BEGIN DY ADDITIONS
    int           epeg_scale_only                (Epeg_Image *im);
+   unsigned char *epeg_exif_thumb(Epeg_Image *im, unsigned long *outsize);
 //   const char   *epeg_error_msg();
 //END DY ADDITIONS
 #ifdef __cplusplus

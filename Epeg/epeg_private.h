@@ -65,6 +65,10 @@ struct _Epeg_Image
       int                          quality;
       char                         thumbnail_info : 1;
    } out;
+   //BEGIN DY ADDITIONS
+   unsigned char *thumbStart;
+   unsigned long thumbLength;
+   //END
 };
 
 FILE *_epeg_memfile_read_open   (void *data, size_t size);

@@ -58,10 +58,12 @@
 		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
 		
  		[self setBackgroundColor:[NSColor blackColor]];
+		[self setOpaque:NO];
 		currentIndex = -1;//blurr=8;
    }
     return self;
 }
+
 
 - (void)awakeFromNib {
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
@@ -190,17 +192,19 @@
 	}
 	if (startIndex == -1) startIndex = 0;
 	currentIndex = startIndex;
-	[self setTimer:0]; // reset the timer, in case running
+	[self setTimer:timerIntvl]; // reset the timer, in case running
 	if (helpFld) [helpFld setHidden:YES];
 	[exifFld setString:@""];
 	[imgCache beginCaching];
 	[imgView setImage:nil];
 	[self displayImage];
 	[self makeKeyAndOrderFront:nil];
+	// ordering front seems to reset the cursor, so force it again
+	[imgView setCursor];
 }
 
 - (void)becomeKeyWindow { // need this when switching apps
-	[self bringToForeground];
+	//[self bringToForeground];
 	//HideMenuBar(); // in Carbon
 	//OSStatus Error = 
 	SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
@@ -214,11 +218,11 @@
 }
 
 - (void)sendToBackground {
-	[self setLevel:NSNormalWindowLevel-1];
+	//[self setLevel:NSNormalWindowLevel-1];
 }
 
 - (void)bringToForeground {
-	[self setLevel:NSNormalWindowLevel]; //**debugging
+	//[self setLevel:NSNormalWindowLevel]; //**debugging
 //	[self setLevel:NSFloatingWindowLevel];//CGShieldingWindowLevel()];//NSMainMenuWindowLevel+1
 }
 
@@ -233,6 +237,15 @@
 	else
 		[self killTimer];
 }
+
+// a method for the public to call; added for the pref panel
+- (void)setAutoadvanceTime:(NSTimeInterval)s {
+	if (currentIndex == -1)
+		timerIntvl = s;
+	else
+		[self setTimer:s];
+}
+
 
 - (void)runTimer {
 	[self killTimer]; // always remove the old timer
@@ -353,13 +366,28 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self updateInfoFldWithRotation:[imgView rotation]];
 }
 
+- (void)redisplayImage {
+	if (currentIndex == -1) return;
+	id theFile = [filenames objectAtIndex:currentIndex];
+	[imgCache removeImageForKey:theFile];
+	[zooms removeObjectForKey:theFile]; // don't forget to reset the zoom/rotation!
+	[rotations removeObjectForKey:theFile];
+	[self displayImage];
+}
+
+- (void)uncacheImage:(NSString *)s {
+	[imgCache removeImageForKey:s];
+	[zooms removeObjectForKey:s];
+	[rotations removeObjectForKey:s];
+	if ((currentIndex != -1) && [s isEqualToString:[filenames objectAtIndex:currentIndex]])
+		[self displayImage];
+}
+
 - (void)displayImage {
 	if (currentIndex == -1) return; // in case called after slideshow ended
 									// not necessary if s/isActive/isKeyWindow/
 	NSString *theFile = [filenames objectAtIndex:currentIndex];
 	NSImage *img = [self loadFromCache:theFile];
-	if ([self isMainWindow])
-		[NSCursor setHiddenUntilMouseMoves:YES];
 	[self displayCats];
 	if (img) {
 		//NSLog(@"displaying %d", currentIndex);
@@ -391,6 +419,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 		return;
 	}
 	if (keyIsRepeating) return; // don't bother precaching if we're fast-forwarding anyway
+
+	if ([self isMainWindow] && ![imgView dragMode])
+		[NSCursor setHiddenUntilMouseMoves:YES];
+
 	int i;
 	for (i=1; i<=2; i++) {
 		if (currentIndex+i >= [filenames count])
@@ -476,6 +508,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[helpFld setHidden:![helpFld isHidden]];
 }
 
+#pragma mark event stuff
 // Here's the bulk of our user interface, all keypresses
 - (void)keyUp:(NSEvent *)e {
 	if (keyIsRepeating) {
@@ -533,6 +566,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	switch (c) {
 		case '!':
 			[self setTimer:0.5];
+			break;
+		case '@':
+			[self setTimer:1.5];
 			break;
 		case ' ':
 			if (timerIntvl && autoTimer) {
@@ -610,7 +646,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case '-':
 			if (obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]]) {
 				if (obj->image == [imgView image]
-					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {
+					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) { // cached image smaller than orig
 					[imgView setImage:[[[NSImage alloc] initByReferencingFile:
 						ResolveAliasToPath([filenames objectAtIndex:currentIndex])] autorelease]
 							   zoomIn:c == '=' ? 2 : c == '+'];
@@ -636,6 +672,97 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 }
 
+- (BOOL)performKeyEquivalent:(NSEvent *)e {
+	unichar c = [[e characters] characterAtIndex:0];
+	//NSLog([e charactersIgnoringModifiers]);
+	//NSLog([e characters]);
+	// charactersIgnoringModifiers is 10.4 or later, and doesn't play well with Dvorak Qwerty-cmd
+	DYImageInfo *obj;
+	switch (c) {
+		case '=':
+			if (!([e modifierFlags] & NSNumericPadKeyMask))
+				c = '+';
+			// intentional fall-through
+		case '+':
+		case '-':
+			// ** code copied from keyDown
+			if (obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]]) {
+				if (obj->image == [imgView image]
+					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {  // cached image smaller than orig
+					[imgView setImage:[[[NSImage alloc] initByReferencingFile:
+						ResolveAliasToPath([filenames objectAtIndex:currentIndex])] autorelease]
+							   zoomIn:c == '=' ? 2 : c == '+'];
+				} else {
+					if (c == '+') [imgView zoomIn];
+					else if (c == '-') [imgView zoomOut];
+					else [imgView zoomActualSize];
+				}
+				[self updateInfoFld];
+			}
+			return YES;
+		default:
+			return [super performKeyEquivalent:e];
+	}
+}
+
+
+// mouse control added for 1.2.2 (2006 Aug)
+
+- (void)mouseDown:(NSEvent *)e {
+	if ([imgView dragMode])
+		return;
+	
+	mouseDragged = YES; // prevent the following mouseUp from advancing twice
+	    // this would happen if it was zoomed in
+	if ([e clickCount] == 1)
+		[self jump:1];
+	else if ([e clickCount] == 2)
+		[self endSlideshow];
+}
+
+// while zoomed, wait until mouseUp to advance/end
+- (void)mouseUp:(NSEvent *)e {
+	if (![imgView dragMode])
+		return;
+	if (mouseDragged)
+		return;
+	
+	if ([e clickCount] == 1)
+		[self jump:1];
+	else if ([e clickCount] == 2)
+		[self endSlideshow];
+}
+
+- (void)rightMouseDown:(NSEvent *)e {
+	[self jump:-1];
+}
+
+- (void)sendEvent:(NSEvent *)e {
+	NSEventType t = [e type];
+
+	// override to send right clicks to self
+	if (t == NSRightMouseDown)	{
+		[self rightMouseDown:e];
+		return;
+	}
+	// but trapping help key here doesn't work
+
+	if (t == NSLeftMouseDragged) {
+		mouseDragged = YES;
+	} else if (t == NSLeftMouseDown) {
+		mouseDragged = NO; // reset this on mouseDown, not mouseUp (too early)
+		// or wait til after call to super
+	}
+	[super sendEvent:e];
+}
+
+- (void)scrollWheel:(NSEvent *)e {
+	float y = [e deltaY];
+	int sign = y < 0 ? 1 : -1;
+	[self jump:sign*(floor(fabs(y)/7.0)+1)];
+}
+
+	
 // cache stuff
 
 - (NSImage *)loadFromCache:(NSString *)s {
@@ -650,9 +777,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)cacheAndDisplay:(NSString *)s { // ** roll this into imagecache?
+	if (currentIndex == -1) return; // in case slideshow ended before thread started
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	[imgCache cacheFile:s];
-	if ([[filenames objectAtIndex:currentIndex] isEqualToString:s]) {
+	[imgCache cacheFile:s]; // this operation takes time...
+	if (currentIndex != -1 && [[filenames objectAtIndex:currentIndex] isEqualToString:s]) {
 		//NSLog(@"cacheAndDisplay now displaying %@", idx);
 		[self performSelectorOnMainThread:@selector(displayImage) // requires 10.2
 							   withObject:nil waitUntilDone:NO];
@@ -692,6 +820,22 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self displayImage]; // reload at the current index
 }
 
+- (void)unsetFilename:(NSString *)s { // maybe rename fileWasDeleted, to match creeveywindows?
+	int n = [filenames indexOfObject:s];
+	[filenames removeObjectAtIndex:n];
+	[imgCache removeImageForKey:s];
+	
+	if (n < currentIndex || currentIndex == [filenames count])
+		currentIndex--;
+	if (currentIndex == -1) {
+		// no more images to display!
+		[self endSlideshow];
+		return;
+	}
+	[self displayImage];
+}
+
+
 #pragma mark cat methods
 - (void)displayCats {
 	NSMutableArray *labels = [NSMutableArray arrayWithCapacity:1];
@@ -730,7 +874,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 #pragma mark menu methods
 - (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
-	if ([menuItem tag] == 3) // Loop, Scale Up
+	if ([menuItem tag] == 3) // Loop
+		return YES;
+	if ([menuItem tag] == 8) // Scale Up
+		return YES;
+	if ([menuItem tag] == 9) // Actual Size
 		return YES;
 	if ([menuItem tag] == 7) // random
 		return ![self isActive];
@@ -744,8 +892,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (IBAction)toggleLoopMode:(id)sender {
-	loopMode = !loopMode;
-	[sender setState:loopMode]; // ** what about startup?
+	BOOL b = ![sender state];
+	[sender setState:b];
+	loopMode = b;
 }
 - (IBAction)toggleCheatSheet:(id)sender {
 	[self toggleHelp];
@@ -759,14 +908,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[self updateInfoFld];
 }
 - (IBAction)toggleRandom:(id)sender {
-	randomMode = !randomMode;
-	[sender setState:randomMode];
+	BOOL b = ![sender state];
+	[sender setState:b];
+	randomMode = b;
 }
 - (IBAction)toggleShowActualSize:(id)sender {
 	BOOL b = ![sender state];
 	// save zoomInfo, if any, BEFORE changing the vars
 	if (currentIndex != -1) {
-		[self killTimer];
+		[self killTimer]; // ** why?
 		[self saveZoomInfo];
 	}
 	// then change vars and re-display

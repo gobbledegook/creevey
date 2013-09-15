@@ -109,6 +109,14 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"getInfoVisible"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoVersCheck"];
 	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"jpegPreserveModDate"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowAutoadvance"];
+	[dict setObject:[NSNumber numberWithFloat:5.25] forKey:@"slideshowAutoadvanceTime"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowLoop"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowRandom"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowScaleUp"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowActualSize"];
+	[dict setObject:[NSKeyedArchiver archivedDataWithRootObject:[NSColor blackColor]] forKey:@"slideshowBgColor"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"exifThumbnailShow"];
     [defaults registerDefaults:dict];
 
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
@@ -118,7 +126,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (id)init {
 	if (self = [super init]) {
-		filetypes = [[NSSet alloc] initWithArray:[NSImage imageFileTypes]];
+		filetypes = [[NSSet alloc] initWithArray:[NSImage imageUnfilteredFileTypes]];
 			//@"jpg", @"jpeg," @"gif",
 			//@"tif", @"tiff", @"pict", @"pdf", @"icns", nil];
 		//hfstypes = [[NSSet alloc] initWithObjects:@"'PICT'", @"'JPEG'", @"'GIFf'",
@@ -144,6 +152,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (void)awakeFromNib { // ** warning: this gets called when loading nibs too!
 	[(NSPanel *)[exifTextView window] setBecomesKeyOnlyIfNeeded:YES];
 	[slidesWindow setCats:cats];
+	
+	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
+															  forKeyPath:@"values.slideshowAutoadvanceTime"
+																 options:NSKeyValueObservingOptionNew
+																 context:NULL];
+	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES]; // show color picker w/ opacity/transparency
 }
 
 - (void)dealloc {
@@ -176,6 +190,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[slidesWindow setFilenames:[s count] > 1
 		? [frontWindow currentSelection]
 		: [frontWindow displayedFilenames]];
+	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
+		? [u floatForKey:@"slideshowAutoadvanceTime"]
+		: 0]; // see prefs section for more notes
 	[slidesWindow startSlideshowAtIndex: [s count] == 1 ? [s firstIndex] : -1];
 }
 
@@ -214,6 +232,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	}
 }
 
+// this is called "test" even though it works now.
+// moral: name your functions correctly from the start.
 - (IBAction)rotateTest:(id)sender {
 	DYJpegtranInfo jinfo;
 	int t = [sender tag] - 100;
@@ -221,23 +241,33 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		if (!jpegController)
 			if (![NSBundle loadNibNamed:@"DYJpegtranPanel" owner:self]) return;
 		if (![jpegController runOptionsPanel:&jinfo]) return;
-		if (jinfo.tinfo.force_grayscale || jinfo.cp != JCOPYOPT_ALL || jinfo.tinfo.trim) {
-			if (NSRunCriticalAlertPanel(NSLocalizedString(@"Warning", @""),
-									NSLocalizedString(@"This operation cannot be undone! Are you sure you want to continue?", @""),
-									NSLocalizedString(@"Continue", @""), NSLocalizedString(@"Cancel", @""), nil)
-				!= NSAlertDefaultReturn)
-				return; // user cancelled
-			jinfo.preserveModificationDate = NO;
-		} else {
-			jinfo.preserveModificationDate = [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"];
-		}
 	} else {
+		jinfo.thumbOnly = t > 30;
+		if (jinfo.thumbOnly) t -= 30;
 		jinfo.tinfo.transform = t < DYJPEGTRAN_XFORM_PROGRESSIVE ? t : JXFORM_NONE;
 		jinfo.tinfo.trim = FALSE;
 		jinfo.tinfo.force_grayscale = t == DYJPEGTRAN_XFORM_GRAYSCALE;
 		jinfo.cp = JCOPYOPT_ALL;
 		jinfo.progressive = t == DYJPEGTRAN_XFORM_PROGRESSIVE;
 		jinfo.optimize = 0;
+		jinfo.autorotate = t == DYJPEGTRAN_XFORM_AUTOROTATE;
+		jinfo.resetOrientation = t == DYJPEGTRAN_XFORM_RESETORIENT;
+		jinfo.replaceThumb = t == DYJPEGTRAN_XFORM_REGENTHUMB;
+		jinfo.delThumb = t == DYJPEGTRAN_XFORM_DELETETHUMB;
+	}
+	// throw up warning if necessary
+	if (jinfo.tinfo.force_grayscale || jinfo.cp != JCOPYOPT_ALL || jinfo.tinfo.trim
+		|| jinfo.resetOrientation || jinfo.replaceThumb || jinfo.delThumb) {
+		if (NSRunCriticalAlertPanel(NSLocalizedString(@"Warning", @""),
+								NSLocalizedString(@"This operation cannot be undone! Are you sure you want to continue?", @""),
+								NSLocalizedString(@"Continue", @""), NSLocalizedString(@"Cancel", @""), nil)
+			!= NSAlertDefaultReturn)
+			return; // user cancelled
+		jinfo.preserveModificationDate = jinfo.resetOrientation ? [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"]
+																: NO;
+										 // make an exception for reset orientation,
+										 // since it doesn't _really_ change anything
+	} else {
 		jinfo.preserveModificationDate = [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"];
 	}
 	
@@ -258,14 +288,35 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 	unsigned int n;
 	NSString *s;
+	NSSize maxThumbSize = NSMakeSize(160,160);
 	for (n = 0; n < [a count]; ++n) {
 		s = [a objectAtIndex:n];
+		if (jinfo.replaceThumb) {
+			NSSize tmpSize;
+			NSImage *i = [EpegWrapper imageWithPath:s
+										boundingBox:maxThumbSize
+											getSize:&tmpSize
+										  exifThumb:NO];
+			if (i) {
+				// assuming EpegWrapper always gives us a bitmap imagerep
+				jinfo.newThumb = [(NSBitmapImageRep *)[[i representations] objectAtIndex:0]
+					representationUsingType:NSJPEGFileType
+								 properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:0.0]
+																		forKey:NSImageCompressionFactor]
+					];
+				jinfo.newThumbSize = tmpSize;
+			} else {
+				jinfo.newThumb = NULL;
+			}
+		}
 		if ([DYJpegtran transformImage:ResolveAliasToPath(s) transform:&jinfo]) {
 			[thumbsCache removeImageForKey:ResolveAliasToPath(s)];
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasChanged:) withObject:s];
 			// slower, but easier code
 			if (slidesWasKey) // remember, progress window is now key
-				[slidesWindow displayImage];
+				[slidesWindow redisplayImage];
+			else
+				[slidesWindow uncacheImage:s]; // when we have multiple slideshows, we can just use this method
 		} else {
 			// ** fail silently
 			//NSLog(@"rot failed!");
@@ -328,6 +379,8 @@ performFileOperation:NSWorkspaceRecycleOperation
 			if (result == 1) {
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fullpath];
+				if ([slidesWindow isVisible])
+					[slidesWindow unsetFilename:fullpath];
 			} else if (result == 2)
 				break;
 		}
@@ -352,10 +405,16 @@ performFileOperation:NSWorkspaceRecycleOperation
 //	//NSLog(@"DONE setting firstresponder");
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+	[self showExifThumbnail:[u boolForKey:@"exifThumbnailShow"]
+			   shrinkWindow:NO];
+	
 	//NSLog(@"appdidfinlaunch called");
 	if (!frontWindow) // user didn't drop icons onto app when opening
 		[self newWindow:self];
-	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+
+	[self applySlideshowPrefs:nil];
+	
 	NSTimeInterval t = [NSDate timeIntervalSinceReferenceDate];
 	if ([u boolForKey:@"autoVersCheck"]
 		&& (t - [u floatForKey:@"lastVersCheckTime"] > DYVERSCHECKINTERVAL)) // one week
@@ -415,9 +474,12 @@ enum {
 	SET_DESKTOP,
 	GET_INFO,
 	RANDOM_MODE,
+	SLIDESHOW_SCALE_UP,
+	SLIDESHOW_ACTUAL_SIZE,
 	JPEG_OP = 100,
 	ROTATE_L = 107,
-	ROTATE_R = 105
+	ROTATE_R = 105,
+	SLIDESHOW_MENU = 1001
 };
 
 
@@ -427,7 +489,14 @@ enum {
 		// menu items with tags only enabled if there's a window
 		return !t;
 	}
-	if (t>JPEG_OP) t=JPEG_OP;
+	if (t>JPEG_OP) {
+		if ((t > JPEG_OP + 30) &&
+			![[menuItem menu] supermenu] && // only for contextual menu
+			![[[[exifThumbnailDiscloseBtn window] contentView] viewWithTag:2] image]) {
+			return NO;
+		}
+		t=JPEG_OP;
+	}
 	if (![creeveyWindows count]) frontWindow = nil;
 	unsigned int numSelected = frontWindow ? [[frontWindow selectedIndexes] count] : 0;
 	BOOL writable, isjpeg;
@@ -466,12 +535,12 @@ enum {
 
 #pragma mark prefs stuff
 - (IBAction)openPrefWin:(id)sender; {
-	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
-	[startupDirFld setStringValue:[u stringForKey:@"picturesFolderPath"]];
-	int i, n = [u integerForKey:@"startupOption"];
-	for (i=0; i<2; ++i) {
-		[[startupOptionMatrix cellWithTag:i] setState:i==n];
-	}
+//	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+//	[startupDirFld setStringValue:[u stringForKey:@"picturesFolderPath"]];
+//	int i, n = [u integerForKey:@"startupOption"];
+//	for (i=0; i<2; ++i) {
+//		[[startupOptionMatrix cellWithTag:i] setState:i==n];
+//	}
     [prefsWin makeKeyAndOrderFront:nil];
 }
 - (IBAction)chooseStartupDir:(id)sender; {
@@ -490,19 +559,19 @@ enum {
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	if (returnCode == NSOKButton) {
 		NSString *s = [[sheet filenames] objectAtIndex:0];
-		[startupDirFld setStringValue:s];
+		//[startupDirFld setStringValue:s];
 		[u setObject:s forKey:@"picturesFolderPath"];
 		[u setInteger:1 forKey:@"startupOption"];
-		[[startupOptionMatrix cellWithTag:0] setState:0];
-		[[startupOptionMatrix cellWithTag:1] setState:1];
+		//[[startupOptionMatrix cellWithTag:0] setState:0];
+		//[[startupOptionMatrix cellWithTag:1] setState:1];
 	}
 	[sheet orderOut:self];
 	[prefsWin makeKeyAndOrderFront:nil]; // otherwise unkeys
 }
 
 - (IBAction)changeStartupOption:(id)sender; {
-	[[NSUserDefaults standardUserDefaults] setInteger:[[sender selectedCell] tag]
-											   forKey:@"startupOption"];
+//	[[NSUserDefaults standardUserDefaults] setInteger:[[sender selectedCell] tag]
+//											   forKey:@"startupOption"];
 }
 
 
@@ -512,6 +581,119 @@ enum {
 									forKey:@"ApplicationIcon"]];
 }
 
+- (IBAction)applySlideshowPrefs:(id)sender {
+	// ** this code is inelegant, but whatever
+	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+	NSMenu *m = [[[NSApp mainMenu] itemWithTag:SLIDESHOW_MENU] submenu];
+	NSMenuItem *i;
+	i = [m itemWithTag:LOOP];
+	[i setState:![u boolForKey:@"slideshowLoop"]];
+	[[i target] performSelector:[i action] withObject:i];
+	
+	i = [m itemWithTag:RANDOM_MODE];
+	[i setState:![u boolForKey:@"slideshowRandom"]];
+	[[i target] performSelector:[i action] withObject:i];
+
+	i = [m itemWithTag:SLIDESHOW_SCALE_UP];
+	[i setState:![u boolForKey:@"slideshowScaleUp"]];
+	[[i target] performSelector:[i action] withObject:i];
+
+	i = [m itemWithTag:SLIDESHOW_ACTUAL_SIZE];
+	[i setState:![u boolForKey:@"slideshowActualSize"]];
+	[[i target] performSelector:[i action] withObject:i];
+
+	// auto-advance, since it can only be set during slideshow (and not in menu)
+	// is automagically applied when slideshow starts
+	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
+		? [u floatForKey:@"slideshowAutoadvanceTime"]
+		: 0];
+	
+	// bg color is continuously set. it's cooler that way.
+	// but we still need this for inital setup
+	[slidesWindow setBackgroundColor:
+		[NSKeyedUnarchiver unarchiveObjectWithData:[u dataForKey:@"slideshowBgColor"]]];
+
+
+	[slideshowApplyBtn setEnabled:NO];
+}
+
+- (IBAction)slideshowDefaultsChanged:(id)sender; {
+	[slideshowApplyBtn setEnabled:YES];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+					  ofObject:(id)object 
+                        change:(NSDictionary *)change
+                       context:(void *)context
+{
+    if ([keyPath isEqual:@"values.slideshowAutoadvanceTime"]) {
+		[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"slideshowAutoadvance"];
+		[slideshowApplyBtn setEnabled:YES];
+    }
+}
+
+- (NSColor *)slideshowBgColor { // not actually used, i don't think, we always grab from user defaults
+    return [NSKeyedUnarchiver unarchiveObjectWithData:[[NSUserDefaults standardUserDefaults] dataForKey:@"slideshowBgColor"]];
+}
+
+- (void)setSlideshowBgColor:(NSColor *)value {
+	[slidesWindow setBackgroundColor:value];
+	[[slidesWindow contentView] setNeedsDisplay:YES];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSKeyedArchiver archivedDataWithRootObject:value]
+											  forKey:@"slideshowBgColor"];
+}
+
+
+#pragma mark exif thumb
+- (IBAction)toggleExifThumbnail:(id)sender {
+	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+	int b =	![u boolForKey:@"exifThumbnailShow"];
+	[self showExifThumbnail:b shrinkWindow:YES];
+	[u setBool:b forKey:@"exifThumbnailShow"];
+}
+
+- (void)showExifThumbnail:(BOOL)b shrinkWindow:(BOOL)shrink {
+	NSWindow *w = [exifThumbnailDiscloseBtn window];
+	NSView *v = [w contentView];
+	[exifThumbnailDiscloseBtn setState:b];
+	b = !b;
+	if ([[v viewWithTag:2] isHidden] != b) {
+		NSRect r = [w frame];
+		NSRect q;
+		if (!shrink)
+			q = [[exifTextView enclosingScrollView] frame]; // get the scrollview, not the textview
+		if (b) { // hiding
+			if (shrink) {
+				r.size.height -= 160;
+				r.origin.y += 160;
+			} else
+				q.size.height += 160;
+			[[v viewWithTag:3] setHidden:b]; // text
+			[[v viewWithTag:2] setHidden:b]; // imgview
+			[[v viewWithTag:4] setHidden:b]; // popdown menu
+		} else { // showing
+			if (shrink) {
+				r.size.height += 160;
+				r.origin.y -= 160;
+			} else
+				q.size.height -= 160;
+		}
+		NSView *v2 = [exifTextView enclosingScrollView];
+		if (!shrink)
+			[v2 setFrame:q];
+		else {
+			unsigned int oldMask = [v2 autoresizingMask];
+			[v2 setAutoresizingMask:NSViewMaxXMargin];
+			[w setFrame:r display:YES animate:YES];
+			[v2 setAutoresizingMask:oldMask];
+		}
+		if (!b) {
+			[[v viewWithTag:3] setHidden:b]; // text
+			[[v viewWithTag:2] setHidden:b]; // imgview
+			[[v viewWithTag:4] setHidden:b]; // popdown menu
+		}
+	}
+}
 
 
 #pragma mark new window stuff

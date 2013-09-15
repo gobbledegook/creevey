@@ -53,6 +53,9 @@
 - (BOOL)zoomInfoNeedsSaving;
 - (float)zoomF;
 
+- (BOOL)dragMode;
+- (void)setCursor;
+
 - (DYImageViewZoomInfo *)zoomInfo;
 - (void)setZoomInfo:(DYImageViewZoomInfo *)i;
 

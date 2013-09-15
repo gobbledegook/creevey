@@ -45,6 +45,11 @@
 	i->cp = [[copyMarkersMenu selectedItem] tag];
 	i->progressive = [progressiveBtn state];
 	i->optimize = [optimizeBtn state];
+	i->thumbOnly = 0;
+	i->autorotate = 0;
+	i->resetOrientation = 0;
+	i->replaceThumb = 0;
+	i->delThumb = 0;
 	return YES;
 }
 

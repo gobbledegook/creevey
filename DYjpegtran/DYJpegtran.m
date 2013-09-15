@@ -10,6 +10,19 @@
 //  Created by Dominic Yu 2005 July 11
 
 #import "DYJpegtran.h"
+#import "DYExiftags.h"
+
+static const unsigned short OrientTab[9] = {
+	JXFORM_NONE,
+	JXFORM_NONE,
+	JXFORM_FLIP_H,
+	JXFORM_ROT_180,
+	JXFORM_FLIP_V,
+	JXFORM_TRANSPOSE,
+	JXFORM_ROT_90,
+	JXFORM_TRANSVERSE,
+	JXFORM_ROT_270
+};
 
 struct my_error_mgr {
 	struct jpeg_error_mgr pub;	/* "public" fields */
@@ -29,6 +42,91 @@ _my_error_handler(j_common_ptr cinfo)
 	return;
 }
 
+static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
+								  jpeg_transform_info *info_copy,
+								  unsigned *outLen,
+								  JDIMENSION *newWidth, JDIMENSION *newHeight) {
+	struct jpeg_decompress_struct srcinfo;
+	struct jpeg_compress_struct dstinfo;
+	struct my_error_mgr jsrcerr, jdsterr;
+	jvirt_barray_ptr * src_coef_arrays;
+	jvirt_barray_ptr * dst_coef_arrays;
+	FILE * input_file;
+	FILE * output_file;
+	
+	//	if ((output_file = fopen("/tmp/blah.jpg","w+b")) == NULL) {
+	if ((output_file = tmpfile()) == NULL) {
+		return NULL;
+	}
+	//	if ((input_file = fopen("/tmp/blahin.jpg","w+b")) == NULL) {
+	if ((input_file = tmpfile()) == NULL) {
+		fclose(output_file);
+		return NULL;
+	} else {
+		fwrite(b,len,1,input_file);
+		rewind(input_file);
+	}
+	srcinfo.err = jpeg_std_error(&jsrcerr.pub);
+	jsrcerr.pub.error_exit = _my_error_handler;
+	dstinfo.err = jpeg_std_error(&jdsterr.pub);
+	jdsterr.pub.error_exit = _my_error_handler;
+	
+	if (setjmp(jsrcerr.setjmp_buffer) || setjmp(jdsterr.setjmp_buffer)) {
+		jpeg_destroy_compress(&dstinfo);
+		jpeg_destroy_decompress(&srcinfo);
+		fclose(input_file);
+		fclose(output_file);
+		return NULL;
+	}
+	jpeg_create_decompress(&srcinfo);
+	jpeg_create_compress(&dstinfo);
+	
+	jpeg_stdio_src(&srcinfo, input_file);
+	(void) jpeg_read_header(&srcinfo, TRUE);
+#if TRANSFORMS_SUPPORTED
+	jtransform_request_workspace(&srcinfo, info_copy);
+#endif
+	src_coef_arrays = jpeg_read_coefficients(&srcinfo);
+	jpeg_copy_critical_parameters(&srcinfo, &dstinfo);
+#if TRANSFORMS_SUPPORTED
+	dst_coef_arrays = jtransform_adjust_parameters(&srcinfo, &dstinfo,
+												   src_coef_arrays,
+												   info_copy);
+#else
+	dst_coef_arrays = src_coef_arrays;
+#endif
+	jpeg_stdio_dest(&dstinfo, output_file);
+	jpeg_write_coefficients(&dstinfo, dst_coef_arrays);
+#if TRANSFORMS_SUPPORTED
+	jtransform_execute_transformation(&srcinfo, &dstinfo,
+									  src_coef_arrays,
+									  info_copy);
+#endif
+	*newWidth = srcinfo.image_width;
+	*newHeight = srcinfo.image_height;
+	
+	jpeg_finish_compress(&dstinfo);
+	jpeg_destroy_compress(&dstinfo);
+	(void)jpeg_finish_decompress(&srcinfo);
+	jpeg_destroy_decompress(&srcinfo);
+	
+	/* Close files, if we opened them */
+	//_epeg_memfile_read_close(input_file);
+	fclose(input_file);
+	long numbytes = ftell(output_file);
+	void *thebytes = malloc(numbytes);
+	fseek(output_file,0,SEEK_SET);
+	if (!thebytes ||
+		numbytes != fread(thebytes,sizeof(char),numbytes,output_file)) {
+		fclose(output_file);
+		return NULL;
+	}
+	fclose(output_file);
+	*outLen = numbytes;
+	return thebytes;
+	}
+
+
 
 @implementation DYJpegtran
 
@@ -41,6 +139,7 @@ _my_error_handler(j_common_ptr cinfo)
 	FILE * input_file;
 	FILE * output_file;
 	JCOPY_OPTION copyoption = i->cp;
+	jpeg_transform_info info_copy;
 	
 	/* Open files first, so setjmp can assume they're open. */
 	if ((input_file = fopen([thePath fileSystemRepresentation], "rb")) == NULL) {
@@ -49,6 +148,7 @@ _my_error_handler(j_common_ptr cinfo)
 	}
 	if ((output_file = tmpfile()) == NULL) {
 		NSLog(@"DYJpegtran can't open temp file\n");
+		fclose(input_file);
 		return NO;
 	}
 	
@@ -82,13 +182,63 @@ _my_error_handler(j_common_ptr cinfo)
 	/* Read file header */
 	(void) jpeg_read_header(&srcinfo, TRUE);
 	
+	// for EXIF, first marker should be guaranteed to be APP1, but just in case
+	// a file has been manipulated by a non exifpatch'd jpegtran...
+	jpeg_saved_marker_ptr app1markerptr;
+	app1markerptr = srcinfo.marker_list;
+	while (app1markerptr) {
+		if (app1markerptr->marker == JPEG_APP0 + 1) break;
+		app1markerptr = app1markerptr->next;
+	}
+	unsigned short currentOrientation;
+	currentOrientation = app1markerptr ? exif_orientation(app1markerptr->data,app1markerptr->data_length,0) : 0;
+	if (i->autorotate) {
+		// this must be done before request_workspace for mem alloc reasons
+		i->tinfo.transform = OrientTab[currentOrientation];
+		// if it's 0, the next step will exit this function
+	}
+	
 	// skip file if nothing is changing
-	if (!i->tinfo.transform
-		&& !i->tinfo.force_grayscale
-		&& i->cp == JCOPYOPT_ALL
-		&& !i->optimize
-		&& (i->progressive == jpeg_has_multiple_scans(&srcinfo)))
-		return YES;
+	unsigned outSize;
+	if ((i->replaceThumb && (!i->newThumb
+							 || !app1markerptr
+							 || !find_exif_thumb(app1markerptr->data,
+												 app1markerptr->data_length,
+												 &outSize)))
+		|| (i->autorotate && currentOrientation <= 1) // !app1markerptr
+		|| (i->resetOrientation && currentOrientation <= 1) // !app1markerptr
+		|| (i->delThumb && (!app1markerptr
+							|| !find_exif_thumb(app1markerptr->data,
+												app1markerptr->data_length,
+												&outSize)
+							|| outSize == 0))
+		|| (!i->tinfo.transform
+			&& !i->tinfo.force_grayscale
+			&& i->cp == JCOPYOPT_ALL
+			&& !i->optimize
+			&& (i->progressive == jpeg_has_multiple_scans(&srcinfo))
+			&& !i->replaceThumb
+			&& !i->resetOrientation
+			&& !i->delThumb)
+		)
+	{
+		jpeg_destroy_compress(&dstinfo);
+		jpeg_destroy_decompress(&srcinfo);
+		fclose(input_file);
+		fclose(output_file);
+		//NSLog(@"No change! exiting transformImage");
+		return NO;
+	}
+	
+	// 
+	info_copy = i->tinfo;  // you MUST make a new copy, since
+						   // execute_transform mucks with this! Many hours were wasted because of this error...
+	if (i->thumbOnly) {
+		i->tinfo.transform = JXFORM_NONE;
+		i->tinfo.force_grayscale = 0;
+		i->tinfo.trim = 0;
+	}
+	
 	
 	/* Any space needed by a transform option must be requested before
 		* jpeg_read_coefficients so that memory allocation will be done right.
@@ -126,15 +276,69 @@ _my_error_handler(j_common_ptr cinfo)
 	/* Start compressor (note no image data is actually written here) */
 	jpeg_write_coefficients(&dstinfo, dst_coef_arrays);
 	
+	// DY - this is where we'd want to fiddle with the APP1 marker
+	/* consider applying exif orientation patch
+		http://sylvana.net/jpegcrop/exif_orientation.html
+	 */
+	unsigned oldApp1Size;
+	unsigned char *oldthumb, *newthumb, *oldapp1, *newapp1;
+	JDIMENSION newWidth, newHeight;
+	// skip this thumb rotating step if no rotation
+	// ** maybe we should also do grayscale on the thumb? too much work...
+	newapp1 = NULL;
+	if (app1markerptr) {
+		if (info_copy.transform) {
+			oldthumb = find_exif_thumb(app1markerptr->data,
+									   app1markerptr->data_length,
+									   &outSize);
+			if (oldthumb) {
+				newthumb = transformThumbnail(oldthumb,outSize,&info_copy,&outSize,
+											  &newWidth,&newHeight);
+				if (newthumb) {
+					newapp1 = replace_exif_thumb(newthumb,outSize,newWidth,newHeight,
+												 app1markerptr->data,
+												 app1markerptr->data_length,
+												 &outSize);
+					free(newthumb); // old wasn't malloc'd, doesn't need freeing
+				}
+			}
+		} else if (i->delThumb) {
+			newapp1 = delete_exif_thumb(app1markerptr->data,app1markerptr->data_length,&outSize);
+		} else if (i->replaceThumb) {
+			newapp1 = replace_exif_thumb((unsigned char *)[i->newThumb bytes],[i->newThumb length],
+										 i->newThumbSize.width,i->newThumbSize.height,
+										 app1markerptr->data,
+										 app1markerptr->data_length,
+										 &outSize);
+		}
+		if (newapp1) {
+			oldapp1 = app1markerptr->data;
+			oldApp1Size = app1markerptr->data_length;
+			app1markerptr->data = newapp1;
+			app1markerptr->data_length = outSize;
+		}
+	}
+	// reset the orientation tag
+	// ** note: we modify in-place, which i think is OK...
+	if (app1markerptr && (i->tinfo.transform || i->resetOrientation)) {
+		exif_orientation(app1markerptr->data,app1markerptr->data_length,1); // reset it
+	}
+	
 	/* Copy to the output file any extra markers that we want to preserve */
 	jcopy_markers_execute(&srcinfo, &dstinfo, copyoption);
 	
+	if (app1markerptr && newapp1) {
+		app1markerptr->data = oldapp1;
+		app1markerptr->data_length = oldApp1Size;
+		free(newapp1);
+	}
 	/* Execute image transformation, if any */
 #if TRANSFORMS_SUPPORTED
 	jtransform_execute_transformation(&srcinfo, &dstinfo,
 									  src_coef_arrays,
 									  &i->tinfo);
 #endif
+	
 	
 	/* Finish compression and release memory */
 	jpeg_finish_compress(&dstinfo);

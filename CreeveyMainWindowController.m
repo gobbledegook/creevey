@@ -134,8 +134,10 @@
 			DYImageInfo *result;
 			result = [[DYImageInfo alloc] initWithPath:theFile];
 			result->image =
-				[EpegWrapper imageWithPath:theFile boundingBox:[DYWrappingMatrix maxCellSize]
-								   getSize:&result->pixelSize];
+				[EpegWrapper imageWithPath:theFile
+							   boundingBox:[DYWrappingMatrix maxCellSize]
+								   getSize:&result->pixelSize
+								 exifThumb:YES];
 			if (!result->image) [thumbsCache createScaledImage:result];
 			if (result->image) [thumbsCache addImage:result forFile:theFile];
 			else [thumbsCache dontAddFile:theFile];
@@ -323,7 +325,10 @@
 					//if (FileIsJPEG(theFile)) {
 					// try as jpeg first
 					result->image = //EpegImageWithPath(theFile, cellSize, &result->pixelSize);
-						[EpegWrapper imageWithPath:theFile boundingBox:cellSize getSize:&result->pixelSize];
+						[EpegWrapper imageWithPath:theFile
+									   boundingBox:cellSize
+										   getSize:&result->pixelSize
+										 exifThumb:YES];
 						
 						//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
 					if (!result->image)
@@ -498,14 +503,19 @@
 
 - (void)updateExifInfo:(id)sender {
 	NSTextView *exifTextView = [[NSApp delegate] exifTextView];
-	NSButton *moreBtn = [[[exifTextView window] contentView] viewWithTag:1];
+	NSView *mainView = [[exifTextView window] contentView];
+	NSButton *moreBtn = [mainView viewWithTag:1];
+	NSImageView *thumbView = [mainView viewWithTag:2];
 	NSMutableAttributedString *attStr;
 	id selectedIndexes = [imgMatrix selectedIndexes];
 	if ([[exifTextView window] isVisible]) {
 		if ([selectedIndexes count] == 1) {
-				attStr = Fileinfo2EXIFString([imgMatrix firstSelectedFilename],
-											 [[NSApp delegate] thumbsCache],
-											 [moreBtn state], YES);
+			attStr = Fileinfo2EXIFString([imgMatrix firstSelectedFilename],
+										 [[NSApp delegate] thumbsCache],
+										 [moreBtn state], YES);
+			// exif thumbnail
+			[thumbView setImage:
+				[EpegWrapper exifThumbForPath:ResolveAliasToPath([imgMatrix firstSelectedFilename])]];
 		} else {
 			id s = [selectedIndexes count]
 			? [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
@@ -516,6 +526,7 @@
 			attStr =
 				[[[NSMutableAttributedString alloc] initWithString:s
 													   attributes:atts] autorelease];
+			[thumbView setImage:nil];
 		}
 		[exifTextView replaceCharactersInRange:NSMakeRange(0,[[exifTextView string] length])
 									   withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])

@@ -76,6 +76,8 @@
 		[self setCellClass:[DYBrowserCell class]];
 		[[self cellPrototype] setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]-1]];
 		[self setAllowsEmptySelection:NO];
+		[self setColumnResizingType:NSBrowserUserColumnResizing];
+		[self setPrefersAllColumnUserResizing:YES];
 		
 		typedString = [[NSMutableString alloc] init];
 		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];

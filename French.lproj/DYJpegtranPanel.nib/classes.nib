@@ -1,0 +1,26 @@
+{
+    IBClasses = (
+        {
+            CLASS = CreeveyController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {jpegController = DYJpegtranPanel; }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {convert = id; stopModal = id; transformChanged = id; }; 
+            CLASS = DYJpegtranPanel; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                copyMarkersMenu = NSPopUpButton; 
+                grayscaleBtn = NSButton; 
+                optimizeBtn = NSButton; 
+                progressiveBtn = NSButton; 
+                transformMenu = NSPopUpButton; 
+                trimBtn = NSButton; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}

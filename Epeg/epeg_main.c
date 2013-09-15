@@ -2,6 +2,8 @@
 #include "epeg_private.h"
 
 //BEGIN DY ADDITIONS
+#include "exif.h"
+#include "exifint.h"
 //a place to store error messages
 //static char _jpegliberror[JMSG_LENGTH_MAX];
 //const char *epeg_error_msg() {
@@ -770,6 +772,86 @@ epeg_close(Epeg_Image *im)
    free(im);
 }
 
+//BEGIN DY ADDITIONS
+unsigned char *epeg_exif_thumb(Epeg_Image *im,unsigned long *outsize)
+{
+	if (!im->thumbStart) return NULL;
+	unsigned char *b;
+	b = malloc(im->thumbLength);
+	if (!b) return NULL;
+	*outsize = im->thumbLength;
+	return memcpy(b,im->thumbStart,im->thumbLength);
+}
+
+static void _dy_locate_exif_thumb(Epeg_Image *im, unsigned char *b, unsigned len)
+{
+	if (memcmp(b, "Exif\0\0", 6)) {
+		return;
+	}
+	b += 6;
+	len -= 6;
+	unsigned char *b0 = b; // save beginning for offsets, later
+	enum byteorder o;
+	
+	/* Determine endianness of the TIFF data. */
+	
+	if (!memcmp(b, "MM", 2))
+		o = BIG;
+	else if (!memcmp(b, "II", 2))
+		o = LITTLE;
+	else {
+		return;
+	}
+	
+	b += 2;
+	
+	/* Verify the TIFF header. */
+	
+	if (exif2byte(b, o) != 42) {
+		return;
+	}
+	b += 2;
+	
+	/* Get the 0th IFD, where all of the good stuff should start. */
+	b = b0 + exif4byte(b, o);
+	/* skip the 0th IFD */
+	b += 12*exif2byte(b,o);
+	b += 2; // don't forget the two bytes you read in the last line!
+	unsigned n = exif4byte(b,o); // offset of next IFD
+	if (n == 0)
+		return;
+	b = b0 + n;
+	n = exif2byte(b,o); // number of tags in IFD1
+	b += 2;
+	unsigned long thumbStart = 0;
+	u_int32_t tmp;
+	while (n--) {
+		tmp = exif4byte(b+8,o);
+		//printf("#%u in IFD1 is tag %x, value %u\n", n,exif2byte(b,o),tmp);
+		switch (exif2byte(b,o)) {
+			case 0x0103:
+				if (tmp != 6)
+					return; // not a JPEG thumb, we're done.
+				break;
+			case 0x0201:
+				thumbStart = tmp;
+				break;
+			case 0x0202:
+				im->thumbLength = tmp;
+				break;
+			default:
+				break;
+		}
+		b += 12;
+	}
+	if (thumbStart == 0) return; // if uninitialized
+	//printf("found an EXIF thumb! len: %lu, lim: %u\n", thumbStart + im->thumbLength, len);
+	if (thumbStart + im->thumbLength > len) return; // make sure it's contained in our APP1 marker
+	im->thumbStart = b0 + thumbStart;
+}
+
+//END
+
 static Epeg_Image *
 _epeg_open_header(Epeg_Image *im)
 {
@@ -789,6 +871,9 @@ _epeg_open_header(Epeg_Image *im)
    jpeg_create_decompress(&(im->in.jinfo));
    jpeg_save_markers(&(im->in.jinfo), JPEG_APP0 + 7, 1024);
    jpeg_save_markers(&(im->in.jinfo), JPEG_COM,      65535);
+   //BEGIN DY ADDITIONS
+   jpeg_save_markers(&(im->in.jinfo), JPEG_APP0 + 1, 65535);
+   //END
    jpeg_stdio_src(&(im->in.jinfo), im->in.f);
    jpeg_read_header(&(im->in.jinfo), TRUE);
    im->in.w = im->in.jinfo.image_width;
@@ -814,6 +899,12 @@ _epeg_open_header(Epeg_Image *im)
 		  im->in.comment[m->data_length] = 0;
 	       }
 	  }
+	   //BEGIN DY ADDITIONS
+	else if (m->marker == (JPEG_APP0 + 1))
+	  {
+		_dy_locate_exif_thumb(im, m->data, m->data_length);
+	  }
+	   //END
 	else if (m->marker == (JPEG_APP0 + 7))
 	  {
 	     if ((m->data_length > 7) &&

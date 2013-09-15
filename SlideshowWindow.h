@@ -33,12 +33,14 @@
 	
 	NSString *basePath;
 	NSRect screenRect;
-	int currentIndex;
+	volatile int currentIndex;
 	
 	NSTextView *helpFld;
 	
 	BOOL loopMode, randomMode;
 	unsigned char keyIsRepeating;
+	
+	BOOL mouseDragged;
 }
 
 - (void)setCats:(NSMutableSet **)newCats;
@@ -51,10 +53,16 @@
 - (void)sendToBackground;
 - (void)bringToForeground;
 
+- (void)setAutoadvanceTime:(NSTimeInterval)s; // 0 to turn off
+
 - (NSString *)currentFile;
-- (void)displayImage; // to reload current file, assuming the mod date is different
+- (void)displayImage; // to reload current file, assuming the mod date is different (oops - don't use this anymore)
+- (void)redisplayImage; // to force reload of current file, regardless of mod date
 - (BOOL)currentImageLoaded;
 - (void)removeImageForFile:(NSString *)s;
+
+- (void)uncacheImage:(NSString *)s; // when an image is modified, remove it from cache
+- (void)unsetFilename:(NSString *)s; // use this if something's been deleted
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;

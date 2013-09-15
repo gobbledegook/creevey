@@ -9,9 +9,27 @@
 //
 //  Created by Dominic Yu 2005 July 12
 
+#include "jpeglib.h"
 #import <Foundation/Foundation.h>
 
 @interface DYExiftags : NSObject
 
 + (NSString *)tagsForFile:(NSString *)aPath moreTags:(BOOL)showMore;
 @end
+
+
+// after some false starts, i've decided the following are best here.
+// perhaps even better, we could make a pure C file with these instead.
+
+unsigned char *find_exif_thumb(unsigned char *b, unsigned len,
+							   unsigned *outLen);
+
+//except for find_exif_thumb, all of these allocate new memory, which
+// the caller is responsible for freeing
+unsigned char *delete_exif_thumb(unsigned char *b, unsigned len,
+								 unsigned *outLen);
+unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthumblen,
+								  JDIMENSION newWidth, JDIMENSION newHeight,
+								  unsigned char *b, unsigned len,
+								  unsigned *outLen);
+unsigned short exif_orientation(unsigned char *b, unsigned len, char reset);

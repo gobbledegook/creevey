@@ -24,6 +24,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
     IBOutlet SlideshowWindow *slidesWindow;
 	IBOutlet NSProgressIndicator *jpegProgressBar;
 	IBOutlet NSTextView *exifTextView; BOOL exifWasVisible;
+	IBOutlet NSButton *exifThumbnailDiscloseBtn;
 	DYJpegtranPanel *jpegController;
 
 	NSSet *filetypes;
@@ -36,6 +37,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	IBOutlet NSPanel *prefsWin;
 	IBOutlet NSTextField *startupDirFld;
 	IBOutlet NSMatrix *startupOptionMatrix;
+	IBOutlet NSButton *slideshowApplyBtn;
+	NSColor *slideshowBgColor;
 }
 // accessors
 - (NSMutableSet **)cats;
@@ -49,10 +52,19 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)setDesktopPicture:(id)sender;
 - (IBAction)moveToTrash:(id)sender;
 - (IBAction)rotateTest:(id)sender;
+- (IBAction)exifRegenerate:(id)sender;
+
 // prefs stuff
 - (IBAction)openPrefWin:(id)sender;
 - (IBAction)chooseStartupDir:(id)sender;
 - (IBAction)changeStartupOption:(id)sender;
+- (IBAction)applySlideshowPrefs:(id)sender;
+- (IBAction)slideshowDefaultsChanged:(id)sender;
+- (NSColor *)slideshowBgColor;
+- (void)setSlideshowBgColor:(NSColor *)value;
+// info window thumbnail
+- (IBAction)toggleExifThumbnail:(id)sender;
+- (void)showExifThumbnail:(BOOL)b shrinkWindow:(BOOL)shrink;
 
 - (IBAction)openAboutPanel:(id)sender;
 - (IBAction)stopModal:(id)sender;

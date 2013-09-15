@@ -21,6 +21,7 @@
 
 @implementation DYImageView
 
+// helper method to calculate appropriate zoom factor
 - (float)zoomForFit {
 	float tmp;
 	NSSize imgSize = [image size];
@@ -144,6 +145,7 @@
 	zoomF = 0;
 	rotation = 0;
 
+	[[NSCursor arrowCursor] set];
 	[self setNeedsDisplay:YES];
 }
 
@@ -216,6 +218,7 @@
 			sourceRect.origin.y = tmp;
 		}
 	}
+	[self setCursor];
 	[self setNeedsDisplay:YES];
 }
 
@@ -282,6 +285,7 @@
 - (void)setShowActualSize:(BOOL)b {
 	if (showActualSize == b) return;
 	showActualSize = b;
+	//[[NSCursor arrowCursor] set];
 	[self setNeedsDisplay:YES];
 }
 
@@ -354,6 +358,11 @@
 	}
 
 	sourceRect.size = s;
+	
+	//[self addCursorRect:[self bounds] cursor:[NSCursor openHandCursor]];
+	//[[NSCursor openHandCursor] setOnMouseEntered:YES];
+
+	[self setCursor];
 	[self setNeedsDisplay:YES];
 }
 
@@ -409,17 +418,34 @@
 }
 
 - (void)scrollWheel:(NSEvent *)e {
-	if (zoomF)
+	if ([self dragMode])
 		[self fakeDragX:[e deltaX]*128 y:-[e deltaY]*128];
+	else
+		[super scrollWheel:e];
+}
+- (void)mouseDown:(NSEvent *)e {
+	if ([self dragMode]) {
+		[[NSCursor closedHandCursor] push];
+	}
+	[super mouseDown:e];
 }
 - (void)mouseDragged:(NSEvent *)e {
 	if (zoomF)
 		[self fakeDragX:[e deltaX] y:-[e deltaY]]; // y is flipped?
+	[[NSCursor closedHandCursor] set];
+}
+- (void)mouseUp:(NSEvent *)e {
+	if ([self dragMode]) {
+		[NSCursor pop];
+		[self setCursor];
+	}
+	[super mouseUp:e];
 }
 
 - (void)zoomOff {
 	if (zoomF) {
 		zoomF = 0;
+		[[NSCursor arrowCursor] set];
 		[self setNeedsDisplay:YES];
 	}
 }
@@ -436,6 +462,7 @@
 	zoomF = i->zoomF;
 	sourceRect = i->sourceRect;
 	destSize = i->destSize;
+	[self setCursor];
 	[self setNeedsDisplay:YES];
 }
 
@@ -454,4 +481,18 @@
 - (BOOL)zoomMode { return zoomF != 0; }
 - (float)zoomF {return zoomF;}
 - (NSImage *)image {return image;}
+
+- (BOOL)dragMode {
+	return (zoomF != 0) && !NSEqualSizes(sourceRect.size,[image size]);
+}
+- (void)setCursor {
+	// sets hand or arrow, depending
+	if ([self dragMode]) {
+		[[NSCursor openHandCursor] set];
+		[NSCursor setHiddenUntilMouseMoves:NO]; // NOT unhide
+	} else {
+		[[NSCursor arrowCursor] set];
+	}
+}
+
 @end
