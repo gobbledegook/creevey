@@ -34,6 +34,7 @@
 	NSString *basePath;
 	NSRect screenRect;
 	volatile int currentIndex;
+	int lastIndex; // for outside access to last slide shown
 	
 	NSTextView *helpFld;
 	
@@ -55,6 +56,7 @@
 
 - (void)setAutoadvanceTime:(NSTimeInterval)s; // 0 to turn off
 
+- (int)currentIndex;
 - (NSString *)currentFile;
 - (void)displayImage; // to reload current file, assuming the mod date is different (oops - don't use this anymore)
 - (void)redisplayImage; // to force reload of current file, regardless of mod date

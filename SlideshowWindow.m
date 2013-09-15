@@ -146,6 +146,7 @@
 - (void)endSlideshow {
 	[self saveZoomInfo];
 
+	lastIndex = currentIndex;
 	currentIndex = -1;
 	[self killTimer];
 	[self orderOut:nil];
@@ -203,18 +204,18 @@
 	[imgView setCursor];
 }
 
-- (void)becomeKeyWindow { // need this when switching apps
+- (void)becomeMainWindow { // need this when switching apps
 	//[self bringToForeground];
 	//HideMenuBar(); // in Carbon
 	//OSStatus Error = 
 	SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
     //if (Error != noErr) NSLog(@"Error couldn't set SystemUIMode: %ld", (long)Error);
-	[super becomeKeyWindow];
+	[super becomeMainWindow];
 }
 
-- (void)resignKeyWindow {
+- (void)resignMainWindow {
 	SetSystemUIMode(kUIModeNormal, 0);	
-	[super resignKeyWindow];
+	[super resignMainWindow];
 }
 
 - (void)sendToBackground {
@@ -798,9 +799,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (BOOL)isActive {
 	return currentIndex != -1;
 }
+- (int)currentIndex {
+	return currentIndex == -1 ? lastIndex : currentIndex;
+}
 - (NSString *)currentFile {
-	if (currentIndex == -1) return nil;
-	return [filenames objectAtIndex:currentIndex];
+	//if (currentIndex == -1) return nil;
+	return [filenames objectAtIndex:[self currentIndex]];
 }
 
 - (BOOL)currentImageLoaded {

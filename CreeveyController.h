@@ -52,7 +52,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)setDesktopPicture:(id)sender;
 - (IBAction)moveToTrash:(id)sender;
 - (IBAction)rotateTest:(id)sender;
-- (IBAction)exifRegenerate:(id)sender;
 
 // prefs stuff
 - (IBAction)openPrefWin:(id)sender;

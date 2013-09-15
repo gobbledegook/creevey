@@ -151,6 +151,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (void)awakeFromNib { // ** warning: this gets called when loading nibs too!
 	[(NSPanel *)[exifTextView window] setBecomesKeyOnlyIfNeeded:YES];
+	//[[exifTextView window] setHidesOnDeactivate:NO];
+	// this causes problems b/c the window can be foregrounded without the app
+	// coming to the front (oops)
 	[slidesWindow setCats:cats];
 	
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
@@ -670,7 +673,7 @@ enum {
 				q.size.height += 160;
 			[[v viewWithTag:3] setHidden:b]; // text
 			[[v viewWithTag:2] setHidden:b]; // imgview
-			[[v viewWithTag:4] setHidden:b]; // popdown menu
+			[[v viewWithTag:6] setHidden:b]; // popdown menu
 		} else { // showing
 			if (shrink) {
 				r.size.height += 160;
@@ -690,7 +693,7 @@ enum {
 		if (!b) {
 			[[v viewWithTag:3] setHidden:b]; // text
 			[[v viewWithTag:2] setHidden:b]; // imgview
-			[[v viewWithTag:4] setHidden:b]; // popdown menu
+			[[v viewWithTag:6] setHidden:b]; // popdown menu
 		}
 	}
 }
@@ -760,6 +763,13 @@ enum {
 	// do this here, not in windowChanged, to avoid app switch problems
 	if ([creeveyWindows count] && exifWasVisible)
 		[[exifTextView window] orderFront:nil];
+	if ([creeveyWindows count] && [[frontWindow currentSelection] count] <= 1) {
+		NSArray *a = [frontWindow displayedFilenames];
+		int i = [slidesWindow currentIndex];
+		if (i < [a count]
+			&& [[a objectAtIndex:i] isEqualToString:[slidesWindow currentFile]])
+			[frontWindow selectIndex:i];
+	}
 }
 
 

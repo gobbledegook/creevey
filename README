@@ -33,13 +33,26 @@ Enjoy!
 
 Version History
 ---------------
+1.2.3
+-----
+changes:
+Selected thumbnail now matches last viewed slide
+items sorted by filename (in Finder order)
+skips folders named "Thumbs" (for better iPhoto library browsing)
+icon (Takeshi Gondo)
+Italian
+fixes:
+now hides exif thumb popup menu correctly when info window collapsed
+ghost of last thumbnail no longer remains when deleting a file
+jpeg ops no longer cause menubar/dock to show during slideshows
+
 1.2.2
 -----
 jpeg rotations (not grayscale) now also apply to exif thumbs
 (there seems to be some extraneous stuff in the ifd1 of the exif, seems safe to delete)
 can reset orientation tag and auto-rotate by them
 rotating resets orientation tag
-better prefs window
+better prefs window, can set slideshow defaults
 left- and right-click now go next/back
 dbl-click to end
 scroll wheel to navigate, but it conflicts with scroll wheel to scroll zoomed images

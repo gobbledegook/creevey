@@ -39,6 +39,7 @@
 - (BOOL)setPath:(NSString *)s;
 - (NSArray *)currentSelection;
 - (NSIndexSet *)selectedIndexes;
+- (void)selectIndex:(unsigned int)i;
 - (NSString *)firstSelectedFilename;
 - (NSArray *)displayedFilenames;
 - (BOOL)currentFilesDeletable;

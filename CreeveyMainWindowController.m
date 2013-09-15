@@ -15,6 +15,7 @@
 #import "DYImageCache.h"
 #import "RBSplitView.h"
 #import "DYWrappingMatrix.h"
+#import "FinderCompare.h"
 
 @interface CreeveyMainWindowController (Private)
 - (void)updateStatusFld;
@@ -102,6 +103,9 @@
 }
 - (NSIndexSet *)selectedIndexes {
 	return [imgMatrix selectedIndexes];
+}
+- (void)selectIndex:(unsigned int)i {
+	[imgMatrix selectIndex:i];
 }
 
 - (void)openFiles:(NSArray *)a withSlideshow:(BOOL)doSlides{
@@ -242,6 +246,8 @@
 			if ([[[e fileAttributes] fileType] isEqualToString:NSFileTypeDirectory]) {
 				if (!recurseSubfolders || (!showInvisibles && isInvisible))
 					[e skipDescendents];
+				else if ([[theFile lastPathComponent] isEqualToString:@"Thumbs"])
+					[e skipDescendents]; // special addition for mbatch
 				continue;
 			}
 			if (!showInvisibles && isInvisible)
@@ -283,6 +289,7 @@
 										   withObject:[filesBeingOpened allObjects] // make a copy
 										waitUntilDone:NO];
 	}
+	[displayedFilenames sortUsingSelector:@selector(finderCompare:)];
 	filenamesDone = YES;
 
 	//NSLog(@"got %d files.", [filenames count]);

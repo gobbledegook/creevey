@@ -51,6 +51,7 @@
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
 - (void)addSelectedIndex:(unsigned int)i;
+- (void)selectIndex:(unsigned int)i;
 
 - (unsigned int)numCells;
 - (NSSize)cellSize;

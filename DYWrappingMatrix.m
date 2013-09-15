@@ -435,6 +435,15 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	[cg setImageInterpolation:oldInterp];
 }
+- (void)scrollSelectionToVisible:(unsigned int)n {
+	[self updateStatusString];
+	NSRect r = [self cellnum2rect:n];
+	[self selectionNeedsDisplay:n];
+	// round down for better auto-scrolling
+	r.size.height = (int)r.size.height;
+	if (![self mouse:r.origin inRect:[self visibleRect]])
+		[self scrollRectToVisible:r];
+}
 - (void)keyDown:(NSEvent *)e {
 	unichar c = [[e characters] characterAtIndex:0];
 	switch (c) {
@@ -480,13 +489,17 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	} else
 		return;
 	[selectedIndexes addIndex:n];
-	[self updateStatusString];
-	NSRect r = [self cellnum2rect:n];
-	[self selectionNeedsDisplay:n];
-	// round down for better auto-scrolling
-	r.size.height = (int)r.size.height;
-	if (![self mouse:r.origin inRect:[self visibleRect]])
-		[self scrollRectToVisible:r];
+	[self scrollSelectionToVisible:n];
+}
+
+- (void)selectIndex:(unsigned int)i {
+	// redraw the old selection (assume this only gets called if single selection)
+	if ([selectedIndexes count])
+		[self selectionNeedsDisplay:[selectedIndexes firstIndex]];
+	
+	[selectedIndexes removeAllIndexes];
+	[selectedIndexes addIndex:i];
+	[self scrollSelectionToVisible:i];
 }
 
 #pragma mark selection stuff
@@ -592,7 +605,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self resize:nil];
 	do {
 		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
-	} while (++i<numCells);
+	} while (++i<=numCells);
+	// use <=, not <, because we need to redraw the last cell, which has shifted
 	[self updateStatusString];
 }
 
