@@ -1,0 +1,677 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8D1107280486CEB800E47090 /* creevey_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */; };
+		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
+		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */ = {isa = PBXBuildFile; fileRef = F2029D2D0820B68D00CE44FA /* phxslides.icns */; };
+		F209759D081F3C4500AD4E00 /* Phoenix Slides Help in Resources */ = {isa = PBXBuildFile; fileRef = F2097598081F3C4400AD4E00 /* Phoenix Slides Help */; };
+		F209762B081F51A300AD4E00 /* NSStringDYBasePathExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */; };
+		F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */; };
+		F21F1A7A08079DF100A77552 /* NSArrayIndexSetExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F21F1A7808079DF100A77552 /* NSArrayIndexSetExtension.h */; };
+		F21F1A7B08079DF100A77552 /* NSArrayIndexSetExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F21F1A7908079DF100A77552 /* NSArrayIndexSetExtension.m */; };
+		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
+		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
+		F25EA27C0867329C003728C2 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2710867329C003728C2 /* config.h */; };
+		F25EA27D0867329C003728C2 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F25EA2720867329C003728C2 /* libjpeg.a */; };
+		F25EA27E0867329C003728C2 /* jpeglib.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2730867329C003728C2 /* jpeglib.h */; };
+		F25EA27F0867329C003728C2 /* jmorecfg.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2740867329C003728C2 /* jmorecfg.h */; };
+		F25EA2800867329C003728C2 /* jconfig.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2750867329C003728C2 /* jconfig.h */; };
+		F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = F25EA2760867329C003728C2 /* EpegWrapper.m */; };
+		F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2770867329C003728C2 /* EpegWrapper.h */; };
+		F25EA2830867329C003728C2 /* epeg_private.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2780867329C003728C2 /* epeg_private.h */; };
+		F25EA2840867329C003728C2 /* epeg_memfile.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA2790867329C003728C2 /* epeg_memfile.c */; };
+		F25EA2850867329C003728C2 /* epeg_main.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA27A0867329C003728C2 /* epeg_main.c */; };
+		F25EA2860867329C003728C2 /* Epeg.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA27B0867329C003728C2 /* Epeg.h */; };
+		F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */; };
+		F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */; };
+		F28F0C0B07F5E642009BF709 /* DYWrappingMatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = F28F0C0907F5E642009BF709 /* DYWrappingMatrix.h */; };
+		F28F0C0C07F5E642009BF709 /* DYWrappingMatrix.m in Sources */ = {isa = PBXBuildFile; fileRef = F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */; };
+		F2910A4A08198D5300D3878C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F2910A4908198D5300D3878C /* Localizable.strings */; };
+		F294470D08208AE400B932C1 /* libRBSplitView.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F294470C08208AE400B932C1 /* libRBSplitView.a */; };
+		F29447980820946000B932C1 /* Credits.html in Resources */ = {isa = PBXBuildFile; fileRef = F29447970820946000B932C1 /* Credits.html */; };
+		F29447A70820970100B932C1 /* logo.tiff in Resources */ = {isa = PBXBuildFile; fileRef = F29447A60820970100B932C1 /* logo.tiff */; };
+		F2968B71081183860082207C /* HorribleNSBrowserFix.m in Sources */ = {isa = PBXBuildFile; fileRef = F2968B70081183860082207C /* HorribleNSBrowserFix.m */; };
+		F299B06207FDF5F7006028C1 /* DYImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = F299B06007FDF5F7006028C1 /* DYImageView.h */; };
+		F299B06307FDF5F7006028C1 /* DYImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F299B06107FDF5F7006028C1 /* DYImageView.m */; };
+		F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */ = {isa = PBXBuildFile; fileRef = F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */; };
+		F29CD2370800C372000B0F91 /* DYCarbonGoodies.m in Sources */ = {isa = PBXBuildFile; fileRef = F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */; };
+		F2AA9EAE0857C8EE0098EAEB /* RBSplitView.h in Headers */ = {isa = PBXBuildFile; fileRef = F2AA9EAC0857C8EE0098EAEB /* RBSplitView.h */; };
+		F2AA9EAF0857C8EE0098EAEB /* RBSplitSubview.h in Headers */ = {isa = PBXBuildFile; fileRef = F2AA9EAD0857C8EE0098EAEB /* RBSplitSubview.h */; };
+		F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */ = {isa = PBXBuildFile; fileRef = F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */; };
+		F2AE88E907EB877D008F2193 /* DirBrowserDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = F2AE88E707EB877D008F2193 /* DirBrowserDelegate.h */; };
+		F2AE88EA07EB877D008F2193 /* DirBrowserDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */; };
+		F2AE890E07EB9BB7008F2193 /* CreeveyController.h in Headers */ = {isa = PBXBuildFile; fileRef = F2AE890C07EB9BB7008F2193 /* CreeveyController.h */; };
+		F2AE890F07EB9BB7008F2193 /* CreeveyController.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE890D07EB9BB7008F2193 /* CreeveyController.m */; };
+		F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */ = {isa = PBXBuildFile; fileRef = F2C940B508200F6F0019D0D3 /* multipledocs.gif */; };
+		F2D2AC63080B82840075532A /* brokendoc.tif in Resources */ = {isa = PBXBuildFile; fileRef = F2D2AC62080B82840075532A /* brokendoc.tif */; };
+		F2EE21EA087B809200F212F4 /* UKMainThreadProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = F2EE21E5087B809200F212F4 /* UKMainThreadProxy.m */; };
+		F2EE21EB087B809200F212F4 /* UKMainThreadProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = F2EE21E6087B809200F212F4 /* UKMainThreadProxy.h */; };
+		F2EE21EC087B809200F212F4 /* UKKQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = F2EE21E7087B809200F212F4 /* UKKQueue.m */; };
+		F2EE21ED087B809200F212F4 /* UKKQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = F2EE21E8087B809200F212F4 /* UKKQueue.h */; };
+		F2EE21EE087B809200F212F4 /* UKFileWatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = F2EE21E9087B809200F212F4 /* UKFileWatcher.h */; };
+		F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = F2F2641307EEA114006164BF /* SlideshowWindow.h */; };
+		F2F3B48307F7939100D9C639 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2F3B48207F7939100D9C639 /* Carbon.framework */; };
+		F2F3B72207F7B49400D9C639 /* SlideshowWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */; };
+		F2F54190080A3846008AE60F /* DYCreeveyBrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = F2F5418E080A3846008AE60F /* DYCreeveyBrowser.h */; };
+		F2F54191080A3846008AE60F /* DYCreeveyBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		4A9504CCFFE6A4B311CA0CBA /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OPTIMIZATION_CFLAGS = "-O0";
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		4A9504CDFFE6A4B311CA0CBA /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXFileReference section */
+		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = creevey_Prefix.pch; sourceTree = "<group>"; };
+		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8D1107320486CEB800E47090 /* Phoenix Slides.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Phoenix Slides.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2029D2D0820B68D00CE44FA /* phxslides.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = phxslides.icns; sourceTree = "<group>"; };
+		F2097598081F3C4400AD4E00 /* Phoenix Slides Help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Phoenix Slides Help"; sourceTree = "<group>"; };
+		F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSStringDYBasePathExtension.h; sourceTree = "<group>"; };
+		F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSStringDYBasePathExtension.m; sourceTree = "<group>"; };
+		F21F1A7808079DF100A77552 /* NSArrayIndexSetExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSArrayIndexSetExtension.h; sourceTree = "<group>"; };
+		F21F1A7908079DF100A77552 /* NSArrayIndexSetExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSArrayIndexSetExtension.m; sourceTree = "<group>"; };
+		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
+		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
+		F25EA2710867329C003728C2 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = Epeg/config.h; sourceTree = "<group>"; };
+		F25EA2720867329C003728C2 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = Epeg/libjpeg.a; sourceTree = "<group>"; };
+		F25EA2730867329C003728C2 /* jpeglib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jpeglib.h; path = Epeg/jpeglib.h; sourceTree = "<group>"; };
+		F25EA2740867329C003728C2 /* jmorecfg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jmorecfg.h; path = Epeg/jmorecfg.h; sourceTree = "<group>"; };
+		F25EA2750867329C003728C2 /* jconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jconfig.h; path = Epeg/jconfig.h; sourceTree = "<group>"; };
+		F25EA2760867329C003728C2 /* EpegWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EpegWrapper.m; path = Epeg/EpegWrapper.m; sourceTree = "<group>"; };
+		F25EA2770867329C003728C2 /* EpegWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EpegWrapper.h; path = Epeg/EpegWrapper.h; sourceTree = "<group>"; };
+		F25EA2780867329C003728C2 /* epeg_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = epeg_private.h; path = Epeg/epeg_private.h; sourceTree = "<group>"; };
+		F25EA2790867329C003728C2 /* epeg_memfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_memfile.c; path = Epeg/epeg_memfile.c; sourceTree = "<group>"; };
+		F25EA27A0867329C003728C2 /* epeg_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_main.c; path = Epeg/epeg_main.c; sourceTree = "<group>"; };
+		F25EA27B0867329C003728C2 /* Epeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Epeg.h; path = Epeg/Epeg.h; sourceTree = "<group>"; };
+		F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSIndexSetSymDiffExtension.h; sourceTree = "<group>"; };
+		F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSIndexSetSymDiffExtension.m; sourceTree = "<group>"; };
+		F28F0C0907F5E642009BF709 /* DYWrappingMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYWrappingMatrix.h; sourceTree = "<group>"; };
+		F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYWrappingMatrix.m; sourceTree = "<group>"; };
+		F2910A4108198D2900D3878C /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F2910A4B08198D6100D3878C /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh_TW; path = zh_TW.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F2910A840819A2E400D3878C /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		F294470C08208AE400B932C1 /* libRBSplitView.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libRBSplitView.a; sourceTree = "<group>"; };
+		F29447970820946000B932C1 /* Credits.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = Credits.html; sourceTree = "<group>"; };
+		F29447A60820970100B932C1 /* logo.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = logo.tiff; sourceTree = "<group>"; };
+		F2968B70081183860082207C /* HorribleNSBrowserFix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HorribleNSBrowserFix.m; sourceTree = "<group>"; };
+		F299B06007FDF5F7006028C1 /* DYImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageView.h; sourceTree = "<group>"; };
+		F299B06107FDF5F7006028C1 /* DYImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageView.m; sourceTree = "<group>"; };
+		F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYCarbonGoodies.h; sourceTree = "<group>"; };
+		F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYCarbonGoodies.m; sourceTree = "<group>"; };
+		F2AA9EAC0857C8EE0098EAEB /* RBSplitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBSplitView.h; sourceTree = "<group>"; };
+		F2AA9EAD0857C8EE0098EAEB /* RBSplitSubview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBSplitSubview.h; sourceTree = "<group>"; };
+		F2AC5BEB0819F61700E5E5E6 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = zh_TW; path = zh_TW.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
+		F2AC5BEF0819F62C00E5E5E6 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
+		F2AE88E707EB877D008F2193 /* DirBrowserDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirBrowserDelegate.h; sourceTree = "<group>"; };
+		F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirBrowserDelegate.m; sourceTree = "<group>"; };
+		F2AE890C07EB9BB7008F2193 /* CreeveyController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreeveyController.h; sourceTree = "<group>"; };
+		F2AE890D07EB9BB7008F2193 /* CreeveyController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyController.m; sourceTree = "<group>"; };
+		F2C940B508200F6F0019D0D3 /* multipledocs.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = multipledocs.gif; sourceTree = "<group>"; };
+		F2D2AC62080B82840075532A /* brokendoc.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = brokendoc.tif; sourceTree = "<group>"; };
+		F2EE21E5087B809200F212F4 /* UKMainThreadProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UKMainThreadProxy.m; sourceTree = "<group>"; };
+		F2EE21E6087B809200F212F4 /* UKMainThreadProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UKMainThreadProxy.h; sourceTree = "<group>"; };
+		F2EE21E7087B809200F212F4 /* UKKQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UKKQueue.m; sourceTree = "<group>"; };
+		F2EE21E8087B809200F212F4 /* UKKQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UKKQueue.h; sourceTree = "<group>"; };
+		F2EE21E9087B809200F212F4 /* UKFileWatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UKFileWatcher.h; sourceTree = "<group>"; };
+		F2F2641307EEA114006164BF /* SlideshowWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowWindow.h; sourceTree = "<group>"; };
+		F2F3B48207F7939100D9C639 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SlideshowWindow.m; sourceTree = "<group>"; };
+		F2F5418E080A3846008AE60F /* DYCreeveyBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYCreeveyBrowser.h; sourceTree = "<group>"; };
+		F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYCreeveyBrowser.m; sourceTree = "<group>"; };
+		F2F82C7F087C45B90074EC02 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D11072E0486CEB800E47090 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				F2F3B48307F7939100D9C639 /* Carbon.framework in Frameworks */,
+				F294470D08208AE400B932C1 /* libRBSplitView.a in Frameworks */,
+				F25EA27D0867329C003728C2 /* libjpeg.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		080E96DDFE201D6D7F000001 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				F234C0150810E9B700175D50 /* DYImageCache.h */,
+				F234C0160810E9B700175D50 /* DYImageCache.m */,
+				F2AE88E707EB877D008F2193 /* DirBrowserDelegate.h */,
+				F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */,
+				F2AE890C07EB9BB7008F2193 /* CreeveyController.h */,
+				F2AE890D07EB9BB7008F2193 /* CreeveyController.m */,
+				F2F2641307EEA114006164BF /* SlideshowWindow.h */,
+				F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */,
+				F28F0C0907F5E642009BF709 /* DYWrappingMatrix.h */,
+				F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */,
+				F299B06007FDF5F7006028C1 /* DYImageView.h */,
+				F299B06107FDF5F7006028C1 /* DYImageView.m */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F2F3B48207F7939100D9C639 /* Carbon.framework */,
+				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FACFE9D520D11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D1107320486CEB800E47090 /* Phoenix Slides.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		29B97314FDCFA39411CA2CEA /* creevey */ = {
+			isa = PBXGroup;
+			children = (
+				080E96DDFE201D6D7F000001 /* Classes */,
+				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				29B97317FDCFA39411CA2CEA /* Resources */,
+				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				19C28FACFE9D520D11CA2CBB /* Products */,
+				F2F82C7F087C45B90074EC02 /* README */,
+			);
+			name = creevey;
+			sourceTree = "<group>";
+		};
+		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				F25EA26E08673274003728C2 /* Epeg */,
+				F2047B7308576D2D00D6103F /* kqueue */,
+				F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */,
+				F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */,
+				F21F1A7808079DF100A77552 /* NSArrayIndexSetExtension.h */,
+				F21F1A7908079DF100A77552 /* NSArrayIndexSetExtension.m */,
+				F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */,
+				F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */,
+				F2968B4608117F700082207C /* RBSplitView */,
+				F2F5418E080A3846008AE60F /* DYCreeveyBrowser.h */,
+				F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */,
+				F2968B70081183860082207C /* HorribleNSBrowserFix.m */,
+				F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */,
+				F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */,
+				32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */,
+				29B97316FDCFA39411CA2CEA /* main.m */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		29B97317FDCFA39411CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F2029D2D0820B68D00CE44FA /* phxslides.icns */,
+				F29447970820946000B932C1 /* Credits.html */,
+				F2C940B508200F6F0019D0D3 /* multipledocs.gif */,
+				F29447A60820970100B932C1 /* logo.tiff */,
+				F2097598081F3C4400AD4E00 /* Phoenix Slides Help */,
+				F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */,
+				F2910A4908198D5300D3878C /* Localizable.strings */,
+				F2D2AC62080B82840075532A /* brokendoc.tif */,
+				8D1107310486CEB800E47090 /* Info.plist */,
+				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
+				29B97318FDCFA39411CA2CEA /* MainMenu.nib */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F2047B7308576D2D00D6103F /* kqueue */ = {
+			isa = PBXGroup;
+			children = (
+				F2EE21E5087B809200F212F4 /* UKMainThreadProxy.m */,
+				F2EE21E6087B809200F212F4 /* UKMainThreadProxy.h */,
+				F2EE21E7087B809200F212F4 /* UKKQueue.m */,
+				F2EE21E8087B809200F212F4 /* UKKQueue.h */,
+				F2EE21E9087B809200F212F4 /* UKFileWatcher.h */,
+			);
+			name = kqueue;
+			sourceTree = "<group>";
+		};
+		F25EA26E08673274003728C2 /* Epeg */ = {
+			isa = PBXGroup;
+			children = (
+				F25EA2710867329C003728C2 /* config.h */,
+				F25EA2720867329C003728C2 /* libjpeg.a */,
+				F25EA2730867329C003728C2 /* jpeglib.h */,
+				F25EA2740867329C003728C2 /* jmorecfg.h */,
+				F25EA2750867329C003728C2 /* jconfig.h */,
+				F25EA2760867329C003728C2 /* EpegWrapper.m */,
+				F25EA2770867329C003728C2 /* EpegWrapper.h */,
+				F25EA2780867329C003728C2 /* epeg_private.h */,
+				F25EA2790867329C003728C2 /* epeg_memfile.c */,
+				F25EA27A0867329C003728C2 /* epeg_main.c */,
+				F25EA27B0867329C003728C2 /* Epeg.h */,
+			);
+			name = Epeg;
+			sourceTree = "<group>";
+		};
+		F2968B4608117F700082207C /* RBSplitView */ = {
+			isa = PBXGroup;
+			children = (
+				F2AA9EAC0857C8EE0098EAEB /* RBSplitView.h */,
+				F2AA9EAD0857C8EE0098EAEB /* RBSplitSubview.h */,
+				F294470C08208AE400B932C1 /* libRBSplitView.a */,
+			);
+			name = RBSplitView;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8D1107270486CEB800E47090 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D1107280486CEB800E47090 /* creevey_Prefix.pch in Headers */,
+				F2AE88E907EB877D008F2193 /* DirBrowserDelegate.h in Headers */,
+				F2AE890E07EB9BB7008F2193 /* CreeveyController.h in Headers */,
+				F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */,
+				F28F0C0B07F5E642009BF709 /* DYWrappingMatrix.h in Headers */,
+				F299B06207FDF5F7006028C1 /* DYImageView.h in Headers */,
+				F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */,
+				F21F1A7A08079DF100A77552 /* NSArrayIndexSetExtension.h in Headers */,
+				F2F54190080A3846008AE60F /* DYCreeveyBrowser.h in Headers */,
+				F234C0170810E9B700175D50 /* DYImageCache.h in Headers */,
+				F209762B081F51A300AD4E00 /* NSStringDYBasePathExtension.h in Headers */,
+				F2AA9EAE0857C8EE0098EAEB /* RBSplitView.h in Headers */,
+				F2AA9EAF0857C8EE0098EAEB /* RBSplitSubview.h in Headers */,
+				F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */,
+				F25EA27C0867329C003728C2 /* config.h in Headers */,
+				F25EA27E0867329C003728C2 /* jpeglib.h in Headers */,
+				F25EA27F0867329C003728C2 /* jmorecfg.h in Headers */,
+				F25EA2800867329C003728C2 /* jconfig.h in Headers */,
+				F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */,
+				F25EA2830867329C003728C2 /* epeg_private.h in Headers */,
+				F25EA2860867329C003728C2 /* Epeg.h in Headers */,
+				F2EE21EB087B809200F212F4 /* UKMainThreadProxy.h in Headers */,
+				F2EE21ED087B809200F212F4 /* UKKQueue.h in Headers */,
+				F2EE21EE087B809200F212F4 /* UKFileWatcher.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8D1107260486CEB800E47090 /* Phoenix Slides */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F25EA23C08672CB4003728C2 /* Build configuration list for PBXNativeTarget "Phoenix Slides" */;
+			buildPhases = (
+				8D1107270486CEB800E47090 /* Headers */,
+				8D1107290486CEB800E47090 /* Resources */,
+				8D11072C0486CEB800E47090 /* Sources */,
+				8D11072E0486CEB800E47090 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = /Users/dom/dev/creevey;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = creevey_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = /Users/dom/dev/creevey;
+				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "Phoenix Slides";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+			};
+			dependencies = (
+			);
+			name = "Phoenix Slides";
+			productInstallPath = "$(HOME)/Applications";
+			productName = creevey;
+			productReference = 8D1107320486CEB800E47090 /* Phoenix Slides.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		29B97313FDCFA39411CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = F25EA24008672CB4003728C2 /* Build configuration list for PBXProject "creevey" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				4A9504CCFFE6A4B311CA0CBA /* Development */,
+				4A9504CDFFE6A4B311CA0CBA /* Deployment */,
+			);
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+				zh_TW,
+			);
+			mainGroup = 29B97314FDCFA39411CA2CEA /* creevey */;
+			projectDirPath = "";
+			targets = (
+				8D1107260486CEB800E47090 /* Phoenix Slides */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D1107290486CEB800E47090 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */,
+				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
+				F2D2AC63080B82840075532A /* brokendoc.tif in Resources */,
+				F2910A4A08198D5300D3878C /* Localizable.strings in Resources */,
+				F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */,
+				F209759D081F3C4500AD4E00 /* Phoenix Slides Help in Resources */,
+				F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */,
+				F29447980820946000B932C1 /* Credits.html in Resources */,
+				F29447A70820970100B932C1 /* logo.tiff in Resources */,
+				F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D11072C0486CEB800E47090 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072D0486CEB800E47090 /* main.m in Sources */,
+				F2AE88EA07EB877D008F2193 /* DirBrowserDelegate.m in Sources */,
+				F2AE890F07EB9BB7008F2193 /* CreeveyController.m in Sources */,
+				F28F0C0C07F5E642009BF709 /* DYWrappingMatrix.m in Sources */,
+				F2F3B72207F7B49400D9C639 /* SlideshowWindow.m in Sources */,
+				F299B06307FDF5F7006028C1 /* DYImageView.m in Sources */,
+				F29CD2370800C372000B0F91 /* DYCarbonGoodies.m in Sources */,
+				F21F1A7B08079DF100A77552 /* NSArrayIndexSetExtension.m in Sources */,
+				F2F54191080A3846008AE60F /* DYCreeveyBrowser.m in Sources */,
+				F234C0180810E9B700175D50 /* DYImageCache.m in Sources */,
+				F2968B71081183860082207C /* HorribleNSBrowserFix.m in Sources */,
+				F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */,
+				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,
+				F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */,
+				F25EA2840867329C003728C2 /* epeg_memfile.c in Sources */,
+				F25EA2850867329C003728C2 /* epeg_main.c in Sources */,
+				F2EE21EA087B809200F212F4 /* UKMainThreadProxy.m in Sources */,
+				F2EE21EC087B809200F212F4 /* UKKQueue.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C165DFE840E0CC02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		29B97318FDCFA39411CA2CEA /* MainMenu.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				29B97319FDCFA39411CA2CEA /* English */,
+				F2910A840819A2E400D3878C /* zh_TW */,
+			);
+			name = MainMenu.nib;
+			sourceTree = "<group>";
+		};
+		F2910A4908198D5300D3878C /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F2910A4108198D2900D3878C /* English */,
+				F2910A4B08198D6100D3878C /* zh_TW */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F2AC5BEB0819F61700E5E5E6 /* zh_TW */,
+				F2AC5BEF0819F62C00E5E5E6 /* English */,
+			);
+			name = creeveyhelp.rtf;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		F25EA23D08672CB4003728C2 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				FRAMEWORK_SEARCH_PATHS = /Users/dom/dev/creevey;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = creevey_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/Users/dom/dev/creevey,
+					"$(SRCROOT)/Epeg",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "Phoenix Slides";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		F25EA23E08672CB4003728C2 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = /Users/dom/dev/creevey;
+				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_FAST_OBJC_DISPATCH = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = creevey_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/Users/dom/dev/creevey,
+					"$(SRCROOT)/Epeg",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "Phoenix Slides";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		F25EA23F08672CB4003728C2 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = /Users/dom/dev/creevey;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = creevey_Prefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/Users/dom/dev/creevey,
+					"$(SRCROOT)/Epeg",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "Phoenix Slides";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = app;
+			};
+			name = Default;
+		};
+		F25EA24108672CB4003728C2 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		F25EA24208672CB4003728C2 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Deployment;
+		};
+		F25EA24308672CB4003728C2 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Default;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F25EA23C08672CB4003728C2 /* Build configuration list for PBXNativeTarget "Phoenix Slides" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F25EA23D08672CB4003728C2 /* Development */,
+				F25EA23E08672CB4003728C2 /* Deployment */,
+				F25EA23F08672CB4003728C2 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		F25EA24008672CB4003728C2 /* Build configuration list for PBXProject "creevey" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F25EA24108672CB4003728C2 /* Development */,
+				F25EA24208672CB4003728C2 /* Deployment */,
+				F25EA24308672CB4003728C2 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
+}

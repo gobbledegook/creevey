@@ -15,10 +15,6 @@
 #import "DYImageView.h"
 #import "DYImageCache.h"
 
-
-// returns path if it's not an alias, or if not resolvable
-NSString *ResolveAliasToPath(NSString *path);
-
 @interface SlideshowWindow : NSWindow
 {
     DYImageView *imgView;
@@ -26,7 +22,7 @@ NSString *ResolveAliasToPath(NSString *path);
 	
 	DYImageCache *imgCache;
 	
-	NSTimeInterval timerIntvl;
+	NSTimeInterval timerIntvl; BOOL timerPaused;
 	NSTimer *autoTimer;
 	
 	NSMutableArray *filenames;
@@ -50,26 +46,14 @@ NSString *ResolveAliasToPath(NSString *path);
 - (void)sendToBackground;
 - (void)bringToForeground;
 
-- (BOOL)isActive; // ** why doesn't isKeyWindow work?
 - (NSString *)currentFile;
 - (BOOL)currentImageLoaded;
 - (void)removeImageForFile:(NSString *)s;
-
-// cache methods
-- (NSImage *)loadFromCache:(NSString *)s;
-- (void)cacheAndDisplay:(NSString *)s;
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;
 - (IBAction)toggleLoopMode:(id)sender;
 - (IBAction)toggleCheatSheet:(id)sender;
-
-// private methods
-- (void)displayImage;
-- (void)jump:(int)n;
-- (void)jumpTo:(int)n;
-- (void)setTimer:(NSTimeInterval)s;
-- (void)runTimer;
-- (void)killTimer;
+- (IBAction)toggleScalesUp:(id)sender;
 
 @end

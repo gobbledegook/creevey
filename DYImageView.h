@@ -18,11 +18,19 @@
 
 @interface DYImageView : NSView {
 	NSImage *image, *transformedImage;
+	NSTimer *gifTimer;
 	int rotation;
+	BOOL scalesUp;
+	//float zoom;
 }
 
 - (void)setImage:(NSImage *)anImage;
+- (int)rotation;
 - (int)addRotation:(int)r;
 - (void)setRotation:(int)n;
+
+//- (float)zoom;
+- (BOOL)scalesUp;
+- (void)setScalesUp:(BOOL)b;
 
 @end

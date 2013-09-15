@@ -14,7 +14,9 @@
 	return [NSString stringWithCString:epeg_error_msg()];
 }
 
-+ (NSImage *)imageWithPath:(NSString *)path boundingBox:(NSSize)boundingBox {
++ (NSImage *)imageWithPath:(NSString *)path
+			   boundingBox:(NSSize)boundingBox
+				   getSize:(NSSize *)pixSize {
 
 	Epeg_Image *im = NULL;
 	NSImage *image;
@@ -25,18 +27,18 @@
 	exists = [fileManager fileExistsAtPath:path isDirectory:&isDirectory];
 	if (!exists || isDirectory) {
 		NSLog(@"invalid path '%@' passed", path);
-		//[self release]; //why?
 		return nil;
 	}
 	
 	im = epeg_file_open([path fileSystemRepresentation]);
 	if (!im) {
 		NSLog(@"unable to create epeg image for path '%@'", path);
-		//[self release];
 		return nil;
 	}
 
 	epeg_size_get(im, &width_in, &height_in);
+	pixSize->width = width_in;
+	pixSize->height = height_in;
 
 	float bbox_ratio = (float)(boundingBox.width / boundingBox.height);
 	float orig_ratio = ((float)width_in / (float)height_in);
@@ -60,7 +62,7 @@
 	unsigned char *outbuffer;
 	int outsize;
 	epeg_memory_output_set(im, &outbuffer, &outsize);
-	epeg_quality_set(im, 90);
+	epeg_quality_set(im, 75);
 	if (epeg_encode(im) != 0) {
 		// ALWAYS check the return code!
 		NSLog(@"unable to encode epeg thumbnail for path '%@'", path);

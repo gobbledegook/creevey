@@ -24,10 +24,19 @@ or double-clicking an image's thumbnail.
 <p>In addition to the usual clicking, you can also type in
 directory names to jump directly to them.</p>
 
+<p>The first column of the directory listing contains a list of
+mounted volumes. This list is updated automatically when disks
+are inserted or ejected. The list is also updated if the current
+folder is moved, renamed, or deleted. To refresh the listing
+for all other file system changes (new files, renaming of
+other folders, etc.), click on a folder name and its contents will
+be updated.
+</p>
+
 <p>Check "Subfolders" to have the program search all
 subdirectories for images. When building the list of images,
 it will go into subdirectories as it comes across them
-(i.e., it's depth-first). This can be amusing when looking
+(the search is depth-first). This feature can be amusing when looking
 into application bundles.</p>
 
 <p>You can drag a folder or a file in that folder into the window
@@ -46,8 +55,16 @@ that Mac OS X supports (i.e., everything NSImage can read).</p>
 thumbnails of each of the images. Thumbnails are cached in memory
 and discarded when you quit the program.</p>
 
+<p>Phoenix Slides displays basic information (name, size, dimensions)
+about the currently
+selected file(s) in the status bar at the bottom of the window.</p>
+
+<p>You can resize the thumbnails to display anywhere from 40 to 160
+pixels wide. (They're stored 160 pixels wide internally.)</p>
+
 <p>For those who care: Phoenix Slides uses the Epeg library for fast
-thumbnailing of JPEGs. Non-JPEG files will be thumbnailed slowly. =P</p>
+thumbnailing of JPEGs. Non-JPEG files, on the other hand,
+will be thumbnailed slowly. =P</p>
 
 <h3>Selecting images</h3>
 <p>You can select images to start a slideshow with them,
@@ -58,8 +75,11 @@ reverse the selection. You can also select images by dragging
 around them (in the whitespace).
 </p>
 
+<p>Use the arrow keys on the keyboard to change the selection
+(this only works when exactly one image is selected, though).</p>
+
 <h3>Dragging images</h3>
-You can also drag images to another program to open them with
+Drag images to another program to open them with
 that program, or to the Finder to copy the files.
 
 <h2>Slideshows</h2>
@@ -83,8 +103,14 @@ the slideshow to see all the commands (reproduced below). If you need
 access to the menu, move the mouse to the top of the screen.</p>
 
 <p>Hit one of the number keys (1-9) to auto-advance the slideshow every
-1-9 seconds. Hit '0' or the space bar to stop auto-advance. Hitting a
+1-9 seconds. Hit the space bar to pause/continue auto-advance.
+Hit '0' to stop auto-advance. Hitting a
 key to go backwards also stops the auto-advance.</p>
+
+<p>By default, images smaller than the screen will be shown at
+actual size. To expand them to fill the screen, choose "Scale Up
+Smaller Images" from the Slideshow menu (or hit command-E--think
+'embiggen').</p>
 
 <p>Ordinarily, the slideshow stops when you reach the last slide.
 You can enable loop mode through the Slideshow menu. This will cause
@@ -100,7 +126,7 @@ the front.</p>
 <h3>Slideshow cheat sheet</h3>
 <table>
 	<tr>
-		<td>space</td> <td>pause auto-advance; go next</td>
+		<td>space</td> <td>pause/continue auto-advance; go next</td>
 	</tr>
 	<tr>
 		<td>→↓</td> <td>go next</td>
@@ -165,7 +191,7 @@ So I decided to write my own.</p>
 
 <p>Remember Curator, the now-abandoned image organizer program by
 Caffeine Software? It's nice, but (1) it's dead, (2) the directory
-listing acts up, and (3) you have to wait for a thumbnail to be generated
+listing acts funny, and (3) you have to wait for a thumbnail to be generated
 before you can view an image in a slideshow (WHY?!). I wanted my program
 to rectify these problems, so Phoenix Slides is
 inspired in part by Curator.</p>
@@ -189,24 +215,46 @@ Rainer Brockerhoff (RBSplitView).
 of unemployment.
 </p>
 
-<h2>Version History</h2>
-2005.04.28 1.0 first public release.
+<h2>Help Wanted</h2>
+<p>Looking for localization help: If you want to translate
+Phoenix Slides to your language please
+<a href="http://blyt.net/Contact.html">contact me</a>.</p>
 
-<h2>Contact/Contribute/License</h2>
-<p>Official web site:
-<a href="http://blyt.net/phxslides/">http://blyt.net/phxslides/</a>
-</p>
-
-<p>If you want to contribute to Phoenix Slides please
-<a href="http://blyt.net/Contact.html">contact me</a>.
-You can contribute by offering
+<p>
+You can also contribute by offering
 programming help or making a donation along the lines of books
 (Cocoa, perl, linguistics), money, or skateboarding stuff.
 </p>
 
 
+<h2>Version History</h2>
+2005.07.06 1.1
+<ul>
+	<li>status bar (name, size, dimensions)</li>
+	<li>resizable thumbnails</li>
+	<li>animated GIFs in slideshow</li>
+	<li>slideshow option to zoom small images to size of screen</li>
+	<li>pressing 1-9 now starts auto-advance right away</li>
+	<li>pressing space now pause/continues auto-advance</li>
+	<li>speed/memory optimizations in thumbnail view</li>
+	<li>navigate thumbnails using arrow keys</li>
+	<li>folder listing shows mounted volumes at the top level</li>
+	<li>folder listing automatically updates on volume mount, folder move/rename/delete</li>
+	<li>fixed - thumbnail view sometimes skipped images</li>
+	<li>fixed (very) occasional hang on launch</li>
+</ul>
+
+
+
+2005.04.28 1.0 first public release.
+
+<h2>Contact/License</h2>
+<p>Official web site:
+<a href="http://blyt.net/phxslides/">http://blyt.net/phxslides/</a>
+</p>
+
 <!-- Creative Commons License -->
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/"><img alt="Creative Commons License" border="0" src="http://creativecommons.org/images/public/somerights20.gif" /></a><br />
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/"><img alt="Creative Commons License" border="0" src="http://creativecommons.org/images/public/somerights20.gif"></a><br>
 This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/">Creative Commons License</a>.
 <!-- /Creative Commons License -->
 

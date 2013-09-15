@@ -10,6 +10,23 @@
 #import "DYCarbonGoodies.h"
 #import "NSStringDYBasePathExtension.h"
 
+@interface SlideshowWindow (Private)
+
+- (void)displayImage;
+- (void)jump:(int)n;
+- (void)jumpTo:(int)n;
+- (void)setTimer:(NSTimeInterval)s;
+- (void)runTimer;
+- (void)killTimer;
+- (void)updateInfoFld;
+
+// cache methods
+- (NSImage *)loadFromCache:(NSString *)s;
+- (void)cacheAndDisplay:(NSString *)s;
+
+
+@end
+
 @implementation SlideshowWindow
 
 #define MAX_CACHED 15
@@ -130,7 +147,7 @@
 //	[self setLevel:NSFloatingWindowLevel];//CGShieldingWindowLevel()];//NSMainMenuWindowLevel+1
 }
 
-// timer stuff
+#pragma mark timer stuff
 // setTimer
 // sets the interval between slide show advancing.
 // set to 0 to stop.
@@ -158,16 +175,48 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[autoTimer invalidate]; autoTimer = nil;
 }
 
+- (void)pauseTimer {
+	[self killTimer];
+	timerPaused = YES;
+	if (hideInfoFld) [infoFld setHidden:NO];
+	[self updateInfoFld];
+}
+
 - (void)nextTimer:(NSTimer *)t {
 	//NSLog(@"timer fired!");
 	autoTimer = nil; // so another thread won't send a message to a stale timer obj
 	[self jump:1]; // works with loop mode
 }
 
-//DISPLAY STUFF
+#pragma mark display stuff
+- (float)calcZoom:(NSSize)sourceSize {
+	// calc here b/c larger images have already been cached & shrunk!
+	NSRect boundsRect = [imgView bounds];
+	int rotation = [imgView rotation];
+	float tmp;
+	if (rotation == 90 || rotation == -90) {
+		tmp = boundsRect.size.width;
+		boundsRect.size.width = boundsRect.size.height;
+		boundsRect.size.height = tmp;
+	}
+	
+	if (![imgView scalesUp]
+		&& sourceSize.width <= boundsRect.size.width
+		&& sourceSize.height <= boundsRect.size.height)
+	{
+		return 1;
+	} else {
+		float w_ratio, h_ratio;
+		w_ratio = boundsRect.size.width/sourceSize.width;
+		h_ratio = boundsRect.size.height/sourceSize.height;
+		return w_ratio < h_ratio ? w_ratio : h_ratio;
+	}
+}
+
 // display image number "currentIndex"
 // if it's not cached, say "Loading" and spin off a thread to cache it
 - (void)updateInfoFldWithRotation:(int)r {
+	DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
 	id dir;
 	switch (r) {
 		case 90: dir = NSLocalizedString(@" left", @""); break;
@@ -175,11 +224,22 @@ scheduledTimerWithTimeInterval:timerIntvl
 		default: dir = @"";
 	}
 	if (r < 0) r = -r;
-	[infoFld setStringValue:[NSString stringWithFormat:@"[%i/%i%@] %@",
+	float zoom = [self calcZoom:info->pixelSize];
+	[infoFld setStringValue:[NSString stringWithFormat:@"[%i/%i%@] %@ - %@%@ - %@%@",
 		currentIndex+1, [filenames count],
 		r ? [NSString stringWithFormat:NSLocalizedString(@" rotated%@ %i%C", @"slideshow info"), dir, r, 0xb0] : @"", //degrees
-		[self currentShortFilename]]];
+		[self currentShortFilename],
+		[info pixelSizeAsString],
+		zoom != 1.0 ? [NSString stringWithFormat:@" @ %.0f%%", zoom*100] : @"",
+		FileSize2String(info->fileSize),
+		timerIntvl && timerPaused ? [NSString stringWithFormat:NSLocalizedString(@" Auto-advance(%g) PAUSED", @"slideshow info"), timerIntvl]
+								  : @""]];
 	[infoFld sizeToFit];
+	[imgView setNeedsDisplay:YES]; // **
+}
+
+- (void)updateInfoFld {
+	[self updateInfoFldWithRotation:[imgView rotation]];
 }
 
 - (void)displayImage {
@@ -194,9 +254,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 		NSNumber *rot = [rotations objectForKey:theFile];
 		int r = rot ? [rot intValue] : 0;
 		if (hideInfoFld) [infoFld setHidden:YES]; // this must happen before setImage, for redraw purposes
-		[self updateInfoFldWithRotation:r];
 		[imgView setImage:img];
 		if (r) [imgView setRotation:r];
+		[self updateInfoFldWithRotation:r];
 		if (timerIntvl) [self runTimer];
 	} else {
 		if (hideInfoFld) [infoFld setHidden:NO];
@@ -217,6 +277,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)jump:(int)n { // go forward n pics (negative numbers go backwards)
 	if (n < 0)
 		[self setTimer:0]; // going backwards stops auto-advance
+	else // could get rid of 'else' b/c going backwards makes timerPaused irrelevant
+		timerPaused = NO; // going forward unpauses auto-advance
 	if ((n > 0 && currentIndex+1 == [filenames count]) || (n < 0 && currentIndex == 0)){
 		if (loopMode)
 			[self jumpTo:n<0 ? [filenames count]-1 : 0];
@@ -284,8 +346,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 - (void)keyDown:(NSEvent *)e {
 	unichar c = [[e characters] characterAtIndex:0];
-	if (c >= '0' && c <= '9') {
+	if (c >= '1' && c <= '9') {
+		if (timerIntvl == 0 || timerPaused) [self jump:1];
 		[self setTimer:c - '0'];
+		return;
+	}
+	if (c == '0') {
+		[self setTimer:0];
+		[self updateInfoFld];
 		return;
 	}
 	if ([e isARepeat] && keyIsRepeating < MAX_REPEATING_CACHED) {
@@ -296,8 +364,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[self setTimer:0.5];
 			break;
 		case ' ':
-			if (timerIntvl) {
-				[self setTimer:0];
+			if (timerIntvl && autoTimer) {
+				//[self setTimer:0];
+				[self pauseTimer];
 				break; // pause slideshow only
 			}
 			// otherwise advance
@@ -409,7 +478,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 
-// menu methods
+#pragma mark menu methods
 - (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
 	if ([menuItem tag] == 3) // Loop
 		return YES;
@@ -427,5 +496,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (IBAction)toggleCheatSheet:(id)sender {
 	[self toggleHelp];
 	[sender setState:![helpFld isHidden]];
+}
+- (IBAction)toggleScalesUp:(id)sender {
+	BOOL b = ![sender state];
+	[sender setState:b];
+	[imgView setScalesUp:b];
+	[self updateInfoFld];
 }
 @end

@@ -8,13 +8,22 @@
 /* DirBrowserDelegate */
 
 #import <Cocoa/Cocoa.h>
+@class UKKQueue;
 
 @interface DirBrowserDelegate : NSObject
 {
-	NSFileManager *fm;
-	NSMutableArray *cols;
+	NSMutableArray *cols, *colsInternal;
+	NSString *rootVolumeName;
 	NSArray *hidden; // list of strings from /.hidden
 	BOOL showInvisibles;
+	
+	NSString *currPath;
+	AliasHandle currAlias;
+	
+	UKKQueue *kq;
+	IBOutlet NSBrowser *_b;
 }
+-(NSString*)path;
+-(BOOL)setPath:(NSString *)s;
 -(void)setShowInvisibles:(BOOL)b;
 @end

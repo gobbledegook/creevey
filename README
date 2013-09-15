@@ -1,0 +1,55 @@
+﻿Phoenix Slides source code README
+by Dominic Yu
+2005 June 8
+
+creevey was the code name for Phoenix Slides. Colin Creevey is the
+kid in Harry Potter who keeps taking pictures.
+
+Sorry for the messy source code. I've tried to make things modular
+and reusable, though a lot of classes are rather application-specific.
+Let's see, the wrapping matrix is kinda cool. The dir browser could
+be useful (but NSBrowser is a horrible, horrible class). And the
+Carbon Goodies are definitely useful.
+
+If anyone wants to contribute their coding talent and make this
+program come along more quickly, help is always welcome. TO DO:
+jpeg lossless rotation, show exif info,
+generate web pages, play movies.
+
+Enjoy!
+
+Version History
+---------------
+1.1
+info bar
+resize thumbnails
+change (single-)selection in matrix using arrow keys
+speed/memory optimizations in wrapping matrix
+- now reuses a single NSImageCell
+- setNeedsDisplayInRect redraws only what's needed (selections are faster)
+fixed view/thread bugs (setNeedsDisplay is not thread-safe)
+animated GIFs - ridiculously simple to implement.
+dir listing shows volumes at the top level
+dir listing updates on volume mounting, dir renaming/deletion
+space now pause/continues auto-advance
+pressing 1-9 now starts auto-advance right away
+added scale up for small images
+
+While optimizing the drawing in the wrapping matrix,
+I discovered another Apple bug: needsToDrawRect: sometimes
+returns NO when it should return YES. Supposedly fixed in 10.4,
+and it's documented (TN2107), but it took me a while to figure out.
+
+
+1.0
+---
+first release, day before Tiger (2005.04.28 Thursday).
+
+As of June 12, there've been about 800 downloads. ONE person
+has emailed me thanking me for the program. I guess that means
+no one's found anything wrong with it...
+
+The most annoying bugs are the ones in Apple's frameworks.
+NSBrowser seems to crash if you click on it too much (something
+about the horizontal scrolling animation). I've made a poser subclass
+to disable the animation.

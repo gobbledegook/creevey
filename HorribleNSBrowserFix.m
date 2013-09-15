@@ -14,6 +14,8 @@
 //
 
 // suppress animation which seems to crash AppKit
+// this appears to be unnecessary in 10.4
+// easier?: try setting the NSBrowserSupportsContinuousScrolling default to NO
 
 struct __BrcshFlags {
     unsigned int done:1;

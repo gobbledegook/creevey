@@ -10,10 +10,20 @@
 #import <Cocoa/Cocoa.h>
 @class DYTransparentGreyView;
 
+// allows typing to select items (assumes lists are sorted)
+// allows drag and drop
+// supports separate display/underlying paths
 @interface DYCreeveyBrowser : NSBrowser
 {
 	NSMutableString *typedString;
 	NSTimeInterval lastKeyTime;
-	DYTransparentGreyView *greyview;
+	DYTransparentGreyView *greyview; // for drag-and-drop
 }
 @end
+
+
+@interface NSObject (DYCreeveyBrowserDelegate)
+- (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(int)column;
+- (void)browserWillSendAction:(NSBrowser *)sender;
+@end
+

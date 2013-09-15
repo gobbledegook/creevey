@@ -1,10 +1,10 @@
 //
-//  RBSplitSubview.h version 1.1
+//  RBSplitSubview.h version 1.1.3
 //  RBSplitView
 //
 //  Created by Rainer Brockerhoff on 19/11/2004.
 //  Copyright 2004,2005 Rainer Brockerhoff.
-//	Some Rights Reserved under the Creative Commons Attribution License, version 2.0.
+//	Some Rights Reserved under the Creative Commons Attribution License, version 2.0, and/or the MIT License.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -32,8 +32,10 @@ typedef enum {
 									// Normally varies between -0.999... and 0.999...
 									// When collapsed, holds the proportion of the RBSplitView's dimension
 									// the view was occupying before collapsing.
+	NSRect previous;				// Holds the frame rect for the last delegate notification.
 	NSSize savedSize;				// This holds the size the subview had before it was resized beyond
 									// its minimum or maximum limits. Valid if notInLimits is YES.
+	unsigned int actDivider;		// This is set temporarily while an alternate drag view is being dragged.
 	BOOL canCollapse;				// YES if the subview can be collapsed.
 	BOOL notInLimits;				// YES if the subview's dimensions are outside the set limits.
 }

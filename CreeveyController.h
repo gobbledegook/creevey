@@ -13,20 +13,13 @@
 #import "DYWrappingMatrix.h"
 #import "RBSplitView.h"
 
-@interface DYStatusField : NSTextField
-{
-	NSString *statusText;
-}
-- (void)setStatusText:(NSString *)s;
-@end
 @interface CreeveyController : NSObject
 {
     IBOutlet NSBrowser *dirBrowser;
     IBOutlet SlideshowWindow *slidesWindow;
 	IBOutlet NSButton *slidesBtn;
 	IBOutlet DYWrappingMatrix *imgMatrix;
-	IBOutlet DYStatusField *statusFld;
-	IBOutlet RBSplitView *splitView;
+	IBOutlet NSTextField *statusFld, *bottomStatusFld;
 	
 	NSSet *filetypes;
 	

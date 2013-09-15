@@ -12,22 +12,6 @@
 #import "DirBrowserDelegate.h"
 
 #define MAX_THUMBS 2000
-
-// work around ugly threaded drawing
-@implementation DYStatusField
-- (void)drawRect:(NSRect)r {
-	if (statusText) [self setStringValue:statusText];
-	[super drawRect:r];
-}
-
-- (void)setStatusText:(NSString *)s {
-	[statusText release];
-	statusText = [s retain];
-	[self setNeedsDisplay:YES];
-}
-
-@end
-
 #define DEFAULT_PATH [@"~/Pictures" stringByResolvingSymlinksInPath]
 
 @implementation CreeveyController
@@ -44,6 +28,7 @@
     [dict setObject:s forKey:@"picturesFolderPath"];
     [dict setObject:s forKey:@"lastFolderPath"];
     [dict setObject:[NSNumber numberWithShort:0] forKey:@"startupOption"];
+	[dict setObject:[NSNumber numberWithFloat:120] forKey:@"thumbCellWidth"];
     [defaults registerDefaults:dict];
 	
 	[RBSplitView class];
@@ -66,11 +51,10 @@
 
 - (void)awakeFromNib {
 	[imgMatrix setFrameSize:[[imgMatrix superview] frame].size];
+	[imgMatrix setCellWidth:[[NSUserDefaults standardUserDefaults] floatForKey:@"thumbCellWidth"]];
 	thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
-	[thumbsCache setBoundingSize:[imgMatrix cellSize]];
-	[dirBrowser loadColumnZero]; // or else NSBrowser chokes if it's in a collapsed subview
-	[splitView restoreState:YES];
-	[splitView adjustSubviews];
+	[thumbsCache setBoundingSize:[imgMatrix maxCellSize]];
+	[thumbsCache setInterpolationType:NSImageInterpolationNone];
 }
 
 - (void)dealloc {
@@ -81,7 +65,7 @@
 }
 
 - (void)updateStatusFld {
-	[statusFld setStatusText:[NSString stringWithFormat:NSLocalizedString(@"%u images", @""),
+	[statusFld setStringValue:[NSString stringWithFormat:NSLocalizedString(@"%u images", @""),
 		[filenames count]]];
 }
 
@@ -127,9 +111,14 @@
 				 || [filetypes containsObject:NSHFSTypeOfFile(theFile)]))
 			{	
 				[filenames addObject:aPath];
-				if (++i % 100 == 0)
-					[statusFld setStatusText:[NSString stringWithFormat:@"%@ (%i)",
-						NSLocalizedString(@"Getting filenames...", @""), i]];
+				if (++i % 100 == 0) {
+					[NSObject cancelPreviousPerformRequestsWithTarget:statusFld];
+					// this fixes weird display issues
+					[statusFld performSelectorOnMainThread:@selector(setStringValue:)
+												withObject:[NSString stringWithFormat:@"%@ (%i)",
+													NSLocalizedString(@"Getting filenames...", @""), i]
+											 waitUntilDone:NO];
+				}
 			}
 			//		  NSFileTypeForHFSTypeCode([[atts objectForKey:NSFileHFSCreatorCode] unsignedLongValue]),
 			if (stopCaching) {
@@ -147,7 +136,7 @@
 	
 	int numFiles = [filenames count];
 	// ** int maxThumbs = MAX(MAX_THUMBS,numFiles+numToDelete);
-	NSSize cellSize = [imgMatrix cellSize];
+	NSSize cellSize = [imgMatrix maxCellSize];
 	NSImage *thumb;
 	NSString *origPath, *theFile;
 	
@@ -163,20 +152,25 @@
 		thumb = [thumbsCache imageForKey:theFile];
 		if (!thumb) {
 			//NSLog(@"caching %d", i);
-			[statusFld setStatusText:[NSString stringWithFormat:NSLocalizedString(@"Loading %i of %u...", @""), i+1, numFiles]];
+			[NSObject cancelPreviousPerformRequestsWithTarget:statusFld];
+			[statusFld performSelectorOnMainThread:@selector(setStringValue:)
+										withObject:[NSString stringWithFormat:NSLocalizedString(@"Loading %i of %u...", @""), i+1, numFiles]
+									 waitUntilDone:NO];
 			if ([[[theFile pathExtension] lowercaseString] isEqualToString:@"jpg"]
 				|| [NSHFSTypeOfFile(theFile) isEqualToString:@"JPEG"]) {
-				thumb = [EpegWrapper imageWithPath:theFile boundingBox:cellSize];
-				if (!thumb)
-					NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]);
-				else
-					[thumbsCache addImage:thumb forFile:theFile];
+				NSSize theSize;
+				thumb = [EpegWrapper imageWithPath:theFile boundingBox:cellSize getSize:&theSize];
+				//if (!thumb)
+				//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
+				//else
+				if (thumb)
+					[thumbsCache addImage:thumb forFile:theFile size:theSize];
 			} else {
 				[thumbsCache cacheFile:theFile]; // will sleep if pending
 				thumb = [thumbsCache imageForKey:theFile];
 			}
 			if (!thumb) {
-				NSLog(@"couldn't load image %@", origPath);
+				//NSLog(@"couldn't load image %@", origPath);
 				thumb = [NSImage imageNamed:@"brokendoc"];
 			}
 		}
@@ -208,8 +202,8 @@
 	currentFilesDeletable = NO;
 	filenamesDone = NO;
 	[slidesBtn setEnabled:NO];
-	NSString *currentPath = [dirBrowser path];
-	[statusFld setStatusText:NSLocalizedString(@"Getting filenames...", @"")];
+	NSString *currentPath = [[dirBrowser delegate] path];
+	[statusFld setStringValue:NSLocalizedString(@"Getting filenames...", @"")];
 	[[dirBrowser window] setTitleWithRepresentedFilename:currentPath];
 	[slidesWindow setBasePath:currentPath];
 	[NSThread detachNewThreadSelector:@selector(loadImages:)
@@ -242,7 +236,7 @@
 		if ([s count])
 			RevealItemsInFinder([filenames subarrayWithIndexSet:s]);
 		else
-			[[NSWorkspace sharedWorkspace] openFile:[dirBrowser path]];
+			[[NSWorkspace sharedWorkspace] openFile:[[dirBrowser delegate] path]];
 	}
 }
 
@@ -270,8 +264,8 @@
 	[imgMatrix selectNone:sender];
 }
 
-// returns YES if successful
-// unsuccessful: 0 user wants to continue; -1 cancel/abort
+// returns 1 if successful
+// unsuccessful: 0 user wants to continue; 2 cancel/abort
 - (char)trashFile:(NSString *)fullpath numLeft:(unsigned int)numFiles {
 	int tag;
 	if ([[NSWorkspace sharedWorkspace]
@@ -280,20 +274,20 @@ performFileOperation:NSWorkspaceRecycleOperation
 		 destination:@""
 			   files:[NSArray arrayWithObject:[fullpath lastPathComponent]]
 				 tag:&tag]) {
-		return YES;
+		return 1;
 	}
 	if (NSRunAlertPanel(nil, //title
 						NSLocalizedString(@"The file %@ could not be moved to the trash because an error of %i occurred.", @""),
 						@"Cancel", (numFiles > 1 ? @"Continue" : nil), nil,
 						[fullpath lastPathComponent], tag) == NSAlertDefaultReturn)
-		return -1;
+		return 2;
 	return 0;
 }
 
 - (IBAction)moveToTrash:(id)sender {
 	if ([slidesWindow isKeyWindow]) {
 		NSString *s = [slidesWindow currentFile];
-		if ([self trashFile:s numLeft:1]) {
+		if ([self trashFile:s numLeft:1] == 1) {
 			unsigned i = [filenames indexOfObject:[slidesWindow currentFile]];
 			if (i != NSNotFound) {
 				if (i < [imgMatrix numCells]) // ** copied from below
@@ -313,12 +307,12 @@ performFileOperation:NSWorkspaceRecycleOperation
 		for (i=[s lastIndex]; i != NSNotFound; i = [s indexLessThanIndex:i]) {
 			NSString *fullpath = [filenames objectAtIndex:i];
 			char result = [self trashFile:fullpath numLeft:n--];
-			if (result) {
+			if (result == 1) {
 				if (i < [imgMatrix numCells]) // imgMatrix might not have loaded it yet!
 					[imgMatrix removeImageAtIndex:i];
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
 				[filenames removeObjectAtIndex:i]; // do this last, it invalidates fullpath!
-			} else if (result == -1)
+			} else if (result == 2)
 				break;
 		}
 		//NSLog(@"%@", [[NSWorkspace sharedWorkspace] mountedRemovableMedia]);
@@ -349,12 +343,12 @@ performFileOperation:NSWorkspaceRecycleOperation
 	//NSLog(@"file exists");
 	if (!isDir)
 		filename = [filename stringByDeletingLastPathComponent];
-	if (![dirBrowser setPath:filename]) {
+	if (![[dirBrowser delegate] setPath:filename]) {
 		//NSLog(@"retrying as invisible");
 		showInvisibles = YES;
 		[[dirBrowser delegate] setShowInvisibles:YES];
-		[dirBrowser loadColumnZero]; // ** i guess this should be in the delegate class
-		[dirBrowser setPath:filename];
+		//[dirBrowser loadColumnZero]; // ** should be in the delegate class?
+		[[dirBrowser delegate] setPath:filename];
 	}
 	//NSLog(@"sending action");
 	[dirBrowser sendAction];
@@ -375,7 +369,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 	return YES;
 }
 
-// app delegate methods
+#pragma mark app delegate methods
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	//NSLog(@"appdidfinlaunch called");
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
@@ -385,16 +379,21 @@ performFileOperation:NSWorkspaceRecycleOperation
 		: [u stringForKey:@"picturesFolderPath"];
 	//NSLog(@"got my path");
 	if (lastThreadTime == 0) // user didn't drop icons onto app when opening
+	{
+		[dirBrowser loadColumnZero]; // work around stupid bug, doesn't auto-select cell 0
 		if (![self openFile:s])
 			if (![self openFile:DEFAULT_PATH])
 				[self openFile:NSHomeDirectory()];
+	}
+	[[dirBrowser window] makeFirstResponder:dirBrowser]; //another stupid workaround, for hiliting
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	if ([u integerForKey:@"startupOption"] == 0)
-		[u setObject:[dirBrowser path] forKey:@"lastFolderPath"];
+		[u setObject:[[dirBrowser delegate] path] forKey:@"lastFolderPath"];
+	[u setFloat:[imgMatrix cellWidth] forKey:@"thumbCellWidth"];
 }
 
 
@@ -524,5 +523,41 @@ enum {
 #pragma mark splitview delegate methods
 - (void)splitView:(RBSplitView*)sender wasResizedFrom:(float)oldDimension to:(float)newDimension {
 	[sender adjustSubviewsExcepting:[sender subviewAtPosition:0]];
+}
+
+#pragma mark wrapping matrix methods
+- (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)selectedIndexes {
+	NSString *s, *path;
+	DYImageInfo *i;
+	unsigned long long totalSize = 0;
+	id obj; NSEnumerator *e;
+	switch ([selectedIndexes count]) {
+		case 0:
+			s = @"";
+			break;
+		case 1:
+			path = [filenames objectAtIndex:[selectedIndexes firstIndex]];
+			i = [thumbsCache infoForKey:ResolveAliasToPath(path)];
+			// must resolve alias here b/c that's what we do in loadImages
+			// see also modTime in DYImageCache
+			s = i ? [[path lastPathComponent] stringByAppendingFormat:@" %dx%d (%@)",
+						(int)i->pixelSize.width,
+						(int)i->pixelSize.height,
+						FileSize2String(i->fileSize)]
+				  : [[path lastPathComponent] stringByAppendingString:
+					  @" - bad image file!"];
+			break;
+		default:
+			e = [[filenames subarrayWithIndexSet:selectedIndexes] objectEnumerator];
+			while (obj = [e nextObject]) {
+				if (i = [thumbsCache infoForKey:ResolveAliasToPath(obj)])
+					totalSize += i->fileSize;
+			}
+			s = [NSString stringWithFormat:@"%d selected (%@)",
+				[selectedIndexes count],
+				FileSize2String(totalSize)];
+			break;
+	}
+	[bottomStatusFld setStringValue:s];
 }
 @end

@@ -7,23 +7,25 @@
 
 #import "DYWrappingMatrix.h"
 #import "NSArrayIndexSetExtension.h"
-#import "NSStringDYBasePathExtension.h"
+#import "NSIndexSetSymDiffExtension.h"
 
-#define MAX_CELL_WIDTH  180
-// max height is 3/4 * max width
-#define MIN_CELL_WIDTH  80
+#define MAX_CELL_WIDTH  160
+#define MIN_CELL_WIDTH  40
+#define DEFAULT_CELL_WIDTH 120
+// height is 3/4 * width
 #define PADDING 16
 
-@interface NSObject(DYWrappingMatrixTrasher)
-- (IBAction)moveToTrash:(id)sender;
-@end
+/* there are three methods called from a separate thread:
+   addSelectedIndex
+   removeAllImages
+   addImage:withFilename:
+
+   i've tried to make them thread-safe
+ */
+
 
 static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSRect destinationRect;
-	// float tmp;
-	float centerX, centerY;
-	centerX = boundsRect.origin.x + boundsRect.size.width/2;
-	centerY = boundsRect.origin.y + boundsRect.size.height/2;
 	
 	// size
 	if (sourceSize.width <= boundsRect.size.width
@@ -43,18 +45,22 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	
 	// origin
-	destinationRect.origin.x = centerX - destinationRect.size.width/2;
-	destinationRect.origin.y = centerY - destinationRect.size.height/2;
-	destinationRect = NSIntegralRect(destinationRect); // make them integers, dammit
-	return destinationRect;
+	destinationRect.origin.x = NSMidX(boundsRect) - destinationRect.size.width/2;
+	destinationRect.origin.y = NSMidY(boundsRect) - destinationRect.size.height/2;
+	return NSIntegralRect(destinationRect);
+	//return destinationRect;
 }
+
+@interface DYWrappingMatrix (Private)
+- (void)resize:(id)anObject; // called to recalc, set frame height
+@end
 
 @implementation DYWrappingMatrix
 
 + (Class)cellClass { return [NSActionCell class]; }
 	// NSActionCell or subclass required for target/action
 
-// services stuff
+#pragma mark services stuff
 + (void)initialize
 {
     static BOOL initialized = NO;
@@ -81,23 +87,23 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
         return NO;
  	[pboard declareTypes:[NSArray arrayWithObject:NSFilenamesPboardType]
 				   owner:nil];
-	// ** repeated from mouseDown
-	NSEnumerator *e = [[cells subarrayWithIndexSet:selectedIndexes] objectEnumerator];
-	id obj; NSMutableArray *files = [NSMutableArray array];
-	while (obj = [e nextObject]) {
-		[files addObject:[obj representedObject]];
-	}
-	return [pboard setPropertyList:files forType:NSFilenamesPboardType];
+	return [pboard setPropertyList:[filenames subarrayWithIndexSet:selectedIndexes]
+						   forType:NSFilenamesPboardType];
 }
 
+#pragma mark init stuff
 - (id)initWithFrame:(NSRect)frameRect
 {
 	if ((self = [super initWithFrame:frameRect]) != nil) {
-		cells = [[NSMutableArray alloc] initWithCapacity:100];
+		myCell = [[NSImageCell alloc] initImageCell:nil];
+		images = [[NSMutableArray alloc] initWithCapacity:100];
+		filenames = [[NSMutableArray alloc] initWithCapacity:100];
 		selectedIndexes = [[NSMutableIndexSet alloc] init];
-		cellWidth = 120;
+		[self setCellWidth:DEFAULT_CELL_WIDTH];
 		
 		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+		
+		[[[NSThread currentThread] threadDictionary] setObject:@"1" forKey:@"DYWrappingMatrixMainThread"];
 	}
 	return self;
 }
@@ -111,7 +117,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)dealloc {
-	[cells release];
+	[myCell release];
+	[images release];
+	[filenames release];
 	[selectedIndexes release];
 	[super dealloc];
 }
@@ -120,17 +128,28 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (BOOL)canBecomeKeyView { return YES; }
 - (BOOL)isFlipped { return YES; }
 
-
+#pragma mark display/drag stuff
 - (NSSize)cellSize { return NSMakeSize(cellWidth,cellWidth*3/4); }
+- (NSSize)maxCellSize { return NSMakeSize(MAX_CELL_WIDTH,MAX_CELL_WIDTH*3/4); }
+- (float)maxCellWidth { return MAX_CELL_WIDTH; }
+- (float)minCellWidth { return MIN_CELL_WIDTH; }
+- (float)cellWidth { return cellWidth; }
+- (void)setCellWidth:(float)w {
+	cellWidth = w;
+	[self resize:nil];
+	[self setNeedsDisplay:YES]; // ** I suppose should call on main thread too
+}
+
 
 - (void)calculateCellSizes {
+	// all values dependent on bounds width, cellWidth(, numCells for resize:)
 	float self_w = [self bounds].size.width;
 	cellHeight = cellWidth*3/4;
 	numCols = (int)(self_w)/((int)cellWidth + PADDING/2);
 	if (numCols == 0) numCols = 1;
 	columnSpacing = (self_w - numCols*cellWidth)/numCols;
-	area_w = (int)(cellWidth + columnSpacing);
-	area_h = (int)(cellHeight + PADDING);
+	area_w = cellWidth + columnSpacing;
+	area_h = cellHeight + PADDING;
 }
 - (int)point2cellnum:(NSPoint)p {
 	int col = MIN(numCols-1, (int)p.x/area_w); if (col < 0) col = 0;
@@ -138,15 +157,38 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	int n = col + numCols*row; if (n<0) n=0;
 	return n; // n might be > numCells-1
 }
-- (NSRect)imageRectForIndex:(unsigned int)n {
-	id c = [cells objectAtIndex:n];
+- (NSRect)cellnum2rect:(unsigned int)n {
 	int row, col;
 	row = n/numCols;
 	col = n%numCols;
-	NSRect cellRect = NSMakeRect(cellWidth*col + columnSpacing*(col + 0.5),
-								 cellHeight*row + PADDING*(row+0.5),
-								 cellWidth, cellHeight);
-	return ScaledCenteredRect([[c image] size], cellRect);
+	return NSMakeRect(area_w*col,area_h*row,area_w, area_h);
+}
+- (NSRect)imageRectForIndex:(unsigned int)n {
+	int row, col;
+	row = n/numCols;
+	col = n%numCols;
+	return ScaledCenteredRect([[images objectAtIndex:n] size],
+							  NSMakeRect(cellWidth*col + columnSpacing*(col + 0.5),
+										 cellHeight*row + PADDING*(row+0.5),
+										 cellWidth, cellHeight)); // rect for cell only
+}
+
+- (void)selectionNeedsDisplay:(unsigned int)n {
+	int row, col;
+	row = n/numCols;
+	col = n%numCols;
+	float x, y, x2, y2;
+	NSRect r = [self imageRectForIndex:n]; // use this because it's integral
+	// top left of area
+	x = area_w*col;                      y = area_h*row;
+	// bottom right of cell
+	x2 = r.origin.x + r.size.width;     y2 = r.origin.y + r.size.height;
+	[self setNeedsDisplayInRect:NSMakeRect(x,y, area_w, r.origin.y-y)]; // top
+	[self setNeedsDisplayInRect:NSMakeRect(x,y2, area_w, y+area_h-y2)]; // bottom
+	[self setNeedsDisplayInRect:NSMakeRect(x,r.origin.y,
+										   r.origin.x-x, r.size.height)]; // left
+	[self setNeedsDisplayInRect:NSMakeRect(x2, r.origin.y,
+										   x+area_w-x2,r.size.height)]; // right
 }
 
 - (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal {
@@ -158,20 +200,21 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation {
 	if (operation != NSDragOperationDelete)
 		return;
-	[[self target] moveToTrash:nil]; // **
+	if ([[self target] respondsToSelector:@selector(moveToTrash:)])
+		[[self target] moveToTrash:nil];
 }
 
-
+#pragma mark event stuff
 - (void)mouseDown:(NSEvent *)theEvent {
 	[[self window] makeFirstResponder:self];
 	BOOL keepOn = YES;
 	char doDrag = 0;
 	int cellNum, a, b, i;
 	NSRange draggedRange;
-	NSMutableIndexSet *oldSelection = [[NSMutableIndexSet alloc] initWithIndexSet:selectedIndexes];
+	NSMutableIndexSet *oldSelection = [selectedIndexes mutableCopy];
+	NSMutableIndexSet *lastIterationSelection = [oldSelection mutableCopy];
 	BOOL shiftKeyDown = ([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 	BOOL cmdKeyDown = ([theEvent modifierFlags] & NSCommandKeyMask) != 0;
-	[self calculateCellSizes];
 
 	NSPoint mouseLoc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	NSPoint mouseDownLoc = mouseLoc;
@@ -181,7 +224,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	if (!cmdKeyDown && mouseDownCellNum < numCells &&
 		([selectedIndexes containsIndex:mouseDownCellNum] ||
-		 NSPointInRect(mouseLoc, [self imageRectForIndex:mouseDownCellNum]))) {
+		 NSPointInRect(mouseLoc, [self imageRectForIndex:mouseDownCellNum]) && !shiftKeyDown)) {
 		// we should drag if started in selection
 		// or dragging the actual image
 		doDrag = 1;
@@ -228,7 +271,16 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 							[selectedIndexes addIndex:draggedRange.location+i];
 				if (![self mouse:mouseLoc inRect:[self visibleRect]])
 					[self autoscroll:theEvent]; // always check visibleRect for autoscroll
-				[self setNeedsDisplay:YES];
+				[lastIterationSelection symmetricDifference:selectedIndexes];
+				if ([lastIterationSelection count]) {
+					// if selection changed...
+					[self updateStatusString];
+					for (i=[lastIterationSelection firstIndex]; i != NSNotFound; i = [lastIterationSelection indexGreaterThanIndex:i]) {
+						[self selectionNeedsDisplay:i];
+					}
+				}
+				[lastIterationSelection removeAllIndexes];
+				[lastIterationSelection addIndexes:selectedIndexes];
 				break;
             case NSLeftMouseUp:
 				if ([theEvent clickCount] == 2)
@@ -244,32 +296,33 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     }
 	[NSEvent stopPeriodicEvents];
 	if (doDrag == 2) {
-		NSEnumerator *e = [[cells subarrayWithIndexSet:selectedIndexes] objectEnumerator];
-		id obj; NSMutableArray *files = [NSMutableArray array];
-		while (obj = [e nextObject]) {
-			[files addObject:[obj representedObject]];
-		}
 		//pboard
 		NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
 		[pboard declareTypes:[NSArray arrayWithObject:NSFilenamesPboardType]
 					   owner:nil];
-		[pboard setPropertyList:files forType:NSFilenamesPboardType];
+		[pboard setPropertyList:[filenames subarrayWithIndexSet:selectedIndexes]
+						forType:NSFilenamesPboardType];
 		//loc, img
 		NSImage *dragImg, *transparentImg;
 		NSPoint imgLoc = mouseDownLoc;
+		NSSize imgSize;
 		if ([selectedIndexes count] == 1) {
-			dragImg = [[cells objectAtIndex:[selectedIndexes firstIndex]] image];
+			dragImg = [images objectAtIndex:[selectedIndexes firstIndex]];
 			NSRect imgRect = [self imageRectForIndex:mouseDownCellNum];
+			imgSize = imgRect.size;
 			imgLoc = imgRect.origin;
 			imgLoc.y += imgRect.size.height;
 		} else {
 			dragImg = [NSImage imageNamed:@"multipledocs"];
+			imgSize = [dragImg size];
 			imgLoc.x -= [dragImg size].width/2;
 			imgLoc.y += [dragImg size].height/2; // we're using flipped coords, calc bottom left
 		}
-		transparentImg = [[[NSImage alloc] initWithSize:[dragImg size]] autorelease];
+		transparentImg = [[[NSImage alloc] initWithSize:imgSize] autorelease];
 		[transparentImg lockFocus];
-		[dragImg compositeToPoint:NSZeroPoint operation:NSCompositeCopy fraction:0.3];
+		[dragImg drawInRect:NSMakeRect(0,0,imgSize.width,imgSize.height)
+				   fromRect:NSMakeRect(0,0,[dragImg size].width,[dragImg size].height)
+				  operation:NSCompositeCopy fraction:0.3];
 		[transparentImg unlockFocus];
 		[self dragImage:transparentImg
 					 at:imgLoc
@@ -279,12 +332,13 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			 pasteboard:pboard source:self slideBack:YES];
 	}
 	[oldSelection release];
+	[lastIterationSelection release];
 }
 
 - (void)resize:(id)anObject { // called by notification center
 	[self calculateCellSizes];
 	NSSize mySize = [self frame].size;
-	int numRows = numCells == 0 ? 1 : (numCells-1)/numCols + 1;
+	int numRows = numCells == 0 ? 0 : (numCells-1)/numCols + 1;
 	float h = MAX(numRows*area_h, [[self superview] frame].size.height);
 	if (mySize.height != h) {
 		mySize.height = h;
@@ -292,50 +346,164 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 }
 
+// always call this if called from another thread
+// calling from main seems to make drawing weird
+- (void)setNeedsDisplayInRect2:(NSRect)invalidRect {
+//	if ([[[NSThread currentThread] threadDictionary] objectForKey:@"DYWrappingMatrixMainThread"])
+//		[super setNeedsDisplayInRect:(NSRect)invalidRect];
+//	else
+		[self performSelectorOnMainThread:@selector(setNeedsDisplayInRectThreaded:)
+							   withObject:[NSValue valueWithRect:invalidRect]
+							waitUntilDone:NO];
+}
+
+- (void)setNeedsDisplayInRectThreaded:(NSValue *)v {
+	[self setNeedsDisplayInRect:[v rectValue]];
+}
+- (void)setNeedsDisplayThreaded {
+	[self setNeedsDisplay:YES];
+}
+
+// needsToDrawRect: is broken in Panther (10.3)
+// see TN2107
+// purportedly fixed in 10.4
+- (BOOL)needsToDrawRect:(NSRect)rect rectListBounds:(NSRect)rectListBounds
+{
+    const NSRect *rectList;
+    int count;
+    int i;
+    
+    if (!NSIntersectsRect(rect, rectListBounds)) {
+        return NO;
+    }
+    [self getRectsBeingDrawn:&rectList count:&count];
+    if (count == 1) {
+        return YES;
+    } else {
+        for (i = 0; i < count; i++) {
+            if (NSIntersectsRect(rect, rectList[i])) {
+                return YES;
+            }
+        }
+        return NO;
+    }
+}
 
 - (void)drawRect:(NSRect)rect {
+	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
+	NSImageInterpolation oldInterp = [cg imageInterpolation];
+	[cg setImageInterpolation:NSImageInterpolationNone];
+	
 	[[NSColor whiteColor] set];
 	[NSBezierPath fillRect:rect];
-	[self calculateCellSizes];
-	
+	//NSLog(@"---------------------------");
 	int i, row, col;
 	NSRect areaRect = NSMakeRect(0, 0, area_w, area_h);
-	NSRect cellRect = NSMakeRect(0, 0, cellWidth, cellHeight);
+	NSRect cellRect;
 	NSWindow *myWindow = [self window];
 	for (i=0; i<numCells; ++i) {
 		row = i/numCols;
 		col = i%numCols;
 		areaRect.origin = NSMakePoint(area_w*col, area_h*row);
-		if (![self needsToDrawRect:areaRect]) continue; // 10.3
+		if (![self needsToDrawRect:areaRect rectListBounds:rect]) continue; // 10.3
 		if ([selectedIndexes containsIndex:i]) {
 			[([myWindow firstResponder] == self && [myWindow isKeyWindow]
 			  ? [NSColor selectedTextBackgroundColor]
 			  : [NSColor lightGrayColor]) set];
 			[NSBezierPath fillRect:areaRect];
 		}
-		cellRect.origin = NSMakePoint(cellWidth*col + columnSpacing*(col + 0.5),
-									  cellHeight*row + PADDING*(row+0.5));
-		if (![self needsToDrawRect:cellRect]) continue;
-		[[cells objectAtIndex:i] drawWithFrame:cellRect inView:self];
+		cellRect = [self imageRectForIndex:i];
+		if (![self needsToDrawRect:cellRect	rectListBounds:rect]) {
+			//NSLog(@"skipped cell %i", i);
+			continue;	
+		}
+		[myCell setImage:[images objectAtIndex:i]];
+		[[NSColor whiteColor] set]; // white bg for transparent imgs
+		NSRectFill(cellRect);
+		[myCell drawWithFrame:cellRect inView:self];
 	}
 	if (dragEntered) {
 		[[[NSColor lightGrayColor] colorWithAlphaComponent:0.5] set];
 		[NSBezierPath fillRect:rect];
 	}
+	[cg setImageInterpolation:oldInterp];
+}
+- (void)keyDown:(NSEvent *)e {
+	unichar c = [[e characters] characterAtIndex:0];
+	switch (c) {
+		case NSRightArrowFunctionKey:
+		case NSLeftArrowFunctionKey:
+		case NSDownArrowFunctionKey:
+		case NSUpArrowFunctionKey:
+			break;
+		default:
+			[super keyDown:e];
+			return;
+	}
+#pragma unused (n)
+	unsigned int n;
+	if ([selectedIndexes count] == 1) {
+		n = [selectedIndexes firstIndex];
+		[self selectionNeedsDisplay:n];
+		switch (c) {
+			case NSRightArrowFunctionKey: if (n<numCells-1) n++; break;
+			case NSLeftArrowFunctionKey:  if (n>0) n--; break;
+			case NSDownArrowFunctionKey:
+				if ((numCells - 1 - n) < numCols) n = numCells-1;
+				else n += numCols;
+				break;
+			case NSUpArrowFunctionKey:
+				if (numCols > n) n = 0;
+				else n -= numCols;
+				break;
+			default: break;
+		}
+		[selectedIndexes removeAllIndexes];
+	} else if ([selectedIndexes count] == 0) {
+		switch (c) {
+			case NSRightArrowFunctionKey:
+			case NSDownArrowFunctionKey:
+				n = 0;
+				break;
+			case NSLeftArrowFunctionKey:
+			case NSUpArrowFunctionKey:
+				n = numCells-1;
+				break;
+			default: break;
+		}
+	} else
+		return;
+	[selectedIndexes addIndex:n];
+	[self updateStatusString];
+	NSRect r = [self cellnum2rect:n];
+	[self selectionNeedsDisplay:n];
+	// round down for better auto-scrolling
+	r.size.height = (int)r.size.height;
+	if (![self mouse:r.origin inRect:[self visibleRect]])
+		[self scrollRectToVisible:r];
 }
 
+#pragma mark selection stuff
 - (NSMutableIndexSet *)selectedIndexes {
 	return selectedIndexes;
 }
 
 - (IBAction)selectAll:(id)sender {
 	[selectedIndexes addIndexesInRange:NSMakeRange(0,numCells)];
-	[self setNeedsDisplay:YES];
+	unsigned int i;
+	for (i=0; i<numCells; ++i) {
+		[self selectionNeedsDisplay:i];
+	}
+	[self updateStatusString];
 }
 
 - (IBAction)selectNone:(id)sender {
 	[selectedIndexes removeAllIndexes];
-	[self setNeedsDisplay:YES];
+	unsigned int i;
+	for (i=0; i<numCells; ++i) {
+		[self selectionNeedsDisplay:i];
+	}
+	[self updateStatusString];
 }
 
 - (unsigned int)numCells {
@@ -344,45 +512,55 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (void)addSelectedIndex:(unsigned int)i {
 	[selectedIndexes addIndex:i];
+	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
+	[NSObject cancelPreviousPerformRequestsWithTarget:self
+											 selector:@selector(updateStatusString)
+											   object:nil];
+	[self performSelectorOnMainThread:@selector(updateStatusString)
+						   withObject:nil waitUntilDone:NO];
+	//[self updateStatusString];
 }
 
 //- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i {
 //	if (i >= numCells) return;
-//	NSImageCell *c = [cells objectAtIndex:i];
+//	NSImageCell *c = [images objectAtIndex:i];
 //	[c setImage:theImage];
 //	[self setNeedsDisplay:YES];
 //}
 
-- (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
-	// once we create a cell, we never dealloc it
-	// keep track using numCells
-	unsigned int i = numCells;
-	NSImageCell *c;
-	if ([cells count] < ++numCells) {
-		c = [[NSImageCell alloc] initImageCell:theImage];
-		[cells addObject:c]; [c release];
-	} else {
-		c = [cells objectAtIndex:i];
-		[c setImage:theImage];
+- (void)updateStatusString {
+	if ([[self target] respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)]) {
+		[[self target] wrappingMatrix:self selectionDidChange:selectedIndexes];
 	}
-	[c setRepresentedObject:s];
-	[self resize:nil];
-	[self setNeedsDisplay:YES];
-	//[self calculateCellSizes];
-	//[self setNeedsDisplayInRect:NSMakeRect(area_w*(i%numCols), area_h*(i/numCols),
-	//									   area_w, area_h)];
+}
+
+#pragma mark add/delete images stuff
+- (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
+	[images addObject:theImage];
+	[filenames addObject:s];
+	numCells++;
+	//[self resize:nil];
+	[self performSelectorOnMainThread:@selector(resize:)
+						   withObject:nil waitUntilDone:NO];
+	[self setNeedsDisplayInRect2:[self cellnum2rect:numCells-1]];
 }
 
 - (void)removeAllImages {
 	numCells = 0;
-	[selectedIndexes removeAllIndexes];
-	[self resize:nil];
-	[self setNeedsDisplay:YES];
+	[images removeAllObjects];
+	[filenames removeAllObjects];
+	// ** [self resize:nil];
+	//[self setNeedsDisplay:YES]; // ** I suppose should call on main thread too
+	[self performSelectorOnMainThread:@selector(resize:)
+						   withObject:nil waitUntilDone:NO];
+	[self performSelectorOnMainThread:@selector(setNeedsDisplayThreaded)
+						   withObject:nil waitUntilDone:NO];
+	[self selectNone:nil]; // **
 }
 /*
 - (void)removeSelectedImages {
 	numCells -= [selectedIndexes count];
-	[cells removeObjectsFromIndices:selectedIndexes];
+	[images removeObjectsFromIndices:selectedIndexes];
 	[selectedIndexes removeAllIndexes];
 	[self setNeedsDisplay:YES];
 }
@@ -390,14 +568,18 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)removeImageAtIndex:(unsigned int)i {
 	//** check if i is in range?
 	numCells--;
-	[cells removeObjectAtIndex:i];
+	[images removeObjectAtIndex:i];
+	[filenames removeObjectAtIndex:i];
 	[selectedIndexes shiftIndexesStartingAtIndex:i+1 by:-1];
 	[self resize:nil];
-	[self setNeedsDisplay:YES];
+	do {
+		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
+	} while (++i<numCells);
+	[self updateStatusString];
 }
 
 
-// dragging stuff
+#pragma mark more dragging stuff
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
     NSPasteboard *pboard;
     NSDragOperation sourceDragMask;
@@ -445,5 +627,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     }
     return YES;
 }
+
 
 @end

@@ -7,6 +7,31 @@
 
 #import "DYCreeveyBrowser.h"
 
+@interface DYBrowserCell : NSBrowserCell {
+	NSString *title;
+}
+// maintains a title for display (sep. from stringValue), and draws it
+@end
+
+@implementation DYBrowserCell
+
+- (void)setTitle:(NSString *)s {
+	[title release];
+	title = [s copy];
+}
+- (NSString *)title {
+	return title;
+}
+
+- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
+	id myStringValue = [self stringValue];
+	[self setStringValue:title];
+	[super drawInteriorWithFrame:cellFrame inView:controlView];
+	[self setStringValue:myStringValue];
+}
+
+@end
+
 @interface DYCreeveyBrowserMatrix : NSMatrix
 @end
 @implementation DYCreeveyBrowserMatrix
@@ -35,18 +60,15 @@
 }
 @end
 
-// for another delegate method
-@interface NSObject (DYCreeveyBrowserDelegate)
-- (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(int)column;
-@end
-
 @implementation DYCreeveyBrowser
 //why doesn't IB let me set this as a custom class of an NSBrowser???
+//it calls a different init method
 - (id)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
 		[self setMatrixClass:[DYCreeveyBrowserMatrix class]];
 		[self setTitled:NO];
 		[self setHasHorizontalScroller:YES];
+		[self setCellClass:[DYBrowserCell class]];
 		[[self cellPrototype] setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]-1]];
 		[self setAllowsEmptySelection:NO];
 		
@@ -65,6 +87,10 @@
 #define KEYPRESS_INTERVAL 0.5
 
 - (void)keyDown:(NSEvent *)e {
+	if (![[self delegate] respondsToSelector:@selector(browser:typedString:inColumn:)]) {
+		[super keyDown:e];
+		return;
+	}
 	NSString *s = [e characters];
 	if (![s length])
 		return; // dead keys return empty
@@ -84,7 +110,14 @@
 	
 	[[self delegate] browser:self typedString:typedString inColumn:[self selectedColumn]];
 }
-// dragging stuff
+
+- (BOOL)sendAction {
+	if ([[self delegate] respondsToSelector:@selector(browserWillSendAction:)])
+		[[self delegate] browserWillSendAction:self];
+	return [super sendAction];
+}
+
+#pragma mark dragging stuff
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
     NSPasteboard *pboard;
     NSDragOperation sourceDragMask;

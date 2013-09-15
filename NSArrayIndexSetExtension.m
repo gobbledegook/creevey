@@ -19,20 +19,19 @@
 @implementation NSArray (DYIndexSetExtension)
 
 - (NSArray *)subarrayWithIndexSet:(NSIndexSet *)s {
-	unsigned int i, numSelected;
-	unsigned int *indexes;
-	NSRange r;
-	r.location = 0;
-	r.length = [self count];
+	unsigned int i, *indexes;
+//	NSRange r; OBSOLETE CODE**
+//	r.location = 0;
+//	r.length = [self count];
 	unsigned int numIndexes = [s count];
 	
 	indexes = malloc(sizeof(unsigned int *)*numIndexes);
 	NSAssert(indexes, @"subarrayWithIndexSet malloc failed!");
 	
-	numSelected = [s getIndexes:indexes maxCount:numIndexes inIndexRange:&r];
+	[s getIndexes:indexes maxCount:numIndexes inIndexRange:NULL];
 	
-	NSMutableArray *a = [[NSMutableArray alloc] initWithCapacity:numSelected];
-	for (i=0; i<numSelected; ++i)
+	NSMutableArray *a = [[NSMutableArray alloc] initWithCapacity:numIndexes];
+	for (i=0; i<numIndexes; ++i)
 		[a addObject:[self objectAtIndex:indexes[i]]];
 	NSArray *b = [NSArray arrayWithArray:a];
 	free(indexes);

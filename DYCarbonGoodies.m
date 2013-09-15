@@ -44,6 +44,23 @@ NSString *ResolveAliasToPath(NSString *path) {
 	return resolvedPath;
 }
 
+NSString *AliasToPath(AliasHandle aHndl) {
+	NSString *resolvedPath = nil;
+	FSRef fsRef;
+	Boolean wasChanged;
+	if (FSResolveAliasWithMountFlags(NULL,aHndl,&fsRef,&wasChanged,
+									 kResolveAliasFileNoUI)  == noErr) {
+		CFURLRef resolvedUrl = CFURLCreateFromFSRef(NULL, &fsRef);
+		if (resolvedUrl) {
+			CFStringRef thePath = CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle);
+			resolvedPath = [NSString stringWithString:(NSString*)thePath];
+			CFRelease(thePath);
+			CFRelease(resolvedUrl);
+		}
+	}
+	return resolvedPath;
+}
+
 
 OSStatus GetFinderPSN(ProcessSerialNumber *psn) {
 	ProcessInfoRec          info;
@@ -84,7 +101,7 @@ void RevealItemsInFinder(NSArray *theFiles)
 	OSErr err;
 	// prepare descList
 	AEDescList descList;
-	err = AECreateList(NULL,NULL,false,&descList);
+	err = AECreateList(NULL,0,false,&descList);
 	if (err) return;
 	
 	int numFiles = [theFiles count];
@@ -206,6 +223,8 @@ BOOL FileIsInvisible(NSString *path) {
 	
 	return (info.flags & kLSItemInfoIsInvisible) != 0;
 	/* UNTESTED CODE below, from mailing list
+	 * above uses Launch Services
+	 * below uses Carbon FS calls
 	FSRef                possibleInvisibleFile; 
 	FSCatalogInfo        catalogInfo; 
 	BOOL                isHidden = NO; 
@@ -215,25 +234,12 @@ BOOL FileIsInvisible(NSString *path) {
 	FSGetCatalogInfo(&possibleInvisibleFile, kFSCatInfoFinderInfo, 
 					 &catalogInfo,  nil, nil, nil); 
 	isHidden |= (((FileInfo*)catalogInfo.finderInfo)->finderFlags & 
-				 kIsInvisible) ? 1 : 0; 
-	
-	OR
-	
-    NSString * filePath = path  // obviously, this line is pseudocode
-    FSSpec fsSpec = [filePath getFSSpec]; 
-    FInfo fInfo; 
-
-    OSStatus err = FSpGetFInfo(&fsSpec, &fInfo);
-    if(err) 
-        return NO;
-    bool invisibleFlag = fInfo.fdFlags & kIsInvisible; 
-    BOOL invisibleName = [[filePath lastPathComponent] hasPrefix:@"."];
-    bool fileVisible = !(invisibleFlag && invisibleName);
+				 kIsInvisible) ? 1 : 0;
 	*/
 	
 }
 
-// code below lifte from DeskPictAppDockMenu
+// code below lifted from DeskPictAppDockMenu
 
 // Setting the desktop picture involves a lot of Apple Event and Carbon code.
 // It's all self-contained in this one function.  This Apple Event isn't guarrenteed to

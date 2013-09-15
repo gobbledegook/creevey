@@ -9,10 +9,15 @@
 
 #import <Cocoa/Cocoa.h>
 
+// displays thumbnails of image files
+// for fastest results, make thumbnails yourself to avoid scaling
+// supports selection, drag/drop, keyboard navigation
+// assumes it is embedded in a scrollview
 @interface DYWrappingMatrix : NSControl
 {
-	NSMutableArray *cells;
-	NSArray *filenames;
+	NSImageCell *myCell;           // one cell, reused for efficiency
+	NSMutableArray *images;
+	NSMutableArray *filenames;
 	float cellWidth;
 	unsigned int numCells;
 	NSMutableIndexSet *selectedIndexes;
@@ -20,8 +25,8 @@
 	BOOL dragEntered;
 	
 	// vars used for repeated calculations
-	int numCols, area_w, area_h;
-	float cellHeight, columnSpacing;
+	int numCols;
+	float cellHeight, columnSpacing, area_w, area_h;
 }
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
@@ -30,6 +35,10 @@
 //- (void)removeSelectedImages;
 - (void)removeImageAtIndex:(unsigned int)i;
 
+// call when no images, preparing to add (for two-pass adding)
+//- (void)setFilenames:(NSArray *)a;
+
+
 - (NSMutableIndexSet *)selectedIndexes;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
@@ -37,4 +46,18 @@
 
 - (unsigned int)numCells;
 - (NSSize)cellSize;
+- (NSSize)maxCellSize;
+- (float)maxCellWidth;
+- (float)minCellWidth;
+- (float)cellWidth;
+- (void)setCellWidth:(float)w;
+
+- (void)updateStatusString; // ** rename me
+
 @end
+
+@interface NSObject(DYWrappingMatrixTarget)
+- (IBAction)moveToTrash:(id)sender; // dragging to trashcan will call this
+- (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)s;
+@end
+

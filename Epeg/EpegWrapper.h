@@ -15,7 +15,9 @@
 	
 }
 
-+ (NSImage *)imageWithPath:(NSString *)path boundingBox:(NSSize)boundingBox;
++ (NSImage *)imageWithPath:(NSString *)path
+			   boundingBox:(NSSize)boundingBox 
+				   getSize:(NSSize *)pixSize;
 + (NSString *)jpegErrorMessage;
 
 @end

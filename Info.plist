@@ -120,7 +120,7 @@
 	<key>CFBundleSignature</key>
 	<string>CrvY</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>2</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

@@ -15,12 +15,48 @@
 
 #import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
+
+#define N_StringFromFileSize_UNITS 3
+NSString *FileSize2String(unsigned long long fileSize) {
+	char *units[N_StringFromFileSize_UNITS] = {"KB", "MB", "GB"};
+	short i;
+	if (fileSize < 1024)
+		return [NSString stringWithFormat:@"%qu bytes", fileSize];
+	
+	double n = fileSize;
+	for (i=0; i<N_StringFromFileSize_UNITS; ++i) {
+		n /= 1024.0;
+		if (n < 1024) break;
+	}
+	return [NSString stringWithFormat:@"%.1f %s", n, units[i]];
+}
+
 @implementation DYImageInfo
 - (void)dealloc {
 	//[orig release];
 	[image release];
 	[modTime release];
 	[super dealloc];
+}
+
+// designated initializer
+- initWithPath:(NSString *)s {
+	if (self = [super init]) {
+		path = [s copy];
+		
+		// get modTime
+		NSDictionary *fattrs = [[NSFileManager
+			defaultManager] fileAttributesAtPath:ResolveAliasToPath(s)
+									traverseLink:NO];
+		modTime = [[fattrs fileModificationDate] retain];
+		
+		// get fileSize
+		fileSize = [fattrs fileSize];
+	}
+	return self;
+}
+- (NSString *)pixelSizeAsString {
+	return [NSString stringWithFormat:@"%dx%d", (int)pixelSize.width, (int)pixelSize.height];
 }
 @end
 
@@ -53,6 +89,10 @@
 	boundingSize = aSize;
 }
 
+- (void)setInterpolationType:(NSImageInterpolation)t {
+	interpolationType = t;
+}
+
 - (void)dealloc {
 	[images release];
 	[cacheOrder release];
@@ -63,18 +103,16 @@
 }
 
 - (DYImageInfo *)createScaledImage:(NSString *)s {
-	s = ResolveAliasToPath(s);
-	NSDictionary *fattrs = [fm fileAttributesAtPath:s traverseLink:NO];
-	DYImageInfo *imgInfo = [[[DYImageInfo alloc] init] autorelease];
-	imgInfo->modTime = [[fattrs fileModificationDate] retain];
-	if ([fattrs fileSize] == 0)
+	DYImageInfo *imgInfo = [[[DYImageInfo alloc] initWithPath:s] autorelease];
+	if (imgInfo->fileSize == 0)
 		return imgInfo;  // nsimage crashes on zero-length files
 	
+	s = ResolveAliasToPath(s);
 	NSSize maxSize = boundingSize;
 	NSImage *orig, *result = nil;
+	// calc pixelSize
 	orig = [[NSImage alloc] initByReferencingFile:s];
-	//NSLog(@"%@", orig);
-	/* You MUST either setDataRetained:YES OR setCacheMode:NSImageCacheNever.
+	   /* You MUST either setDataRetained:YES OR setCacheMode:NSImageCacheNever.
 		* Once the image is composited, NSImage will throw away the original
 		* data and save only a cached (read: reduced) version. It seems that
 		* if [orig size] is smaller than the raw pixel size, NSImage immediately
@@ -84,19 +122,25 @@
 		* simply blows up the cached image into a larger pixely image.
 		* We can fix this by telling it not to cache at all, or by retaining the
 		* original data.
+		* Another way: setScalesWhenResized
 		*/
-	//[orig setDataRetained:YES];
 	[orig setCacheMode:NSImageCacheNever];
 	// now scale the img
-	if (orig && [[orig representations] count]) { //** why doesn't it return nil for corrupt jpegs?
-		NSSize oldSize, newSize;
+	if (orig && [[orig representations] count]) { // why doesn't it return nil for corrupt jpegs?
 		NSImageRep *oldRep = [[orig representations] objectAtIndex:0];
-		oldSize = NSMakeSize([oldRep pixelsWide],[oldRep pixelsHigh]); // need pixels here, [orig size] might be wrong!
+		NSSize oldSize, newSize;
+		oldSize = NSMakeSize([oldRep pixelsWide], [oldRep pixelsHigh]);
 		
-		if (oldSize.width == 0 || oldSize.height == 0)
+		if (oldSize.width == 0 || oldSize.height == 0) // PDF's don't have pixels
 			oldSize = [orig size];
+		
 		if (oldSize.width != 0 && oldSize.height != 0) { // if it's still 0, skip it, BAD IMAGE
-
+			imgInfo->pixelSize = oldSize;
+		  if ([oldRep isKindOfClass:[NSBitmapImageRep class]]
+			  && [((NSBitmapImageRep*)oldRep) valueForProperty:NSImageFrameCount]) {
+			  // special case for animated gifs
+			  result = [orig retain];
+		  } else {
 			if ((maxSize.height > maxSize.width) != (oldSize.height > oldSize.width)) {
 				// ** do this only for the slideshow
 				maxSize.height = boundingSize.width;
@@ -121,21 +165,27 @@
 				}
 			}
 			result = [[NSImage alloc] initWithSize:newSize];// autorelease];
-			// right now we copy the old image into a new, smaller image
-			// is there a better way? just add cached rep to the orig image?
+															// right now we copy the old image into a new, smaller image
+															// is there a better way? just add cached rep to the orig image?
 			oldSize = [oldRep size];
 			[result lockFocus];
-			//NSGraphicsContext *cg = [NSGraphicsContext currentContext];
-			//NSImageInterpolation oldInterp = [cg imageInterpolation];
-			//[cg setImageInterpolation:NSImageInterpolationLow];
+			NSGraphicsContext *cg;
+			NSImageInterpolation oldInterp;
+			if (interpolationType) { // NSImageInterpolationDefault is 0
+				cg = [NSGraphicsContext currentContext];
+				oldInterp = [cg imageInterpolation];
+				[cg setImageInterpolation:interpolationType];
+			}
 			[orig drawInRect:NSMakeRect(0,0,newSize.width,newSize.height)
 					fromRect:NSMakeRect(0,0,oldSize.width,oldSize.height)
 				   operation:NSCompositeSourceOver fraction:1.0];
-			//[cg setImageInterpolation:oldInterp];
+			if (interpolationType)
+				[cg setImageInterpolation:oldInterp];
 			[result unlockFocus];
-			[orig release];
+		  }
 		}
 	}
+	[orig release];
 	imgInfo->image = result;
 	return imgInfo;
 }
@@ -224,13 +274,13 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 						   withObject:s];
 }
 
-- (void)addImage:(NSImage *)img forFile:(NSString *)s {
+- (void)addImage:(NSImage *)img forFile:(NSString *)s size:(NSSize)aSize {
 	// repeated code from cacheFile?
 	[cacheLock lock];
 	[cacheOrder addObject:s];
-	DYImageInfo *imgInfo = [[[DYImageInfo alloc] init] autorelease];
-	imgInfo->modTime = [[[fm fileAttributesAtPath:s traverseLink:NO] fileModificationDate] retain];
+	DYImageInfo *imgInfo = [[[DYImageInfo alloc] initWithPath:s] autorelease];
 	imgInfo->image = [img retain];
+	imgInfo->pixelSize = aSize;
 	[images setObject:imgInfo forKey:s];
 	
 	// remove stale images, if any
@@ -239,6 +289,11 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 		[cacheOrder removeObjectAtIndex:0];
 	}
 	[cacheLock unlock];
+}
+
+- (DYImageInfo *)infoForKey:(NSString *)s {
+	// ** unlike imageforkey, this is nonmagical
+	return [images objectForKey:s];
 }
 
 - (NSImage *)imageForKey:(NSString *)s {

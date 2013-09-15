@@ -16,27 +16,31 @@
             CLASS = CreeveyController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                bottomStatusFld = NSTextField; 
                 dirBrowser = NSBrowser; 
                 imgMatrix = DYWrappingMatrix; 
                 prefsWin = NSPanel; 
                 slidesBtn = NSButton; 
                 slidesWindow = SlideshowWindow; 
-                splitView = RBSplitView; 
                 startupDirFld = NSTextField; 
                 startupOptionMatrix = NSMatrix; 
-                statusFld = DYStatusField; 
+                statusFld = NSTextField; 
             }; 
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = DYCreeveyBrowser; LANGUAGE = ObjC; SUPERCLASS = NSBrowser; }, 
-        {CLASS = DYStatusField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
         {
             ACTIONS = {selectAll = id; selectNone = id; }; 
             CLASS = DYWrappingMatrix; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSControl; 
         }, 
-        {CLASS = DirBrowserDelegate; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = DirBrowserDelegate; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {"_b" = NSBrowser; }; 
+            SUPERCLASS = NSObject; 
+        }, 
         {
             ACTIONS = {moveToTrash = id; selectNone = id; }; 
             CLASS = FirstResponder; 
@@ -44,7 +48,12 @@
             SUPERCLASS = NSObject; 
         }, 
         {
-            ACTIONS = {endSlideshow = id; toggleCheatSheet = id; toggleLoopMode = id; }; 
+            ACTIONS = {
+                endSlideshow = id; 
+                toggleCheatSheet = id; 
+                toggleLoopMode = id; 
+                toggleScalesUp = id; 
+            }; 
             CLASS = SlideshowWindow; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSWindow; 

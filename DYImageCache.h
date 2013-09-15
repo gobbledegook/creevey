@@ -14,15 +14,18 @@
 
 #import <Cocoa/Cocoa.h>
 
-NSImage *CacheImage(NSString *s, NSSize boundingSize);
+NSString *FileSize2String(unsigned long long fileSize);
 
 @interface DYImageInfo : NSObject { // use like a struct
 	@public
+	NSString *path;
 	NSImage /*orig,*/ *image;
-//	NSSize size;
 	NSDate *modTime;
+	unsigned long long fileSize;
+	NSSize pixelSize;
 }
-
+- initWithPath:(NSString *)s;
+- (NSString *)pixelSizeAsString;
 @end
 
 
@@ -39,19 +42,23 @@ NSImage *CacheImage(NSString *s, NSSize boundingSize);
 	BOOL cachingShouldStop;
 	
 	NSFileManager *fm;
+	NSImageInterpolation interpolationType;
 }
 
 - (id)initWithCapacity:(unsigned int)n;
 
 - (void)setBoundingSize:(NSSize)aSize;
+- (void)setInterpolationType:(NSImageInterpolation)t;
 
 - (void)cacheFile:(NSString *)s;
 - (void)cacheFileInNewThread:(NSString *)s;
 
 // for doing your own caching (e.g., Epeg)
-- (void)addImage:(NSImage *)img forFile:(NSString *)s;
+- (void)addImage:(NSImage *)img forFile:(NSString *)s size:(NSSize)aSize;
 - (NSImage *)imageForKey:(NSString *)s;
 - (void)removeImageForKey:(NSString *)s;
+
+- (DYImageInfo *)infoForKey:(NSString *)s;
 
 - (void)abortCaching;
 - (void)beginCaching;
