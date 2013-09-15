@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2012 July
+modified 2012 October
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -50,6 +50,12 @@ Enjoy!
 
 Version History
 ---------------
+1.2.8
+-----
+make universal binary again (you have to compile with XCode 3.2.6)
+info bar now hidden by default
+info bar visibility is now sticky
+
 1.2.7
 -----
 thumbnail view now auto-rotates JPEG images with orientation tags

@@ -44,6 +44,9 @@
 
 + (void)initialize {
 	srandom((unsigned long)time(NULL));
+	[[NSUserDefaults standardUserDefaults] registerDefaults:
+	 [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0]
+								 forKey:@"DYSlideshowWindowVisibleFields"]];
 }
 
 #define MAX_CACHED 15
@@ -106,6 +109,17 @@
 	[exifFld setSelectable:NO];
 	//[exifFld setVerticallyResizable:NO];
 	[sv setHidden:YES];
+	
+	switch ([[NSUserDefaults standardUserDefaults] integerForKey:@"DYSlideshowWindowVisibleFields"]) {
+		case 0:
+			hideInfoFld = YES;
+			break;
+		case 2:
+			[sv setHidden:NO];
+			break;
+		default:
+			break;
+	}
 }
 
 - (void)dealloc {
@@ -656,6 +670,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if (![infoFld isHidden])
 				[self toggleExif];
 			[infoFld setHidden:hideInfoFld]; // 10.3 or later!
+			{
+				unsigned short infoFldVisible = 0;
+				if (![[exifFld enclosingScrollView] isHidden]) {
+					infoFldVisible = 2;
+				} else if (!hideInfoFld) {
+					infoFldVisible = 1;
+				}
+				[[NSUserDefaults standardUserDefaults] setInteger:infoFldVisible forKey:@"DYSlideshowWindowVisibleFields"];
+			}
 			break;
 		case 'h':
 		case '?':
@@ -673,6 +696,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				moreExif = !moreExif;
 				[self updateExifFld];
 			}
+			[[NSUserDefaults standardUserDefaults] setInteger:2 forKey:@"DYSlideshowWindowVisibleFields"];
 			break;
 //		case 'e':
 //			[self toggleExif];

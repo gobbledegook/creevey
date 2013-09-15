@@ -106,7 +106,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Phoenix Slides</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Phoenix Slides 1.2.7, Copyright 2005-2012 Dominic Yu, Gold Mountain Software</string>
+	<string>Phoenix Slides 1.2.8, Copyright 2005-2012 Dominic Yu, Gold Mountain Software</string>
 	<key>CFBundleHelpBookFolder</key>
 	<string>Phoenix Slides Help</string>
 	<key>CFBundleHelpBookName</key>
@@ -122,11 +122,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.7</string>
+	<string>1.2.8</string>
 	<key>CFBundleSignature</key>
 	<string>CrvY</string>
 	<key>CFBundleVersion</key>
-	<string>10</string>
+	<string>11</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>©2005-2012 Dominic Yu, Gold Mountain Software.</string>
 	<key>NSMainNibFile</key>
