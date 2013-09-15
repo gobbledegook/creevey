@@ -28,6 +28,7 @@
 	NSMutableSet *filesBeingOpened; // to be selected
 	BOOL recurseSubfolders;
 	BOOL showInvisibles;
+	short int sortOrder;
 	
 	short int currCat;
 }
@@ -44,6 +45,9 @@
 - (NSArray *)displayedFilenames;
 - (BOOL)currentFilesDeletable;
 - (BOOL)filenamesDone;
+- (short int)sortOrder;
+- (void)setSortOrder:(short int)n;
+- (DYWrappingMatrix *)imageMatrix;
 
 //other
 - (void)setDefaultPath;

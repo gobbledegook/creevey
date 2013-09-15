@@ -130,7 +130,9 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 
 @implementation DYJpegtran
 
-+ (BOOL)transformImage:(NSString *)thePath transform:(DYJpegtranInfo *)i {
++ (BOOL)transformImage:(NSString *)thePath transform:(DYJpegtranInfo)i {
+	// you need to pass-by-value the entire struct, since we modify it
+	// (see "if (i.starting_exif_orientation > 1 ... )")
 	struct jpeg_decompress_struct srcinfo;
 	struct jpeg_compress_struct dstinfo;
 	struct my_error_mgr jsrcerr, jdsterr;
@@ -138,8 +140,68 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	jvirt_barray_ptr * dst_coef_arrays;
 	FILE * input_file;
 	FILE * output_file;
-	JCOPY_OPTION copyoption = i->cp;
+	JCOPY_OPTION copyoption = i.cp;
 	jpeg_transform_info info_copy;
+	
+	// take into account current orientation and adjust accordingly
+	if (i.starting_exif_orientation > 1
+		&& !i.autorotate
+		&& !i.resetOrientation) {
+		int deg; BOOL flipped;
+		exiforientation_to_components(i.starting_exif_orientation, &deg, &flipped);
+		// note: jpegtran talks about rotation clockwise
+		// but Cocoa does rotation counter-clockwise on an x-y plane.
+		// so the following looks like it's backwards, but it's actually correct.
+		switch (i.tinfo.transform) {
+			case JXFORM_ROT_90:
+				deg -= 90;
+				break;
+			case JXFORM_ROT_180:
+				deg += 180;
+				break;
+			case JXFORM_ROT_270:
+				deg += 90;
+				break;
+			case JXFORM_FLIP_H:
+				flipped = !flipped;
+				if (i.starting_exif_orientation > 4) deg += 180;
+				// because flipping is order-dependent for 90-degree turns,
+				// for the EXIF orientations involving 90-degree turns,
+				// we have to add another 180 turn.
+				// This applies to these four flip-toggle cases.
+				break;
+			case JXFORM_FLIP_V:
+				flipped = !flipped;
+				if (i.starting_exif_orientation <= 4) deg += 180;
+				break;
+			case JXFORM_TRANSPOSE:
+				if (i.starting_exif_orientation <= 4) deg += 90; else deg -= 90;
+				flipped = !flipped;
+				break;
+			case JXFORM_TRANSVERSE:
+				if (i.starting_exif_orientation <= 4) deg -= 90; else deg += 90;
+				flipped = !flipped;
+				break;
+			default:
+				break;
+		}
+		if (deg > 180) deg -= 360; else if (deg == -180) deg = 180;
+		if (deg == 0) {
+			i.tinfo.transform = flipped ? JXFORM_FLIP_H : JXFORM_NONE;
+		} else if (deg == 90) {
+			i.tinfo.transform = flipped ? JXFORM_TRANSPOSE : JXFORM_ROT_270;
+		} else if (deg == -90) {
+			i.tinfo.transform = flipped ? JXFORM_TRANSVERSE : JXFORM_ROT_90;
+		} else { // deg == 180
+			i.tinfo.transform = flipped ? JXFORM_FLIP_V : JXFORM_ROT_180;
+		}
+		// after doing this, always reset the orientation!
+		// but only if the transform is JXFORM_NONE,
+		// otherwise the method might think it's a non-op (if the file's orientation tag is 1)
+		// and stop executing later on.
+		if (i.tinfo.transform == JXFORM_NONE)
+			i.resetOrientation = YES;
+	}
 	
 	/* Open files first, so setjmp can assume they're open. */
 	if ((input_file = fopen([thePath fileSystemRepresentation], "rb")) == NULL) {
@@ -192,34 +254,34 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	}
 	unsigned short currentOrientation;
 	currentOrientation = app1markerptr ? exif_orientation(app1markerptr->data,app1markerptr->data_length,0) : 0;
-	if (i->autorotate) {
+	if (i.autorotate) {
 		// this must be done before request_workspace for mem alloc reasons
-		i->tinfo.transform = OrientTab[currentOrientation];
-		// if it's 0, the next step will exit this function
+		i.tinfo.transform = OrientTab[currentOrientation];
+		// if it's 0, the next "if" will exit this function
 	}
 	
 	// skip file if nothing is changing
 	unsigned outSize;
-	if ((i->replaceThumb && (!i->newThumb
+	if ((i.replaceThumb && (!i.newThumb
 							 || !app1markerptr
 							 || !find_exif_thumb(app1markerptr->data,
 												 app1markerptr->data_length,
 												 &outSize)))
-		|| (i->autorotate && currentOrientation <= 1) // !app1markerptr
-		|| (i->resetOrientation && currentOrientation <= 1) // !app1markerptr
-		|| (i->delThumb && (!app1markerptr
+		|| (i.autorotate && currentOrientation <= 1) // !app1markerptr
+		|| (i.resetOrientation && currentOrientation <= 1) // !app1markerptr
+		|| (i.delThumb && (!app1markerptr
 							|| !find_exif_thumb(app1markerptr->data,
 												app1markerptr->data_length,
 												&outSize)
 							|| outSize == 0))
-		|| (!i->tinfo.transform
-			&& !i->tinfo.force_grayscale
-			&& i->cp == JCOPYOPT_ALL
-			&& !i->optimize
-			&& (i->progressive == jpeg_has_multiple_scans(&srcinfo))
-			&& !i->replaceThumb
-			&& !i->resetOrientation
-			&& !i->delThumb)
+		|| (!i.tinfo.transform
+			&& !i.tinfo.force_grayscale
+			&& i.cp == JCOPYOPT_ALL
+			&& !i.optimize
+			&& (i.progressive == jpeg_has_multiple_scans(&srcinfo))
+			&& !i.replaceThumb
+			&& !i.resetOrientation
+			&& !i.delThumb)
 		)
 	{
 		jpeg_destroy_compress(&dstinfo);
@@ -231,12 +293,12 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	}
 	
 	// 
-	info_copy = i->tinfo;  // you MUST make a new copy, since
+	info_copy = i.tinfo;  // you MUST make a new copy, since
 						   // execute_transform mucks with this! Many hours were wasted because of this error...
-	if (i->thumbOnly) {
-		i->tinfo.transform = JXFORM_NONE;
-		i->tinfo.force_grayscale = 0;
-		i->tinfo.trim = 0;
+	if (i.thumbOnly) {
+		i.tinfo.transform = JXFORM_NONE;
+		i.tinfo.force_grayscale = 0;
+		i.tinfo.trim = 0;
 	}
 	
 	
@@ -244,7 +306,7 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 		* jpeg_read_coefficients so that memory allocation will be done right.
 		*/
 #if TRANSFORMS_SUPPORTED
-	jtransform_request_workspace(&srcinfo, &i->tinfo);
+	jtransform_request_workspace(&srcinfo, &i.tinfo);
 #endif
 	
 	/* Read source file as DCT coefficients */
@@ -259,15 +321,15 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 #if TRANSFORMS_SUPPORTED
 	dst_coef_arrays = jtransform_adjust_parameters(&srcinfo, &dstinfo,
 												   src_coef_arrays,
-												   &i->tinfo);
+												   &i.tinfo);
 #else
 	dst_coef_arrays = src_coef_arrays;
 #endif
 	
 	//cinfo->optimize_coding = TRUE;
-	if (i->progressive)
+	if (i.progressive)
 		jpeg_simple_progression(&dstinfo);
-	if (i->optimize)
+	if (i.optimize)
 		dstinfo.optimize_coding = TRUE;
 	
 	/* Specify data destination for compression */
@@ -302,11 +364,11 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 					free(newthumb); // old wasn't malloc'd, doesn't need freeing
 				}
 			}
-		} else if (i->delThumb) {
+		} else if (i.delThumb) {
 			newapp1 = delete_exif_thumb(app1markerptr->data,app1markerptr->data_length,&outSize);
-		} else if (i->replaceThumb) {
-			newapp1 = replace_exif_thumb((unsigned char *)[i->newThumb bytes],[i->newThumb length],
-										 i->newThumbSize.width,i->newThumbSize.height,
+		} else if (i.replaceThumb) {
+			newapp1 = replace_exif_thumb((unsigned char *)[i.newThumb bytes],[i.newThumb length],
+										 i.newThumbSize.width,i.newThumbSize.height,
 										 app1markerptr->data,
 										 app1markerptr->data_length,
 										 &outSize);
@@ -320,7 +382,7 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	}
 	// reset the orientation tag
 	// ** note: we modify in-place, which i think is OK...
-	if (app1markerptr && (i->tinfo.transform || i->resetOrientation)) {
+	if (app1markerptr && (info_copy.transform || i.resetOrientation)) {
 		exif_orientation(app1markerptr->data,app1markerptr->data_length,1); // reset it
 	}
 	
@@ -336,7 +398,7 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 #if TRANSFORMS_SUPPORTED
 	jtransform_execute_transformation(&srcinfo, &dstinfo,
 									  src_coef_arrays,
-									  &i->tinfo);
+									  &i.tinfo);
 #endif
 	
 	
@@ -362,7 +424,7 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	fclose(output_file);
 	
 	NSMutableArray *fkeys = [NSMutableArray arrayWithObjects:NSFileCreationDate, NSFileHFSCreatorCode, NSFileHFSTypeCode, nil];
-	if (i->preserveModificationDate)
+	if (i.preserveModificationDate)
 		[fkeys addObject:NSFileModificationDate];
 	NSArray *fatts = [[[NSFileManager defaultManager] fileAttributesAtPath:thePath traverseLink:YES]
 		objectsForKeys:fkeys notFoundMarker:[NSNull null]];

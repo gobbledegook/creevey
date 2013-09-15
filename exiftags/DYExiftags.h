@@ -34,4 +34,9 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthum
 								  unsigned char *b, unsigned len,
 								  unsigned *outLen);
 // obviously this doesn't malloc
+// returns 0 if there's no valid exif orientation
 unsigned short exif_orientation(unsigned char *b, unsigned len, char reset);
+
+// finally, some utility functions for converting the orientations to degrees and horizontal flips
+void exiforientation_to_components(unsigned short n, int *getDegrees, BOOL *getFlipped);
+unsigned short components_to_exiforientation(int deg, BOOL flipped);

@@ -302,6 +302,26 @@ programming help or making a donation along the lines of books
 
 
 <h2><a name="vers"></a>Version History</h2>
+2012.07.27 1.2.7
+<ul>
+	<li>sort thumbnails by name or date</li>
+	<li>names in the browser are sorted by name now</li>
+	<li>thumbnail window now auto-rotates JPEGs with orientation tags (e.g. from your iPhone)</li>
+	<li>new "Rotate by Tag" command to apply a lossless JPEG rotation according to the orientation tag</li>
+	<li>in slideshow mode: added a new command to save the currently displayed orientation using lossless JPEG rotation</li>
+	<li>JPEG rotation commands are now applied relative to the currently displayed orientation</li>
+	<li>hitting '*' during slideshow now resetns rotation and flip (in addition to zoom)</li>
+	<li>added hidden preference to <em>not</em> re-randomize at the start of a new loop when both "Loop" and "Random" are active: type <tt>defaults write net.blyt.phoenixslides Slideshow:RerandomizeOnLoop -boolean NO</tt> in a Terminal window</li>
+	<li>fixed bug where super-skinny images might crash the browser (thanks to Luis Lozano)</li>
+	<li>fixed: white line on the right side of some 180-degree rotations</li>
+	<li>fixed bug where you're stuck in a slideshow if you dragged something to the Phoenix Slides icon, then switch to view a particular "category", then switched away from that window (e.g. another app) and back again (thanks to Doc O'Leary)</li>
+	<li>fixed bug where a jpeg would remain flipped in the slideshow after modifying it</li>
+	<li>fixed bug where slideshow rotations would be stored incorrectly after flipping</li>
+	<li>fixed: aliases in slideshows can now show EXIF info</li>
+	<li>fixed: replace thumb works with aliases</li>
+	<li>updated some localizations</li>
+</ul>
+
 2009.08.31 1.2.6
 <ul>
 	<li>works with Mac OS X 10.6 (Snow Leopard)</li>

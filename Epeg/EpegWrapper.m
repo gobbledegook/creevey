@@ -7,6 +7,8 @@
 //
 
 #import "EpegWrapper.h"
+#import "DYExiftags.h"
+
 
 /*@interface EpegBitmapImageRep : NSBitmapImageRep
 @end
@@ -28,7 +30,9 @@
 + (NSImage *)imageWithPath:(NSString *)path
 			   boundingBox:(NSSize)boundingBox
 				   getSize:(NSSize *)pixSize
-				 exifThumb:(BOOL)wantExifThumb {
+				 exifThumb:(BOOL)wantExifThumb
+				//autorotate:(BOOL)autorotate
+			getOrientation:(unsigned short *)orientationOut {
 
 	Epeg_Image *im = NULL;
 	NSImage *image;
@@ -37,7 +41,7 @@
 	im = epeg_file_open([path fileSystemRepresentation]);
 	if (!im)
 		return nil;
-
+	
 	epeg_size_get(im, &width_in, &height_in);
 	if (width_in < boundingBox.width || height_in < boundingBox.height) {
 		// fail if either dimension is too small
@@ -45,8 +49,21 @@
 		epeg_close(im);
 		return nil;
 	}
+	//if (pixSize) {
 	pixSize->width = width_in;
 	pixSize->height = height_in;
+	//}
+	
+	unsigned short orientation = [DYExiftags orientationForFile:path];
+	if (orientationOut) *orientationOut = orientation;
+	if (/* autorotate && */ orientation >= 5
+		&& boundingBox.width < boundingBox.height != width_in < height_in) {
+		// swap the width/height for the largest thumbnail, in case we need to rotate
+		float tmp;
+		tmp = boundingBox.width;
+		boundingBox.width = boundingBox.height;
+		boundingBox.height = tmp;
+	}
 	
 	// insert clever EXIF thumbnail routine here
 	const void *pixels;
@@ -64,6 +81,7 @@
 			imageRep = nil;
 		}
 	}
+	int width_out, height_out;
 	if (!imageRep) {
 		
 		float bbox_ratio = (float)(boundingBox.width / boundingBox.height);
@@ -77,8 +95,8 @@
 			: (float)(boundingBox.height / height_in);
 		//	NSLog(@"scale %f", scalefactor);
 
-		int width_out = (int)((float)width_in * scalefactor);
-		int height_out = (int)((float)height_in * scalefactor);
+		width_out = (int)((float)width_in * scalefactor);
+		height_out = (int)((float)height_in * scalefactor);
 		//	NSLog(@"x in %d, y in %d / x out %d, y out %d", width_in, height_in, width_out, height_out);
 
 		epeg_decode_size_set(im, width_out, height_out);
@@ -135,6 +153,48 @@
 	image = [[NSImage alloc] initWithSize:NSZeroSize];
 	[image addRepresentation:imageRep];
 	[imageRep release];
+	
+//	if (autorotate && orientation != 1) {
+//		if (orientation >= 5) {
+//			// if rotating, swap the width/height
+//			int tmp;
+//			tmp = width_out;
+//			width_out = height_out;
+//			height_out = tmp;
+//		}
+//		NSSize newSize = NSMakeSize(width_out, height_out);
+//		NSImage *rotImg = [[NSImage alloc] initWithSize:newSize];
+//		[rotImg lockFocus];
+//		int r = 0, x0 = 0, y0 = 0; BOOL imgFlipped = NO;
+//		switch (orientation) {
+//			case 4: r = 180; case 2: imgFlipped = YES; break;
+//			case 5: imgFlipped = YES; case 8: r = 90; break;
+//			case 7: imgFlipped = YES; case 6: r = -90; break;
+//			case 3: r = 180; break; default: r = 0;
+//		}
+//		switch (orientation) {
+//			case 2: x0 = -newSize.width; break;
+//			case 3: x0 = -newSize.width; y0 = -newSize.height; break;
+//			case 4: y0 = -newSize.height; break;
+//			case 5: x0 = -newSize.height; y0 = -newSize.width; break;
+//			case 6: x0 = -newSize.height; break;
+//			case 8: y0 = -newSize.width; break;
+//		}
+//		NSAffineTransform *transform = [NSAffineTransform transform];
+//		[transform rotateByDegrees:r];
+//		if (imgFlipped)
+//			[transform scaleXBy:-1 yBy:1];
+//		[transform concat];
+//
+//		[image drawAtPoint:NSMakePoint(x0, y0)
+//				  fromRect:NSZeroRect //NSMakeRect(0, 0, oldSize.width, oldSize.height)
+//				 operation:NSCompositeSourceOver  
+//				  fraction:1.0];
+//		[rotImg unlockFocus];
+//		
+//		[image release];
+//		image = rotImg;
+//	}
 	
 	//NSLog(@"%@", NSStringFromSize([image size]));
 	

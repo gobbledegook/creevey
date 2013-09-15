@@ -11,6 +11,34 @@
 
 #define BROWSER_ROOT @"/Volumes"
 
+// our special comparator which takes instead of a string,
+// an array where we're interested in the first item.
+@implementation NSArray (EmbeddedFinderCompare)
+- (NSComparisonResult)embeddedFinderCompare:(NSArray *)anArray
+{
+	NSString *aString = [anArray objectAtIndex:0];
+	NSString *myString = [self objectAtIndex:0];
+	SInt32 compareResult;
+	
+	CFIndex lhsLen = [myString length];;
+    CFIndex rhsLen = [aString length];
+	
+	UniChar *lhsBuf = malloc(lhsLen * sizeof(UniChar));
+	UniChar *rhsBuf = malloc(rhsLen * sizeof(UniChar));
+	
+	[myString getCharacters:lhsBuf];
+	[aString getCharacters:rhsBuf];
+	
+	(void) UCCompareTextDefault(kUCCollateComposeInsensitiveMask | kUCCollateWidthInsensitiveMask | kUCCollateCaseInsensitiveMask | kUCCollateDigitsOverrideMask | kUCCollateDigitsAsNumberMask| kUCCollatePunctuationSignificantMask,lhsBuf,lhsLen,rhsBuf,rhsLen,NULL,&compareResult);
+	
+	free(lhsBuf);
+	free(rhsBuf);
+	
+	return (CFComparisonResult) compareResult;
+}
+@end
+
+
 @interface DirBrowserDelegate (Private)
 - (int)loadDir:(NSString *)path inCol:(int)n;
 @end
@@ -121,11 +149,12 @@
 		[cols addObject:[NSMutableArray arrayWithCapacity:15]];
 		[colsInternal addObject:[NSMutableArray arrayWithCapacity:15]];
 	}
-	NSMutableArray *a,*a2;
+	NSMutableArray *a,*a2,*tempArray;
 	a = [cols objectAtIndex:n];
 	a2 = [colsInternal objectAtIndex:n];
 	[a removeAllObjects];
 	[a2 removeAllObjects];
+	tempArray = [NSMutableArray arrayWithCapacity:15];
 	
 	NSEnumerator *e = [[fm directoryContentsAtPath:path] objectEnumerator];
 	BOOL isDir;
@@ -149,13 +178,22 @@
 		}
 		[fm fileExistsAtPath:fullpath isDirectory:&isDir];
 		if (isDir) {
-			[a2 addObject:obj];
+			[tempArray addObject:
+			 [NSArray arrayWithObjects:
+			  [fm displayNameAtPath:fullpath], obj, nil]];
 			//if (n==0) NSLog(@"%@", obj);
 			//obj = [fm displayNameAtPath:fullpath];
-			[a addObject:[fm displayNameAtPath:fullpath]];
 			//[a addObject:obj];
 			//if (n==0) NSLog(@"%@", obj);
 		}
+	}
+	// sort it so it makes sense! the OS doesn't always give directory contents in a convenient order
+	[tempArray sortUsingSelector:@selector(embeddedFinderCompare:)];
+	e = [tempArray objectEnumerator];
+	NSArray *obj2;
+	while ((obj2 = [e nextObject])) {
+		[a addObject:[obj2 objectAtIndex:0]]; // display names
+		[a2 addObject:[obj2 objectAtIndex:1]]; // actual (on disk) names
 	}
 	return [a count];
 }
@@ -174,7 +212,7 @@
 }
 
 - (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(int)column {
-	NSMutableArray *a = [colsInternal objectAtIndex:column];
+	NSMutableArray *a = [cols objectAtIndex:column]; // use cols, not colsInternal here, since we sort by display names
 	unsigned int i, n = [a count];
 	for (i=0; i<n; ++i) {
 		if ([[a objectAtIndex:i] caseInsensitiveCompare:s] >= 0)

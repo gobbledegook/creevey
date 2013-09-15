@@ -9,7 +9,10 @@
 #import "NSArrayIndexSetExtension.h"
 #import "NSIndexSetSymDiffExtension.h"
 #import "CreeveyMainWindowController.h"
+#import "DYCarbonGoodies.h"
 
+#import "DYImageCache.h" // kludge to access the thumbsCache
+#import "CreeveyController.h"
 
 
 #define MAX_EXIF_WIDTH  160
@@ -18,6 +21,7 @@
 // height is 3/4 * width
 #define PADDING 16
 #define VERTPADDING 16
+#define DEFAULT_TEXTHEIGHT 12
 
 /* there are three methods called from a separate thread:
    addSelectedIndex
@@ -26,6 +30,55 @@
 
    i've tried to make them thread-safe
  */
+
+@interface NSImage (ImageRotationAddition)
+// helper method to generate a new NSImage and make it draw that instead.
+- (NSImage *)rotateByExifOrientation:(unsigned short)n;
+@end
+
+@implementation NSImage (ImageRotationAddition)
+- (NSImage *)rotateByExifOrientation:(unsigned short)n; {
+	NSSize newSize = [self size];
+	if (n >= 5) {
+		// if rotating, swap the width/height
+		float tmp;
+		tmp = newSize.width;
+		newSize.width = newSize.height;
+		newSize.height = tmp;
+	}
+	NSImage *rotImg = [[[NSImage alloc] initWithSize:newSize] autorelease];
+	[rotImg lockFocus];
+	int r = 0, x0 = 0, y0 = 0; BOOL imgFlipped = NO;
+	switch (n) {
+		case 4: r = 180; case 2: imgFlipped = YES; break;
+		case 5: imgFlipped = YES; case 8: r = 90; break;
+		case 7: imgFlipped = YES; case 6: r = -90; break;
+		case 3: r = 180; break;
+	}
+	switch (n) {
+		case 2: x0 = -newSize.width; break;
+		case 3: x0 = -newSize.width; y0 = -newSize.height; break;
+		case 4: y0 = -newSize.height; break;
+		case 5: x0 = -newSize.height; y0 = -newSize.width; break;
+		case 6: x0 = -newSize.height; break;
+		case 8: y0 = -newSize.width; break;
+	}
+	NSAffineTransform *transform = [NSAffineTransform transform];
+	[transform rotateByDegrees:r];
+	if (imgFlipped)
+		[transform scaleXBy:-1 yBy:1];
+	[transform concat];
+	
+	[self drawAtPoint:NSMakePoint(x0, y0)
+			 fromRect:NSZeroRect
+			operation:NSCompositeSourceOver  
+			 fraction:1.0];
+	[rotImg unlockFocus];
+	return rotImg;
+}
+@end
+
+
 
 
 static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
@@ -57,6 +110,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 @interface DYWrappingMatrix (Private)
 - (void)resize:(id)anObject; // called to recalc, set frame height
+- (NSImage *)imageForIndex:(unsigned int)n;
+- (NSSize)imageSizeForIndex:(unsigned int)n;
+- (unsigned short)exifOrientationForIndex:(unsigned int)n;
 @end
 
 @implementation DYWrappingMatrix
@@ -113,10 +169,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 {
 	if ((self = [super initWithFrame:frameRect]) != nil) {
 		myCell = [[NSImageCell alloc] initImageCell:nil];
+		myTextCell = [[NSCell alloc] init];
+		[myTextCell setAlignment:NSCenterTextAlignment];
 		images = [[NSMutableArray alloc] initWithCapacity:100];
 		filenames = [[NSMutableArray alloc] initWithCapacity:100];
 		selectedIndexes = [[NSMutableIndexSet alloc] init];
 		[self setCellWidth:DEFAULT_CELL_WIDTH];
+		textHeight = DEFAULT_TEXTHEIGHT;
+		autoRotate = YES;
 		
 		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
 		
@@ -156,6 +216,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)dealloc {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[myCell release];
+	[myTextCell release];
 	[images release];
 	[filenames release];
 	[selectedIndexes release];
@@ -189,7 +250,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (numCols == 0) numCols = 1;
 	columnSpacing = (self_w - numCols*cellWidth)/numCols;
 	area_w = cellWidth + columnSpacing;
-	area_h = cellHeight + VERTPADDING;
+	area_h = cellHeight + VERTPADDING + textHeight;
 }
 - (int)point2cellnum:(NSPoint)p {
 	int col = MIN(numCols-1, (int)p.x/area_w); if (col < 0) col = 0;
@@ -207,9 +268,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	int row, col;
 	row = n/numCols;
 	col = n%numCols;
-	return ScaledCenteredRect([[images objectAtIndex:n] size],
+	return ScaledCenteredRect([self imageSizeForIndex:n],
 							  NSMakeRect(cellWidth*col + columnSpacing*(col + 0.5),
-										 cellHeight*row + VERTPADDING*(row+0.5),
+										 (cellHeight+textHeight)*row + VERTPADDING*(row+0.5),
 										 cellWidth, cellHeight)); // rect for cell only
 }
 
@@ -258,6 +319,30 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		if ([[NSApp delegate] respondsToSelector:@selector(moveElsewhere:)])
 			[[NSApp delegate] moveElsewhere:nil];		
 	}
+}
+
+#pragma mark filename stuff
+
+- (BOOL)showFilenames {
+	return textHeight > 0;
+}
+- (void)setShowFilenames:(BOOL)b {
+	// preserve the scrollpoint relative to the top left visible thumbnail
+	NSPoint mouseLoc = [self convertPoint:NSMakePoint(1, 1) fromView:[self enclosingScrollView]]; // for some reason NSZeroPoint isn't quite right...
+	int row = (int)mouseLoc.y/area_h;
+	float dy = mouseLoc.y - area_h*row;
+
+	// show/hide filenames
+	if (b) {
+		textHeight = DEFAULT_TEXTHEIGHT;
+	} else {
+		textHeight = 0;
+	}
+	[self resize:nil];
+	[self setNeedsDisplay]; // you need this because it doesn't redraw if there's not enough items in the window to make it look like the scrollview changed
+	
+	// restore scrollpoint
+	[self scrollPoint:NSMakePoint(0, row*area_h + dy)];
 }
 
 #pragma mark event stuff
@@ -365,7 +450,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		NSPoint imgLoc = mouseDownLoc;
 		NSSize imgSize;
 		if ([selectedIndexes count] == 1) {
-			dragImg = [images objectAtIndex:[selectedIndexes firstIndex]];
+			dragImg = [self imageForIndex:[selectedIndexes firstIndex]];
 			NSRect imgRect = [self imageRectForIndex:mouseDownCellNum];
 			imgSize = imgRect.size;
 			imgLoc = imgRect.origin;
@@ -457,8 +542,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	//NSLog(@"---------------------------");
 	int i, row, col;
 	NSRect areaRect = NSMakeRect(0, 0, area_w, area_h);
+	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + VERTPADDING/2);
 	NSRect cellRect;
 	NSWindow *myWindow = [self window];
+	[myTextCell setFont:[NSFont systemFontOfSize:cellWidth >= 160 ? 12 : 4+cellWidth/20]]; // ranges from 6 to 12: 6 + 6*(cellWidth-40)/(160-40)
 	for (i=0; i<numCells; ++i) {
 		row = i/numCols;
 		col = i%numCols;
@@ -471,16 +558,64 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			  : [NSColor lightGrayColor]) set];
 			[NSBezierPath fillRect:areaRect];
 		}
-		// calculate drawing area for thumb
+		// calculate drawing area for thumb and filename area
+		if (textHeight) {
+			textCellRect.origin.x = areaRect.origin.x;
+			textCellRect.origin.y = areaRect.origin.y + area_h - textHeight - VERTPADDING/2;
+		}
 		cellRect = [self imageRectForIndex:i];
-		if (![self needsToDrawRect:cellRect	rectListBounds:rect]) {
+		if (![self needsToDrawRect:cellRect	rectListBounds:rect] &&
+			(textHeight == 0
+			 || ![self needsToDrawRect:textCellRect	rectListBounds:rect])) {
 			//NSLog(@"skipped cell %i", i);
 			continue;	
 		}
-		[myCell setImage:[images objectAtIndex:i]];
+		NSImage *img = [images objectAtIndex:i];
+		[myCell setImage:img];//[self imageForIndex:i]];//
 		[[NSColor whiteColor] set]; // white bg for transparent imgs
 		NSRectFill(cellRect);
-		[myCell drawWithFrame:cellRect inView:self];
+		if (autoRotate) {
+			// this code is awfully similar to the NSImage category above,
+			// but I figure it's more time and memory efficient to draw directly to the view
+			// rather than generating a new NSImage every time you want to draw
+			unsigned short orientation = [self exifOrientationForIndex:i];
+			int r = 0; BOOL imgFlipped = NO;
+			switch (orientation) {
+				case 4: r = 180; case 2: imgFlipped = YES; break;
+				case 5: imgFlipped = YES; case 8: r = -90; break;
+				case 7: imgFlipped = YES; case 6: r = 90; break;
+				case 3: r = 180; break;
+			}
+			NSAffineTransform *transform = [NSAffineTransform transform];
+			[transform translateXBy:cellRect.origin.x+cellRect.size.width/2
+								yBy:cellRect.origin.y+cellRect.size.height/2];
+			[transform rotateByDegrees:r];
+			if (imgFlipped) [transform scaleXBy:-1 yBy:1];
+			[transform translateXBy:-cellRect.origin.x-cellRect.size.width/2
+								yBy:-cellRect.origin.y-cellRect.size.height/2];
+			[transform concat];
+			NSRect cellRect2 = cellRect;
+			if (orientation >= 5) {
+				// swap
+				cellRect2.size.width = cellRect.size.height;
+				cellRect2.size.height = cellRect.size.width;
+				
+				// adjust for rotation offset
+				float offset = (cellRect.size.width - cellRect.size.height)/2;
+				cellRect2.origin.x += offset;
+				cellRect2.origin.y -= offset;
+			}
+			[myCell drawWithFrame:cellRect2 inView:self];
+			[transform invert];
+			[transform concat];
+		} else {
+			[myCell drawWithFrame:cellRect inView:self];
+		}
+		
+		if (textHeight) {
+			[myTextCell setStringValue:[[filenames objectAtIndex:i] lastPathComponent]];
+			[myTextCell drawWithFrame:textCellRect inView:self];
+		}
 	}
 	if (dragEntered) {
 		[[[NSColor lightGrayColor] colorWithAlphaComponent:0.5] set];
@@ -554,6 +689,50 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[selectedIndexes addIndex:i];
 	[self scrollSelectionToVisible:i];
 }
+
+#pragma mark auto-rotate stuff
+- (BOOL)autoRotate {
+	return autoRotate;
+}
+- (void)setAutoRotate:(BOOL)b {
+	int i;
+	// once for the old areas
+	for (i=0; i<numCells; ++i) {
+		if ([self exifOrientationForIndex:i] <= 1) continue;
+		[self setNeedsDisplayInRect:[self imageRectForIndex:i]];
+	}
+	autoRotate = b;
+	// once for the new
+	for (i=0; i<numCells; ++i) {
+		if ([self exifOrientationForIndex:i] <= 1) continue;
+		[self setNeedsDisplayInRect:[self imageRectForIndex:i]];
+	}
+}
+- (NSImage *)imageForIndex:(unsigned int)n {
+	if (autoRotate) {
+		return [[images objectAtIndex:n] rotateByExifOrientation:
+				[self exifOrientationForIndex:n]];
+	} else {
+		return [images objectAtIndex:n];
+	}
+}
+- (NSSize)imageSizeForIndex:(unsigned int)n {
+	NSSize s = [[images objectAtIndex:n] size];
+	if (autoRotate && [self exifOrientationForIndex:n] >= 5) {
+		float tmp;
+		tmp = s.width;
+		s.width = s.height;
+		s.height = tmp;
+	}
+	return s;
+}
+- (unsigned short)exifOrientationForIndex:(unsigned int)n {
+	DYImageInfo *i = [[(CreeveyController *)[NSApp delegate] thumbsCache]
+					  infoForKey:ResolveAliasToPath([filenames objectAtIndex:n])];
+	return i ? i->exifOrientation : 0;
+}
+
+
 
 #pragma mark selection stuff
 - (NSMutableIndexSet *)selectedIndexes {

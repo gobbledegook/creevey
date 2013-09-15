@@ -5,6 +5,8 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
+#include "stdlib.h"
+
 #import "CreeveyMainWindowController.h"
 #import "EpegWrapper.h"
 #import "DYCarbonGoodies.h"
@@ -16,6 +18,23 @@
 #import "RBSplitView.h"
 #import "DYWrappingMatrix.h"
 #import "FinderCompare.h"
+
+@implementation NSString (DateModifiedCompare)
+
+- (NSComparisonResult)dateModifiedCompare:(NSString *)other
+{
+	NSFileManager *fm = [NSFileManager defaultManager];
+	NSComparisonResult r;
+	r = [[[fm fileAttributesAtPath:self traverseLink:YES] fileModificationDate]
+			compare:[[fm fileAttributesAtPath:other traverseLink:YES] fileModificationDate]];
+	if (r == NSOrderedSame) { // use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
+		return [self finderCompare:other];
+	}
+	return r;
+}
+
+@end
+
 
 @interface CreeveyMainWindowController (Private)
 - (void)updateStatusFld;
@@ -31,6 +50,7 @@
 		displayedFilenames = [[NSMutableArray alloc] init];
 		loadImageLock = [[NSLock alloc] init];
 		filesBeingOpened = [[NSMutableSet alloc] init];
+		sortOrder = 1; // by name
 	}
     return self;
 }
@@ -49,6 +69,16 @@
 	[loadImageLock release];
 	[filesBeingOpened release];
 	[super dealloc];
+}
+
+#pragma mark sorting stuff
+- (DYWrappingMatrix *)imageMatrix { return imgMatrix; }
+- (short int)sortOrder {	return sortOrder; }
+- (void)setSortOrder:(short int)n {
+	sortOrder = n;
+	[NSThread detachNewThreadSelector:@selector(loadImages:)
+							 toTarget:self
+						   withObject:nil];
 }
 
 - (NSString *)path { return [[dirBrowser delegate] path]; }
@@ -141,7 +171,8 @@
 				[EpegWrapper imageWithPath:theFile
 							   boundingBox:[DYWrappingMatrix maxCellSize]
 								   getSize:&result->pixelSize
-								 exifThumb:NO];
+								 exifThumb:NO
+							getOrientation:&result->exifOrientation];
 			if (!result->image) [thumbsCache createScaledImage:result];
 			if (result->image) [thumbsCache addImage:result forFile:theFile];
 			else [thumbsCache dontAddFile:theFile];
@@ -283,13 +314,33 @@
 					[displayedFilenames addObject:origPath];
 			}
 		}
+	} else { // if we got here, that means the sort order changed and currCat == 0
+		[imgMatrix removeAllImages];
 	}
-	if (startSlideshowWhenReady && [filesBeingOpened count]) {
-		[[NSApp delegate] performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
-										   withObject:[filesBeingOpened allObjects] // make a copy
-										waitUntilDone:NO];
+	if (startSlideshowWhenReady) {
+		startSlideshowWhenReady = NO;
+		// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
+		if ([filesBeingOpened count]) {
+			[[NSApp delegate] performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
+											   withObject:[filesBeingOpened allObjects] // make a copy
+											waitUntilDone:NO];
+		}
 	}
-	[displayedFilenames sortUsingSelector:@selector(finderCompare:)];
+	if (abs(sortOrder) == 1) {
+		[displayedFilenames sortUsingSelector:@selector(finderCompare:)];
+	} else {
+		[displayedFilenames sortUsingSelector:@selector(dateModifiedCompare:)];
+	}
+	if (sortOrder < 0) {
+		// reverse the array
+		unsigned int a, b;
+		a = 0;
+		b = [displayedFilenames count]-1;
+		while (a < b) {
+			[displayedFilenames exchangeObjectAtIndex:a withObjectAtIndex:b];
+			a++; b--;
+		}
+	}
 	filenamesDone = YES;
 
 	//NSLog(@"got %d files.", [filenames count]);
@@ -338,7 +389,8 @@
 						[EpegWrapper imageWithPath:theFile
 									   boundingBox:cellSize
 										   getSize:&result->pixelSize
-										 exifThumb:useExifThumbs];
+										 exifThumb:useExifThumbs
+									getOrientation:&result->exifOrientation];
 						
 						//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
 					if (!result->image)
@@ -489,7 +541,9 @@
 	[self updateExifInfo];
 	if (!filenamesDone || !loadingDone)// && stopCaching)
 		stopCaching = NO;
-	if (filenamesDone && currCat) { // reload in case cats changed; ** we should probably notify when cats change instead
+	if (filenamesDone && currCat) { // reload in case category membership of certain files changed;
+		// ** we should probably notify when cats change instead
+		// ** and also handle the case where you change something's category so it no longer belongs in the current view
 		stopCaching = YES;
 		[loadImageLock lock];
 		// make reloading less bad by saving selection

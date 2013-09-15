@@ -161,6 +161,8 @@ NSString *FileSize2String(unsigned long long fileSize) {
 					newSize.width = (int)(oldSize.width*h_ratio);
 					newSize.height = (int)(maxSize.height);
 				}
+				if (newSize.width == 0) newSize.width = 1; // super-skinny images will make this crash unless you specify a minimum dimension of 1
+				if (newSize.height == 0) newSize.height = 1;
 				[orig setSize:newSize];
 				result = [[NSImage alloc] initWithSize:newSize];
 				[result lockFocus];
@@ -248,7 +250,7 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 						   withObject:s];
 }
 
-- (BOOL)attemptLockOnFile:(NSString *)s {
+- (BOOL)attemptLockOnFile:(NSString *)s { // add s to the "pending" array
 	[cacheLock lock];
 	if (CacheContains(s) || cachingShouldStop) {
 		// abort if already cached OR slideshow ended
@@ -283,6 +285,7 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 		}
 	}
 	[cacheLock unlock];
+	[pendingLock lock];
 	[pendingLock unlockWithCondition:[s hash]]; // unlocking w/o locking, i guess it's OK
 }
 
@@ -290,6 +293,7 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	[cacheLock lock];
 	[pending removeObject:s];
 	[cacheLock unlock];
+	[pendingLock lock];
 	[pendingLock unlockWithCondition:[s hash]];
 }
 

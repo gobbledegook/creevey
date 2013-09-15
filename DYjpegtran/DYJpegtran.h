@@ -19,18 +19,20 @@
 #define DYJPEGTRAN_XFORM_RESETORIENT 14
 #define DYJPEGTRAN_XFORM_REGENTHUMB  15
 #define DYJPEGTRAN_XFORM_DELETETHUMB 16
+#define DYJPEGTRAN_XFORM_SAVEORIENT  17 // uses the orientation specified by starting_exif_orientation; actually not used explicitly
 
 typedef struct {
 	jpeg_transform_info tinfo;
 	JCOPY_OPTION cp;
 	BOOL progressive, optimize, preserveModificationDate,
 		thumbOnly, autorotate, resetOrientation,
-		replaceThumb, delThumb;
+		replaceThumb, delThumb, saveOrientation;
+	unsigned short starting_exif_orientation;
 	NSData *newThumb; // must be JPEG!
 	NSSize newThumbSize;
 } DYJpegtranInfo;
 
 @interface DYJpegtran : NSObject
 // returns YES if the file was modified
-+ (BOOL)transformImage:(NSString *)thePath transform:(DYJpegtranInfo *)i;
++ (BOOL)transformImage:(NSString *)thePath transform:(DYJpegtranInfo)i;
 @end

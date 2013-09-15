@@ -97,29 +97,26 @@
 	destinationRect.origin.x = (int)(centerX - destinationRect.size.width/2);
 	destinationRect.origin.y = (int)(centerY - destinationRect.size.height/2);
 	
+	[[NSColor whiteColor] set]; // make a nice background for transparent gifs, etc.
+	if (rotation == 0 || rotation == 180) {
+		// convert destinationRect to view coords
+		destinationRect = [self convertRect:destinationRect fromView:nil];
+		[NSBezierPath fillRect:destinationRect];
+		// apparently doing this after you perform the transform
+		// will sometimes lead to white lines on the right side of 180-degree turned images.
+		// not sure why. so we put a call here for 180, and later on for +/-90
+	}
 	NSAffineTransform *transform = [NSAffineTransform transform];
-	// flipping
-	if (isImageFlipped) {
-		[transform scaleXBy:-1 yBy:1];
-		[transform translateXBy:-centerX*2 yBy:0];
-		// move over by the screen width; don't use value of boundsRect.size.width,
-		// because it might have been switched with the height (above)
-	}
-	
-	// rotating
-	if (rotation != 0) {
-		[transform translateXBy:centerX yBy:centerY];
-		[transform rotateByDegrees:isImageFlipped ? -rotation : rotation];
-		[transform translateXBy:-centerX yBy:-centerY];
-	}
+	[transform translateXBy:centerX yBy:centerY];
+	if (rotation != 0) [transform rotateByDegrees:rotation]; //isImageFlipped ? -rotation : rotation]; // order matters! if you switch flipping with rotation, you need to switch 90-degree rotations too
+	if (isImageFlipped) [transform scaleXBy:-1 yBy:1]; // [transform translateXBy:-centerX*2 yBy:0]; // move over by the screen width; don't use value of boundsRect.size.width, because it might have been switched with the height (above)
+	[transform translateXBy:-centerX yBy:-centerY];
 	[transform concat];
 	
-	// now, convert destinationRect to view coords
-	destinationRect = [self convertRect:destinationRect fromView:nil];
-
-	[[NSColor whiteColor] set]; // make a nice background for transparent gifs, etc.
-	[NSBezierPath fillRect:destinationRect];
-	
+	if (rotation == 90 || rotation == -90) { // see comment above
+		destinationRect = [self convertRect:destinationRect fromView:nil];
+		[NSBezierPath fillRect:destinationRect];
+	}
 	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
 	NSImageInterpolation oldInterp = [cg imageInterpolation];
 	[cg setImageInterpolation:zoom > 1 ? NSImageInterpolationNone : NSImageInterpolationLow];

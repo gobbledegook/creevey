@@ -8,6 +8,7 @@
 #include "stdlib.h"
 
 #import "DYJpegtran.h"
+#import "DYExiftags.h"
 
 #import "SlideshowWindow.h"
 #import <Carbon/Carbon.h>
@@ -115,6 +116,10 @@
 	[imgCache release];
 	[helpFld release];
 	[super dealloc];
+}
+
+- (void)setRerandomizeOnLoop:(BOOL)b {
+	rerandomizeOnLoop = b;
 }
 
 - (void)setCats:(NSMutableSet **)newCats {
@@ -380,6 +385,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[imgCache removeImageForKey:theFile];
 	[zooms removeObjectForKey:theFile]; // don't forget to reset the zoom/rotation!
 	[rotations removeObjectForKey:theFile];
+	[flips removeObjectForKey:theFile];
 	[self displayImage];
 }
 
@@ -387,6 +393,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[imgCache removeImageForKey:s];
 	[zooms removeObjectForKey:s];
 	[rotations removeObjectForKey:s];
+	[flips removeObjectForKey:s];
 	if ((currentIndex != -1) && [s isEqualToString:[filenames objectAtIndex:currentIndex]])
 		[self displayImage];
 }
@@ -412,34 +419,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 		// if zoomed in, we need to set a different image
 		// here, copy-pasted from keyDown
 		DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
-		if (!rot && !imgFlipped) {
+		if (!rot && !imgFlipped && info->exifOrientation) {
 			// auto-rotate by exif orientation
-			switch (info->exifOrientation) {
-				case 4: // flipv
-					r = 180;
-					// fall through
-				case 2: // fliph
-					imgFlipped = YES;
-					break;
-
-				case 5: // transpose
-					imgFlipped = YES;
-				case 8: // 90 left
-					r = 90;
-					break;
-
-				case 7: // transverse transpose
-					imgFlipped = YES;
-				case 6: // 90 right
-					r = -90;
-					break;
-				case 3: // 180
-					r = 180;
-					break;
-				default:
-					r = 0;
-					imgFlipped = NO;
-			}
+			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
 			[rotations setObject:[NSNumber numberWithInt:r] forKey:theFile];
 			[flips setObject:[NSNumber numberWithBool:imgFlipped] forKey:theFile];
 			[imgView setRotation:r];
@@ -482,7 +464,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		timerPaused = NO; // going forward unpauses auto-advance
 	if ((n > 0 && currentIndex+1 == [filenames count]) || (n < 0 && currentIndex == 0)){
 		if (loopMode) {
-			if (randomMode && n > 0) {
+			if (randomMode && n > 0 && rerandomizeOnLoop) {
 				// reshuffle whenever you loop through to the beginning
 				unsigned i = [filenames count];
 				while (--i)
@@ -523,8 +505,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)toggleFlip {
 	BOOL b = [imgView toggleFlip];
-	[flips setObject:[NSNumber numberWithBool:b]
-			  forKey:[filenames objectAtIndex:currentIndex]];
+	NSString *s = [filenames objectAtIndex:currentIndex];
+	[flips setObject:[NSNumber numberWithBool:b] forKey:s];
+
+	// also update the rotation to match, since flipping will reverse it
+	int r = [[rotations objectForKey:s] intValue];
+	if (r == 90 || r == -90)
+		[rotations setObject:[NSNumber numberWithInt:-r] forKey:s];
+	
 	[self updateInfoFld];
 }
 
@@ -725,10 +713,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// for important comments
 			break;
 		case '*':
-			[imgView zoomOff];
-			if (![imgView showActualSize])
-				[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
-			[self updateInfoFld];
+			//[imgView zoomOff];
+			//if (![imgView showActualSize])
+			//	[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
+			//[self updateInfoFld];
+			[self redisplayImage]; // this resets zoom, rotate, and flip
 			break;
 		default:
 			//NSLog(@"%x",c);
@@ -868,6 +857,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (NSString *)currentFile {
 	//if (currentIndex == -1) return nil;
 	return [filenames objectAtIndex:[self currentIndex]];
+}
+- (unsigned short)currentOrientation {
+	NSString *theFile = [filenames objectAtIndex:[self currentIndex]];
+	NSNumber *rot = [rotations objectForKey:theFile];
+	return components_to_exiforientation(rot ? [rot intValue] : 0,
+										 [[flips objectForKey:theFile] boolValue]);
+}
+- (unsigned short)currentFileExifOrientation {
+	return [imgCache infoForKey:[filenames objectAtIndex:[self currentIndex]]]->exifOrientation;
 }
 
 - (BOOL)currentImageLoaded {

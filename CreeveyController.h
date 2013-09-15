@@ -53,6 +53,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)moveToTrash:(id)sender;
 - (IBAction)moveElsewhere:(id)sender;
 - (IBAction)rotateTest:(id)sender;
+- (IBAction)sortThumbnails:(id)sender;
+- (IBAction)doShowFilenames:(id)sender;
+- (IBAction)doAutoRotateDisplayedImage:(id)sender;
 
 // prefs stuff
 - (IBAction)openPrefWin:(id)sender;

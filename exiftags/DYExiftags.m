@@ -599,3 +599,29 @@ unsigned short exif_orientation(unsigned char *b, unsigned len, char reset) {
 	}
 	return 0;
 }
+
+void exiforientation_to_components(unsigned short n, int *getDegrees, BOOL *getFlipped) {
+	switch (n) {
+		case 1: *getDegrees = 0; *getFlipped = NO; break;
+		case 8: *getDegrees = 90; *getFlipped = NO; break;
+		case 6: *getDegrees = -90; *getFlipped = NO; break;
+		case 3: *getDegrees = 180; *getFlipped = NO; break;
+		case 2: *getDegrees = 0; *getFlipped = YES; break;
+		case 5: *getDegrees = 90; *getFlipped = YES; break;
+		case 7: *getDegrees = -90; *getFlipped = YES; break;
+		case 4: *getDegrees = 180; *getFlipped = YES; break;
+		default: *getDegrees = 0; *getFlipped = NO; break;
+	}
+}
+
+unsigned short components_to_exiforientation(int deg, BOOL flipped) {
+	if (deg == 0) {
+		return flipped ? 2 : 1;
+	} else if (deg == 90) {
+		return flipped ? 5 : 8;
+	} else if (deg == -90) {
+		return flipped ? 7 : 6;
+	} else { // deg == 180
+		return flipped ? 4 : 3;
+	}
+}

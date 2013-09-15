@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2009 Aug 31
+modified 2012 July
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -19,8 +19,25 @@ Carbon Goodies are definitely useful.
 If anyone wants to contribute their coding talent and make this
 program come along more quickly, help is always welcome.
 
+Aliases: a pain to deal with. Why can't the OS just use symbolic links?
+Anyway, things to keep in mind re aliases:
+1. the thumbs image cache always stores images using the resolved filename as
+   the key. This prevents duplication somewhat, but it means when you look
+   things up you need to make a call to ResolveAliasToPath.
+2. for some reason, i decided to store images using unresolved filenames
+   in the slideshow cache. Oh, I think it's in case there are multiple
+   slideshows in the future, each one should have its own cache.
+   So anyway, it's different than for the thumbnails, which is one global cache
+   for all the windows.
+3. file operations should of course operate on the original file.
+   Everything in the JPEG and EXIF menus call rotateTest:; get exiforientation etc.
+   and set desktop should also resolve to the original path.
+   But move to trash, reveal in finder should not. Get Info is weird, since
+   you want to show that it's an alias, but also show the original info.
+   Plus there's two places where you get info, once in the slideshow and
+   once in the get info window.
+
 TO DO:
-- generate web pages
 - play movies
 - lossless jpeg cropping?
 - speed, speed, speed. i've noticed a slight lag sometimes when going forward
@@ -33,6 +50,33 @@ Enjoy!
 
 Version History
 ---------------
+1.2.7
+-----
+thumbnail view now auto-rotates JPEG images with orientation tags
+- you can turn this off in a menu item
+for better consistency...
+- JPEGs are now rotated relative to their currently displayed orientation
+- in the slideshow you can save the current rotation (cmd-shift-S);
+	(in the browser view, use "Rotate by Tag", since you can't rotate thumbnails in the browser)
+sort thumbnails by either name or date
+directory names in browser sorted by name.
+columns now resize individually (hold option to do all at once). see setPrefersAllColumnUserResizing.
+made the "orientation" menu items more sensitive to context (specifically, during slideshows they only activate if the orientation > 1)
+'*' now resets rotation and flip (used to be just zoom)
+added hidden pref: defaults write net.blyt.phoenixslides Slideshow:RerandomizeOnLoop -boolean NO
+fixed bug where super-skinny images might crash the browser (thanks to Luis Lozano)
+fixed bug where you're stuck in a slideshow if you dragged something to the
+	Phoenix Slides icon, then switch to view a particular category, then
+	switched away from that window (e.g. another app) and back again (thanks to Doc O'Leary)
+fixed bug where a jpeg would remain flipped in the slideshow after modifying it
+fixed bug where slideshow rotations would be stored incorrectly after flipping
+fixed: aliases in slideshows can now show EXIF info
+fixed: replace thumb works with aliases
+fixed: white line on the right side of some 180-degree rotations
+got rid of annoying NSLock warnings in the console
+updated localizations (except French!)
+fixed "type" field as shown in Get Info in the Finder
+
 1.2.6
 -----
 fixed - work around Snow Leopard's NSBrowser bug(?)
@@ -48,7 +92,7 @@ pref to move files/make alias
 allows flipping with 'f'
 shift-space goes back
 in EXIF menu, "Auto-rotate JPEG Files" changed to "Rotate JPEG File by EXIF tag"
-*** made slideshow auto-rotate by exif orientation, but not the thumbnails
+made slideshow auto-rotate by exif orientation, but not the thumbnails
 fixed bug when reading JPEG Comments with 8-bit characters
 fixed - dragging to trash can now removes thumbnail from view (bug introduced in 1.2, I think)
 fixed - banished that annoying white line when showing cached, scaled-down images

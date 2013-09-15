@@ -38,7 +38,7 @@
 	
 	NSTextView *helpFld;
 	
-	BOOL loopMode, randomMode;
+	BOOL loopMode, randomMode, rerandomizeOnLoop;
 	unsigned char keyIsRepeating;
 	
 	BOOL mouseDragged;
@@ -58,6 +58,8 @@
 
 - (int)currentIndex;
 - (NSString *)currentFile;
+- (unsigned short)currentOrientation; // returns an EXIF orientation
+- (unsigned short)currentFileExifOrientation;
 - (void)displayImage; // to reload current file, assuming the mod date is different (oops - don't use this anymore)
 - (void)redisplayImage; // to force reload of current file, regardless of mod date
 - (BOOL)currentImageLoaded;
@@ -65,6 +67,8 @@
 
 - (void)uncacheImage:(NSString *)s; // when an image is modified, remove it from cache
 - (void)unsetFilename:(NSString *)s; // use this if something's been deleted
+
+- (void)setRerandomizeOnLoop:(BOOL)b;
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;

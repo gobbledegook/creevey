@@ -5,6 +5,8 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
+#include "stdlib.h"
+
 #import "CreeveyController.h"
 #import "EpegWrapper.h"
 #import "DYJpegtran.h"
@@ -38,7 +40,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	if (basicInfo) [s appendString:[origPath lastPathComponent]];
 	if (path != origPath)
 		[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
-	DYImageInfo *i = [cache infoForKey:path];
+	DYImageInfo *i = [cache infoForKey:origPath];
+	if (!i) i = [cache infoForKey:path]; // if no info from the given path, try resolving the alias.
 	if (i) {
 		id exifStr = [DYExiftags tagsForFile:path moreTags:moreExif];
 		if (basicInfo)
@@ -117,6 +120,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowActualSize"];
 	[dict setObject:[NSKeyedArchiver archivedDataWithRootObject:[NSColor blackColor]] forKey:@"slideshowBgColor"];
 	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"exifThumbnailShow"];
+	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"showFilenames"];
+	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"Slideshow:RerandomizeOnLoop"];
     [defaults registerDefaults:dict];
 
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
@@ -155,6 +160,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	// this causes problems b/c the window can be foregrounded without the app
 	// coming to the front (oops)
 	[slidesWindow setCats:cats];
+	[slidesWindow setRerandomizeOnLoop:[[NSUserDefaults standardUserDefaults] boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
 															  forKeyPath:@"values.slideshowAutoadvanceTime"
@@ -201,6 +207,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
 		? [u floatForKey:@"slideshowAutoadvanceTime"]
 		: 0]; // see prefs section for more notes
+	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	[slidesWindow startSlideshowAtIndex: [s count] == 1 ? [s firstIndex] : -1];
 }
 
@@ -279,10 +286,24 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	}
 	
 	NSArray *a;
-	BOOL slidesWasKey = [slidesWindow isMainWindow]; // ** test for main is better
-	a = slidesWasKey
-		? [NSArray arrayWithObject:[slidesWindow currentFile]]
-		: [frontWindow currentSelection];
+	DYImageInfo *imgInfo;
+	BOOL slidesWasKey = [slidesWindow isMainWindow]; // ** test for main is better than key
+	BOOL autoRotate = YES; // set this to yes, if the browser is active and not autorotating we change it below. I.e., autorotate will be true if we're in a slideshow
+	if (slidesWasKey) {
+		NSString *slidesFile = [slidesWindow currentFile];
+		a = [NSArray arrayWithObject:slidesFile];
+		// we need to get the current (viewing) orientation of the slide
+		// we *don't* need to save the current cached thumbnail info since it's going to get deleted
+		unsigned short orientation = [slidesWindow currentOrientation];
+		if (orientation != 0) {
+			imgInfo = [thumbsCache infoForKey:ResolveAliasToPath(slidesFile)];
+			if (imgInfo)
+				imgInfo->exifOrientation = [slidesWindow currentOrientation];
+		}
+	} else {
+		a = [frontWindow currentSelection];
+		autoRotate = [[frontWindow imageMatrix] autoRotate];
+	}
 	
 	[jpegProgressBar setUsesThreadedAnimation:YES];
 	[jpegProgressBar setIndeterminate:YES];
@@ -294,16 +315,18 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[jpegProgressBar startAnimation:self];
 
 	unsigned int n;
-	NSString *s;
+	NSString *s, *resolvedPath;
 	NSSize maxThumbSize = NSMakeSize(160,160);
 	for (n = 0; n < [a count]; ++n) {
 		s = [a objectAtIndex:n];
+		resolvedPath = ResolveAliasToPath(s);
 		if (jinfo.replaceThumb) {
 			NSSize tmpSize;
-			NSImage *i = [EpegWrapper imageWithPath:s
+			NSImage *i = [EpegWrapper imageWithPath:resolvedPath
 										boundingBox:maxThumbSize
 											getSize:&tmpSize
-										  exifThumb:NO];
+										  exifThumb:NO
+									 getOrientation:NULL];
 			if (i) {
 				// assuming EpegWrapper always gives us a bitmap imagerep
 				jinfo.newThumb = [(NSBitmapImageRep *)[[i representations] objectAtIndex:0]
@@ -316,8 +339,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 				jinfo.newThumb = NULL;
 			}
 		}
-		if ([DYJpegtran transformImage:ResolveAliasToPath(s) transform:&jinfo]) {
-			[thumbsCache removeImageForKey:ResolveAliasToPath(s)];
+		imgInfo = [thumbsCache infoForKey:resolvedPath];
+		jinfo.starting_exif_orientation = autoRotate
+			? (imgInfo ? imgInfo->exifOrientation : 0) // thumbsCache should always have the info we want, but just in case it doesn't don't crash!
+			: 0;
+		if ([DYJpegtran transformImage:resolvedPath transform:jinfo]) {
+			[thumbsCache removeImageForKey:resolvedPath];
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasChanged:) withObject:s];
 			// slower, but easier code
 			if (slidesWasKey) // remember, progress window is now key
@@ -344,6 +371,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)stopModal:(id)sender {
 	[NSApp stopModal];
 }
+
 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
@@ -495,29 +523,39 @@ enum {
 	JPEG_OP = 100,
 	ROTATE_L = 107,
 	ROTATE_R = 105,
-	SLIDESHOW_MENU = 1001
+	EXIF_ORIENT_ROTATE = 113,
+	EXIF_ORIENT_RESET = 114,
+	EXIF_THUMB_DELETE = 116,
+	ROTATE_SAVE = 117,
+	SORT_NAME = 201,
+	SORT_DATE_MODIFIED = 202,
+	SHOW_FILE_NAMES = 251,
+	AUTO_ROTATE = 261,
+	SLIDESHOW_MENU = 1001,
+	VIEW_MENU = 200
 };
 
 
 - (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
 	int t = [menuItem tag];
+	int test_t = t;
 	if (![NSApp mainWindow]) {
 		// menu items with tags only enabled if there's a window
 		return !t;
 	}
-	if (t>JPEG_OP) {
-		if ((t > JPEG_OP + 30) &&
+	if (t>JPEG_OP && t < SORT_NAME) {
+		if ((t > JPEG_OP + 30 || t == EXIF_THUMB_DELETE) &&
 			![[menuItem menu] supermenu] && // only for contextual menu
 			![[[[exifThumbnailDiscloseBtn window] contentView] viewWithTag:2] image]) {
 			return NO;
 		}
-		t=JPEG_OP;
+		test_t = JPEG_OP;
 	}
 	if (![creeveyWindows count]) frontWindow = nil;
 	unsigned int numSelected = frontWindow ? [[frontWindow selectedIndexes] count] : 0;
 	BOOL writable, isjpeg;
 	
-	switch (t) {
+	switch (test_t) {
 		case MOVE_TO_TRASH:
 		case JPEG_OP:
 			// only when slides isn't loading cache!
@@ -527,12 +565,21 @@ enum {
 					[[NSFileManager defaultManager] isDeletableFileAtPath:
 						[slidesWindow currentFile]]
 				: numSelected > 0 && frontWindow && [frontWindow currentFilesDeletable];
+			if (t == MOVE_TO_TRASH) return writable;
+			
 			isjpeg = [slidesWindow isMainWindow]
 				? FileIsJPEG([slidesWindow currentFile])
 				: numSelected > 0 && frontWindow && FileIsJPEG([frontWindow firstSelectedFilename]);
 			
-			if (t == JPEG_OP) return writable && isjpeg;
-			return writable;
+			//if (t == JPEG_OP) return writable && isjpeg;
+			if (t == ROTATE_SAVE) { // only allow saving rotations during the slideshow
+				return writable && isjpeg && [slidesWindow isMainWindow]
+				&& [slidesWindow currentOrientation] > 1;
+			}
+			if ((t == EXIF_ORIENT_ROTATE || t == EXIF_ORIENT_RESET) && [slidesWindow isMainWindow]) {
+				return writable && isjpeg && [slidesWindow currentFileExifOrientation] > 1;
+			}
+			return writable && isjpeg;
 			// I don't like the idea of accessing the disk every time the menu
 			// is accessed
 		case REVEAL_IN_FINDER:
@@ -543,10 +590,45 @@ enum {
 		case SET_DESKTOP:
 			return [slidesWindow isMainWindow] || numSelected == 1;
 		case GET_INFO:
+		case SORT_NAME:
+		case SORT_DATE_MODIFIED:
+		case SHOW_FILE_NAMES:
+		case AUTO_ROTATE:
 			return ![slidesWindow isMainWindow];
 		default:
 			return YES;
 	}
+}
+
+- (IBAction)sortThumbnails:(id)sender {
+	short int newSort, oldSort;
+	oldSort = [frontWindow sortOrder];
+	newSort = [sender tag] - 200;
+	
+	if (newSort == abs(oldSort)) {
+		newSort = -oldSort; // reverse the sort if user selects it again
+		[sender setState:newSort < 0 ? NSMixedState : NSOnState];
+	} else {
+		[sender setState:NSOnState];
+
+		NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
+		[[m itemWithTag:newSort == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+	}
+	[frontWindow setSortOrder:newSort];
+}
+
+- (IBAction)doShowFilenames:(id)sender {
+	BOOL b = ![[frontWindow imageMatrix] showFilenames];
+	[sender setState:b ? NSOnState : NSOffState];
+	[[frontWindow imageMatrix] setShowFilenames:b];
+	if ([creeveyWindows count] == 1) // save as default if this is the only window
+		[[NSUserDefaults standardUserDefaults] setBool:b forKey:@"showFilenames"];
+}
+
+- (IBAction)doAutoRotateDisplayedImage:(id)sender {
+	BOOL b = ![[frontWindow imageMatrix] autoRotate];
+	[sender setState:b ? NSOnState : NSOffState];
+	[[frontWindow imageMatrix] setAutoRotate:b];
 }
 
 #pragma mark prefs stuff
@@ -739,6 +821,7 @@ enum {
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowClosed:) name:NSWindowWillCloseNotification object:[wc window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
 	[wc showWindow:nil]; // or override wdidload
+	[[wc imageMatrix] setShowFilenames:[[NSUserDefaults standardUserDefaults] boolForKey:@"showFilenames"]];
 	if (sender)
 		[wc setDefaultPath];
 }
@@ -761,6 +844,13 @@ enum {
 
 - (void)windowChanged:(NSNotification *)n {
 	frontWindow = [[n object] windowController];
+	
+	short int sortOrder = [frontWindow sortOrder];
+	NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
+	[[m itemWithTag:200+abs(sortOrder)] setState:sortOrder > 0 ? NSOnState : NSMixedState];
+	[[m itemWithTag:abs(sortOrder) == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+	[[m itemWithTag:SHOW_FILE_NAMES] setState:[[frontWindow imageMatrix] showFilenames] ? NSOnState : NSOffState];
+	[[m itemWithTag:AUTO_ROTATE] setState:[[frontWindow imageMatrix] autoRotate] ? NSOnState : NSOffState];
 }
 
 - (IBAction)versionCheck:(id)sender {

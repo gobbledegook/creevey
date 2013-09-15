@@ -18,7 +18,9 @@
 	IBOutlet id delegate;
 
 	NSColor *bgColor;
+	BOOL autoRotate;
 	NSImageCell *myCell;           // one cell, reused for efficiency
+	NSCell *myTextCell; // for drawing the file name
 	NSMutableArray *images;
 	NSMutableArray *filenames;
 	float cellWidth;
@@ -30,6 +32,7 @@
 	// vars used for repeated calculations
 	int numCols;
 	float cellHeight, columnSpacing, area_w, area_h;
+	unsigned int textHeight;
 }
 
 + (NSSize)maxCellSize;
@@ -59,6 +62,11 @@
 - (float)minCellWidth;
 - (float)cellWidth;
 - (void)setCellWidth:(float)w;
+
+- (BOOL)showFilenames;
+- (void)setShowFilenames:(BOOL)b;
+- (BOOL)autoRotate;
+- (void)setAutoRotate:(BOOL)b;
 
 - (void)updateStatusString; // ** rename me
 - (void)setDelegate:(id)d;
