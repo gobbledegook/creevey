@@ -5,13 +5,10 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//
 //  NSArrayIndexSetExtension.m
 //  creevey
 //
 //  Created by d on 2005.04.08.
-//  Copyright 2005 __MyCompanyName__. All rights reserved.
-//
 
 #import "NSArrayIndexSetExtension.h"
 
@@ -30,13 +27,11 @@
 	
 	[s getIndexes:indexes maxCount:numIndexes inIndexRange:NULL];
 	
-	NSMutableArray *a = [[NSMutableArray alloc] initWithCapacity:numIndexes];
+	NSMutableArray *a = [NSMutableArray arrayWithCapacity:numIndexes];
 	for (i=0; i<numIndexes; ++i)
 		[a addObject:[self objectAtIndex:indexes[i]]];
-	NSArray *b = [NSArray arrayWithArray:a];
 	free(indexes);
-	[a release];
-	return b;
+	return a;
 }
 
 @end

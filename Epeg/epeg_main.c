@@ -3,10 +3,10 @@
 
 //BEGIN DY ADDITIONS
 //a place to store error messages
-static char _jpegliberror[JMSG_LENGTH_MAX];
-const char *epeg_error_msg() {
-	return _jpegliberror;
-}
+//static char _jpegliberror[JMSG_LENGTH_MAX];
+//const char *epeg_error_msg() {
+//	return _jpegliberror;
+//}
 //END DY ADDITIONS
 static Epeg_Image   *_epeg_open_header         (Epeg_Image *im);
 static int           _epeg_decode              (Epeg_Image *im);
@@ -1156,7 +1156,7 @@ _epeg_fatal_error_handler(j_common_ptr cinfo)
    
    errmgr = (emptr)cinfo->err;
    //BEGIN DY ADDITIONS
-   (*cinfo->err->format_message)(cinfo, _jpegliberror);
+   //(*cinfo->err->format_message)(cinfo, _jpegliberror);
    //END DY ADDITIONS
    longjmp(errmgr->setjmp_buffer, 1);
    return;

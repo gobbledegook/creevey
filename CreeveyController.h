@@ -8,46 +8,54 @@
 /* CreeveyController */
 
 #import <Cocoa/Cocoa.h>
-#import "DYImageCache.h"
-#import "SlideshowWindow.h"
-#import "DYWrappingMatrix.h"
-#import "RBSplitView.h"
+#define CREEVEY_DEFAULT_PATH [@"~/Pictures" stringByResolvingSymlinksInPath]
+
+@class CreeveyMainWindowController, DYImageCache, SlideshowWindow, DYJpegtranPanel;
+
+inline BOOL FileIsJPEG(NSString *s);
+
+#define NUM_FNKEY_CATS 11
 
 @interface CreeveyController : NSObject
 {
-    IBOutlet NSBrowser *dirBrowser;
+	NSMutableSet *cats[NUM_FNKEY_CATS];
     IBOutlet SlideshowWindow *slidesWindow;
-	IBOutlet NSButton *slidesBtn;
-	IBOutlet DYWrappingMatrix *imgMatrix;
-	IBOutlet NSTextField *statusFld, *bottomStatusFld;
-	
+	IBOutlet NSProgressIndicator *jpegProgressBar;
+	IBOutlet NSTextView *exifTextView; BOOL exifWasVisible;
+	DYJpegtranPanel *jpegController;
+
 	NSSet *filetypes;
+	NSMutableArray *creeveyWindows;
+	CreeveyMainWindowController *frontWindow;
 	
-	NSMutableArray *filenames;
 	DYImageCache *thumbsCache;
-	NSLock *thumbsCacheLock; BOOL stopCaching; NSTimeInterval lastThreadTime;
-	
-	BOOL currentFilesDeletable;
-	BOOL filenamesDone;
-	NSMutableSet *filesBeingOpened;
-	BOOL recurseSubfolders;
-	BOOL showInvisibles;
 	
 	// prefs stuff
 	IBOutlet NSPanel *prefsWin;
 	IBOutlet NSTextField *startupDirFld;
 	IBOutlet NSMatrix *startupOptionMatrix;
 }
+// accessors
+- (NSMutableSet **)cats;
+- (DYImageCache *)thumbsCache;
+- (NSTextView *)exifTextView;
+- (NSSet *)filetypes;
+
 - (IBAction)slideshow:(id)sender;
-- (IBAction)displayDir:(id)sender;
 - (IBAction)openSelectedFiles:(id)sender;
 - (IBAction)revealSelectedFilesInFinder:(id)sender;
-- (IBAction)setRecurseSubfolders:(id)sender;
 - (IBAction)setDesktopPicture:(id)sender;
+- (IBAction)moveToTrash:(id)sender;
+- (IBAction)rotateTest:(id)sender;
 // prefs stuff
 - (IBAction)openPrefWin:(id)sender;
 - (IBAction)chooseStartupDir:(id)sender;
 - (IBAction)changeStartupOption:(id)sender;
 
 - (IBAction)openAboutPanel:(id)sender;
+- (IBAction)stopModal:(id)sender;
+- (IBAction)openGetInfoPanel:(id)sender;
+- (IBAction)newWindow:(id)sender;
+- (IBAction)versionCheck:(id)sender;
+- (IBAction)sendFeedback:(id)sender;
 @end

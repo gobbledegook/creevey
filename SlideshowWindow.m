@@ -5,20 +5,27 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
+#include "stdlib.h"
+
 #import "SlideshowWindow.h"
 #import <Carbon/Carbon.h>
 #import "DYCarbonGoodies.h"
 #import "NSStringDYBasePathExtension.h"
+#import "CreeveyController.h"
 
 @interface SlideshowWindow (Private)
 
-- (void)displayImage;
+//- (void)displayImage;
 - (void)jump:(int)n;
 - (void)jumpTo:(int)n;
 - (void)setTimer:(NSTimeInterval)s;
 - (void)runTimer;
 - (void)killTimer;
 - (void)updateInfoFld;
+
+// cat methods
+- (void)displayCats;
+- (void)assignCat:(short int)n toggle:(BOOL)toggle;
 
 // cache methods
 - (NSImage *)loadFromCache:(NSString *)s;
@@ -28,6 +35,10 @@
 @end
 
 @implementation SlideshowWindow
+
++ (void)initialize {
+	srandom((unsigned long)time(NULL));
+}
 
 #define MAX_CACHED 15
 // MAX_CACHED must be bigger than the number of items you plan to have cached!
@@ -58,6 +69,13 @@
 	[infoFld setBackgroundColor:[NSColor grayColor]];
 	[infoFld setBezeled:NO];
 	[infoFld setEditable:NO];
+	
+	catsFld = [[NSTextField alloc] initWithFrame:NSZeroRect];
+	[imgView addSubview:catsFld]; [catsFld release];
+	[catsFld setBackgroundColor:[NSColor grayColor]];
+	[catsFld setBezeled:NO];
+	[catsFld setEditable:NO]; // **
+	[catsFld setHidden:YES];
 }
 
 - (void)dealloc {
@@ -68,8 +86,13 @@
 	[super dealloc];
 }
 
+- (void)setCats:(NSMutableSet **)newCats {
+    cats = newCats;
+}
+
 // must override this for borderless windows
 - (BOOL)canBecomeKeyWindow { return YES; }
+- (BOOL)canBecomeMainWindow { return YES; }
 
 // start/end stuff
 - (void)setFilenames:(NSArray *)files {
@@ -99,22 +122,39 @@
 }
 
 - (void)startSlideshow {
-	[self startSlideshowAtIndex:0];
+	[self startSlideshowAtIndex:-1]; // to distinguish from 0, for random mode
 }
 - (void)startSlideshowAtIndex:(int)startIndex {
-	screenRect = [[NSScreen mainScreen] frame];
-	[imgCache setBoundingSize:screenRect.size];
-	// this may need to change as screen res changes
-	// we assume user won't change screen resolution during a show
-	
 	if ([filenames count] == 0) {
 		NSBeep();
 		return;
 	}
 	
+	screenRect = [[NSScreen mainScreen] frame];
+	[imgCache setBoundingSize:screenRect.size];
+	// this may need to change as screen res changes
+	// we assume user won't change screen resolution during a show
+	
 	[self setContentSize:screenRect.size];
 	[self setFrameOrigin:NSZeroPoint];
+	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
+	// ** OR set springiness on awake
 	
+	
+	if (randomMode) {
+		unsigned i = [filenames count];
+		if (startIndex != -1)
+			// save selected image at the end
+			[filenames exchangeObjectAtIndex:startIndex withObjectAtIndex:--i];
+		while (--i)
+			[filenames exchangeObjectAtIndex:i withObjectAtIndex:random()%(i+1)];
+		if (startIndex != -1) {
+			// now put it at the beginning
+			[filenames exchangeObjectAtIndex:0 withObjectAtIndex:[filenames count]-1];
+			startIndex = 0;
+		}
+	}
+	if (startIndex == -1) startIndex = 0;
 	currentIndex = startIndex;
 	[self setTimer:0]; // reset the timer, in case running
 	if (helpFld) [helpFld setHidden:YES];
@@ -224,17 +264,25 @@ scheduledTimerWithTimeInterval:timerIntvl
 		default: dir = @"";
 	}
 	if (r < 0) r = -r;
-	float zoom = [self calcZoom:info->pixelSize];
+	float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
 	[infoFld setStringValue:[NSString stringWithFormat:@"[%i/%i%@] %@ - %@%@ - %@%@",
 		currentIndex+1, [filenames count],
-		r ? [NSString stringWithFormat:NSLocalizedString(@" rotated%@ %i%C", @"slideshow info"), dir, r, 0xb0] : @"", //degrees
+		r ? [NSString stringWithFormat:
+			NSLocalizedString(@" rotated%@ %i%C", @""), dir, r, 0xb0] : @"", //degrees
 		[self currentShortFilename],
 		[info pixelSizeAsString],
-		zoom != 1.0 ? [NSString stringWithFormat:@" @ %.0f%%", zoom*100] : @"",
+		(zoom != 1.0 || [imgView zoomMode]) ? [NSString stringWithFormat:
+			@" @ %.0f%%", zoom*100] : @"",
 		FileSize2String(info->fileSize),
-		timerIntvl && timerPaused ? [NSString stringWithFormat:NSLocalizedString(@" Auto-advance(%g) PAUSED", @"slideshow info"), timerIntvl]
+		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1g%@) %@",
+			NSLocalizedString(@"Auto-advance", @""),
+			timerIntvl,
+			NSLocalizedString(@"seconds", @""),
+			NSLocalizedString(@"PAUSED", @"")]
 								  : @""]];
+//	[infoFld setNeedsDisplay:YES];
 	[infoFld sizeToFit];
+//	[infoFld setNeedsDisplay:YES];
 	[imgView setNeedsDisplay:YES]; // **
 }
 
@@ -249,6 +297,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSImage *img = [self loadFromCache:theFile];
 	if ([self isKeyWindow])
 		[NSCursor setHiddenUntilMouseMoves:YES];
+	[self displayCats];
 	if (img) {
 		//NSLog(@"displaying %d", currentIndex);
 		NSNumber *rot = [rotations objectForKey:theFile];
@@ -303,22 +352,25 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self updateInfoFldWithRotation:n];
 }
 
+
 - (void)toggleHelp {
 	if (!helpFld) {
-		NSRect r = NSMakeRect(0,0,297,256);
-		helpFld = [[NSTextView alloc] initWithFrame:r];
+		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect]; //NSMakeRect(0,0,310,265)
 		[[self contentView] addSubview:helpFld]; [helpFld release];
+		[helpFld setHorizontallyResizable:YES]; // NO by default
+//		[helpFld setVerticallyResizable:NO]; // YES by default
+//		[helpFld sizeToFit]; //doesn't do anything?
 		if (![helpFld readRTFDFromFile:
 			[[NSBundle mainBundle] pathForResource:@"creeveyhelp" ofType:@"rtf"]])
 			NSLog(@"couldn't load cheat sheet!");
 		[helpFld setBackgroundColor:[NSColor lightGrayColor]];
 		[helpFld setSelectable:NO];
-//		[helpFld setHorizontallyResizable:YES];
-//		[helpFld setVerticallyResizable:YES];
-//		[helpFld sizeToFit]; //doesn't do anything?
-		NSSize s = [[self contentView] frame].size;
+		NSSize s = [[helpFld textStorage] size];
+		NSRect r = NSMakeRect(0,0,s.width+12,s.height);
+		// width must be bigger than text, or wrappage will occur
+		s = [[self contentView] frame].size;
 		r.origin.x = s.width - r.size.width - 50;
-		r.origin.y = s.height - r.size.height - 50;
+		r.origin.y = s.height - r.size.height - 55;
 		[helpFld setFrame:r];
 		return;
 	}
@@ -347,8 +399,21 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)keyDown:(NSEvent *)e {
 	unichar c = [[e characters] characterAtIndex:0];
 	if (c >= '1' && c <= '9') {
-		if (timerIntvl == 0 || timerPaused) [self jump:1];
-		[self setTimer:c - '0'];
+		if (([e modifierFlags] & NSNumericPadKeyMask) != 0 && [imgView zoomMode]) {
+			if (c == '5') {
+				NSBeep();
+			} else {
+				char x,y;
+				c -= '0';
+				if (c<=3) y = 1; else if (c>=7) y = -1;
+				if (c%3 == 0) x = -1; else if (c%3 == 1) x = 1;
+				[imgView fakeDragX:([imgView bounds].size.width/2)*x
+								 y:([imgView bounds].size.height/2)*y];
+			}
+		} else {
+			if (timerIntvl == 0 || timerPaused) [self jump:1];
+			[self setTimer:c - '0'];
+		}
 		return;
 	}
 	if (c == '0') {
@@ -356,9 +421,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[self updateInfoFld];
 		return;
 	}
+	if (c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
+		[self assignCat:c - NSF1FunctionKey + 1
+				 toggle:([e modifierFlags] & NSCommandKeyMask) != 0];
+		//NSLog(@"got cat %i", c - NSF1FunctionKey + 1);
+		return;
+	}
 	if ([e isARepeat] && keyIsRepeating < MAX_REPEATING_CACHED) {
 		keyIsRepeating++;
 	}
+	DYImageInfo *obj;
 	switch (c) {
 		case '!':
 			[self setTimer:0.5];
@@ -410,6 +482,27 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case 'r':
 			[self setRotation:-90];
 			break;
+		case '+':
+		case '-':
+		case '=':
+			if (obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]]) {
+				if (obj->image == [imgView image]
+					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {
+					[imgView setImage:[[[NSImage alloc] initByReferencingFile:
+						ResolveAliasToPath([filenames objectAtIndex:currentIndex])] autorelease]
+							   zoomIn:c == '=' ? 2 : c == '+'];
+				} else {
+					if (c == '+') [imgView zoomIn];
+					else if (c == '-') [imgView zoomOut];
+					else [imgView zoomActualSize];
+				}
+				[self updateInfoFld];
+			}
+			break;
+		case '*':
+			[imgView zoomOff];
+			[self updateInfoFld];
+			break;
 		default:
 			//NSLog(@"%x",c);
 			[super keyDown:e];
@@ -417,11 +510,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 // cache stuff
-
-/* cache of NSImage objects in a hash where the index is the key.
- * we also use an array to know which indexes were cached in which order
- * so we know when to get rid of them.
- */
 
 - (NSImage *)loadFromCache:(NSString *)s {
 	NSImage *img = [imgCache imageForKey:s];
@@ -434,7 +522,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	return nil;
 }
 
-- (void)cacheAndDisplay:(NSString *)s {
+- (void)cacheAndDisplay:(NSString *)s { // ** roll this into imagecache?
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	[imgCache cacheFile:s];
 	if ([[filenames objectAtIndex:currentIndex] isEqualToString:s]) {
@@ -462,7 +550,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (BOOL)currentImageLoaded {
 	NSString *s = [self currentFile];
-	return [imgCache imageForKey:s] != nil;
+	return [imgCache infoForKey:s] != nil;
 }
 
 - (void)removeImageForFile:(NSString *)s {
@@ -477,11 +565,48 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self displayImage]; // reload at the current index
 }
 
+#pragma mark cat methods
+- (void)displayCats {
+	NSMutableArray *labels = [NSMutableArray arrayWithCapacity:1];
+	NSString *s = [filenames objectAtIndex:currentIndex];
+	short int i;
+	for (i=0; i<NUM_FNKEY_CATS; ++i) {
+		if ([cats[i] containsObject:s])
+			[labels addObject:[NSString stringWithFormat:NSLocalizedString(@"Group %i", @""), i+2]];
+	}
+	if ([labels count]) {
+		[catsFld setStringValue:[labels componentsJoinedByString:@", "]];
+		[catsFld sizeToFit];
+		[catsFld setHidden:NO];
+	} else {
+		[catsFld setHidden:YES];
+	}
+}
+
+- (void)assignCat:(short int)n toggle:(BOOL)toggle{
+	if (n==1) {
+		short int i;
+		for (i=0; i<NUM_FNKEY_CATS; ++i)
+			[cats[i] removeObject:[filenames objectAtIndex:currentIndex]];
+	} else {
+		id s = [filenames objectAtIndex:currentIndex];
+		if (toggle && [cats[n-2] containsObject:s])
+			[cats[n-2] removeObject:s];
+		else
+			[cats[n-2] addObject:s];
+		if (toggle)
+			[imgView setNeedsDisplayInRect:[catsFld frame]]; // in case the field shrinks
+	}
+	[self displayCats];
+}
+
 
 #pragma mark menu methods
 - (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
 	if ([menuItem tag] == 3) // Loop
 		return YES;
+	if ([menuItem tag] == 7) // random
+		return ![self isActive];
 	return [self isActive];
 }
 
@@ -501,6 +626,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 	BOOL b = ![sender state];
 	[sender setState:b];
 	[imgView setScalesUp:b];
-	[self updateInfoFld];
+	if (currentIndex != -1)
+		[self updateInfoFld];
 }
+- (IBAction)toggleRandom:(id)sender {
+	randomMode = !randomMode;
+	[sender setState:randomMode];
+}
+
 @end

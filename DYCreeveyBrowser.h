@@ -25,5 +25,6 @@
 @interface NSObject (DYCreeveyBrowserDelegate)
 - (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(int)column;
 - (void)browserWillSendAction:(NSBrowser *)sender;
+- (void)fakeKeyDown:(NSEvent *)e; // for redirecting pgup/down
 @end
 

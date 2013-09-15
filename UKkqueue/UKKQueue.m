@@ -30,7 +30,7 @@
 // @synchronized isn't available prior to 10.3, so we use a typedef so
 //  this class is thread-safe on Panther but still compiles on older OSs.
 
-// ** forget thread safety! -DY
+// forget thread safety! save a compiler flag.
 //#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_3
 //#define AT_SYNCHRONIZED(n)      @synchronized(n)
 //#else
@@ -92,10 +92,12 @@
         //NSLog(@"%@ (%d)", self, [self retainCount]);
         if( [self retainCount] == 2 && queueFD != -1 )
         {
-            int q = queueFD;
+            //int q = queueFD;
             queueFD = -1;
-            if( close( q ) == -1 )
-                NSLog(@"release: Couldn't close main kqueue (%d)", errno);
+            /*if( close( q ) == -1 )
+                NSLog(@"release: Couldn't close main kqueue (%d)", errno);*/
+			// closing will wait for the 5-second timeout!
+			// i've moved it to the thread - DY
         }
     }
     
@@ -140,7 +142,7 @@
 	
 	[super dealloc];
     
-    //NSLog(@"kqueue released.");
+    //NSLog(@"kqueue gone!");
 }
 
 
@@ -307,7 +309,8 @@
 	int					n;
     struct kevent		ev;
     struct timespec     timeout = { 5, 0 }; // 5 seconds timeout.
-    
+    int					q = queueFD; // save value before being clobbered by -1
+	
     while( queueFD != -1 )
     {
 		NSAutoreleasePool*  pool = [[NSAutoreleasePool alloc] init];
@@ -347,8 +350,10 @@
 		
 		[pool release];
     }
-    
-    //NSLog(@"exiting kqueue watcher thread.");
+	
+	if( close( q ) == -1 )
+		NSLog(@"release: Couldn't close main kqueue (%d)", errno);
+	//NSLog(@"exiting kqueue watcher thread.");
 }
 
 

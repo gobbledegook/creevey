@@ -9,7 +9,6 @@
 //  creevey
 //
 //  Created by d on 2005.04.15.
-//  Copyright 2005 __MyCompanyName__. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -53,14 +52,20 @@ NSString *FileSize2String(unsigned long long fileSize);
 - (void)cacheFile:(NSString *)s;
 - (void)cacheFileInNewThread:(NSString *)s;
 
-// for doing your own caching (e.g., Epeg)
-- (void)addImage:(NSImage *)img forFile:(NSString *)s size:(NSSize)aSize;
+// cacheFile consists of the following three steps
+// exposed here for doing your own caching (e.g., Epeg)
+// you MUST call addImage or dontAdd if attemptLock returns YES
+- (BOOL)attemptLockOnFile:(NSString *)s; // will sleep if s is pending, then return NO
+- (void)createScaledImage:(DYImageInfo *)imgInfo; // if i->image is nil, you must replace with dummy image
+- (void)addImage:(DYImageInfo *)img forFile:(NSString *)s;
+- (void)dontAddFile:(NSString *)s; // simply remove from pending
+
 - (NSImage *)imageForKey:(NSString *)s;
 - (void)removeImageForKey:(NSString *)s;
 
 - (DYImageInfo *)infoForKey:(NSString *)s;
 
-- (void)abortCaching;
+- (void)abortCaching; // when set, ignore calls to cacheFile; pending files dropped when done
 - (void)beginCaching;
 
 @end

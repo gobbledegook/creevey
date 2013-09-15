@@ -17,8 +17,9 @@
 
 @interface SlideshowWindow : NSWindow
 {
+	NSMutableSet **cats;
     DYImageView *imgView;
-	NSTextField *infoFld; BOOL hideInfoFld;
+	NSTextField *infoFld, *catsFld; BOOL hideInfoFld;
 	
 	DYImageCache *imgCache;
 	
@@ -34,9 +35,11 @@
 	
 	NSTextView *helpFld;
 	
-	BOOL loopMode;
+	BOOL loopMode, randomMode;
 	unsigned char keyIsRepeating;
 }
+
+- (void)setCats:(NSMutableSet **)newCats;
 
 - (void)setFilenames:(NSArray *)files; // call this before starting the slideshow
 - (void)setBasePath:(NSString *)s;
@@ -47,6 +50,7 @@
 - (void)bringToForeground;
 
 - (NSString *)currentFile;
+- (void)displayImage; // to reload current file, assuming the mod date is different
 - (BOOL)currentImageLoaded;
 - (void)removeImageForFile:(NSString *)s;
 
@@ -55,5 +59,6 @@
 - (IBAction)toggleLoopMode:(id)sender;
 - (IBAction)toggleCheatSheet:(id)sender;
 - (IBAction)toggleScalesUp:(id)sender;
+- (IBAction)toggleRandom:(id)sender;
 
 @end

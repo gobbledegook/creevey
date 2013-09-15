@@ -9,15 +9,10 @@
 #import <Foundation/Foundation.h>
 #include "Epeg.h"
 
-
-@interface EpegWrapper : NSObject {
-
-	
-}
+@interface EpegWrapper : NSObject 
 
 + (NSImage *)imageWithPath:(NSString *)path
 			   boundingBox:(NSSize)boundingBox 
 				   getSize:(NSSize *)pixSize;
-+ (NSString *)jpegErrorMessage;
-
+//+ (NSString *)jpegErrorMessage;
 @end

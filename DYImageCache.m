@@ -102,16 +102,14 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	[super dealloc];
 }
 
-- (DYImageInfo *)createScaledImage:(NSString *)s {
-	DYImageInfo *imgInfo = [[[DYImageInfo alloc] initWithPath:s] autorelease];
+- (void)createScaledImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0)
-		return imgInfo;  // nsimage crashes on zero-length files
+		return;  // nsimage crashes on zero-length files
 	
-	s = ResolveAliasToPath(s);
 	NSSize maxSize = boundingSize;
 	NSImage *orig, *result = nil;
 	// calc pixelSize
-	orig = [[NSImage alloc] initByReferencingFile:s];
+	orig = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo->path)];
 	   /* You MUST either setDataRetained:YES OR setCacheMode:NSImageCacheNever.
 		* Once the image is composited, NSImage will throw away the original
 		* data and save only a cached (read: reduced) version. It seems that
@@ -122,9 +120,9 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		* simply blows up the cached image into a larger pixely image.
 		* We can fix this by telling it not to cache at all, or by retaining the
 		* original data.
-		* Another way: setScalesWhenResized
+		* A better way: setScalesWhenResized
 		*/
-	[orig setCacheMode:NSImageCacheNever];
+	[orig setScalesWhenResized:YES];
 	// now scale the img
 	if (orig && [[orig representations] count]) { // why doesn't it return nil for corrupt jpegs?
 		NSImageRep *oldRep = [[orig representations] objectAtIndex:0];
@@ -134,24 +132,22 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		if (oldSize.width == 0 || oldSize.height == 0) // PDF's don't have pixels
 			oldSize = [orig size];
 		
-		if (oldSize.width != 0 && oldSize.height != 0) { // if it's still 0, skip it, BAD IMAGE
+		if (oldSize.width != 0 && oldSize.height != 0) { // but if it's still 0, skip it, BAD IMAGE
 			imgInfo->pixelSize = oldSize;
-		  if ([oldRep isKindOfClass:[NSBitmapImageRep class]]
-			  && [((NSBitmapImageRep*)oldRep) valueForProperty:NSImageFrameCount]) {
-			  // special case for animated gifs
-			  result = [orig retain];
-		  } else {
 			if ((maxSize.height > maxSize.width) != (oldSize.height > oldSize.width)) {
 				// ** do this only for the slideshow
 				maxSize.height = boundingSize.width;
 				maxSize.width = boundingSize.height;
 			}
 			
-			if (oldSize.width <= maxSize.width && oldSize.height <= maxSize.height) {
-				newSize = oldSize;
-				// we still cache anyway in case there's a pixel vs reported size diff
-				// ** we might be able to optimize away by checking for equality
-				// in which case, don't set nevercache for returned images
+			if ((oldSize.width <= maxSize.width && oldSize.height <= maxSize.height)
+				|| ([oldRep isKindOfClass:[NSBitmapImageRep class]]
+					&& [((NSBitmapImageRep*)oldRep) valueForProperty:NSImageFrameCount])) {
+				// special case for animated gifs
+				result = [orig retain];
+				if (!NSEqualSizes(oldSize,[orig size]))
+					[orig setSize:oldSize];
+				// in which case, don't set nevercache for returned images?
 			} else {
 				float w_ratio, h_ratio;
 				w_ratio = maxSize.width/oldSize.width;
@@ -163,31 +159,32 @@ NSString *FileSize2String(unsigned long long fileSize) {
 					newSize.width = oldSize.width*h_ratio;
 					newSize.height = maxSize.height;
 				}
+				[orig setSize:newSize];			  
+				result = [[NSImage alloc] initWithSize:newSize];
+				[result lockFocus];
+				[orig compositeToPoint:NSZeroPoint operation:NSCompositeSourceOver];
+				[result unlockFocus];
 			}
-			result = [[NSImage alloc] initWithSize:newSize];// autorelease];
-															// right now we copy the old image into a new, smaller image
-															// is there a better way? just add cached rep to the orig image?
-			oldSize = [oldRep size];
-			[result lockFocus];
-			NSGraphicsContext *cg;
-			NSImageInterpolation oldInterp;
-			if (interpolationType) { // NSImageInterpolationDefault is 0
-				cg = [NSGraphicsContext currentContext];
-				oldInterp = [cg imageInterpolation];
-				[cg setImageInterpolation:interpolationType];
-			}
-			[orig drawInRect:NSMakeRect(0,0,newSize.width,newSize.height)
-					fromRect:NSMakeRect(0,0,oldSize.width,oldSize.height)
-				   operation:NSCompositeSourceOver fraction:1.0];
-			if (interpolationType)
-				[cg setImageInterpolation:oldInterp];
-			[result unlockFocus];
-		  }
+			//oldSize = [oldRep size];
+//			oldSize =  newSize;
+//			[result lockFocus];
+//			NSGraphicsContext *cg;
+//			NSImageInterpolation oldInterp;
+//			if (interpolationType) { // NSImageInterpolationDefault is 0
+//				cg = [NSGraphicsContext currentContext];
+//				oldInterp = [cg imageInterpolation];
+//				[cg setImageInterpolation:interpolationType];
+//			}
+//			[orig drawInRect:NSMakeRect(0,0,newSize.width,newSize.height)
+//					fromRect:NSMakeRect(0,0,oldSize.width,oldSize.height)
+//				   operation:NSCompositeSourceOver fraction:1.0];
+//			if (interpolationType)
+//				[cg setImageInterpolation:oldInterp];
+//			[result unlockFocus];
 		}
 	}
 	[orig release];
 	imgInfo->image = result;
-	return imgInfo;
 }
 
 /*//a failed experiment
@@ -220,47 +217,19 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 #define CacheContains(x)	([images objectForKey:x] != nil)
 #define PendingContains(x)  ([pending containsObject:x])
 - (void)cacheFile:(NSString *)s {
-	DYImageInfo *result;
-	[cacheLock lock];
-	if (CacheContains(s) || cachingShouldStop) {
-		// abort if already cached OR slideshow ended
-		[cacheLock unlock];
-		return;
-	}
-	if (PendingContains(s)) {
-		[cacheLock unlock];
-		//NSLog(@"waiting for pending %@", idx);
-		[pendingLock lockWhenCondition:[s hash]];
-		// this lock doesn't do anything, but is useful for communication purposes
-		//NSLog(@"%@ not pending.", idx);
-		[pendingLock unlockWithCondition:[s hash]];
-		return;
-	}
-	[pending addObject:s]; // so no one else caches it simultaneously
-	[cacheLock unlock];
+	if (![self attemptLockOnFile:s]) return;
 	
 	// make image objects
 	//NSLog(@"caching %@", idx);
-	result = [self createScaledImage:s];
-	if (result->image == nil) result->image = [[NSImage imageNamed:@"brokendoc"] retain]; // ** don't hardcode!
+	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
+	[self createScaledImage:result];
+	if (result->image == nil)
+		result->image = [[NSImage imageNamed:@"brokendoc"] retain]; // ** don't hardcode!
 	
 	// now add it to cache
-	[cacheLock lock];
-	if (!cachingShouldStop) { // skip if show ended
-		[pending removeObject:s];		[cacheOrder addObject:s];
-		[images setObject:result forKey:s];
-		
-		// remove stale images, if any
-		if ([cacheOrder count] > maxImages) {
-			[images removeObjectForKey:[cacheOrder objectAtIndex:0]];
-			[cacheOrder removeObjectAtIndex:0];
-		}
-		//NSLog(@"caching %@ done!", idx);
-	}
-	// clean up
-	[cacheLock unlock];
-	//[pendingLock lock];
-	[pendingLock unlockWithCondition:[s hash]]; // unlocking w/o locking, i guess it's OK
+	[self addImage:result forFile:s];
+	[result release];
+	//NSLog(@"caching %@ done!", idx);
 }
 
 - (void)cacheFileThreaded:(NSString *)s {
@@ -274,21 +243,49 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 						   withObject:s];
 }
 
-- (void)addImage:(NSImage *)img forFile:(NSString *)s size:(NSSize)aSize {
-	// repeated code from cacheFile?
+- (BOOL)attemptLockOnFile:(NSString *)s {
 	[cacheLock lock];
-	[cacheOrder addObject:s];
-	DYImageInfo *imgInfo = [[[DYImageInfo alloc] initWithPath:s] autorelease];
-	imgInfo->image = [img retain];
-	imgInfo->pixelSize = aSize;
-	[images setObject:imgInfo forKey:s];
-	
-	// remove stale images, if any
-	if ([cacheOrder count] > maxImages) {
-		[images removeObjectForKey:[cacheOrder objectAtIndex:0]];
-		[cacheOrder removeObjectAtIndex:0];
+	if (CacheContains(s) || cachingShouldStop) {
+		// abort if already cached OR slideshow ended
+		[cacheLock unlock];
+		return NO;
+	}
+	if (PendingContains(s)) {
+		[cacheLock unlock];
+		//NSLog(@"waiting for pending %@", idx);
+		[pendingLock lockWhenCondition:[s hash]];
+		// this lock doesn't do anything, but is useful for communication purposes
+		//NSLog(@"%@ not pending.", idx);
+		[pendingLock unlockWithCondition:[s hash]];
+		return NO;
+	}
+	[pending addObject:s]; // so no one else caches it simultaneously
+	[cacheLock unlock];
+	return YES;
+}
+
+- (void)addImage:(DYImageInfo *)imgInfo forFile:(NSString *)s {
+	[cacheLock lock];
+	[pending removeObject:s];
+	if (!cachingShouldStop) {
+		[cacheOrder addObject:s];
+		[images setObject:imgInfo forKey:s];
+		
+		// remove stale images, if any
+		if ([cacheOrder count] > maxImages) {
+			[images removeObjectForKey:[cacheOrder objectAtIndex:0]];
+			[cacheOrder removeObjectAtIndex:0];
+		}
 	}
 	[cacheLock unlock];
+	[pendingLock unlockWithCondition:[s hash]]; // unlocking w/o locking, i guess it's OK
+}
+
+- (void)dontAddFile:(NSString *)s {
+	[cacheLock lock];
+	[pending removeObject:s];
+	[cacheLock unlock];
+	[pendingLock unlockWithCondition:[s hash]];
 }
 
 - (DYImageInfo *)infoForKey:(NSString *)s {

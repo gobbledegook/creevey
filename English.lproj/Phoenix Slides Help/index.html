@@ -2,17 +2,30 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en">
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
 	<title>Phoenix Slides Help</title>
 	<meta name="AppleTitle" content="Phoenix Slides Help">
 </head>
 <body>
 <h1>Phoenix Slides Help</h1>
 <h2>Overview</h2>
-Phoenix Slides is a fast full-screen slideshow
-program/image browser. It requires Mac OS X 10.3 or later.
+<p>Phoenix Slides is a fast full-screen slideshow
+program and image browser. You can also use it to do lossless JPEG
+transformations and view EXIF data. It requires Mac OS X 10.3 or later.</p>
 
-<h2>Usage</h2>
+Contents:
+<ul>
+	<li><a href="#usage">General Usage</a></li>
+	<li><a href="#slides">Slideshows</a></li>
+	<li><a href="#jpeg">JPEG Transforms</a></li>
+	<li><a href="#cats">Groups/Categories</a></li>
+	<li><a href="#story">The Story</a></li>
+	<li><a href="#ack">Acknowledgements</a></li>
+	<li><a href="#vers">Version History/Contact Info</a></li>
+</ul>
+
+
+<h2><a name="usage"></a>Usage</h2>
 <p>Use the directory listing at the top of the window to
 navigate to a directory. You can also drag files or folders
 into the window or onto the application icon. Start a slideshow
@@ -82,7 +95,16 @@ around them (in the whitespace).
 Drag images to another program to open them with
 that program, or to the Finder to copy the files.
 
-<h2>Slideshows</h2>
+<h3>Reveal in Finder</h3>
+<p>The "Reveal in Finder" menu item can be handy for file operations
+that are beyond the limits of drag and drop. If one or more files are selected,
+Phoenix Slides tells the Finder to show those files. If you have "Subfolders"
+checked and your files are from different directories, the specific behavior
+will be up to the Finder. If no files are selected, the Phoenix Slides will
+simply open the selected folder in the Finder.
+</p>
+
+<h2><a name="slides"></a>Slideshows</h2>
 <p>Starting a slideshow will do different things depending
 on the current selection:</p>
 <ul>
@@ -112,6 +134,13 @@ actual size. To expand them to fill the screen, choose "Scale Up
 Smaller Images" from the Slideshow menu (or hit command-E--think
 'embiggen').</p>
 
+<p>If you want to zoom in on an image, use +/- (especially convenient
+on the numeric keypad). Use '=' to zoom to actual size (100%). You can
+get back to the default size (fit to screen) by hitting '*'.
+When the image is larger than the screen, you can use the number keys
+on the numeric keypad to scroll around (1-9, except 5). Your scroll
+wheel will work also, if your mouse has one.</p>
+
 <p>Ordinarily, the slideshow stops when you reach the last slide.
 You can enable loop mode through the Slideshow menu. This will cause
 the slideshow to wrap around to the first slide after the last one.
@@ -125,63 +154,94 @@ the front.</p>
 
 <h3>Slideshow cheat sheet</h3>
 <table>
-	<tr>
-		<td>space</td> <td>pause/continue auto-advance; go next</td>
-	</tr>
-	<tr>
-		<td>→↓</td> <td>go next</td>
-	</tr>
-	<tr>
-		<td>←↑</td> <td>go previous</td>
-	</tr>
-	<tr>
-		<td>page down</td> <td>go forward 10</td>
-	</tr>
-	<tr>
-		<td>page up</td> <td>go back 10</td>
-	</tr>
-	<tr>
-		<td>home</td> <td>go to first slide</td>
-	</tr>
-	<tr>
-		<td>end</td> <td>go to last slide</td>
-	</tr>
-	<tr>
-		<td>0</td> <td>pause auto-advance</td>
-	</tr>
-	<tr>
-		<td>1-9</td> <td>auto-advance every n seconds</td>
-	</tr>
-	<tr>
-		<td>!</td> <td>auto-advance every 1/2 second</td>
-	</tr>
-	<tr>
-		<td>h, ?</td> <td>show/hide this cheat sheet</td>
-	</tr>
-	<tr>
-		<td>i</td> <td>show/hide filename</td>
-	</tr>
-	<tr>
-		<td>r</td> <td>rotate right (90° clockwise)</td>
-	</tr>
-	<tr>
-		<td>l</td> <td>rotate left (90° counter-clockwise)</td>
-	</tr>
-	<tr>
-		<td>esc, q</td> <td>end slideshow</td>
-	</tr>
+<tr><td>space</td><td>pause/continue auto-advance; go next</td></tr>
+<tr><td>&rarr;&darr;</td><td>go next</td></tr>
+<tr><td>&larr;&uarr;</td><td>go previous</td></tr>
+<tr><td>page down</td><td>go forward 10</td></tr>
+<tr><td>page up</td><td>go back 10</td></tr>
+<tr><td>home</td><td>go to first slide</td></tr>
+<tr><td>end</td><td>go to last slide</td></tr>
+<tr><td>0</td><td>pause auto-advance</td></tr>
+<tr><td>1-9</td><td>auto-advance every n seconds</td></tr>
+<tr><td>!</td><td>auto-advance every 1/2 second</td></tr>
+<tr><td>h, ?</td><td>show/hide this cheat sheet</td></tr>
+<tr><td>i</td><td>show/hide filename</td></tr>
+<tr><td>F2-F12</td><td>assign to group n</td></tr>
+<tr><td>>&#8984;F2-F12</td><td>toggle group assignment</td></tr>
+<tr><td>F1</td><td>remove group assignment</td></tr>
+<tr><td>r</td><td>rotate right (90� clockwise)</td></tr>
+<tr><td>l</td><td>rotate left (90� counter-clockwise)</td></tr>
+<tr><td>&#8984;E</td><td>scale up small images</td></tr>
+<tr><td>+/-</td><td>zoom in/out</td></tr>
+<tr><td>=</td><td>actual pixels</td></tr>
+<tr><td>*</td><td>zoom to fit</td></tr>
+<tr><td>1-9 (num keypad)</td><td>scroll zoomed image</td></tr>
+<tr><td>esc, q</td><td>end slideshow</td></tr>
 </table>
 
-<h2>Menu items</h2>
-<p>Most of the menu items are self-explanatory. The "Reveal in Finder"
-command requires additional explanation: If one or more files are selected,
-Phoenix Slides tells the Finder to show those files. If you have "Subfolders"
-checked and your files are from different directories, the specific behavior
-will be up to the Finder. If no files are selected, the Phoenix Slides will
-simply open the selected folder in the Finder.
+<h2><a name="jpeg"></a>JPEG Transformations</h2>
+<p>Phoenix Slides can do lossless transformations on JPEG files.
+In fact, it uses code from jpegtran (including the EXIF patch),
+and supports most of its advanced options, which are briefly
+explained below:
 </p>
 
-<h2>The Phoenix Slides story</h2>
+<p><strong>Drop Nontransformable Edge Blocks</strong> - Lossless rotation
+is only perfect for images whose size is a multiple of the iMCU block
+size, usually 8 or 16. The "imperfect" blocks on the edge can be
+trimmed, if desired, though of course this is an irreversible operation.
+Here's more from the jpegtran docs:</p>
+
+<pre>jpegtran's default behavior when transforming an odd-size image is designed
+to preserve exact reversibility and mathematical consistency of the
+transformation set.... Transpose is able to flip the entire image
+area.  Horizontal mirroring leaves any partial iMCU column at the right edge
+untouched, but is able to flip all rows of the image.  Similarly, vertical
+mirroring leaves any partial iMCU row at the bottom edge untouched, but is
+able to flip all columns.  The other transforms can be built up as sequences
+of transpose and flip operations; for consistency, their actions on edge
+pixels are defined to be the same as the end result of the corresponding
+transpose-and-flip sequence.
+</pre>
+
+<p><strong>Make Progressive</strong> - Creates images suitable for
+incremental display over slow communication links. Progressive JPEG files
+consist of a series of scans of increasing quality.</p>
+
+<p><strong>Optimize Huffman Table</strong> - Slower, but
+creates slightly smaller files.</p>
+
+<p><strong>Grayscale</strong> - Simply removes the color (chrominance)
+information, leaving grayscale (luminance) data intact.</p>
+
+<p><strong>JPEG Markers</strong> - Various options to remove JPEG comments
+and other data (such as EXIF information) stored in the header of JPEG files.</p>
+
+<p>Phoenix Slides will warn you if you attempt a nonreversible operation.</p>
+
+<h2><a name="cats"></a>Groups/Categories</h2>
+
+<p>Phoenix Slides provides a method to temporarily group or categorize
+images. During a slideshow, hit one of the F2-F12 keys to assign an image
+to a group. Then, in the thumbnail view, hit F2-F12 to see images in
+the corresponding group. You can also hit command-F2(through F12) to toggle
+an image's group assignment in both slideshow and thumbnail views.
+To clear all category assignments, hit F1 during a slideshow, or command-F1
+when viewing thumbnails. Assigning images to groups can be useful for batch
+operations, e.g., selecting a bunch of images to perform a JPEG rotation on.</p>
+
+<p>Naturally, you will not be able to use those function keys which
+the system or third party utilities have reserved for other things,
+the F9-F12 defaults for Expos&eacute; and Dashboard being the most
+notable examples. However, you can usually work around this by
+holding down either the control or option key when pressing F1-F12.</p>
+
+<p>Categories are temporary and will be lost when Phoenix Slides quits.
+You should think of this functionality as a sort of fancy selection mechanism.</p>
+
+
+
+<h2><a name="story"></a>The Phoenix Slides story</h2>
 <p>One day, Jim (the professor in charge at the research project I work at)
 brought in some CDs of photos from Thailand. Let's look at these pictures,
 he said. We searched the Macs in the office for suitable slideshow programs,
@@ -201,14 +261,21 @@ is also featured prominently on the San Francisco city flag (that's where
 we're based). Plus, I'm a fan of Fawkes (Dumbledore's phoenix in the
 Harry Potter books).</p>
 
-<h2>Acknowledgements</h2>
+<h2><a name="ack"></a>Acknowledgements</h2>
 <p>Thanks to David Chow and his uncanny ability to crash my program.</p>
+
+<p>Thanks to Thomas Steg of Karlsruhe (Germany) for the German
+localization and docs.</p>
 
 <p>Thanks to all those who make their source code available to
 learn from/adapt to other purposes, including rasterman (Epeg),
 Allan Hsu (Magic Lantern), Marc Liyanage (EpegWrapper), and
 Rainer Brockerhoff (RBSplitView).
 </p>
+
+<p>Thanks to Adrian Gonzales at
+<a href="http://www.icestorm.com/">The Icestorm Network</a> for generously
+providing server space.</p>
 
 <p>And finally, thanks to my old boss at my dead-end job for
 "terminating" me. Let Phoenix Slides be a testament to the advantages
@@ -227,7 +294,21 @@ programming help or making a donation along the lines of books
 </p>
 
 
-<h2>Version History</h2>
+<h2><a name="vers"></a>Version History</h2>
+2005.08.03 1.2
+<ul>
+	<li>zoom in/out in slideshow</li>
+	<li>lossless JPEG rotations/transformations</li>
+	<li>get info window with EXIF info, JPEG comments, etc.</li>
+	<li>ability to open multiple thumbnail windows</li>
+	<li>ability to assign images to temporary groups/categories</li>
+	<li>random order slideshows</li>
+	<li>slightly faster thumbnail loading for non-JPEGs</li>
+	<li>automatic version checking</li>
+	<li>German localization</li>
+	<li>fixed - preferences not always saved on quit</li>
+</ul>
+
 2005.07.06 1.1
 <ul>
 	<li>status bar (name, size, dimensions)</li>
@@ -252,6 +333,7 @@ programming help or making a donation along the lines of books
 <p>Official web site:
 <a href="http://blyt.net/phxslides/">http://blyt.net/phxslides/</a>
 </p>
+<p>Also, please <a href="mailto:dyupc@blyt.net">email</a> suggestions, bug reports, and comments.</p>
 
 <!-- Creative Commons License -->
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/"><img alt="Creative Commons License" border="0" src="http://creativecommons.org/images/public/somerights20.gif"></a><br>

@@ -15,6 +15,8 @@
 // assumes it is embedded in a scrollview
 @interface DYWrappingMatrix : NSControl
 {
+	IBOutlet id delegate;
+
 	NSImageCell *myCell;           // one cell, reused for efficiency
 	NSMutableArray *images;
 	NSMutableArray *filenames;
@@ -29,8 +31,11 @@
 	float cellHeight, columnSpacing, area_w, area_h;
 }
 
++ (NSSize)maxCellSize;
+
+
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
-//- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i;
+- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i;
 - (void)removeAllImages;
 //- (void)removeSelectedImages;
 - (void)removeImageAtIndex:(unsigned int)i;
@@ -39,20 +44,23 @@
 //- (void)setFilenames:(NSArray *)a;
 
 
+- (NSArray *)filenames;
 - (NSMutableIndexSet *)selectedIndexes;
+- (NSArray *)selectedFilenames;
+- (NSString *)firstSelectedFilename;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
 - (void)addSelectedIndex:(unsigned int)i;
 
 - (unsigned int)numCells;
 - (NSSize)cellSize;
-- (NSSize)maxCellSize;
 - (float)maxCellWidth;
 - (float)minCellWidth;
 - (float)cellWidth;
 - (void)setCellWidth:(float)w;
 
 - (void)updateStatusString; // ** rename me
+- (void)setDelegate:(id)d;
 
 @end
 

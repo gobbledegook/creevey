@@ -5,13 +5,10 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//
 //  NSArrayIndexSetExtension.h
 //  creevey
 //
 //  Created by d on 2005.04.08.
-//  Copyright 2005 __MyCompanyName__. All rights reserved.
-//
 
 #import <Cocoa/Cocoa.h>
 

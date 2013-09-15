@@ -4,27 +4,29 @@
             ACTIONS = {
                 changeStartupOption = id; 
                 chooseStartupDir = id; 
-                displayDir = id; 
+                moveToTrash = id; 
+                newWindow = id; 
                 openAboutPanel = id; 
+                openGetInfoPanel = id; 
                 openPrefWin = id; 
                 openSelectedFiles = id; 
                 revealSelectedFilesInFinder = id; 
+                rotateTest = id; 
+                sendFeedback = id; 
                 setDesktopPicture = id; 
-                setRecurseSubfolders = id; 
                 slideshow = id; 
+                stopModal = id; 
+                versionCheck = id; 
             }; 
             CLASS = CreeveyController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                bottomStatusFld = NSTextField; 
-                dirBrowser = NSBrowser; 
-                imgMatrix = DYWrappingMatrix; 
+                exifTextView = NSTextView; 
+                jpegProgressBar = NSProgressIndicator; 
                 prefsWin = NSPanel; 
-                slidesBtn = NSButton; 
                 slidesWindow = SlideshowWindow; 
                 startupDirFld = NSTextField; 
                 startupOptionMatrix = NSMatrix; 
-                statusFld = NSTextField; 
             }; 
             SUPERCLASS = NSObject; 
         }, 
@@ -36,13 +38,7 @@
             SUPERCLASS = NSControl; 
         }, 
         {
-            CLASS = DirBrowserDelegate; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {"_b" = NSBrowser; }; 
-            SUPERCLASS = NSObject; 
-        }, 
-        {
-            ACTIONS = {moveToTrash = id; selectNone = id; }; 
+            ACTIONS = {selectNone = id; updateExifInfo = id; }; 
             CLASS = FirstResponder; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSObject; 
@@ -52,6 +48,7 @@
                 endSlideshow = id; 
                 toggleCheatSheet = id; 
                 toggleLoopMode = id; 
+                toggleRandom = id; 
                 toggleScalesUp = id; 
             }; 
             CLASS = SlideshowWindow; 

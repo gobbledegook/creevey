@@ -10,8 +10,6 @@
 //  creevey
 //
 //  Created by d on 2005.04.03.
-//  Copyright 2005 __MyCompanyName__. All rights reserved.
-//
 
 #import "DYCarbonGoodies.h"
 #import <Carbon/Carbon.h>

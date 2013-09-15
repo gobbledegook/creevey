@@ -5,26 +5,27 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//
 //  DYImageView.h
 //  creevey
 //
 //  Created by d on 2005.04.01.
-//  Copyright 2005 __MyCompanyName__. All rights reserved.
-//
 
 #import <Cocoa/Cocoa.h>
 
 
 @interface DYImageView : NSView {
-	NSImage *image, *transformedImage;
+	NSImage *image;
 	NSTimer *gifTimer;
 	int rotation;
 	BOOL scalesUp;
-	//float zoom;
+	NSRect sourceRect;
+	NSSize destSize;
+	float zoomF;
 }
 
+- (NSImage *)image;
 - (void)setImage:(NSImage *)anImage;
+- (void)setImage:(NSImage *)anImage zoomIn:(BOOL)zoomIn;
 - (int)rotation;
 - (int)addRotation:(int)r;
 - (void)setRotation:(int)n;
@@ -32,5 +33,15 @@
 //- (float)zoom;
 - (BOOL)scalesUp;
 - (void)setScalesUp:(BOOL)b;
+
+- (void)zoomOff;
+- (void)zoomActualSize;
+- (void)zoomIn;
+- (void)zoomOut;
+- (void)fakeDragX:(float)x y:(float)y;
+
+- (BOOL)zoomMode;
+- (float)zoomF;
+
 
 @end

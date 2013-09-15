@@ -6,6 +6,7 @@
 //California 94305, USA.
 
 #import "DYCreeveyBrowser.h"
+#import "CreeveyMainWindowController.h"
 
 @interface DYBrowserCell : NSBrowserCell {
 	NSString *title;
@@ -35,6 +36,10 @@
 @interface DYCreeveyBrowserMatrix : NSMatrix
 @end
 @implementation DYCreeveyBrowserMatrix
+- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
+	if ([menuItem action] == @selector(selectAll:)) return YES;
+	return [super validateMenuItem:menuItem];
+}
 - (void)selectAll:(id)sender {
 	[[[self window] delegate] selectAll:sender]; // to pass it to image matrix
 }
@@ -44,7 +49,7 @@
 		if ([self frame].size.height > [[self superview] frame].size.height)
 			[[self superview] keyDown:e]; // scroll ourselves
 		else
-			[[[self window] delegate] keyDown:e]; // scroll img matrix
+			[[[self window] delegate] fakeKeyDown:e]; // scroll img matrix
 	else
 		[super keyDown:e];
 }
@@ -155,8 +160,7 @@
 		
         if (sourceDragMask & NSDragOperationGeneric) {
 			
-            [[NSApp delegate] application:nil
-								openFiles:files]; // **
+            [[[self window] delegate] openFiles:files]; // **
 			
         }
 		

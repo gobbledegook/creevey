@@ -1,26 +1,62 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
-2005 June 8
+created 2005 June 8
+modified 2005 August 3
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
 
+I put my source code out in the hopes that people might contribute
+to the project, and also so others may benefit from my hours of
+blood, sweat, and code (as the old CodeWarrior mantra goes).
+
 Sorry for the messy source code. I've tried to make things modular
 and reusable, though a lot of classes are rather application-specific.
 Let's see, the wrapping matrix is kinda cool. The dir browser could
-be useful (but NSBrowser is a horrible, horrible class). And the
+be useful (NSBrowser quirks notwithstanding). And the
 Carbon Goodies are definitely useful.
 
 If anyone wants to contribute their coding talent and make this
-program come along more quickly, help is always welcome. TO DO:
-jpeg lossless rotation, show exif info,
-generate web pages, play movies.
+program come along more quickly, help is always welcome.
+
+TO DO:
+- generate web pages
+- play movies
+- lossless jpeg cropping?
+- speed, speed, speed. i've noticed a slight lag sometimes when going forward
+  in the slideshow, which disappears if you go back over those pics again.
+  can't figure out why...
+
 
 Enjoy!
 
 Version History
 ---------------
+1.2
+---
+lossless jpeg rotation and other transformations
+get info window: name, alias, size, progressive, jpeg comments, exif info
+multiple windows! (this was a cr@pload of work)
+save prefs on exit (i forgot to call synchronize)
+tried to make thumbnail loading faster, but can't seem to make significant
+  improvements. Epeg is nice, tho i can't seem to get anywhere near the promised
+  25 thumbs/second, but I think that figure's just for small (<1MP) jpegs.
+fixed a problem when releasing a UKKQueue that only became apparent
+  when closing multiple windows (up to 5-second hang)
+double-click on empty trailing whitespace or with cmd or shift no longer sends action
+German localization, thanks to Thomas Steg.
+removed help indexes--they were just taking up space, and it's a one-page doc anyway.
+cheat sheet rect now calculated to fit text exactly
+random slideshows
+categories
+auto vers check
+zoom in slideshow - if flush to edge, zoom in on edges
+  otherwise zooming in zooms in on center
+faster image loading - use NSImage's setScalesWhenResized and setSize
+
+
 1.1
+---
 info bar
 resize thumbnails
 change (single-)selection in matrix using arrow keys
@@ -31,6 +67,8 @@ fixed view/thread bugs (setNeedsDisplay is not thread-safe)
 animated GIFs - ridiculously simple to implement.
 dir listing shows volumes at the top level
 dir listing updates on volume mounting, dir renaming/deletion
+  (using kqueue - it's too much to refresh for any and every
+  dir content change, i think)
 space now pause/continues auto-advance
 pressing 1-9 now starts auto-advance right away
 added scale up for small images
@@ -50,6 +88,7 @@ has emailed me thanking me for the program. I guess that means
 no one's found anything wrong with it...
 
 The most annoying bugs are the ones in Apple's frameworks.
+(cuz you assume there aren't any...)
 NSBrowser seems to crash if you click on it too much (something
 about the horizontal scrolling animation). I've made a poser subclass
 to disable the animation.

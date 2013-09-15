@@ -8,11 +8,22 @@
 
 #import "EpegWrapper.h"
 
+/*@interface EpegBitmapImageRep : NSBitmapImageRep
+@end
+@implementation EpegBitmapImageRep
+- (void)dealloc {
+	free([self bitmapData]);
+	[super dealloc];
+}
+@end
+// */
+
 
 @implementation EpegWrapper
-+ (NSString *)jpegErrorMessage {
-	return [NSString stringWithCString:epeg_error_msg()];
-}
+
+//+ (NSString *)jpegErrorMessage {
+//	return [NSString stringWithCString:epeg_error_msg()];
+//}
 
 + (NSImage *)imageWithPath:(NSString *)path
 			   boundingBox:(NSSize)boundingBox
@@ -21,22 +32,18 @@
 	Epeg_Image *im = NULL;
 	NSImage *image;
 	int width_in, height_in;
-
-	NSFileManager *fileManager = [NSFileManager defaultManager];
-	BOOL isDirectory, exists;
-	exists = [fileManager fileExistsAtPath:path isDirectory:&isDirectory];
-	if (!exists || isDirectory) {
-		NSLog(@"invalid path '%@' passed", path);
-		return nil;
-	}
 	
 	im = epeg_file_open([path fileSystemRepresentation]);
-	if (!im) {
-		NSLog(@"unable to create epeg image for path '%@'", path);
+	if (!im)
 		return nil;
-	}
 
 	epeg_size_get(im, &width_in, &height_in);
+	if (width_in < boundingBox.width || height_in < boundingBox.height) {
+		// fail if either dimension is too small
+		// works around black areas outside small images
+		epeg_close(im);
+		return nil;
+	}
 	pixSize->width = width_in;
 	pixSize->height = height_in;
 
@@ -58,59 +65,59 @@
 	epeg_decode_size_set(im, width_out, height_out);
 	epeg_decode_colorspace_set(im, EPEG_RGB8);
 
-	//option1
+/*	//option1
 	unsigned char *outbuffer;
 	int outsize;
 	epeg_memory_output_set(im, &outbuffer, &outsize);
-	epeg_quality_set(im, 75);
+	//epeg_quality_set(im, 75);
 	if (epeg_encode(im) != 0) {
 		// ALWAYS check the return code!
 		NSLog(@"unable to encode epeg thumbnail for path '%@'", path);
+		epeg_close(im);
 		return nil;
 	}
 	//NSLog(@"%d compressed, from %d", outsize, (width_out * height_out * 3));
 	epeg_close(im);
-	NSData *data = [NSData dataWithBytesNoCopy:outbuffer length:outsize]; //outbuffer will be freed by NSData
-	image = [[[NSImage alloc] initWithData:data] autorelease];
+	NSData *data = [[NSData alloc] initWithBytesNoCopy:outbuffer length:outsize]; //outbuffer will be freed by NSData
+	NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithData:data];
+	[data release]; // */
 	
 	//option2
 	//possibly faster since we skip compression
 	//but it seems about the same (b/c of memcpying more memory?)
-/*	const void *pixels = NULL;
-	void *destbuffer = NULL;
-	if (epeg_scale_only(im) != 0) {
+	const void *pixels;
+	if (epeg_scale_only(im) != 0)
 		return nil;
-	}
+	// sep call to epeg_scale_only, if error, the epeg handle will _probably_
+	// be closed (but not necessarily, it seems--see the epeg source)
 	pixels = epeg_pixels_get(im, 0, 0, width_out, height_out);
 	if (!pixels) {
-		// ALWAYS check the return code!
-		NSLog(@"unable to encode epeg thumbnail for path '%@'", path);
+		NSLog(@"epeg unable to get pixels for path '%@'", path);
+		epeg_close(im); // ... we _should_ need to close here, though
 		return nil;
 	}
 	NSBitmapImageRep *imageRep =
-		[[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
-												 pixelsWide:width_out
-												 pixelsHigh:height_out
-											  bitsPerSample:8
-											samplesPerPixel:3
-												   hasAlpha:NO
-												   isPlanar:NO
-											 colorSpaceName:NSDeviceRGBColorSpace
-												bytesPerRow:0 bitsPerPixel:0] autorelease];
-	destbuffer = [imageRep bitmapData];
-	memcpy(destbuffer, pixels, (width_out * height_out * 3));
+		[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+												pixelsWide:width_out
+												pixelsHigh:height_out
+											 bitsPerSample:8
+										   samplesPerPixel:3
+												  hasAlpha:NO
+												  isPlanar:NO
+											colorSpaceName:NSDeviceRGBColorSpace
+											   bytesPerRow:width_out*3
+											  bitsPerPixel:0];
+	memcpy([imageRep bitmapData], pixels, (width_out * height_out * 3));
 	epeg_pixels_free(im, pixels);
-	epeg_close(im);
+	epeg_close(im);// */
+	
 	image = [[NSImage alloc] initWithSize:NSZeroSize];
 	[image addRepresentation:imageRep];
-*/
-	//fin
-	if (!image) {
-		NSLog(@"unable to create image");
-		return nil;
-	}
+	[imageRep release];
 	
-	return image;
+	//NSLog(@"%@", NSStringFromSize([image size]));
+	
+	return image; // N.B.: retained, NOT autoreleased!!!
 }
 
 @end

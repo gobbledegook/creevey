@@ -8,12 +8,15 @@
 #import "DYWrappingMatrix.h"
 #import "NSArrayIndexSetExtension.h"
 #import "NSIndexSetSymDiffExtension.h"
+#import "CreeveyMainWindowController.h"
+
 
 #define MAX_CELL_WIDTH  160
 #define MIN_CELL_WIDTH  40
 #define DEFAULT_CELL_WIDTH 120
 // height is 3/4 * width
 #define PADDING 16
+#define VERTPADDING 16
 
 /* there are three methods called from a separate thread:
    addSelectedIndex
@@ -72,6 +75,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 							 returnTypes:nil];
     return;
 }
++ (NSSize)maxCellSize { return NSMakeSize(MAX_CELL_WIDTH,MAX_CELL_WIDTH*3/4); }
+
 - (id)validRequestorForSendType:(NSString *)sendType
 					 returnType:(NSString *)returnType {
     if (!returnType && [sendType isEqual:NSFilenamesPboardType]) {
@@ -117,6 +122,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)dealloc {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[myCell release];
 	[images release];
 	[filenames release];
@@ -130,7 +136,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 #pragma mark display/drag stuff
 - (NSSize)cellSize { return NSMakeSize(cellWidth,cellWidth*3/4); }
-- (NSSize)maxCellSize { return NSMakeSize(MAX_CELL_WIDTH,MAX_CELL_WIDTH*3/4); }
 - (float)maxCellWidth { return MAX_CELL_WIDTH; }
 - (float)minCellWidth { return MIN_CELL_WIDTH; }
 - (float)cellWidth { return cellWidth; }
@@ -149,7 +154,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (numCols == 0) numCols = 1;
 	columnSpacing = (self_w - numCols*cellWidth)/numCols;
 	area_w = cellWidth + columnSpacing;
-	area_h = cellHeight + PADDING;
+	area_h = cellHeight + VERTPADDING;
 }
 - (int)point2cellnum:(NSPoint)p {
 	int col = MIN(numCols-1, (int)p.x/area_w); if (col < 0) col = 0;
@@ -169,7 +174,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	col = n%numCols;
 	return ScaledCenteredRect([[images objectAtIndex:n] size],
 							  NSMakeRect(cellWidth*col + columnSpacing*(col + 0.5),
-										 cellHeight*row + PADDING*(row+0.5),
+										 cellHeight*row + VERTPADDING*(row+0.5),
 										 cellWidth, cellHeight)); // rect for cell only
 }
 
@@ -283,7 +288,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				[lastIterationSelection addIndexes:selectedIndexes];
 				break;
             case NSLeftMouseUp:
-				if ([theEvent clickCount] == 2)
+				if ([theEvent clickCount] == 2
+					&& mouseDownCellNum < numCells
+					&& !shiftKeyDown && !cmdKeyDown)
 					[self sendAction:[self action] to:[self target]];
 				keepOn = NO;
 				break;
@@ -440,7 +447,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			[super keyDown:e];
 			return;
 	}
-#pragma unused (n)
 	unsigned int n;
 	if ([selectedIndexes count] == 1) {
 		n = [selectedIndexes firstIndex];
@@ -467,9 +473,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				break;
 			case NSLeftArrowFunctionKey:
 			case NSUpArrowFunctionKey:
+			default: // keep the compiler happy about n
 				n = numCells-1;
 				break;
-			default: break;
 		}
 	} else
 		return;
@@ -486,6 +492,18 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 #pragma mark selection stuff
 - (NSMutableIndexSet *)selectedIndexes {
 	return selectedIndexes;
+}
+
+- (NSArray *)filenames {
+	return filenames;
+}
+
+- (NSArray *)selectedFilenames {
+	return [filenames subarrayWithIndexSet:selectedIndexes];
+}
+
+- (NSString *)firstSelectedFilename {
+	return [filenames objectAtIndex:[selectedIndexes firstIndex]];
 }
 
 - (IBAction)selectAll:(id)sender {
@@ -521,16 +539,16 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	//[self updateStatusString];
 }
 
-//- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i {
-//	if (i >= numCells) return;
-//	NSImageCell *c = [images objectAtIndex:i];
-//	[c setImage:theImage];
-//	[self setNeedsDisplay:YES];
-//}
+// call this when an image changes (filename is already set)
+- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i {
+	if (i >= numCells) return;
+	[images replaceObjectAtIndex:i withObject:theImage];
+	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
+}
 
 - (void)updateStatusString {
-	if ([[self target] respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)]) {
-		[[self target] wrappingMatrix:self selectionDidChange:selectedIndexes];
+	if ([delegate respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)]) {
+		[delegate wrappingMatrix:self selectionDidChange:selectedIndexes];
 	}
 }
 
@@ -619,13 +637,16 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
         if (sourceDragMask & NSDragOperationGeneric) {
 			
-            [[NSApp delegate] application:nil
-								openFiles:files]; // **
+            [[[self window] delegate] openFiles:files]; // **
 			
         }
 		
     }
     return YES;
+}
+
+- (void)setDelegate:(id)d {
+	delegate = d; // NOT retained
 }
 
 

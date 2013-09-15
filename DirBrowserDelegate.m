@@ -102,6 +102,7 @@
 	}
 	if ([_b setPath:s]) return YES;
 	[_b selectRow:0 inColumn:0]; // if it failed, try it again *sigh*
+	 // work around stupid bug, doesn't auto-select cell 0
 	return [_b setPath:s];
 }
 

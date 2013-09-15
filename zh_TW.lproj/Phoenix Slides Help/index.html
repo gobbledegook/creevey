@@ -1,0 +1,265 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="zh-tw">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=big5">
+	<title>Phoenix Slides 輔助說明</title>
+	<meta name="AppleTitle" content="Phoenix Slides 輔助說明">
+</head>
+<body>
+<h1>Phoenix Slides 輔助說明</h1>
+<h2>簡介</h2>
+<p>Phoenix Slides 是一個圖片瀏覽及檢視工具，其功能包括全螢幕幻燈秀、
+無失真JPEG檔案轉換、和EXIF資訊顯示。此應用程式需要 Mac OS X 10.3 以上。</p>
+
+<p>首先要對讀者抱歉，我的中文不好……有人願意幫我翻譯嗎？</p>
+
+Contents:
+<ul>
+	<li><a href="#usage">使用方法</a></li>
+	<li><a href="#slides">幻燈秀</a></li>
+	<li><a href="#jpeg">JPEG轉換</a></li>
+	<li><a href="#cats">影像群組/分類</a></li>
+	<li><a href="#story">Phoenix Slides的故事</a></li>
+	<li><a href="#ack">謝意</a></li>
+	<li><a href="#vers">版本歷史/聯絡方式</a></li>
+</ul>
+
+<h2><a name="usage"></a>使用方法</h2>
+<p>你可以用視窗頂部的檔案夾瀏覽表前往某一個檔案夾，
+也可以直接把檔案夾或檔案夾裡面的任何檔案拖到視窗上。
+若要播放幻燈秀，你可以按“幻燈片”一下，或按一個縮覽圖兩下。
+</p>
+
+<h3>檔案夾瀏覽表</h3>
+<p>除了用滑鼠按，你也可以用鍵盤打字來前往一個檔案夾。</p>
+
+<p>檔案夾瀏覽表的第一欄列出目前所裝載的磁磚及卷宗。
+當卷宗被裝載或退出，或者目前所選的檔案夾被移動或重新命名時，
+檔案夾瀏覽表會自動更新。在其他情形下，你可以按一下一個檔案夾的名稱，
+以更新其內容。
+</p>
+
+<p>你可以按一下“次檔案夾”來尋找檔案夾裡的所有圖檔,包括次檔案夾裡圖檔。
+你可以用這個功能檢視應用程式套件內容的影像，很好玩。
+</p>
+
+<h3>縮覽圖</h3>
+<p>當你前往一個檔案夾時，Phoenix Slides會先尋找該檔案夾裡的圖檔，
+然後開始生成縮覽圖。縮覽圖將會緩存於記憶體，結束程式時便會被丟掉。
+</p>
+
+<p>Phoenix Slides用Epeg函數庫來快速地生成JPEG檔案的縮覽圖。
+製造非JPEG檔案的縮覽圖就比較慢了。</p>
+
+<h3>選擇影像</h3>
+<p>你可以用滑鼠選擇影像。如果剛好選了一個影像，你也可以用箭頭鍵選擇影像。
+</p>
+
+<h3>拖移影像</h3>
+你可以將影像拖移到別外一個應用程式，讓該程式打開檔案，
+或拖移到Finder以拷貝檔案。
+
+
+<h2><a name="slides"></a>幻燈秀</h2>
+<p>開始幻燈秀時：</p>
+<ul>
+	<li>若無所選項目，播放所有影像的幻燈秀。</li>
+	<li>若選了一個項目，從所選的影像開始播放所有影像的幻燈秀。</li>
+	<li>若選了數個項目，播放所選影像的幻燈秀。</li>
+</ul>
+
+<h3>幻燈秀播放時</h3>
+<p>請用鍵盤控制幻燈秀。請打'h'或'?'鍵顯示簡單的說明。
+</p>
+
+<p>請打1-9鍵幻燈秀自動前往(每1-9秒)。打空白鍵來暫停；返回或打'0'鍵停止。
+</p>
+
+<h3>幻燈秀簡單說明</h3>
+<table>
+<tr><td>空白鍵</td><td>暫停/繼續自動往前；往前</td></tr>
+<tr><td>&rarr;&darr;</td><td>往前</td></tr>
+<tr><td>&larr;&uarr;</td><td>返回</td></tr>
+<tr><td>page down</td><td>往前十張</td></tr>
+<tr><td>page up</td><td>返回十張</td></tr>
+<tr><td>home</td><td>回到第一張</td></tr>
+<tr><td>end</td><td>最後一張</td></tr>
+<tr><td>0</td><td>取消自動往前</td></tr>
+<tr><td>1-9</td><td>每 n 秒自動往前</td></tr>
+<tr><td>!</td><td>每半秒自動往前</td></tr>
+<tr><td>h, ?</td><td>顯示∕隱藏輔助說明</td></tr>
+<tr><td>i</td><td>顯示∕隱藏檔案名稱</td></tr>
+<tr><td>F2-F12</td><td>放進組ｎ</td></tr>
+<tr><td>&#8984;F2-F12</td><td>調換群組類別</td></tr>
+<tr><td>F1</td><td>忘記群組類別</td></tr>
+<tr><td>r</td><td>向右旋轉</td></tr>
+<tr><td>l</td><td>向左旋轉</td></tr>
+<tr><td>&#8984;E</td><td>將小影像放大</td></tr>
+<tr><td>+/-</td><td>放大/縮小</td></tr>
+<tr><td>=</td><td>實際大小</td></tr>
+<tr><td>*</td><td>縮放至適當大小</td></tr>
+<tr><td>數字小鍵盤1-9</td><td>捲視已放大的影像</td></tr>
+<tr><td>esc, q</td><td>結束幻燈秀</td></tr>
+</table>
+
+<h2><a name="jpeg"></a>JPEG轉換</h2>
+<p>Phoenix Slides用jpegtran(包EXIF patch)來執行無失真JPEG轉換。
+</p>
+
+<p>刪除不能轉換的邊緣數據塊 - 無失真JPEG旋轉不一定是完美的。
+如果影像的大小不是iMCU數據塊大小的倍數(通常是8或16)，
+側邊的數據塊就不能轉換了。你可以通過進階選項刪除這些數據塊。
+當然這個動作不能還原。詳情請參閱jpegtran說明:</p>
+
+<pre>jpegtran's default behavior when transforming an odd-size image is designed
+to preserve exact reversibility and mathematical consistency of the
+transformation set.... Transpose is able to flip the entire image
+area.  Horizontal mirroring leaves any partial iMCU column at the right edge
+untouched, but is able to flip all rows of the image.  Similarly, vertical
+mirroring leaves any partial iMCU row at the bottom edge untouched, but is
+able to flip all columns.  The other transforms can be built up as sequences
+of transpose and flip operations; for consistency, their actions on edge
+pixels are defined to be the same as the end result of the corresponding
+transpose-and-flip sequence.
+</pre>
+
+<h2><a name="cats"></a>影像群組/分類</h2>
+
+<p>幻燈秀播放時，你可以打F2-F12鍵將影像放進一個群組裡，
+然後在瀏覽視窗裡再打F2-F12，檢視一個群組內的影像。
+你也可以用&#8984;F2-F12 來調換影像的群組類別。
+這個功能很方便，你可以先選擇很多影像，然後一起把它們旋轉或執行其他動作。
+</p>
+
+<p>群組是暫時的，結束程式時就會被丟掉。</p>
+
+
+<h2><a name="story"></a>Phoenix Slides的故事</h2>
+<p>有一天，馬教授帶了幾張CD到辦公室，CD上有他在泰國拍的照片。
+「我們來看這些照片吧」他說。我們便在辦公室的Mac裡找適合的幻燈秀程式，
+不過找不到我們喜歡的。我們只好用蘋果電腦預覽程式。可是它非常慢，
+而且用全螢幕的時候不能旋轉影像！所以我打算寫我自己的程式，
+Phoenix Slides就這樣生成了。</p>
+
+<p>我以前很喜歡用Caffeine Software的Curator程式，可惜它已經不在發展中。
+它也有其他的小毛病，例如，你要等到它製造了縮覽圖才能看幻燈秀。我覺得這樣太不合理了。
+當然，Phoenix Slides沒有這樣的毛病。
+</p>
+
+<p>為什麼Phoenix呢？除了它的神話意義，它也是舊金山市旗的標誌(我位在舊金山)。
+我也很喜歡Fawkes(在哈利波特裡牠是Dumbledore的鳳凰).</p>
+
+<h2><a name="ack"></a>謝意</h2>
+<p>謝謝David Chow，他總是找到方法crash我的程式。</p>
+
+<p>謝謝Thomas Steg (德國 Karlsruhe) - 德文翻譯</p>
+
+<p>感謝open source軟體的開發者，包括 rasterman (Epeg)、
+Allan Hsu (Magic Lantern)、Marc Liyanage (EpegWrapper)、及
+Rainer Brockerhoff (RBSplitView)。
+</p>
+
+<p>謝謝Adrian Gonzales,
+<a href="http://www.icestorm.com/">The Icestorm Network</a>
+- 網站空間</p>
+
+<p>最後也要感謝我的前任老板，他炒了我魷魚我才有空開發Phoenix Slides。
+</p>
+
+<h2>Help Wanted</h2>
+<p>Looking for localization help: If you want to translate
+Phoenix Slides to your language please
+<a href="http://blyt.net/Contact.html">contact me</a>.</p>
+
+<p>
+You can also contribute by offering
+programming help or making a donation along the lines of books
+(Cocoa, perl, linguistics), money, or skateboarding stuff.
+</p>
+
+<h2><a name="vers"></a>版本歷史(英文)</h2>
+2005.08.03 1.2
+<ul>
+	<li>zoom in/out in slideshow</li>
+	<li>lossless JPEG rotations/transformations</li>
+	<li>get info window with EXIF info, JPEG comments, etc.</li>
+	<li>ability to open multiple thumbnail windows</li>
+	<li>ability to assign images to temporary groups/categories</li>
+	<li>random order slideshows</li>
+	<li>slightly faster thumbnail loading for non-JPEGs</li>
+	<li>automatic version checking</li>
+	<li>German localization</li>
+	<li>fixed - preferences not always saved on quit</li>
+</ul>
+
+2005.07.06 1.1
+<ul>
+	<li>status bar (name, size, dimensions)</li>
+	<li>resizable thumbnails</li>
+	<li>animated GIFs in slideshow</li>
+	<li>slideshow option to zoom small images to size of screen</li>
+	<li>pressing 1-9 now starts auto-advance right away</li>
+	<li>pressing space now pause/continues auto-advance</li>
+	<li>speed/memory optimizations in thumbnail view</li>
+	<li>navigate thumbnails using arrow keys</li>
+	<li>folder listing shows mounted volumes at the top level</li>
+	<li>folder listing automatically updates on volume mount, folder move/rename/delete</li>
+	<li>fixed - thumbnail view sometimes skipped images</li>
+	<li>fixed (very) occasional hang on launch</li>
+</ul>
+
+
+
+2005.04.28 1.0 first public release.
+
+<h2>聯絡方式/版權</h2>
+<p>官方網站:
+<a href="http://blyt.net/phxslides/">http://blyt.net/phxslides/</a>
+</p>
+
+<p>歡迎發 <a href="mailto:dyupc@blyt.net">email</a> 給我！</p>
+
+
+<!-- Creative Commons License -->
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/"><img alt="Creative Commons License" border="0" src="http://creativecommons.org/images/public/somerights20.gif"></a><br>
+This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/">Creative Commons License</a>.
+<!-- /Creative Commons License -->
+
+
+<!--
+
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="">
+   <dc:title>Phoenix Slides</dc:title>
+   <dc:date>2005</dc:date>
+   <dc:rights><Agent>
+      <dc:title>Dominic Yu</dc:title>
+   </Agent></dc:rights>
+   <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/2.0/" />
+</Work>
+
+<License rdf:about="http://creativecommons.org/licenses/by-nc-sa/2.0/">
+   <permits rdf:resource="http://web.resource.org/cc/Reproduction" />
+   <permits rdf:resource="http://web.resource.org/cc/Distribution" />
+   <requires rdf:resource="http://web.resource.org/cc/Notice" />
+   <requires rdf:resource="http://web.resource.org/cc/Attribution" />
+   <prohibits rdf:resource="http://web.resource.org/cc/CommercialUse" />
+   <permits rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+   <requires rdf:resource="http://web.resource.org/cc/ShareAlike" />
+</License>
+
+</rdf:RDF>
+
+-->
+
+<p>
+Copyright 2005 by Dominic Yu. This software is free and open source.
+You are free to use it for non-commercial
+purposes. Derivative works must give proper credit to me and be shared under
+the same license, unless I give written permission stating otherwise.</p>
+
+</body>
+</html>
