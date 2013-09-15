@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Phoenix Slides Help</title>
+	<meta name="AppleTitle" content="Phoenix Slides Help">
+</head>
+<body>
+<h1>Phoenix Slides Help</h1>
+<h2>Overview</h2>
+Phoenix Slides is a fast full-screen slideshow
+program/image browser. It requires Mac OS X 10.3 or later.
+
+<h2>Usage</h2>
+<p>Use the directory listing at the top of the window to
+navigate to a directory. You can also drag files or folders
+into the window or onto the application icon. Start a slideshow
+by clicking on the "Slideshow" button, hitting the return key,
+or double-clicking an image's thumbnail.
+</p>
+
+<h3>Using the directory listing</h3>
+<p>In addition to the usual clicking, you can also type in
+directory names to jump directly to them.</p>
+
+<p>Check "Subfolders" to have the program search all
+subdirectories for images. When building the list of images,
+it will go into subdirectories as it comes across them
+(i.e., it's depth-first). This can be amusing when looking
+into application bundles.</p>
+
+<p>You can drag a folder or a file in that folder into the window
+to jump to that directory. If you drag image files,
+they will be selected in the thumbnail view. (You can also drag
+non-image files to navigate to a directory; this is to be construed
+as a feature. :-)</p>
+
+<p>When you choose a folder to browse, the program builds a list of image
+files (based on the file extension (like .jpg) and the four-letter
+type code (like 'PICT')). Phoenix Slides supports all image types
+that Mac OS X supports (i.e., everything NSImage can read).</p>
+
+<h3>Thumbnails</h3>
+<p>After getting the list of filenames, the program starts generating
+thumbnails of each of the images. Thumbnails are cached in memory
+and discarded when you quit the program.</p>
+
+<p>For those who care: Phoenix Slides uses the Epeg library for fast
+thumbnailing of JPEGs. Non-JPEG files will be thumbnailed slowly. =P</p>
+
+<h3>Selecting images</h3>
+<p>You can select images to start a slideshow with them,
+move them to the trash, reveal them in the Finder, or set
+an image as the desktop background. To select an image, click
+on it. Shift-click to extend the selection; command-click to
+reverse the selection. You can also select images by dragging
+around them (in the whitespace).
+</p>
+
+<h3>Dragging images</h3>
+You can also drag images to another program to open them with
+that program, or to the Finder to copy the files.
+
+<h2>Slideshows</h2>
+<p>Starting a slideshow will do different things depending
+on the current selection:</p>
+<ul>
+	<li>If no items are selected, it starts a slideshow
+	with all images starting at the first image.</li>
+	<li>If one item is selected, it starts a slideshow
+	with all images starting at the selected image.</li>
+	<li>If multiple items are selected, it starts a slideshow
+	with just the selected images.</li>
+</ul>
+<p>You can start a slideshow any time after the list of filenames
+is compiled (you don't have to wait for all the thumbnails to load).
+</p>
+
+<h3>During the slideshow</h3>
+<p>You control the slideshow using the keyboard. Hit 'h' or '?' during
+the slideshow to see all the commands (reproduced below). If you need
+access to the menu, move the mouse to the top of the screen.</p>
+
+<p>Hit one of the number keys (1-9) to auto-advance the slideshow every
+1-9 seconds. Hit '0' or the space bar to stop auto-advance. Hitting a
+key to go backwards also stops the auto-advance.</p>
+
+<p>Ordinarily, the slideshow stops when you reach the last slide.
+You can enable loop mode through the Slideshow menu. This will cause
+the slideshow to wrap around to the first slide after the last one.
+Combined with auto-advance, this would cause the slideshow to go on
+forever.</p>
+
+<p>You can switch to other programs while the slideshow is running
+(using command-tab, for example). It'll keep going merrily along behind
+your other windows. Click on the slideshow window to bring it back to
+the front.</p>
+
+<h3>Slideshow cheat sheet</h3>
+<table>
+	<tr>
+		<td>space</td> <td>pause auto-advance; go next</td>
+	</tr>
+	<tr>
+		<td>→↓</td> <td>go next</td>
+	</tr>
+	<tr>
+		<td>←↑</td> <td>go previous</td>
+	</tr>
+	<tr>
+		<td>page down</td> <td>go forward 10</td>
+	</tr>
+	<tr>
+		<td>page up</td> <td>go back 10</td>
+	</tr>
+	<tr>
+		<td>home</td> <td>go to first slide</td>
+	</tr>
+	<tr>
+		<td>end</td> <td>go to last slide</td>
+	</tr>
+	<tr>
+		<td>0</td> <td>pause auto-advance</td>
+	</tr>
+	<tr>
+		<td>1-9</td> <td>auto-advance every n seconds</td>
+	</tr>
+	<tr>
+		<td>!</td> <td>auto-advance every 1/2 second</td>
+	</tr>
+	<tr>
+		<td>h, ?</td> <td>show/hide this cheat sheet</td>
+	</tr>
+	<tr>
+		<td>i</td> <td>show/hide filename</td>
+	</tr>
+	<tr>
+		<td>r</td> <td>rotate right (90° clockwise)</td>
+	</tr>
+	<tr>
+		<td>l</td> <td>rotate left (90° counter-clockwise)</td>
+	</tr>
+	<tr>
+		<td>esc, q</td> <td>end slideshow</td>
+	</tr>
+</table>
+
+<h2>Menu items</h2>
+<p>Most of the menu items are self-explanatory. The "Reveal in Finder"
+command requires additional explanation: If one or more files are selected,
+Phoenix Slides tells the Finder to show those files. If you have "Subfolders"
+checked and your files are from different directories, the specific behavior
+will be up to the Finder. If no files are selected, the Phoenix Slides will
+simply open the selected folder in the Finder.
+</p>
+
+<h2>The Phoenix Slides story</h2>
+<p>One day, Jim (the professor in charge at the research project I work at)
+brought in some CDs of photos from Thailand. Let's look at these pictures,
+he said. We searched the Macs in the office for suitable slideshow programs,
+but to no avail. We ended up using the full-screen mode in Preview. It
+was... painful. We couldn't even rotate the images in full-screen mode.
+So I decided to write my own.</p>
+
+<p>Remember Curator, the now-abandoned image organizer program by
+Caffeine Software? It's nice, but (1) it's dead, (2) the directory
+listing acts up, and (3) you have to wait for a thumbnail to be generated
+before you can view an image in a slideshow (WHY?!). I wanted my program
+to rectify these problems, so Phoenix Slides is
+inspired in part by Curator.</p>
+
+<p>Why Phoenix? Aside from its mythological significance, the phoenix
+is also featured prominently on the San Francisco city flag (that's where
+we're based). Plus, I'm a fan of Fawkes (Dumbledore's phoenix in the
+Harry Potter books).</p>
+
+<h2>Acknowledgements</h2>
+<p>Thanks to David Chow and his uncanny ability to crash my program.</p>
+
+<p>Thanks to all those who make their source code available to
+learn from/adapt to other purposes, including rasterman (Epeg),
+Allan Hsu (Magic Lantern), Marc Liyanage (EpegWrapper), and
+Rainer Brockerhoff (RBSplitView).
+</p>
+
+<p>And finally, thanks to my old boss at my dead-end job for
+"terminating" me. Let Phoenix Slides be a testament to the advantages
+of unemployment.
+</p>
+
+<h2>Version History</h2>
+2005.04.28 1.0 first public release.
+
+<h2>Contact/Contribute/License</h2>
+<p>Official web site:
+<a href="http://blyt.net/phxslides/">http://blyt.net/phxslides/</a>
+</p>
+
+<p>If you want to contribute to Phoenix Slides please
+<a href="http://blyt.net/Contact.html">contact me</a>.
+You can contribute by offering
+programming help or making a donation along the lines of books
+(Cocoa, perl, linguistics), money, or skateboarding stuff.
+</p>
+
+
+<!-- Creative Commons License -->
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/"><img alt="Creative Commons License" border="0" src="http://creativecommons.org/images/public/somerights20.gif" /></a><br />
+This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/2.0/">Creative Commons License</a>.
+<!-- /Creative Commons License -->
+
+
+<!--
+
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="">
+   <dc:title>Phoenix Slides</dc:title>
+   <dc:date>2005</dc:date>
+   <dc:rights><Agent>
+      <dc:title>Dominic Yu</dc:title>
+   </Agent></dc:rights>
+   <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/2.0/" />
+</Work>
+
+<License rdf:about="http://creativecommons.org/licenses/by-nc-sa/2.0/">
+   <permits rdf:resource="http://web.resource.org/cc/Reproduction" />
+   <permits rdf:resource="http://web.resource.org/cc/Distribution" />
+   <requires rdf:resource="http://web.resource.org/cc/Notice" />
+   <requires rdf:resource="http://web.resource.org/cc/Attribution" />
+   <prohibits rdf:resource="http://web.resource.org/cc/CommercialUse" />
+   <permits rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+   <requires rdf:resource="http://web.resource.org/cc/ShareAlike" />
+</License>
+
+</rdf:RDF>
+
+-->
+
+<p>
+Copyright 2005 by Dominic Yu. This software is free and open source.
+You are free to use it for non-commercial
+purposes. Derivative works must give proper credit to me and be shared under
+the same license, unless I give written permission stating otherwise.</p>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {
+                changeStartupOption = id; 
+                chooseStartupDir = id; 
+                displayDir = id; 
+                openAboutPanel = id; 
+                openPrefWin = id; 
+                openSelectedFiles = id; 
+                revealSelectedFilesInFinder = id; 
+                setDesktopPicture = id; 
+                setRecurseSubfolders = id; 
+                slideshow = id; 
+            }; 
+            CLASS = CreeveyController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                dirBrowser = NSBrowser; 
+                imgMatrix = DYWrappingMatrix; 
+                prefsWin = NSPanel; 
+                slidesBtn = NSButton; 
+                slidesWindow = SlideshowWindow; 
+                splitView = RBSplitView; 
+                startupDirFld = NSTextField; 
+                startupOptionMatrix = NSMatrix; 
+                statusFld = DYStatusField; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = DYCreeveyBrowser; LANGUAGE = ObjC; SUPERCLASS = NSBrowser; }, 
+        {CLASS = DYStatusField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
+        {
+            ACTIONS = {selectAll = id; selectNone = id; }; 
+            CLASS = DYWrappingMatrix; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSControl; 
+        }, 
+        {CLASS = DirBrowserDelegate; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {moveToTrash = id; selectNone = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {endSlideshow = id; toggleCheatSheet = id; toggleLoopMode = id; }; 
+            CLASS = SlideshowWindow; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSWindow; 
+        }
+    ); 
+    IBVersion = 1; 
+}
