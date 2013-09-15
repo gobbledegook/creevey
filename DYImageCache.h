@@ -22,6 +22,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 	NSDate *modTime;
 	unsigned long long fileSize;
 	NSSize pixelSize;
+	unsigned short exifOrientation;
 }
 - initWithPath:(NSString *)s;
 - (NSString *)pixelSizeAsString;
@@ -46,6 +47,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 - (id)initWithCapacity:(unsigned int)n;
 
+- (float)boundingWidth;
 - (void)setBoundingSize:(NSSize)aSize;
 - (void)setInterpolationType:(NSImageInterpolation)t;
 
@@ -62,6 +64,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 - (NSImage *)imageForKey:(NSString *)s;
 - (void)removeImageForKey:(NSString *)s;
+- (void)removeAllImages;
 
 - (DYImageInfo *)infoForKey:(NSString *)s;
 

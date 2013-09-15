@@ -160,6 +160,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 															  forKeyPath:@"values.slideshowAutoadvanceTime"
 																 options:NSKeyValueObservingOptionNew
 																 context:NULL];
+	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
+															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
+																 options:0
+																 context:NULL];
 	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES]; // show color picker w/ opacity/transparency
 }
 
@@ -363,10 +367,11 @@ performFileOperation:NSWorkspaceRecycleOperation
 	return 0;
 }
 
-- (IBAction)moveToTrash:(id)sender {
+- (void)removePicsAndTrash:(BOOL)b {
+	// *** to be more efficient, we should change the path in the cache instead of deleting it
 	if ([slidesWindow isMainWindow]) {
 		NSString *s = [slidesWindow currentFile];
-		if ([self trashFile:s numLeft:1]) {
+		if (!b || [self trashFile:s numLeft:1]) {
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:s];
 			[thumbsCache removeImageForKey:s];
 			[slidesWindow removeImageForFile:s];
@@ -378,7 +383,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 		// wait... we don't, because we're not using indexes anymore
 		for (i=0; i < n; ++i) {
 			NSString *fullpath = [a objectAtIndex:i];
-			char result = [self trashFile:fullpath numLeft:n-i];
+			char result = (b ? [self trashFile:fullpath numLeft:n-i] : 1);
 			if (result == 1) {
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fullpath];
@@ -389,6 +394,14 @@ performFileOperation:NSWorkspaceRecycleOperation
 		}
 		[frontWindow updateExifInfo];
 	}
+}
+
+- (IBAction)moveToTrash:(id)sender {
+	[self removePicsAndTrash:YES];
+}
+
+- (IBAction)moveElsewhere:(id)sender {
+	[self removePicsAndTrash:NO];
 }
 
 #pragma mark app delegate methods
@@ -626,12 +639,18 @@ enum {
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
 					  ofObject:(id)object 
-                        change:(NSDictionary *)change
+                        change:(NSDictionary *)c
                        context:(void *)context
 {
     if ([keyPath isEqual:@"values.slideshowAutoadvanceTime"]) {
 		[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"slideshowAutoadvance"];
 		[slideshowApplyBtn setEnabled:YES];
+    } else if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
+		if ([thumbsCache boundingWidth]
+			< [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"]) {
+			[thumbsCache removeAllImages];
+			[thumbsCache setBoundingSize:[DYWrappingMatrix maxCellSize]];
+		}
     }
 }
 

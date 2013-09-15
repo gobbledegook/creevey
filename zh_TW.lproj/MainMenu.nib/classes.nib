@@ -1,74 +1,199 @@
-{
-    IBClasses = (
-        {
-            ACTIONS = {
-                applySlideshowPrefs = id; 
-                changeStartupOption = id; 
-                chooseStartupDir = id; 
-                exifRegenerate = id; 
-                moveToTrash = id; 
-                newWindow = id; 
-                openAboutPanel = id; 
-                openGetInfoPanel = id; 
-                openPrefWin = id; 
-                openSelectedFiles = id; 
-                revealSelectedFilesInFinder = id; 
-                rotateTest = id; 
-                sendFeedback = id; 
-                setDesktopPicture = id; 
-                slideshow = id; 
-                slideshowDefaultsChanged = id; 
-                stopModal = id; 
-                toggleExifThumbnail = id; 
-                versionCheck = id; 
-            }; 
-            CLASS = CreeveyController; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                exifTextView = NSTextView; 
-                exifThumbnailDiscloseBtn = NSButton; 
-                jpegProgressBar = NSProgressIndicator; 
-                prefsWin = NSPanel; 
-                slidesWindow = SlideshowWindow; 
-                slideshowApplyBtn = NSButton; 
-                startupDirFld = NSTextField; 
-                startupOptionMatrix = NSMatrix; 
-            }; 
-            SUPERCLASS = NSObject; 
-        }, 
-        {CLASS = DYCreeveyBrowser; LANGUAGE = ObjC; SUPERCLASS = NSBrowser; }, 
-        {
-            ACTIONS = {selectAll = id; selectNone = id; }; 
-            CLASS = DYWrappingMatrix; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = NSControl; 
-        }, 
-        {
-            ACTIONS = {selectNone = id; updateExifInfo = id; }; 
-            CLASS = FirstResponder; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = NSObject; 
-        }, 
-        {
-            ACTIONS = {
-                endSlideshow = id; 
-                toggleCheatSheet = id; 
-                toggleLoopMode = id; 
-                toggleRandom = id; 
-                toggleScalesUp = id; 
-                toggleShowActualSize = id; 
-            }; 
-            CLASS = SlideshowWindow; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = NSWindow; 
-        }, 
-        {
-            ACTIONS = {changePanes = id; orderFrontPrefsPanel = id; }; 
-            CLASS = UKPrefsPanel; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {tabView = NSTabView; }; 
-            SUPERCLASS = NSObject; 
-        }
-    ); 
-    IBVersion = 1; 
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IBClasses</key>
+	<array>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>endSlideshow</key>
+				<string>id</string>
+				<key>toggleCheatSheet</key>
+				<string>id</string>
+				<key>toggleLoopMode</key>
+				<string>id</string>
+				<key>toggleRandom</key>
+				<string>id</string>
+				<key>toggleScalesUp</key>
+				<string>id</string>
+				<key>toggleShowActualSize</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>SlideshowWindow</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSWindow</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>RBSplitView</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>delegate</key>
+				<string>id</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>RBSplitSubview</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>RBSplitSubview</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSView</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>selectNone</key>
+				<string>id</string>
+				<key>updateExifInfo</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>FirstResponder</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>applySlideshowPrefs</key>
+				<string>id</string>
+				<key>changeStartupOption</key>
+				<string>id</string>
+				<key>chooseStartupDir</key>
+				<string>id</string>
+				<key>exifRegenerate</key>
+				<string>id</string>
+				<key>moveElsewhere</key>
+				<string>id</string>
+				<key>moveToTrash</key>
+				<string>id</string>
+				<key>newWindow</key>
+				<string>id</string>
+				<key>openAboutPanel</key>
+				<string>id</string>
+				<key>openGetInfoPanel</key>
+				<string>id</string>
+				<key>openPrefWin</key>
+				<string>id</string>
+				<key>openSelectedFiles</key>
+				<string>id</string>
+				<key>revealSelectedFilesInFinder</key>
+				<string>id</string>
+				<key>rotateTest</key>
+				<string>id</string>
+				<key>sendFeedback</key>
+				<string>id</string>
+				<key>setDesktopPicture</key>
+				<string>id</string>
+				<key>slideshow</key>
+				<string>id</string>
+				<key>slideshowDefaultsChanged</key>
+				<string>id</string>
+				<key>stopModal</key>
+				<string>id</string>
+				<key>toggleExifThumbnail</key>
+				<string>id</string>
+				<key>versionCheck</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>CreeveyController</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>exifTextView</key>
+				<string>NSTextView</string>
+				<key>exifThumbnailDiscloseBtn</key>
+				<string>NSButton</string>
+				<key>jpegProgressBar</key>
+				<string>NSProgressIndicator</string>
+				<key>prefsWin</key>
+				<string>NSPanel</string>
+				<key>slidesWindow</key>
+				<string>SlideshowWindow</string>
+				<key>slideshowApplyBtn</key>
+				<string>NSButton</string>
+				<key>startupDirFld</key>
+				<string>NSTextField</string>
+				<key>startupOptionMatrix</key>
+				<string>NSMatrix</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>browserWillSendAction</key>
+				<string>NSBrowser</string>
+				<key>didAdjustSubviews</key>
+				<string>RBSplitView</string>
+				<key>moveElsewhere</key>
+				<string>id</string>
+				<key>moveToTrash</key>
+				<string>id</string>
+				<key>willAdjustSubviews</key>
+				<string>RBSplitView</string>
+			</dict>
+			<key>CLASS</key>
+			<string>NSObject</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>selectAll</key>
+				<string>id</string>
+				<key>selectNone</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>DYWrappingMatrix</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>delegate</key>
+				<string>id</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSControl</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>changePanes</key>
+				<string>id</string>
+				<key>orderFrontPrefsPanel</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>UKPrefsPanel</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>tabView</key>
+				<string>NSTabView</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+	</array>
+	<key>IBVersion</key>
+	<string>1</string>
+</dict>
+</plist>

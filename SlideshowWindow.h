@@ -29,7 +29,7 @@
 	NSTimer *autoTimer;
 	
 	NSMutableArray *filenames;
-	NSMutableDictionary *rotations, *zooms;
+	NSMutableDictionary *rotations, *zooms, *flips;
 	
 	NSString *basePath;
 	NSRect screenRect;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
@@ -106,7 +106,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Phoenix Slides</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Phoenix Slides 1.2.4, Copyright 2005-2007 Dominic Yu, Gold Mountain Software</string>
+	<string>Phoenix Slides 1.2.5, Copyright 2005-2009 Dominic Yu, Gold Mountain Software</string>
 	<key>CFBundleHelpBookFolder</key>
 	<string>Phoenix Slides Help</string>
 	<key>CFBundleHelpBookName</key>
@@ -122,13 +122,13 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.4</string>
+	<string>1.2.5</string>
 	<key>CFBundleSignature</key>
 	<string>CrvY</string>
 	<key>CFBundleVersion</key>
-	<string>7</string>
+	<string>8</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>©2005-2007 Dominic Yu, Gold Mountain Software.</string>
+	<string>©2005-2009 Dominic Yu, Gold Mountain Software.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

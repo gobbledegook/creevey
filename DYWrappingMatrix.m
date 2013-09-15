@@ -11,7 +11,8 @@
 #import "CreeveyMainWindowController.h"
 
 
-#define MAX_CELL_WIDTH  160
+
+#define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
 #define DEFAULT_CELL_WIDTH 120
 // height is 3/4 * width
@@ -66,6 +67,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 #pragma mark services stuff
 + (void)initialize
 {
+	// prefs stuff
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[dict setObject:[NSArchiver archivedDataWithRootObject:[NSColor whiteColor]] forKey:@"DYWrappingMatrixBgColor"];
+	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"DYWrappingMatrixAllowMove"];
+	[dict setObject:@"160" forKey:@"DYWrappingMatrixMaxCellWidth"];
+	[defaults registerDefaults:dict];
+	
     static BOOL initialized = NO;
     /* Make sure code only gets executed once. */
     if (initialized) return;
@@ -75,7 +84,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 							 returnTypes:nil];
     return;
 }
-+ (NSSize)maxCellSize { return NSMakeSize(MAX_CELL_WIDTH,MAX_CELL_WIDTH*3/4); }
++ (NSSize)maxCellSize {
+	int w = [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];
+	return NSMakeSize(w, w*3/4);
+}
 
 - (id)validRequestorForSendType:(NSString *)sendType
 					 returnType:(NSString *)returnType {
@@ -119,6 +131,26 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 											 selector:@selector(resize:)
 												 name:NSViewFrameDidChangeNotification
 											   object:[self enclosingScrollView]];
+	bgColor = [[NSUnarchiver unarchiveObjectWithData:
+		[[NSUserDefaults standardUserDefaults] dataForKey:@"DYWrappingMatrixBgColor"]]
+		retain];
+	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
+															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
+																 options:NSKeyValueObservingOptionNew
+																 context:NULL];
+}
+
+- (void)setMaxCellWidth:(float)w {
+	//do nothing
+}
+- (void)observeValueForKeyPath:(NSString *)keyPath
+					  ofObject:(id)object 
+                        change:(NSDictionary *)c
+                       context:(void *)context
+{
+    if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
+		[self setMaxCellWidth:[[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"]];
+    }
 }
 
 - (void)dealloc {
@@ -127,6 +159,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[images release];
 	[filenames release];
 	[selectedIndexes release];
+	[bgColor release];
 	[super dealloc];
 }
 
@@ -136,7 +169,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 #pragma mark display/drag stuff
 - (NSSize)cellSize { return NSMakeSize(cellWidth,cellWidth*3/4); }
-- (float)maxCellWidth { return MAX_CELL_WIDTH; }
+- (float)maxCellWidth {
+	return [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];
+}
 - (float)minCellWidth { return MIN_CELL_WIDTH; }
 - (float)cellWidth { return cellWidth; }
 - (void)setCellWidth:(float)w {
@@ -197,16 +232,32 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal {
-	return isLocal ? NSDragOperationNone :
-	NSDragOperationGeneric | NSDragOperationCopy | NSDragOperationDelete;
+	if (isLocal) return NSDragOperationNone;
+	unsigned int o = NSDragOperationGeneric | NSDragOperationDelete | NSDragOperationCopy;
+	if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYWrappingMatrixAllowMove"])
+		o |= NSDragOperationLink | NSDragOperationMove;
 	// NSDragOperationLink creates aliases in the finder
+	return o;
+	
+	// Note: You CANNOT check the currentEvent for modifier flags here to
+	// change the kind of dragging operation to the Finder. This is because
+	// the Finder seems to only remember the first return value from this
+	// function, even though it happens to get called over and over again.
+	// i.e., later invocations of this function return the value that you tell
+	// it to, but the Finder just ignores it. This means you only get the
+	// desired behavior when the user holds down the option key _before_
+	// the dragging starts, which is not good user interface.
 }
 
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation {
-	if (operation != NSDragOperationDelete)
-		return;
-	if ([[self target] respondsToSelector:@selector(moveToTrash:)])
-		[[self target] moveToTrash:nil];
+	// ** hm, how to best talk to the right object?
+	if (operation == NSDragOperationDelete) {
+		if ([[NSApp delegate] respondsToSelector:@selector(moveToTrash:)])
+			[[NSApp delegate] moveToTrash:nil];		
+	} else if (operation == NSDragOperationMove) {
+		if ([[NSApp delegate] respondsToSelector:@selector(moveElsewhere:)])
+			[[NSApp delegate] moveElsewhere:nil];		
+	}
 }
 
 #pragma mark event stuff
@@ -401,7 +452,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSImageInterpolation oldInterp = [cg imageInterpolation];
 	[cg setImageInterpolation:NSImageInterpolationNone];
 	
-	[[NSColor whiteColor] set];
+	[bgColor set];
 	[NSBezierPath fillRect:rect];
 	//NSLog(@"---------------------------");
 	int i, row, col;

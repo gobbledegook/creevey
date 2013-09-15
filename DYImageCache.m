@@ -15,6 +15,7 @@
 
 #import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
+#import "DYExiftags.h"
 
 #define N_StringFromFileSize_UNITS 3
 NSString *FileSize2String(unsigned long long fileSize) {
@@ -88,6 +89,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 - (void)setBoundingSize:(NSSize)aSize {
 	boundingSize = aSize;
 }
+- (float)boundingWidth {	return boundingSize.width; }
 
 - (void)setInterpolationType:(NSImageInterpolation)t {
 	interpolationType = t;
@@ -153,13 +155,13 @@ NSString *FileSize2String(unsigned long long fileSize) {
 				w_ratio = maxSize.width/oldSize.width;
 				h_ratio = maxSize.height/oldSize.height;
 				if (w_ratio < h_ratio) { // the side w/ bigger ratio needs to be shrunk
-					newSize.height = oldSize.height*w_ratio;
-					newSize.width = maxSize.width;
+					newSize.height = (int)(oldSize.height*w_ratio);
+					newSize.width = (int)(maxSize.width);
 				} else {
-					newSize.width = oldSize.width*h_ratio;
-					newSize.height = maxSize.height;
+					newSize.width = (int)(oldSize.width*h_ratio);
+					newSize.height = (int)(maxSize.height);
 				}
-				[orig setSize:newSize];			  
+				[orig setSize:newSize];
 				result = [[NSImage alloc] initWithSize:newSize];
 				[result lockFocus];
 				[orig compositeToPoint:NSZeroPoint operation:NSCompositeSourceOver];
@@ -214,6 +216,7 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 }
 */
 
+// see usage note in the .h file.
 #define CacheContains(x)	([images objectForKey:x] != nil)
 #define PendingContains(x)  ([pending containsObject:x])
 - (void)cacheFile:(NSString *)s {
@@ -225,7 +228,9 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	[self createScaledImage:result];
 	if (result->image == nil)
 		result->image = [[NSImage imageNamed:@"brokendoc"] retain]; // ** don't hardcode!
-	
+	else
+		result->exifOrientation = [DYExiftags orientationForFile:ResolveAliasToPath(s)];
+
 	// now add it to cache
 	[self addImage:result forFile:s];
 	[result release];
@@ -326,6 +331,15 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	}
 	[cacheLock unlock];
 }
+
+- (void)removeAllImages {
+	[cacheLock lock];
+	[images removeAllObjects];
+	[cacheOrder removeAllObjects];
+	[pending removeAllObjects];
+	[cacheLock unlock];
+}
+
 
 
 - (void)abortCaching {

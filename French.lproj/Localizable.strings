@@ -1,1 +1,55 @@
-/* slideshow */ " left"             = "gauche"; " right"            = "droite"; " rotated%@ %i%C" = "  rotation %@ %i%C"; 	/* %@    direction (left/right above) 	   %i    number of degrees 	   %C  unicode degree symbol ° 	 */  "Auto-advance" = " Avance automatique"; "seconds"      = "s"; /* use something short, like "s" */ "PAUSED"       = "PAUSE";  /* status bars */ "%u images" = "%u images"; "Group %i" = "Groupe %i"; "%u image(s) updated for Group %i" = "%u images traitées dans le groupe %i";  "Getting filenames..." = "Lecture des noms de fichiers..."; "Loading %i of %u..." = "Chargement %i de %u...";  "Loading [%i/%i] %@..." = "Chargement [%i/%i] %@...";  "The file %@ could not be moved to the trash because an error of %i occurred." = "Le fichier %@ n'a pas pu être déplacé dans la corbeille à cause d'une erreur %i ";  "Could not set the desktop because an error of type %i occurred." = "Le fond d'écran n'as pas pu être changé à cause d'une erreur %i";  "Warning" = "Attention"; "This operation cannot be undone! Are you sure you want to continue?" = "Cette opération ne peut pas être annulée. Voulez-vous continuer?"; "Continue" = "Continuer"; "Cancel" = "Annuler";  /* Get Info Window */  "Camera-Specific Properties:\n" = "Propriétés de l'appareil:\n"; "Image-Specific Properties:\n" = "Propriétés de l'image:\n"; "Other Properties:\n" = "Autres propriétés:\n"; "Unsupported Properties:\n" = "Propriétés non-supportées:\n"; "JPEG Comment:\n" = "Commentaire JPEG:\n"; "Progressive JPEG file\n" = "Fichier JPEG à encodage progressif:\n";  "Alias" = "Alias"; /* Finder Alias */ "Width" = "Largeur"; "Height" = "Hauteur"; "Unable to read file" = "Impossible de lire le fichier"; "No images selected." = "Aucune image sélectionnée"; "%d images selected." = "%d images sélectionnées";  "Could not check for update - unable to connect to server." = "Recherche de mise à jour impossible ﹣serveur indisponible."; "Could not check for update - an error occurred while connecting to the server." = "Recherche de mis à jour impossible ﹣erreur lors de la connection au serveur."; "A new version of Phoenix Slides is available." = "Une nouvelle version de Phoenix Slides est disponible."; "More Info" = "Plus d'info"; "Not Now" = "Pas maintenant"; "You have the latest version of Phoenix Slides." = "Vous avez la dernière version de Phoenix Slides."; 
+/* slideshow */
+" left"             = "gauche";
+" right"            = "droite";
+" rotated%@ %i%C" = "  rotation %@ %i%C";
+	/* %@    direction (left/right above)
+	   %i    number of degrees
+	   %C  unicode degree symbol °
+	 */
+" flipped" = " renversé";
+
+"Auto-advance" = " Avance automatique";
+"seconds"      = "s"; /* use something short, like "s" */
+"PAUSED"       = "PAUSE";
+
+/* status bars */
+"%u images" = "%u images";
+"Group %i" = "Groupe %i";
+"%u image(s) updated for Group %i" = "%u images traitées dans le groupe %i";
+
+"Getting filenames..." = "Lecture des noms de fichiers...";
+"Loading %i of %u..." = "Chargement %i de %u...";
+
+"Loading [%i/%i] %@..." = "Chargement [%i/%i] %@...";
+
+"The file %@ could not be moved to the trash because an error of %i occurred." = "Le fichier %@ n'a pas pu être déplacé dans la corbeille à cause d'une erreur %i ";
+
+"Could not set the desktop because an error of type %i occurred." = "Le fond d'écran n'as pas pu être changé à cause d'une erreur %i";
+
+"Warning" = "Attention";
+"This operation cannot be undone! Are you sure you want to continue?" = "Cette opération ne peut pas être annulée. Voulez-vous continuer?";
+"Continue" = "Continuer";
+"Cancel" = "Annuler";
+
+/* Get Info Window */
+
+"Camera-Specific Properties:\n" = "Propriétés de l'appareil:\n";
+"Image-Specific Properties:\n" = "Propriétés de l'image:\n";
+"Other Properties:\n" = "Autres propriétés:\n";
+"Unsupported Properties:\n" = "Propriétés non-supportées:\n";
+"JPEG Comment:\n" = "Commentaire JPEG:\n";
+"Progressive JPEG file\n" = "Fichier JPEG à encodage progressif:\n";
+
+"Alias" = "Alias"; /* Finder Alias */
+"Width" = "Largeur";
+"Height" = "Hauteur";
+"Unable to read file" = "Impossible de lire le fichier";
+"No images selected." = "Aucune image sélectionnée";
+"%d images selected." = "%d images sélectionnées";
+
+"Could not check for update - unable to connect to server." = "Recherche de mise à jour impossible ﹣serveur indisponible.";
+"Could not check for update - an error occurred while connecting to the server." = "Recherche de mis à jour impossible ﹣erreur lors de la connection au serveur.";
+"A new version of Phoenix Slides is available." = "Une nouvelle version de Phoenix Slides est disponible.";
+"More Info" = "Plus d'info";
+"Not Now" = "Pas maintenant";
+"You have the latest version of Phoenix Slides." = "Vous avez la dernière version de Phoenix Slides.";

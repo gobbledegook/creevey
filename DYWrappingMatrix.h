@@ -17,6 +17,7 @@
 {
 	IBOutlet id delegate;
 
+	NSColor *bgColor;
 	NSImageCell *myCell;           // one cell, reused for efficiency
 	NSMutableArray *images;
 	NSMutableArray *filenames;
@@ -32,7 +33,6 @@
 }
 
 + (NSSize)maxCellSize;
-
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
 - (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i;
@@ -67,6 +67,7 @@
 
 @interface NSObject(DYWrappingMatrixTarget)
 - (IBAction)moveToTrash:(id)sender; // dragging to trashcan will call this
+- (IBAction)moveElsewhere:(id)sender; // moving a file to the Finder will call this
 - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)s;
 @end
 

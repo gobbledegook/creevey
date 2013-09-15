@@ -97,13 +97,22 @@
 	destinationRect.origin.x = (int)(centerX - destinationRect.size.width/2);
 	destinationRect.origin.y = (int)(centerY - destinationRect.size.height/2);
 	
-	if (rotation != 0) {
-		NSAffineTransform *transform = [NSAffineTransform transform];
-		[transform translateXBy:centerX yBy:centerY];
-		[transform rotateByDegrees:rotation];
-		[transform translateXBy:-centerX yBy:-centerY];
-		[transform concat];
+	NSAffineTransform *transform = [NSAffineTransform transform];
+	// flipping
+	if (isImageFlipped) {
+		[transform scaleXBy:-1 yBy:1];
+		[transform translateXBy:-centerX*2 yBy:0];
+		// move over by the screen width; don't use value of boundsRect.size.width,
+		// because it might have been switched with the height (above)
 	}
+	
+	// rotating
+	if (rotation != 0) {
+		[transform translateXBy:centerX yBy:centerY];
+		[transform rotateByDegrees:isImageFlipped ? -rotation : rotation];
+		[transform translateXBy:-centerX yBy:-centerY];
+	}
+	[transform concat];
 	
 	// now, convert destinationRect to view coords
 	destinationRect = [self convertRect:destinationRect fromView:nil];
@@ -117,8 +126,8 @@
 	[image drawInRect:destinationRect fromRect:srcRect operation:NSCompositeSourceOver fraction:1.0];
 	[cg setImageInterpolation:oldInterp];
 	
-	//[transform invert];
-	//[transform concat];
+	[transform invert];
+	[transform concat];
 	id rep = [[image representations] objectAtIndex:0];
 	if ([rep isKindOfClass:[NSBitmapImageRep class]]
 		&& [rep valueForProperty:NSImageFrameCount]) {
@@ -147,6 +156,7 @@
 	image = [anImage retain];
 	zoomF = 0;
 	rotation = 0;
+	isImageFlipped = NO;
 
 	[[NSCursor arrowCursor] set];
 	[self setNeedsDisplay:YES];
@@ -274,6 +284,24 @@
 	// assume from zero, don't call when zoomed
 	rotation = n;
 	[self setNeedsDisplay:YES];
+}
+
+- (void)setFlip:(BOOL)b {
+	isImageFlipped = b;
+	[self setNeedsDisplay:YES];
+}
+
+- (BOOL)toggleFlip {
+	isImageFlipped = !isImageFlipped;
+	if (rotation == 90 || rotation == -90) {
+		rotation = -rotation;
+	}
+	[self setNeedsDisplay:YES];
+	return isImageFlipped;
+}
+
+- (BOOL)isImageFlipped {
+	return isImageFlipped;
 }
 
 //- (float)zoom { return zoom; }

@@ -141,7 +141,7 @@
 				[EpegWrapper imageWithPath:theFile
 							   boundingBox:[DYWrappingMatrix maxCellSize]
 								   getSize:&result->pixelSize
-								 exifThumb:YES];
+								 exifThumb:NO];
 			if (!result->image) [thumbsCache createScaledImage:result];
 			if (result->image) [thumbsCache addImage:result forFile:theFile];
 			else [thumbsCache dontAddFile:theFile];
@@ -299,6 +299,9 @@
 	if ([displayedFilenames count] > 0) {
 		loadingDone = NO;
 		DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
+		BOOL useExifThumbs = [[NSUserDefaults standardUserDefaults]
+							  integerForKey:@"DYWrappingMatrixMaxCellWidth"] == 160;
+		// only use exif thumbs if we're at the smallest thumbnail  setting
 		[slidesBtn setEnabled:YES]; // ** not main thread?
 		currentFilesDeletable = [fm isDeletableFileAtPath:[displayedFilenames objectAtIndex:0]];
 		
@@ -335,7 +338,7 @@
 						[EpegWrapper imageWithPath:theFile
 									   boundingBox:cellSize
 										   getSize:&result->pixelSize
-										 exifThumb:YES];
+										 exifThumb:useExifThumbs];
 						
 						//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
 					if (!result->image)

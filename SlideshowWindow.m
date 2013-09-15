@@ -7,6 +7,8 @@
 
 #include "stdlib.h"
 
+#import "DYJpegtran.h"
+
 #import "SlideshowWindow.h"
 #import <Carbon/Carbon.h>
 #import "DYCarbonGoodies.h"
@@ -54,6 +56,7 @@
 	if (self = [super initWithContentRect:r styleMask:NSBorderlessWindowMask backing:b defer:d]) {
 		filenames = [[NSMutableArray alloc] init];
 		rotations = [[NSMutableDictionary alloc] init];
+		flips = [[NSMutableDictionary alloc] init];
 		zooms = [[NSMutableDictionary alloc] init];
 		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
 		
@@ -107,6 +110,7 @@
 - (void)dealloc {
 	[filenames release];
 	[rotations release];
+	[flips release];
 	[zooms release];
 	[imgCache release];
 	[helpFld release];
@@ -343,15 +347,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	if (r < 0) r = -r;
 	float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
-	[infoFld setStringValue:[NSString stringWithFormat:@"[%i/%i%@] %@ - %@%@ - %@%@",
+	[infoFld setStringValue:[NSString stringWithFormat:@"[%i/%i] %@ - %@ - %@%@%@%@ %@",
 		currentIndex+1, [filenames count],
-		r ? [NSString stringWithFormat:
-			NSLocalizedString(@" rotated%@ %i%C", @""), dir, r, 0xb0] : @"", //degrees
 		[self currentShortFilename],
+		FileSize2String(info->fileSize),
 		[info pixelSizeAsString],
 		(zoom != 1.0 || [imgView zoomMode]) ? [NSString stringWithFormat:
 			@" @ %.0f%%", zoom*100] : @"",
-		FileSize2String(info->fileSize),
+		[imgView isImageFlipped] ? NSLocalizedString(@" flipped", @"") : @"",
+		r ? [NSString stringWithFormat:
+			NSLocalizedString(@" rotated%@ %i%C", @""), dir, r, 0xb0] : @"", //degrees
 		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1g%@) %@",
 			NSLocalizedString(@"Auto-advance", @""),
 			timerIntvl,
@@ -396,13 +401,49 @@ scheduledTimerWithTimeInterval:timerIntvl
 		NSNumber *rot = [rotations objectForKey:theFile];
 		DYImageViewZoomInfo *zoomInfo = [zooms objectForKey:theFile];
 		int r = rot ? [rot intValue] : 0;
+		BOOL imgFlipped = [[flips objectForKey:theFile] boolValue];
+		
 		if (hideInfoFld) [infoFld setHidden:YES]; // this must happen before setImage, for redraw purposes
 		[imgView setImage:img];
 		if (r) [imgView setRotation:r];
+		if (imgFlipped) [imgView setFlip:YES];
 		// ** see keyDown for specifics
 		// if zoomed in, we need to set a different image
 		// here, copy-pasted from keyDown
 		DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
+		if (!rot && !imgFlipped) {
+			// auto-rotate by exif orientation
+			switch (info->exifOrientation) {
+				case 4: // flipv
+					r = 180;
+					// fall through
+				case 2: // fliph
+					imgFlipped = YES;
+					break;
+
+				case 5: // transpose
+					imgFlipped = YES;
+				case 8: // 90 left
+					r = 90;
+					break;
+
+				case 7: // transverse transpose
+					imgFlipped = YES;
+				case 6: // 90 right
+					r = -90;
+					break;
+				case 3: // 180
+					r = 180;
+					break;
+				default:
+					r = 0;
+					imgFlipped = NO;
+			}
+			[rotations setObject:[NSNumber numberWithInt:r] forKey:theFile];
+			[flips setObject:[NSNumber numberWithBool:imgFlipped] forKey:theFile];
+			[imgView setRotation:r];
+			[imgView setFlip:imgFlipped];
+		}
 		if (zoomInfo || ([imgView showActualSize] &&
 						 !(info->pixelSize.width < [imgView bounds].size.width &&
 						   info->pixelSize.height < [imgView bounds].size.height))) {
@@ -470,6 +511,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[rotations setObject:[NSNumber numberWithInt:n]
 				  forKey:[filenames objectAtIndex:currentIndex]];
 	[self updateInfoFldWithRotation:n];
+}
+
+- (void)toggleFlip {
+	BOOL b = [imgView toggleFlip];
+	[flips setObject:[NSNumber numberWithBool:b]
+			  forKey:[filenames objectAtIndex:currentIndex]];
+	[self updateInfoFld];
 }
 
 - (void)toggleExif {
@@ -564,6 +612,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if ([e isARepeat] && keyIsRepeating < MAX_REPEATING_CACHED) {
 		keyIsRepeating++;
 	}
+	if (c == ' ' && (([e modifierFlags] & NSShiftKeyMask) != 0)) {
+		c = NSLeftArrowFunctionKey;
+	}
 	DYImageInfo *obj;
 	switch (c) {
 		case '!':
@@ -637,6 +688,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 			break;
 		case 'r':
 			[self setRotation:-90];
+			break;
+		case 'f':
+			[self toggleFlip];
 			break;
 		case '=':
 			//if ([imgView showActualSize])

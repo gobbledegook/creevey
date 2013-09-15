@@ -187,7 +187,8 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 		if (mptr->marker == JPEG_COM) {
 			// go backwards, comments at the beginning
 			[result insertString:@"\n" atIndex:0];
-			[result insertString:[NSString stringWithCString:mptr->data length:mptr->data_length]
+			[result insertString:[[[NSString alloc] initWithBytes:mptr->data length:mptr->data_length
+														 encoding:NSMacOSRomanStringEncoding] autorelease]
 						 atIndex:0];
 			[result insertString:NSLocalizedString(@"JPEG Comment:\n", @"") atIndex:0];
 		} else if (mptr->marker == JPEG_APP0+1) {
@@ -222,7 +223,53 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 	return result;
 }
 
++ (unsigned short)orientationForFile:(NSString *)aPath {
+	unsigned len;
+	unsigned char *app1 = exifHeaderForFile(aPath,&len);
+	if (!app1)
+		return 0;
+	unsigned short z = exif_orientation(app1,len,0);
+	free(app1);
+	return z;
+}
+
 @end
+
+
+unsigned char *exifHeaderForFile(NSString *aPath, unsigned *len) {
+	struct jpeg_decompress_struct srcinfo;
+	struct my_error_mgr jsrcerr;
+	FILE * input_file;
+	
+	/* Open files first, so setjmp can assume they're open. */
+	if ((input_file = fopen([aPath fileSystemRepresentation], "rb")) == NULL)
+		return NULL;
+	srcinfo.err = jpeg_std_error(&jsrcerr.pub);
+	jsrcerr.pub.error_exit = _my_error_handler;
+	
+	if (setjmp(jsrcerr.setjmp_buffer)) {
+		jpeg_destroy_decompress(&srcinfo);
+		fclose(input_file);
+		return NULL;
+	}
+	jpeg_create_decompress(&srcinfo);
+	jpeg_stdio_src(&srcinfo, input_file);
+	jpeg_save_markers(&srcinfo,JPEG_APP0+1,0xFFFF);
+	jpeg_read_header(&srcinfo, TRUE);
+	
+	jpeg_saved_marker_ptr mptr = srcinfo.marker_list;
+	unsigned char *newapp1 = NULL;
+	if (mptr && (mptr->marker == JPEG_APP0+1)) {
+		newapp1 = malloc(mptr->data_length);
+		if (newapp1) {
+			memcpy(newapp1,mptr->data,mptr->data_length);
+			*len = mptr->data_length;
+		}
+	}
+	jpeg_destroy_decompress(&srcinfo);
+	fclose(input_file);
+	return newapp1;
+}
 
 
 static unsigned largestExifOffset(unsigned oldLargest,

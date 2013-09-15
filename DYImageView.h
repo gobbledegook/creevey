@@ -24,7 +24,7 @@
 	NSImage *image;
 	NSTimer *gifTimer;
 	int rotation;
-	BOOL scalesUp, showActualSize;
+	BOOL scalesUp, showActualSize, isImageFlipped;
 	NSRect sourceRect;
 	NSSize destSize;
 	float zoomF;
@@ -36,6 +36,9 @@
 - (int)rotation;
 - (int)addRotation:(int)r;
 - (void)setRotation:(int)n;
+- (void)setFlip:(BOOL)b;
+- (BOOL)toggleFlip;
+- (BOOL)isImageFlipped;
 
 //- (float)zoom;
 - (BOOL)scalesUp;

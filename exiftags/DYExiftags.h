@@ -13,8 +13,8 @@
 #import <Foundation/Foundation.h>
 
 @interface DYExiftags : NSObject
-
 + (NSString *)tagsForFile:(NSString *)aPath moreTags:(BOOL)showMore;
++ (unsigned short)orientationForFile:(NSString *)aPath;
 @end
 
 
@@ -26,10 +26,12 @@ unsigned char *find_exif_thumb(unsigned char *b, unsigned len,
 
 //except for find_exif_thumb, all of these allocate new memory, which
 // the caller is responsible for freeing
+unsigned char *exifHeaderForFile(NSString *aPath, unsigned *len);
 unsigned char *delete_exif_thumb(unsigned char *b, unsigned len,
 								 unsigned *outLen);
 unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthumblen,
 								  JDIMENSION newWidth, JDIMENSION newHeight,
 								  unsigned char *b, unsigned len,
 								  unsigned *outLen);
+// obviously this doesn't malloc
 unsigned short exif_orientation(unsigned char *b, unsigned len, char reset);
