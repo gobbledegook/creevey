@@ -100,7 +100,13 @@
 		else
 			s = [rootVolumeName stringByAppendingString:aPath];
 	}
-	if ([_b setPath:s]) return YES;
+	if (!browserInited) {
+		[_b selectRow:0 inColumn:0];
+		browserInited = YES;
+	}
+	if ([_b setPath:s]) return YES; // in 10.6, this will fail unexpectedly with no warning
+	// the first time this is run. Hence, the previous line.
+	
 	[_b selectRow:0 inColumn:0]; // if it failed, try it again *sigh*
 	 // work around stupid bug, doesn't auto-select cell 0
 	return [_b setPath:s];

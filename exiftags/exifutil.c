@@ -268,7 +268,8 @@ exifstralloc(char **str, int len)
 
 	if (*str) {
 		exifwarn("tried to alloc over non-null string");
-		abort();
+		/*** abort(); DY - changed this to return ***/
+		return;
 	}
 	if (!(*str = (char *)calloc(1, len)))
 		exifdie((const char *)strerror(errno));

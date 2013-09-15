@@ -167,21 +167,22 @@
 		return;
 	}
 	
-	screenRect = [[NSScreen mainScreen] frame];
-	[imgCache setBoundingSize:screenRect.size]; // boundingSize for the cache is actually in pixels
-	// ** caching issues?
-	// if oldBoundingSize != or < newSize, delete cache
-
-	// this may need to change as screen res changes
-	// we assume user won't change screen resolution during a show
-	// ** but they might!
-	
-	//[self setContentSize:screenRect.size];
-	//[self setFrameOrigin:screenRect.origin];
-	[self setFrame:screenRect display:NO];
-	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
-	// ** OR set springiness on awake
-	
+	if (![self isVisible]) {
+		screenRect = [[NSScreen mainScreen] frame];
+		[imgCache setBoundingSize:screenRect.size]; // boundingSize for the cache is actually in pixels
+		// ** caching issues?
+		// if oldBoundingSize != or < newSize, delete cache
+		
+		// this may need to change as screen res changes
+		// we assume user won't change screen resolution during a show
+		// ** but they might!
+		
+		//[self setContentSize:screenRect.size];
+		//[self setFrameOrigin:screenRect.origin];
+		[self setFrame:screenRect display:NO];
+		[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
+		// ** OR set springiness on awake
+	}
 	
 	if (randomMode) {
 		unsigned i = [filenames count];
@@ -480,10 +481,17 @@ scheduledTimerWithTimeInterval:timerIntvl
 	else // could get rid of 'else' b/c going backwards makes timerPaused irrelevant
 		timerPaused = NO; // going forward unpauses auto-advance
 	if ((n > 0 && currentIndex+1 == [filenames count]) || (n < 0 && currentIndex == 0)){
-		if (loopMode)
+		if (loopMode) {
+			if (randomMode && n > 0) {
+				// reshuffle whenever you loop through to the beginning
+				unsigned i = [filenames count];
+				while (--i)
+					[filenames exchangeObjectAtIndex:i withObjectAtIndex:random()%(i+1)];
+			}
 			[self jumpTo:n<0 ? [filenames count]-1 : 0];
-		else
+		} else {
 			NSBeep();
+		}
 		return;
 	}
 	[self jumpTo:currentIndex+n];

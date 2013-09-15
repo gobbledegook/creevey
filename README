@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2009 March 22
+modified 2009 Aug 31
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -33,6 +33,14 @@ Enjoy!
 
 Version History
 ---------------
+1.2.6
+-----
+fixed - work around Snow Leopard's NSBrowser bug(?)
+if slideshow is running, don't switch to different monitor
+when in random mode AND loop mode, re-randomize at the start of each loop
+fixed crash on EXIF field type mismatch
+Italian localization improved (thanks to Silvano Dotti)
+
 1.2.5
 -----
 thumbs bg color
@@ -40,6 +48,7 @@ pref to move files/make alias
 allows flipping with 'f'
 shift-space goes back
 in EXIF menu, "Auto-rotate JPEG Files" changed to "Rotate JPEG File by EXIF tag"
+*** made slideshow auto-rotate by exif orientation, but not the thumbnails
 fixed bug when reading JPEG Comments with 8-bit characters
 fixed - dragging to trash can now removes thumbnail from view (bug introduced in 1.2, I think)
 fixed - banished that annoying white line when showing cached, scaled-down images

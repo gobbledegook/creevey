@@ -16,6 +16,7 @@
 	NSString *rootVolumeName;
 	NSArray *hidden; // list of strings from /.hidden
 	BOOL showInvisibles;
+	BOOL browserInited; // work around NSBrowser bug
 	
 	NSString *currPath;
 	AliasHandle currAlias;
