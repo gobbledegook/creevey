@@ -24,7 +24,7 @@
 #define MAX_THUMBS 2000
 #define DYVERSCHECKINTERVAL 604800
 
-inline BOOL FileIsJPEG(NSString *s) {
+BOOL FileIsJPEG(NSString *s) {
 	return [[[s pathExtension] lowercaseString] isEqualToString:@"jpg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
