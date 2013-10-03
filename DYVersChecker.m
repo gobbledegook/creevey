@@ -42,6 +42,10 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
+	if ([response isKindOfClass: [NSHTTPURLResponse class]]) {
+		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+		responseCode = [httpResponse statusCode];
+	}
     [receivedData setLength:0];
 }
 
@@ -63,6 +67,12 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+	// check the HTTP status code and make sure it was successful
+	if (responseCode != 200) {
+		if (notify)
+			NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
+		return;
+	}
 	// if currVers > myVers
 	if (strtol([receivedData bytes],NULL,10) > [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] intValue]) {
 		if (NSRunInformationalAlertPanel([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"],
