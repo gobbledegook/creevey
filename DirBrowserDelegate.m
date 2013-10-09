@@ -84,6 +84,7 @@
 	[_b loadColumnZero];
 	NSString *newPath = AliasToPath(currAlias);
 	// if no newPath (files deleted?) fall back to currPath
+	browserInited = NO;
 	[self setPath:newPath ? newPath : currPath]; // don't actually set currPath here
 												 // wait for browserWillSendAction to do it
 	[_b sendAction];
