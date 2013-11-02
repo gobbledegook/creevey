@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.26 2004/11/06 18:36:46 ejohnst Exp $
+ * $Id: exifutil.c,v 1.31 2007/12/16 01:14:26 ejohnst Exp $
  */
 
 /*
@@ -77,6 +77,60 @@ exifwarn2(const char *msg1, const char *msg2)
 {
 
 	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
+}
+
+
+/*
+ * Sanity check a tag's count & value when used as an offset within
+ * the TIFF.  Checks for overflows.  Returns 0 if OK; !0 if not OK.
+ */
+int
+offsanity(struct exifprop *prop, u_int16_t size, struct ifd *dir)
+{
+	u_int32_t tifflen;
+	const char *name;
+
+	/* XXX Hrm.  Should be OK with 64-bit addresses. */
+	tifflen = dir->md.etiff - dir->md.btiff;
+	if (prop->name)
+		name = prop->name;
+	else
+		name = "Unknown";
+
+	if (!prop->count) {
+		if (prop->value > tifflen) {
+			exifwarn2("invalid field offset", name);
+			prop->lvl = ED_BAD;
+			return (1);
+		}
+		return (0);
+	}
+
+	/* Does count * size overflow? */
+
+	if (size > (u_int32_t)(-1) / prop->count) {
+		exifwarn2("invalid field count", name);
+		prop->lvl = ED_BAD;
+		return (1);
+	}
+
+	/* Does count * size + value overflow? */
+
+	if ((u_int32_t)(-1) - prop->value < prop->count * size) {
+		exifwarn2("invalid field offset", name);
+		prop->lvl = ED_BAD;
+		return (1);
+	}
+
+	/* Is the offset valid? */
+
+	if (prop->value + prop->count * size > tifflen) {
+		exifwarn2("invalid field offset", name);
+		prop->lvl = ED_BAD;
+		return (1);
+	}
+
+	return (0);
 }
 
 
@@ -206,8 +260,8 @@ struct exifprop *
 findprop(struct exifprop *prop, struct exiftag *tagset, u_int16_t tag)
 {
 
-	for (; prop && (prop->tagset != tagset || prop->tag != tag);
-	    prop = prop->next);
+	for (; prop && (prop->tagset != tagset || prop->tag != tag ||
+	    prop->lvl == ED_BAD); prop = prop->next);
 	return (prop);
 }
 
@@ -301,7 +355,7 @@ dumpprop(struct exifprop *prop, struct field *afield)
 
 	for (i = 0; ftypes[i].type && ftypes[i].type != prop->type; i++);
 	if (afield) {
-		printf("   %s (0x%04X): %s, %d; %d\n", prop->name,
+		printf("   %s (0x%04X): %s, %u; %u\n", prop->name,
 		    prop->tag, ftypes[i].name, prop->count,
 		    prop->value);
 		printf("      ");
@@ -328,10 +382,45 @@ u_int32_t
 readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
     struct tiffmeta *md)
 {
-	u_int32_t ifdsize;
+	u_int32_t ifdsize, tifflen;
 	unsigned char *b;
+	struct ifdoff *ifdoffs, *lastoff;
 
+	tifflen = md->etiff - md->btiff;
 	b = md->btiff;
+	ifdoffs = (struct ifdoff *)(md->ifdoffs);
+	lastoff = NULL;
+	*dir = NULL;
+
+	/*
+	 * Check to see if we've already visited this offset.  Otherwise
+	 * we could loop.  (Need to add in TIFF start for Nikon makernotes.)
+	 */
+
+	while (ifdoffs && ifdoffs->offset != b + offset) {
+		lastoff = ifdoffs;
+		ifdoffs = ifdoffs->next;
+	}
+	if (ifdoffs) {
+		/* We'll only complain if debugging. */
+		if (debug) exifwarn("loop in IFD reference");
+		return (0);
+	}
+
+	ifdoffs = (struct ifdoff *)malloc(sizeof(struct ifdoff));
+	if (!ifdoffs) {
+		exifwarn2("can't allocate IFD offset record",
+		    (const char *)strerror(errno));
+		return (0);
+	}
+	ifdoffs->offset = offset + b;
+	ifdoffs->next = NULL;
+
+	/* The 0th (first) IFD establishes our list on the master tiffmeta. */
+	if (lastoff)
+		lastoff->next = ifdoffs;
+	else
+		md->ifdoffs = (void *)ifdoffs;
 
 	/*
 	 * Verify that we have a valid offset.  Some maker note IFDs prepend
@@ -339,14 +428,15 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 	 * (Number of directory entries is in the first 2 bytes.)
 	 */
 
-	if (b + offset + 2 > md->etiff) {
-		*dir = NULL;
+	if ((u_int32_t)(-1) - offset < 2 || offset + 2 > tifflen)
 		return (0);
-	}
 
 	*dir = (struct ifd *)malloc(sizeof(struct ifd));
-	if (!*dir)
-		exifdie((const char *)strerror(errno));
+	if (!*dir) {
+		exifwarn2("can't allocate IFD record",
+		    (const char *)strerror(errno));
+		return (0);
+	}
 
 	(*dir)->num = exif2byte(b + offset, md->order);
 	(*dir)->par = NULL;
@@ -354,12 +444,22 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 	(*dir)->md = *md;
 	(*dir)->next = NULL;
 
+	/* Make sure ifdsize doesn't overflow. */
+
+	if ((*dir)->num &&
+	    sizeof(struct field) > (u_int32_t)(-1) / (*dir)->num) {
+		free(*dir);
+		*dir = NULL;
+		return (0);
+	}
+
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += offset + 2;
 
-	/* Sanity check our sizes. */
+	/* Sanity check our size (and check for overflows). */
 
-	if (b + ifdsize > md->etiff) {
+	if ((u_int32_t)(-1) - (offset + 2) < ifdsize ||
+	    offset + 2 + ifdsize > tifflen) {
 		free(*dir);
 		*dir = NULL;
 		return (0);
@@ -394,11 +494,6 @@ readifds(u_int32_t offset, struct exiftag *tagset, struct tiffmeta *md)
 {
 	struct ifd *firstifd, *curifd;
 
-	/*
-	 * XXX Note: we really should be checking to see if this IFD
-	 * has already been visited...
-	 */
-	
 	/* Fetch our first one. */
 
 	offset = readifd(offset, &firstifd, tagset, md);

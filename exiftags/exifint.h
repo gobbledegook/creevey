@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.29 2004/08/20 22:31:45 ejohnst Exp $
+ * $Id: exifint.h,v 1.32 2007/12/16 00:48:22 ejohnst Exp $
  */
 
 /*
@@ -88,6 +88,14 @@ struct ifd {
 };
 
 
+/* List of IFD offsets, to detect loops. */
+
+struct ifdoff {
+	unsigned char *offset;	/* Offset to IFD. */
+	struct ifdoff *next;	/* Next IFD in list. */
+};
+
+
 /* Macro for making sense of a fraction. */
 
 #define fixfract(str, n, d, t)	{ \
@@ -119,6 +127,7 @@ extern struct descrip filesrcs[];
 
 /* Utility functions from exifutil.c. */
 
+extern int offsanity(struct exifprop *prop, u_int16_t size, struct ifd *dir);
 extern u_int16_t exif2byte(unsigned char *b, enum byteorder o);
 extern int16_t exif2sbyte(unsigned char *b, enum byteorder o);
 extern u_int32_t exif4byte(unsigned char *b, enum byteorder o);

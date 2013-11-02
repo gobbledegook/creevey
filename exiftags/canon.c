@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.52 2005/01/11 20:12:35 ejohnst Exp $
+ * $Id: canon.c,v 1.54 2007/12/16 03:06:13 ejohnst Exp $
  */
 
 /*
@@ -38,6 +38,7 @@
  * EOS 1D and 1Ds contributions from Stan Jirman <stanj@phototrek.org>.
  * EOS 10D contributions from Jason Montojo <jason.montojo@rogers.com>.
  * EOS 20D contributions from Per Kristian Hove <Per.Hove@math.ntnu.no>.
+ * EOS 5D contributions from Albert Max Lai <amlai@columbia.edu>.
  *
  */
 
@@ -277,6 +278,8 @@ static struct exiftag canon_tags[] = {
 	  "Custom Function", NULL },
 	{ 0x0093, TIFF_SHORT, 0,  ED_UNK, "Canon93Tag",
 	  "Canon Tag93 Offset", NULL },
+	{ 0x0095, TIFF_ASCII, 64, ED_PAS, "LensName",
+	  "Lens Name", NULL },
 	{ 0x00a0, TIFF_SHORT, 0,  ED_UNK, "CanonA0Tag",
 	  "Canon TagA0 Offset", NULL },
 	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "CanonUnknown",
@@ -697,6 +700,19 @@ static struct descrip ccstm_20dettl[] = {
 	{ -1,	"Unknown" },
 };
 
+static struct descrip ccstm_5dflashsync[] = {
+	{ 0,	"Auto" },
+	{ 1,	"1/200 (Fixed)" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_5dfscr[] = {
+	{ 0,	"Ee-A" },
+	{ 1,	"Ee-D" },
+	{ 2,	"Ee-S" },
+	{ -1,	"Unknown" },
+};
+
 
 /* D30/D60 custom functions. */
 
@@ -783,6 +799,51 @@ static struct exiftag canon_1dcustom[] = {
 	  "AI servo tracking sensitivity", ccstm_aisens },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "1DCustomUnknown",
 	  "Canon 1D/1Ds Custom Unknown", NULL },
+};
+
+/* 5D custom functions. */
+
+static struct exiftag canon_5dcustom[] = {
+	{ 0, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Focusing Screen", ccstm_5dfscr },
+	{ 1,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "SET button function when shooting", ccstm_10dsetbut },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Long exposure noise reduction", ccstm_offon },
+	{ 3,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Flash sync speed in Av mode", ccstm_5dflashsync },
+	{ 4,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Shutter button/AE lock button", ccstm_10dshutter },
+	{ 5,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "AF-assist beam", ccstm_assistflash },
+	{ 6,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Exposure level increments", ccstm_20dexplvl },
+	{ 7,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Flash firing", ccstm_20dflash },
+	{ 8,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "ISO expansion", ccstm_offon },
+	{ 9,  TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 10, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Superimposed display", ccstm_onoff },
+	{ 11, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Menu button display position", ccstm_10dmenubut },
+	{ 12, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Mirror lockup", ccstm_disen },
+	{ 13, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "AF point selection method", ccstm_20dafpsel },
+	{ 14, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "E-TTL II", ccstm_20dettl },
+	{ 15, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Shutter curtain sync", ccstm_shutsync },
+	{ 16, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Safety shift in Av or Tv", ccstm_disen },
+	{ 17, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Lens AF stop button", ccstm_lensaf1 },
+	{ 18, TIFF_SHORT, 0, ED_VRB, "5DCustom",
+	  "Add original decision data", ccstm_offon },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "5DCustomUnknown",
+	  "Canon 5D Custom Unknown", NULL },
 };
 
 /* 10D custom functions. */
@@ -1350,6 +1411,9 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		else if (strstr(t->model, "20D"))
 			canon_custom(prop, t->mkrmd.btiff + prop->value,
 			    t->mkrmd.order, canon_20dcustom);
+		else if (strstr(t->model, "5D"))
+			canon_custom(prop, t->mkrmd.btiff + prop->value,
+			    t->mkrmd.order, canon_5dcustom);
 		else
 			exifwarn2("Custom function unsupported; please "
 			    "report to author", t->model);
@@ -1376,8 +1440,6 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 struct ifd *
 canon_ifd(u_int32_t offset, struct tiffmeta *md)
 {
-	struct ifd *myifd;
 
-	readifd(offset, &myifd, canon_tags, md);
-	return(myifd);
+	return (readifds(offset, canon_tags, md));
 }

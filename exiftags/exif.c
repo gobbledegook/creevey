@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.74 2005/01/04 23:28:25 ejohnst Exp $
+ * $Id: exif.c,v 1.77 2007/12/16 00:25:08 ejohnst Exp $
  */
 
 /*
@@ -136,12 +136,14 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		 * (At least we're able to ID invalid comments...)
 		 */
 
-		if (prop->tagset[i].type && prop->tagset[i].type != prop->type
+		if (prop->tagset[i].type && prop->tagset[i].type !=
+		    prop->type) {
 #ifdef WINXP_BUGS
-		    && prop->tag != EXIF_T_USERCOMMENT
+			if (prop->tag != EXIF_T_USERCOMMENT)
 #endif
-		    )
-			exifwarn2("field type mismatch", prop->name);
+				exifwarn2("field type mismatch", prop->name);
+			prop->lvl = ED_BAD;
+		}
 
 		/*
 		 * Check the field count.
@@ -151,11 +153,16 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 		if (prop->tagset[i].count && prop->tagset[i].count !=
 #ifdef SIGMA_BUGS
-		    prop->count && prop->tag != EXIF_T_FILESRC)
+		    prop->count && prop->tag != EXIF_T_FILESRC) {
 #else
-		    prop->count)
+		    prop->count) {
 #endif
 			exifwarn2("field count mismatch", prop->name);
+
+			/* Let's be forgiving with ASCII fields. */
+			if (prop->type != TIFF_ASCII)
+				prop->lvl = ED_BAD;
+		}
 	}
 
 	/* Debuggage. */
@@ -231,6 +238,11 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	enum byteorder o = t->md.order;
 	struct exifprop *h = t->props;
 
+	/* Skip bad properties. */
+
+	if (prop->lvl == ED_BAD)
+		return;
+
 	/*
 	 * Process tags from special IFDs.
 	 */
@@ -271,7 +283,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		}
 		val = exif4byte(t->md.btiff + prop->value, o) /
 		    exif4byte(t->md.btiff + prop->value + 4, o);
-		snprintf(prop->str, 31, "%d dp%s", val, /*tmp*/prop->str);
+		snprintf(prop->str, 31, "%d dp%s", val, tmpprop->str);
 		prop->str[31] = '\0';
 		break;
 
@@ -480,6 +492,11 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	unsigned char *btiff = dir->md.btiff;
 	enum byteorder o = dir->md.order;
 
+	/* If the tag's already marked as bad, no sense in continuing. */
+
+	if (prop->lvl == ED_BAD)
+		return;
+
 	/* Set description if we have a lookup table. */
 
 	for (i = 0; prop->tagset[i].tag < EXIF_T_UNKNOWN &&
@@ -498,15 +515,6 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	case EXIF_T_EXIFIFD:
 	case EXIF_T_GPSIFD:
 	case EXIF_T_INTEROP:
-		/*
-		 * Prevent looping when the tag refers to its own IFD...
-		 * (Occurs in a screwed-up Agfa example.)
-		 */
-		if (prop->par && prop->tag == prop->par->tag) {
-			exifwarn2("IFD tag refers to itself", prop->name);
-			break;
-		}
-
 		md = &dir->md;
 		while (dir->next)
 			dir = dir->next;
@@ -582,9 +590,11 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		 * the manufacturer tag first to figure out makerifd().
 		 */
 
-		if (makers[t->mkrval].ifdfun)
-			dir->next = makers[t->mkrval].ifdfun(prop->value, md);
-		else
+		if (makers[t->mkrval].ifdfun) {
+			if (!offsanity(prop, 1, dir))
+				dir->next =
+				    makers[t->mkrval].ifdfun(prop->value, md);
+		} else
 			exifwarn("maker note not supported");
 
 		if (!dir->next)
@@ -600,11 +610,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		/* Sanity check the offset. */
 
-		if (prop->value + prop->count >
-		    (u_int32_t)(dir->md.etiff - btiff)) {
-			exifwarn2("invalid field offset", prop->name);
-			break;
-		}
+		if (offsanity(prop, 1, dir))
+			return;
 
 		strncpy(buf, (const char *)(btiff + prop->value), sizeof(buf));
 		buf[sizeof(buf) - 1] = '\0';
@@ -641,9 +648,14 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		/* Check for a comment type and sane offset. */
 
-		if (prop->count < 8 || (prop->value + prop->count >
-		    (u_int32_t)(dir->md.etiff - btiff)))
-			break;
+		if (prop->count < 8) {
+			exifwarn("invalid user comment length");
+			prop->lvl = ED_BAD;
+			return;
+		}
+
+		if (offsanity(prop, 1, dir))
+			return;
 
 		/* Ignore the 'comments' WinXP creates when rotating. */
 #ifdef WINXP_BUGS
@@ -700,13 +712,12 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		}
 
 		/* Sanity check the offset. */
-		if ((prop->value + prop->count <=
-		    (u_int32_t)(dir->md.etiff - btiff))) {
+		if (!offsanity(prop, 1, dir)) {
 			exifstralloc(&prop->str, prop->count + 1);
 			strncpy(prop->str, (const char *)(btiff + prop->value),
 			    prop->count);
-			return;
 		}
+		return;
 	}
 
 	/*
@@ -717,8 +728,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
-	    (prop->value + prop->count * 8 <=
-	    (u_int32_t)(dir->md.etiff - btiff))) {
+	    !offsanity(prop, 8, dir)) {
 
 		exifstralloc(&prop->str, 32);
 
@@ -747,8 +757,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
-	    prop->count > 2 && (prop->value + prop->count * 2 <=
-	    (u_int32_t)(dir->md.etiff - btiff))) {
+	    prop->count > 2 && !offsanity(prop, 2, dir)) {
 
 		if (prop->count > 8)
 			return;
@@ -775,12 +784,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 
 /*
- * Delete dynamic Exif property memory.
+ * Delete dynamic Exif property and IFD memory.
  */
 void
 exiffree(struct exiftags *t)
 {
 	struct exifprop *tmpprop;
+	struct ifdoff *tmpoff;
 
 	if (!t) return;
 
@@ -788,6 +798,10 @@ exiffree(struct exiftags *t)
 		if (t->props->str) free(t->props->str);
 		t->props = t->props->next;
 		free(tmpprop);
+	}
+	while ((tmpoff = (struct ifdoff *)(t->md.ifdoffs))) {
+		t->md.ifdoffs = (void *)tmpoff->next;
+		free(tmpoff);
 	}
 	free(t);
 }
