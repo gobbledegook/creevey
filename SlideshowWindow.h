@@ -14,6 +14,7 @@
 #import <Cocoa/Cocoa.h>
 #import "DYImageView.h"
 #import "DYImageCache.h"
+@class DYRandomizableArray;
 
 @interface SlideshowWindow : NSWindow
 {
@@ -28,7 +29,7 @@
 	NSTimeInterval timerIntvl; BOOL timerPaused;
 	NSTimer *autoTimer;
 	
-	NSMutableArray *filenames;
+	DYRandomizableArray *filenames;
 	NSMutableDictionary *rotations, *zooms, *flips;
 	
 	NSString *basePath;

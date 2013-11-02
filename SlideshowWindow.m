@@ -15,6 +15,7 @@
 #import "DYCarbonGoodies.h"
 #import "NSStringDYBasePathExtension.h"
 #import "CreeveyController.h"
+#import "DYRandomizableArray.h"
 
 @interface SlideshowWindow (Private)
 
@@ -58,7 +59,7 @@
 - (id)initWithContentRect:(NSRect)r styleMask:(unsigned int)m backing:(NSBackingStoreType)b defer:(BOOL)d {
 	// full screen window, force it to be NSBorderlessWindowMask
 	if (self = [super initWithContentRect:r styleMask:NSBorderlessWindowMask backing:b defer:d]) {
-		filenames = [[NSMutableArray alloc] init];
+		filenames = [[DYRandomizableArray alloc] init];
 		rotations = [[NSMutableDictionary alloc] init];
 		flips = [[NSMutableDictionary alloc] init];
 		zooms = [[NSMutableDictionary alloc] init];
@@ -146,8 +147,7 @@
 
 // start/end stuff
 - (void)setFilenames:(NSArray *)files {
-	[filenames removeAllObjects];
-	[filenames addObjectsFromArray:files];
+	[filenames setArray:files];
 }
 
 - (void)setBasePath:(NSString *)s {
@@ -204,19 +204,11 @@
 	}
 	
 	if (randomMode) {
-		unsigned i = [filenames count];
-		if (startIndex != -1)
-			// save selected image at the end
-			[filenames exchangeObjectAtIndex:startIndex withObjectAtIndex:--i];
-		while (--i)
-			[filenames exchangeObjectAtIndex:i withObjectAtIndex:random()%(i+1)];
-		if (startIndex != -1) {
-			// now put it at the beginning
-			[filenames exchangeObjectAtIndex:0 withObjectAtIndex:[filenames count]-1];
-			startIndex = 0;
-		}
+		[filenames randomizeStartingWithObjectAtIndex:startIndex];
+		startIndex = 0;
+	} else {
+		if (startIndex == -1) startIndex = 0;
 	}
-	if (startIndex == -1) startIndex = 0;
 	currentIndex = startIndex;
 	[self setTimer:timerIntvl]; // reset the timer, in case running
 	if (helpFld) [helpFld setHidden:YES];
@@ -480,17 +472,29 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (loopMode) {
 			if (randomMode && n > 0 && rerandomizeOnLoop) {
 				// reshuffle whenever you loop through to the beginning
-				unsigned i = [filenames count];
-				while (--i)
-					[filenames exchangeObjectAtIndex:i withObjectAtIndex:random()%(i+1)];
+				[filenames randomize];
 			}
 			[self jumpTo:n<0 ? [filenames count]-1 : 0];
 		} else {
 			NSBeep();
 		}
-		return;
+	} else {
+		[self jumpTo:currentIndex+n];
 	}
-	[self jumpTo:currentIndex+n];
+}
+
+- (void)jump:(int)n ordered:(BOOL)ordered { // if ordered is YES, jump to the next/previous slide in the ordered sequence
+	if (ordered && randomMode) {
+		[self setTimer:0]; // always stop auto-advance here
+		unsigned int newIndex = n < 0 ? [filenames orderedIndexOfObjectBeforeIndex:currentIndex] : [filenames orderedIndexOfObjectAfterIndex:currentIndex];
+		if (newIndex == NSNotFound) {
+			NSBeep();
+			return;
+		}
+		[self jumpTo:newIndex];
+	} else {
+		[self jump:n];
+	}
 }
 
 - (void)jumpTo:(int)n {
@@ -642,11 +646,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// otherwise advance
 		case NSRightArrowFunctionKey:
 		case NSDownArrowFunctionKey:
-			[self jump:1];
+			// hold down option to go to the next non-randomized slide
+			[self jump:1 ordered:([e modifierFlags] & NSAlternateKeyMask) != 0];
 			break;
 		case NSLeftArrowFunctionKey:
 		case NSUpArrowFunctionKey:
-			[self jump:-1];
+			[self jump:-1 ordered:([e modifierFlags] & NSAlternateKeyMask) != 0];
 			break;
 		case NSHomeFunctionKey:
 			[self jump:-currentIndex]; // <0 stops auto-advance
@@ -833,11 +838,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[super sendEvent:e];
 }
 
-- (void)scrollWheel:(NSEvent *)e {
-	float y = [e deltaY];
-	int sign = y < 0 ? 1 : -1;
-	[self jump:sign*(floor(fabs(y)/7.0)+1)];
-}
+// with the current wireless magic mouse, this is more annoying than useful
+//- (void)scrollWheel:(NSEvent *)e {
+//	float y = [e deltaY];
+//	int sign = y < 0 ? 1 : -1;
+//	[self jump:sign*(floor(fabs(y)/7.0)+1)];
+//}
 
 	
 // cache stuff
@@ -970,7 +976,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if ([menuItem tag] == 9) // Actual Size
 		return YES;
 	if ([menuItem tag] == 7) // random
-		return ![self isActive];
+		return YES;
 	// check if the item's menu is the slideshow menu
 	return [[menuItem menu] itemWithTag:3] ? [self isActive]
 										   : [super validateMenuItem:menuItem];
@@ -1000,6 +1006,17 @@ scheduledTimerWithTimeInterval:timerIntvl
 	BOOL b = ![sender state];
 	[sender setState:b];
 	randomMode = b;
+	if (currentIndex == -1)
+		return;
+	// slideshow is running, so we need to do some cleanup
+	if (randomMode) {
+		[filenames randomizeStartingWithObjectAtIndex:currentIndex];
+		currentIndex = 0;
+	} else {
+		currentIndex = [filenames orderedIndexOfObjectAtIndex:currentIndex];
+		[filenames derandomize];
+	}
+	[self displayImage];
 }
 - (IBAction)toggleShowActualSize:(id)sender {
 	BOOL b = ![sender state];
