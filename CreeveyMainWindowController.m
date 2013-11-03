@@ -284,8 +284,9 @@
 			if (!showInvisibles && isInvisible)
 				continue; // skip invisible files
 			if ([filetypes containsObject:[theFile pathExtension]]
-				 || [filetypes containsObject:NSHFSTypeOfFile(theFile)])
-			{	
+				 || [filetypes containsObject:NSHFSTypeOfFile(theFile)]
+				 || [filetypes containsObject:[[theFile pathExtension] lowercaseString]])
+			{
 				[filenames addObject:aPath];
 				if (++i % 100 == 0)
 					[self setStatusString:[NSString stringWithFormat:@"%@ (%i)",

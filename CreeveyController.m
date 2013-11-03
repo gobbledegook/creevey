@@ -23,10 +23,23 @@
 
 #define MAX_THUMBS 2000
 #define DYVERSCHECKINTERVAL 604800
+#define MAX_FILES_TO_CHECK_FOR_JPEG 100
 
 BOOL FileIsJPEG(NSString *s) {
 	return [[[s pathExtension] lowercaseString] isEqualToString:@"jpg"]
+	|| [[[s pathExtension] lowercaseString] isEqualToString:@"jpeg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
+}
+
+BOOL FilesContainJPEG(NSArray *a) {
+	// find out if at least one file is a JPEG
+	unsigned i, n = [a count];
+	if (n > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check
+	for (i=0; i<n; ++i) {
+		if (FileIsJPEG([a objectAtIndex:i]))
+			return YES;
+	}
+	return NO;
 }
 
 #define TAB(x,y)	[[[NSTextTab alloc] initWithType:x location:y] autorelease]
@@ -323,40 +336,42 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	for (n = 0; n < [a count]; ++n) {
 		s = [a objectAtIndex:n];
 		resolvedPath = ResolveAliasToPath(s);
-		if (jinfo.replaceThumb) {
-			NSSize tmpSize;
-			NSImage *i = [EpegWrapper imageWithPath:resolvedPath
-										boundingBox:maxThumbSize
-											getSize:&tmpSize
-										  exifThumb:NO
-									 getOrientation:NULL];
-			if (i) {
-				// assuming EpegWrapper always gives us a bitmap imagerep
-				jinfo.newThumb = [(NSBitmapImageRep *)[[i representations] objectAtIndex:0]
-					representationUsingType:NSJPEGFileType
-								 properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:0.0]
-																		forKey:NSImageCompressionFactor]
-					];
-				jinfo.newThumbSize = tmpSize;
-			} else {
-				jinfo.newThumb = NULL;
+		if (FileIsJPEG(resolvedPath)) {
+			if (jinfo.replaceThumb) {
+				NSSize tmpSize;
+				NSImage *i = [EpegWrapper imageWithPath:resolvedPath
+											boundingBox:maxThumbSize
+												getSize:&tmpSize
+											  exifThumb:NO
+										 getOrientation:NULL];
+				if (i) {
+					// assuming EpegWrapper always gives us a bitmap imagerep
+					jinfo.newThumb = [(NSBitmapImageRep *)[[i representations] objectAtIndex:0]
+						representationUsingType:NSJPEGFileType
+									 properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:0.0]
+																			forKey:NSImageCompressionFactor]
+						];
+					jinfo.newThumbSize = tmpSize;
+				} else {
+					jinfo.newThumb = NULL;
+				}
 			}
-		}
-		imgInfo = [thumbsCache infoForKey:resolvedPath];
-		jinfo.starting_exif_orientation = autoRotate
-			? (imgInfo ? imgInfo->exifOrientation : 0) // thumbsCache should always have the info we want, but just in case it doesn't don't crash!
-			: 0;
-		if ([DYJpegtran transformImage:resolvedPath transform:jinfo]) {
-			[thumbsCache removeImageForKey:resolvedPath];
-			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasChanged:) withObject:s];
-			// slower, but easier code
-			if (slidesWasKey) // remember, progress window is now key
-				[slidesWindow redisplayImage];
-			else
-				[slidesWindow uncacheImage:s]; // when we have multiple slideshows, we can just use this method
-		} else {
-			// ** fail silently
-			//NSLog(@"rot failed!");
+			imgInfo = [thumbsCache infoForKey:resolvedPath];
+			jinfo.starting_exif_orientation = autoRotate
+				? (imgInfo ? imgInfo->exifOrientation : 0) // thumbsCache should always have the info we want, but just in case it doesn't don't crash!
+				: 0;
+			if ([DYJpegtran transformImage:resolvedPath transform:jinfo]) {
+				[thumbsCache removeImageForKey:resolvedPath];
+				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasChanged:) withObject:s];
+				// slower, but easier code
+				if (slidesWasKey) // remember, progress window is now key
+					[slidesWindow redisplayImage];
+				else
+					[slidesWindow uncacheImage:s]; // when we have multiple slideshows, we can just use this method
+			} else {
+				// ** fail silently
+				//NSLog(@"rot failed!");
+			}
 		}
 		if ([jpegProgressBar isIndeterminate]) {
 			[jpegProgressBar stopAnimation:self];
@@ -573,7 +588,7 @@ enum {
 			
 			isjpeg = [slidesWindow isMainWindow]
 				? [slidesWindow currentFile] && FileIsJPEG([slidesWindow currentFile])
-				: numSelected > 0 && frontWindow && FileIsJPEG([frontWindow firstSelectedFilename]);
+				: numSelected > 0 && frontWindow && FilesContainJPEG([frontWindow currentSelection]);
 			
 			//if (t == JPEG_OP) return writable && isjpeg;
 			if (t == ROTATE_SAVE) { // only allow saving rotations during the slideshow
