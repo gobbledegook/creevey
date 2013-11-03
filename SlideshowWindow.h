@@ -38,6 +38,7 @@
 	int lastIndex; // for outside access to last slide shown
 	
 	NSTextView *helpFld;
+	NSImageView *loopImageView;
 	
 	BOOL loopMode, randomMode, rerandomizeOnLoop;
 	unsigned char keyIsRepeating;

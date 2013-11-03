@@ -463,6 +463,36 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 }
 
+- (void)showLoopAnimation {
+	if (floor(NSAppKitVersionNumber) < NSAppKitVersionNumber10_4) return; // NSAnimation
+
+	if (!loopImageView) {
+		NSImage *loopImage = [NSImage imageNamed:@"loop_forward.tiff"];
+		NSSize s = [loopImage size];
+		NSRect r;
+		r.size = s;
+		s = [[self contentView] frame].size;
+		r.origin.x = (s.width - r.size.width)/2;
+		r.origin.y = (s.height - r.size.height)/2;
+
+		loopImageView = [[NSImageView alloc] initWithFrame:NSIntegralRect(r)];
+		[[self contentView] addSubview:loopImageView]; [loopImageView release];
+		[loopImageView setImage:loopImage];
+	}
+	[loopImageView setHidden:NO];
+
+	NSMutableDictionary *viewDict = [NSMutableDictionary dictionaryWithCapacity:2];
+	[viewDict setObject:loopImageView forKey:NSViewAnimationTargetKey];
+	[viewDict setObject:NSViewAnimationFadeOutEffect forKey:NSViewAnimationEffectKey];
+
+    NSViewAnimation *theAnim = [[NSViewAnimation alloc] initWithViewAnimations:[NSArray arrayWithObject:viewDict]];
+	[theAnim setDuration:0.9];
+    [theAnim setAnimationCurve:NSAnimationEaseIn];
+
+    [theAnim startAnimation];
+    [theAnim release];
+}
+
 - (void)jump:(int)n { // go forward n pics (negative numbers go backwards)
 	if (n < 0)
 		[self setTimer:0]; // going backwards stops auto-advance
@@ -475,6 +505,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				[filenames randomize];
 			}
 			[self jumpTo:n<0 ? [filenames count]-1 : 0];
+			[self showLoopAnimation];
 		} else {
 			NSBeep();
 		}
