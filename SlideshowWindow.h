@@ -60,6 +60,7 @@
 
 - (int)currentIndex;
 - (NSString *)currentFile;
+- (NSString *)basePath;
 - (unsigned short)currentOrientation; // returns an EXIF orientation
 - (unsigned short)currentFileExifOrientation;
 - (void)displayImage; // to reload current file, assuming the mod date is different (oops - don't use this anymore)

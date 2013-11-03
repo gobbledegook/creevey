@@ -222,7 +222,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (IBAction)revealSelectedFilesInFinder:(id)sender {
 	if ([slidesWindow isMainWindow]) {
-		RevealItemsInFinder([NSArray arrayWithObject:[slidesWindow currentFile]]);
+		if ([slidesWindow currentFile])
+			RevealItemsInFinder([NSArray arrayWithObject:[slidesWindow currentFile]]);
+		else
+			[[NSWorkspace sharedWorkspace] openFile:[slidesWindow basePath]];
 	} else {
 		NSArray *a = [frontWindow currentSelection];
 		if ([a count])
@@ -561,14 +564,15 @@ enum {
 			// only when slides isn't loading cache!
 			// only if writeable (we just test the first file in the list)
 			writable = [slidesWindow isMainWindow]
-				? [slidesWindow currentImageLoaded] &&
+				? [slidesWindow currentFile] &&
+					[slidesWindow currentImageLoaded] &&
 					[[NSFileManager defaultManager] isDeletableFileAtPath:
 						[slidesWindow currentFile]]
 				: numSelected > 0 && frontWindow && [frontWindow currentFilesDeletable];
 			if (t == MOVE_TO_TRASH) return writable;
 			
 			isjpeg = [slidesWindow isMainWindow]
-				? FileIsJPEG([slidesWindow currentFile])
+				? [slidesWindow currentFile] && FileIsJPEG([slidesWindow currentFile])
 				: numSelected > 0 && frontWindow && FileIsJPEG([frontWindow firstSelectedFilename]);
 			
 			//if (t == JPEG_OP) return writable && isjpeg;
@@ -588,7 +592,9 @@ enum {
 			if ([slidesWindow isMainWindow] ) return NO;
 			return frontWindow && [frontWindow filenamesDone] && [[frontWindow displayedFilenames] count];
 		case SET_DESKTOP:
-			return [slidesWindow isMainWindow] || numSelected == 1;
+			return [slidesWindow isMainWindow]
+				? ([slidesWindow currentFile] != nil)
+				: numSelected == 1;
 		case GET_INFO:
 		case SORT_NAME:
 		case SORT_DATE_MODIFIED:
