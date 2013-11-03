@@ -69,8 +69,8 @@
 
 -(void) kqueue: (UKKQueue*)q receivedNotification: (NSString*)nm forFile: (NSString*)fpath
 {
-	NSLog(@"got %@ for %@", nm, fpath);
-	if ([nm isEqualToString:UKKQueueFileRenamedNotification]) {
+	//NSLog(@"got %@ for %@", nm, fpath);
+	if ([nm isEqualToString:UKFileWatcherRenameNotification]) {
 		[kq removePathFromQueue:fpath];
 		
 	}
