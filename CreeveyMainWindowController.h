@@ -11,17 +11,21 @@
 
 @class DYWrappingMatrix;
 
-@interface CreeveyMainWindowController : NSWindowController
+@interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate>
 {
     IBOutlet NSBrowser *dirBrowser;
 	IBOutlet NSButton *slidesBtn;
 	IBOutlet DYWrappingMatrix *imgMatrix;
 	IBOutlet NSTextField *statusFld, *bottomStatusFld;
-	
+
 	NSMutableArray *filenames, *displayedFilenames;
 	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
 	volatile BOOL stopCaching;
 	
+	NSConditionLock *imageCacheQueueLock;
+	NSMutableArray *imageCacheQueue, *secondaryImageCacheQueue;
+	volatile BOOL imageCacheQueueRunning;
+
 	BOOL currentFilesDeletable;
 	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
 		startSlideshowWhenReady;

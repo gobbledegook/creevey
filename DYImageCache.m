@@ -229,7 +229,7 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
 	[self createScaledImage:result];
 	if (result->image == nil)
-		result->image = [[NSImage imageNamed:@"brokendoc"] retain]; // ** don't hardcode!
+		result->image = [[NSImage imageNamed:@"brokendoc.tif"] retain]; // ** don't hardcode!
 	else
 		result->exifOrientation = [DYExiftags orientationForFile:ResolveAliasToPath(s)];
 

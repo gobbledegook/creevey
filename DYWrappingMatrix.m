@@ -23,10 +23,11 @@
 #define VERTPADDING 16
 #define DEFAULT_TEXTHEIGHT 12
 
-/* there are three methods called from a separate thread:
+/* there are some methods called in a separate thread:
    addSelectedIndex
    removeAllImages
    addImage:withFilename:
+   imageWithFileInfoNeedsDisplay:
 
    i've tried to make them thread-safe
  */
@@ -174,9 +175,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		images = [[NSMutableArray alloc] initWithCapacity:100];
 		filenames = [[NSMutableArray alloc] initWithCapacity:100];
 		selectedIndexes = [[NSMutableIndexSet alloc] init];
+		requestedFilenames = [[NSMutableSet alloc] init];
 		[self setCellWidth:DEFAULT_CELL_WIDTH];
 		textHeight = DEFAULT_TEXTHEIGHT;
 		autoRotate = YES;
+		loadingImage = [NSImage imageNamed:@"loading.png"];
 		
 		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
 		
@@ -220,6 +223,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[images release];
 	[filenames release];
 	[selectedIndexes release];
+	[requestedFilenames release];
 	[bgColor release];
 	[super dealloc];
 }
@@ -558,6 +562,22 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			  : [NSColor lightGrayColor]) set];
 			[NSBezierPath fillRect:areaRect];
 		}
+		// retrieve the image, or ask the delegate to load it and send it back if it hasn't been set yet
+		NSImage *img = [images objectAtIndex:i];
+		NSString *filename = [filenames objectAtIndex:i];
+		if (img == loadingImage) {
+			if ([delegate respondsToSelector:@selector(wrappingMatrix:loadImageForFile:atIndex:)]
+				&& ![requestedFilenames containsObject:filename]) {
+				NSImage *newImage = [delegate wrappingMatrix:self loadImageForFile:filename atIndex:i];
+				if (newImage) {
+					[images replaceObjectAtIndex:i withObject:newImage];
+					img = newImage;
+				} else {
+					[requestedFilenames addObject:filename];
+				}
+			}
+		}
+		[myCell setImage:img];//[self imageForIndex:i]];//
 		// calculate drawing area for thumb and filename area
 		if (textHeight) {
 			textCellRect.origin.x = areaRect.origin.x;
@@ -568,10 +588,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			(textHeight == 0
 			 || ![self needsToDrawRect:textCellRect	rectListBounds:rect])) {
 			//NSLog(@"skipped cell %i", i);
-			continue;	
+			continue;
 		}
-		NSImage *img = [images objectAtIndex:i];
-		[myCell setImage:img];//[self imageForIndex:i]];//
 		[[NSColor whiteColor] set]; // white bg for transparent imgs
 		NSRectFill(cellRect);
 		if (autoRotate) {
@@ -635,7 +653,18 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)keyDown:(NSEvent *)e {
 	if ([[e characters] length] == 0) return;
 	unichar c = [[e characters] characterAtIndex:0];
+	NSRect r;
 	switch (c) {
+		case NSHomeFunctionKey:
+			r = [self cellnum2rect:0];
+			r.size.height = (int)r.size.height;
+			[self scrollRectToVisible:r];
+			return;
+		case NSEndFunctionKey:
+			r = [self cellnum2rect:[filenames count]-1];
+			r.size.height = (int)r.size.height;
+			[self scrollRectToVisible:r];
+			return;
 		case NSRightArrowFunctionKey:
 		case NSLeftArrowFunctionKey:
 		case NSDownArrowFunctionKey:
@@ -792,6 +821,41 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
 }
 
+#pragma mark lazy loading stuff
+- (void)setImageWithFileInfo:(NSDictionary *)d {
+	NSString *s = [d objectForKey:@"filename"];
+	[requestedFilenames removeObject:s];
+	unsigned int i = [[d objectForKey:@"index"] unsignedIntValue];
+	NSImage *theImage = [d objectForKey:@"image"];
+	if (i >= numCells) return;
+	if (![[filenames objectAtIndex:i] isEqualToString:s]) {
+		i = [filenames indexOfObject:s];
+		if (i == NSNotFound) return;
+	}
+	if ([images objectAtIndex:i] != theImage) {
+		[images replaceObjectAtIndex:i withObject:theImage];
+		[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
+	}
+}
+
+- (BOOL)imageWithFileInfoNeedsDisplay:(NSDictionary *)d {
+	NSString *s = [d objectForKey:@"filename"];
+	if (![requestedFilenames containsObject:s]) return NO;
+	unsigned int i = [[d objectForKey:@"index"] unsignedIntValue];
+	if (i >= numCells) return NO;
+	// simple check to see if nothing's changed and the rect is visible
+	if ([[filenames objectAtIndex:i] isEqualToString:s]) {
+		NSRect visibleRect = [self visibleRect];
+		NSRect cellRect = [self cellnum2rect:i];
+		NSPoint p = cellRect.origin;
+		if (NSPointInRect(p, visibleRect)) return YES;
+		p.x += cellRect.size.width - 1; // adjust these values by one point to make sure NSPointInRect handles the bottom right corner correctly
+		p.y += cellRect.size.height - 1;
+		return NSPointInRect(p, visibleRect);
+	}
+	return NO;
+}
+
 - (void)updateStatusString {
 	if ([delegate respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)]) {
 		[delegate wrappingMatrix:self selectionDidChange:selectedIndexes];
@@ -800,6 +864,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 #pragma mark add/delete images stuff
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
+	if (!theImage) theImage = loadingImage;
 	[images addObject:theImage];
 	[filenames addObject:s];
 	numCells++;
@@ -813,6 +878,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	numCells = 0;
 	[images removeAllObjects];
 	[filenames removeAllObjects];
+	[requestedFilenames removeAllObjects];
 	// ** [self resize:nil];
 	//[self setNeedsDisplay:YES]; // ** I suppose should call on main thread too
 	[self performSelectorOnMainThread:@selector(resize:)
@@ -833,6 +899,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	//** check if i is in range?
 	numCells--;
 	[images removeObjectAtIndex:i];
+	[requestedFilenames removeObject:[filenames objectAtIndex:i]];
 	[filenames removeObjectAtIndex:i];
 	[selectedIndexes shiftIndexesStartingAtIndex:i+1 by:-1];
 	[self resize:nil];

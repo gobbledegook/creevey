@@ -135,6 +135,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"exifThumbnailShow"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"showFilenames"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"Slideshow:RerandomizeOnLoop"];
+	[dict setObject:[NSNumber numberWithInt:3000] forKey:@"maxThumbsToLoad"];
     [defaults registerDefaults:dict];
 
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
