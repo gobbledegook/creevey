@@ -640,6 +640,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 }
 - (void)keyDown:(NSEvent *)e {
+	if ([[e characters] length] == 0) return; // avoid exception on deadkeys
 	unichar c = [[e characters] characterAtIndex:0];
 	if (c >= '1' && c <= '9') {
 		if (([e modifierFlags] & NSNumericPadKeyMask) != 0 && [imgView zoomMode]) {

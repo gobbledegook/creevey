@@ -477,6 +477,7 @@
 }
 
 - (void)keyDown:(NSEvent *)e {
+	if ([[e characters] length] == 0) return;
 	unichar c = [[e characters] characterAtIndex:0];
 	if (filenamesDone && c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
 		c = c - NSF1FunctionKey + 1;

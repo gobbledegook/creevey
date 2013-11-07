@@ -633,6 +633,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self scrollRectToVisible:r];
 }
 - (void)keyDown:(NSEvent *)e {
+	if ([[e characters] length] == 0) return;
 	unichar c = [[e characters] characterAtIndex:0];
 	switch (c) {
 		case NSRightArrowFunctionKey:
