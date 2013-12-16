@@ -12,6 +12,7 @@
 #import "DYCarbonGoodies.h"
 #import "NSArrayIndexSetExtension.h"
 #import "DirBrowserDelegate.h"
+#import "NSStringDYBasePathExtension.h"
 
 #import "CreeveyController.h"
 #import "DYImageCache.h"
@@ -601,7 +602,7 @@
 
 #pragma mark wrapping matrix methods
  - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)selectedIndexes {
-	 NSString *s, *path;
+	 NSString *s, *path, *basePath;
 	 DYImageInfo *i;
 	 DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
 	 unsigned long long totalSize = 0;
@@ -611,6 +612,7 @@
 			 s = @"";
 			 break;
 		 case 1:
+			 basePath = [[[dirBrowser delegate] path] stringByAppendingString:@"/"];
 			 path = [imgMatrix firstSelectedFilename];
 			 i = [thumbsCache infoForKey:ResolveAliasToPath(path)];
 			 // must resolve alias here b/c that's what we do in loadImages
@@ -619,11 +621,11 @@
 				 // in case the thumbnail hasn't loaded into the cache yet, retrieve the file info ourselves.
 				 i = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
 			 }
-			 s = i ? [[path lastPathComponent] stringByAppendingFormat:@" %dx%d (%@)",
+			 s = i ? [[path stringByDeletingBasePath:basePath] stringByAppendingFormat:@" %dx%d (%@)",
 				 (int)i->pixelSize.width,
 				 (int)i->pixelSize.height,
 				 FileSize2String(i->fileSize)]
-				   : [[path lastPathComponent] stringByAppendingString:
+				   : [[path stringByDeletingBasePath:basePath] stringByAppendingString:
 					   @" - bad image file!"];
 			 break;
 		 default:

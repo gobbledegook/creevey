@@ -40,7 +40,7 @@
 	NSTextView *helpFld;
 	NSImageView *loopImageView;
 	
-	BOOL loopMode, randomMode, rerandomizeOnLoop;
+	BOOL loopMode, randomMode, rerandomizeOnLoop, autoRotate;
 	unsigned char keyIsRepeating;
 	
 	BOOL mouseDragged;
@@ -72,6 +72,8 @@
 - (void)unsetFilename:(NSString *)s; // use this if something's been deleted
 
 - (void)setRerandomizeOnLoop:(BOOL)b;
+- (void)setAutoRotate:(BOOL)b;
+- (BOOL)autoRotate;
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;

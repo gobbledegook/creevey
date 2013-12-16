@@ -137,6 +137,19 @@
 	rerandomizeOnLoop = b;
 }
 
+- (void)setAutoRotate:(BOOL)b {
+	autoRotate = b;
+	[rotations removeAllObjects];
+	[flips removeAllObjects];
+	if (currentIndex != -1) {
+		[self displayImage];
+	}
+}
+
+- (BOOL)autoRotate {
+	return autoRotate;
+}
+
 - (void)setCats:(NSMutableSet **)newCats {
     cats = newCats;
 }
@@ -435,7 +448,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		// if zoomed in, we need to set a different image
 		// here, copy-pasted from keyDown
 		DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
-		if (!rot && !imgFlipped && info->exifOrientation) {
+		if (autoRotate && !rot && !imgFlipped && info->exifOrientation) {
 			// auto-rotate by exif orientation
 			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
 			[rotations setObject:[NSNumber numberWithInt:r] forKey:theFile];

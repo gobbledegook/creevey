@@ -136,6 +136,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"showFilenames"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"Slideshow:RerandomizeOnLoop"];
 	[dict setObject:[NSNumber numberWithInt:3000] forKey:@"maxThumbsToLoad"];
+	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoRotateByOrientationTag"];
     [defaults registerDefaults:dict];
 
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
@@ -175,7 +176,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	// coming to the front (oops)
 	[slidesWindow setCats:cats];
 	[slidesWindow setRerandomizeOnLoop:[[NSUserDefaults standardUserDefaults] boolForKey:@"Slideshow:RerandomizeOnLoop"]];
-	
+	[slidesWindow setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
+
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
 															  forKeyPath:@"values.slideshowAutoadvanceTime"
 																 options:NSKeyValueObservingOptionNew
@@ -222,6 +224,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		? [u floatForKey:@"slideshowAutoadvanceTime"]
 		: 0]; // see prefs section for more notes
 	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
+	[slidesWindow setAutoRotate:[[frontWindow imageMatrix] autoRotate]];
 	[slidesWindow startSlideshowAtIndex: [s count] == 1 ? [s firstIndex] : -1];
 }
 
@@ -611,11 +614,12 @@ enum {
 			return [slidesWindow isMainWindow]
 				? ([slidesWindow currentFile] != nil)
 				: numSelected == 1;
+		case AUTO_ROTATE:
+			return YES;
 		case GET_INFO:
 		case SORT_NAME:
 		case SORT_DATE_MODIFIED:
 		case SHOW_FILE_NAMES:
-		case AUTO_ROTATE:
 			return ![slidesWindow isMainWindow];
 		default:
 			return YES;
@@ -648,9 +652,12 @@ enum {
 }
 
 - (IBAction)doAutoRotateDisplayedImage:(id)sender {
-	BOOL b = ![[frontWindow imageMatrix] autoRotate];
+	BOOL b = [slidesWindow isMainWindow] ? ![slidesWindow autoRotate] : ![[frontWindow imageMatrix] autoRotate];
 	[sender setState:b ? NSOnState : NSOffState];
 	[[frontWindow imageMatrix] setAutoRotate:b];
+	[slidesWindow setAutoRotate:b];
+	if ([creeveyWindows count] == 1 || [slidesWindow isMainWindow])
+		[[NSUserDefaults standardUserDefaults] setBool:b forKey:@"autoRotateByOrientationTag"];
 }
 
 #pragma mark prefs stuff
@@ -844,8 +851,17 @@ enum {
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
 	[wc showWindow:nil]; // or override wdidload
 	[[wc imageMatrix] setShowFilenames:[[NSUserDefaults standardUserDefaults] boolForKey:@"showFilenames"]];
+	[[wc imageMatrix] setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
 	if (sender)
 		[wc setDefaultPath];
+
+	// make sure menu items are checked properly (code copied from windowChanged:)
+	short int sortOrder = [wc sortOrder];
+	NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
+	[[m itemWithTag:200+abs(sortOrder)] setState:sortOrder > 0 ? NSOnState : NSMixedState];
+	[[m itemWithTag:abs(sortOrder) == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+	[[m itemWithTag:SHOW_FILE_NAMES] setState:[[wc imageMatrix] showFilenames] ? NSOnState : NSOffState];
+	[[m itemWithTag:AUTO_ROTATE] setState:[[wc imageMatrix] autoRotate] ? NSOnState : NSOffState];
 }
 
 - (void)windowClosed:(NSNotification *)n {
@@ -888,6 +904,7 @@ enum {
 - (void)windowDidBecomeMain:(NSNotification *)aNotification {
 	if ([creeveyWindows count] && (exifWasVisible = [[exifTextView window] isVisible]))
 		[[exifTextView window] orderOut:nil];
+	[[[[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu] itemWithTag:AUTO_ROTATE] setState:[slidesWindow autoRotate]];
 	// only needed in case user cycles through windows; see startSlideshow above
 }
 - (void)windowDidResignMain:(NSNotification *)aNotification {
