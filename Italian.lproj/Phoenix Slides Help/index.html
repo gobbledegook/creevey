@@ -14,8 +14,8 @@ href="#ack">Ringraziamenti</a></li> <li><a href="#vers">Storia delle Versioni/In
 Contatti</a></li> </ul>
 
 
-<h2><a name="usage"></a>Uso</h2> <p>Per raggiungere una directory, usare la lista delle directory
-nella parte alta della finestra. Si possono anche trascinare file o cartelle nella finestra o
+<h2><a name="usage"></a>Uso</h2> <p>Per andare alla cartella desiderata, usare la lista delle directory
+nella parte alta della finestra. Si possono anche trascinare direttamente file o cartelle nella finestra o
 sull'icona dell'applicazione. Si pu&ograve; avviare una presentazione cliccando sul pulsante
 "Presentazione" o premendo il tasto return o con un doppio-click sulla miniatura di un'immagine</p>
 
@@ -28,14 +28,14 @@ in uso viene spostata, rinoninata, o cancellata. Per forzare l'aggiornamento per
 cambiamenti nel file system (nuovi file, rinomina di altre cartelle, etc.), cliccare sul nome di una
 cartella e il suo contenuto verr&agrave; aggiornato. </p>
 
-<p>Attivare il pulsante "Sottocartelle" per far s&igrave; che il programma cerchi le immagini in
+<p>L'attivazione del pulsante "Sottocartelle" fa s&igrave; che il programma cerchi le immagini in
 tutte le sottocartelle. Mentre crea la lista delle immagini, il programma entrer&agrave; nelle
 sottocartelle quando ne incontra (la ricerca &egrave; con precedenza dal basso). Questa
 caratteristica pu&ograve; risultare divertente quando si guarda dentro gli allegati alle
 applicazioni.</p>
 
 <p>Si pu&ograve; trascinare nella finestra una cartella o un file di una cartella per saltare a
-quella cartella. Se si trascinano file di immmagini, esse verranno selezionate nella visualizzazione
+quella cartella. Se si trascinano file di immagini, esse verranno selezionate nella visualizzazione
 delle miniature. Per raggiungere una cartella, si possono trascinare anche file che non sono
 immagini e questa va intesa come una vera peculiarit&agrave;.</p>
 
@@ -48,7 +48,8 @@ ci&ograve; che 'NSImage' pu&ograve; leggere).</p>
 miniature di ogni immagine. Le miniature vengono memorizzate nella cache ed eliminate quando si
 chiude il programma.</p>
 
-<p>Phoenix Slides mostra le informazioni base (nome, dimensione, ingombro) sul/i file selezionati
+<p>Phoenix Slides mostra le informazioni base (nome, dimensione, spazio su
+disco) sul/i file selezionati
 nella barra di stato in fondo alla finestra.</p>
 
 <p>Si possono ridimensionare a piacere le miniature per visualizzarle con una ampiezza da 40 a 160
@@ -64,7 +65,7 @@ selezione; &#x2318;-click per deselezionare. Si possono selezionare immagini anc
 mouse (nello spazio bianco) l'area che le contiene. </p>
 
 <p>Usare i tasti freccia nella tastiera per cambiare la selezione (questo per&ograve; funziona solo
-quando è selezionata una sola immagine).</p>
+quando é selezionata una sola immagine).</p>
 
 <h3>Trascinamento di immagini</h3> &Egrave; possibile trascinare le immagini su un altro programma
 per aprirle con quel programma, o sul Finder per fare una copia dei file. (Se poi nelle preferenze
@@ -81,10 +82,10 @@ aprir&agrave; la cartella selezionata nel Finder. </p>
 
 <h2><a name="slides"></a>Presentazioni</h2> <p>Avviando una presentazione possono accadere cose
 diverse a seconda della selezione attuata:</p> <ul> <li>Se nessuna immagine &egrave; stata
-selezionata, inizia una presentazione con tutte le immmagini a partire dalla prima.</li> <li>Se
-&egrave; stata selezionata una sola immagine, inizia una presentazione con tutte le immmagini a
+selezionata, inizia una presentazione con tutte le immagini a partire dalla prima.</li> <li>Se
+&egrave; stata selezionata una sola immagine, inizia una presentazione con tutte le immagini a
 partire dall'immagine selezionata.</li> <li>Se sono state selezionate pi&ugrave; immagini, inizia
-una presentazione con le sole immmagini selezionate.</li> </ul> <p>Si pu&ograve; avviare una
+una presentazione con le sole immagini selezionate.</li> </ul> <p>Si pu&ograve; avviare una
 presentazione in qualunque momento dopo la formazione della lista dei file (non importa attendere il
 caricamento di tutte le miniature). </p>
 
@@ -138,13 +139,13 @@ l'immagine zoomata</td></tr> <tr><td>esc, q</td><td>esci dalla presentazione</td
 <h2><a name="jpeg"></a>Trasformazioni JPEG </h2> <p>Phoenix Slides pu&ograve; realizzare
 trasformazioni senza perdita di qualità sui file JPEG. Infatti utilizza codice da jpegtran (incluso
 l'EXIF patch), e supporta la maggior parte delle sue opzioni avanzate, che sono spiegate brevemente
-qu&igrave sotto: </p>
+qu&igrave; sotto: </p>
 
-<p><strong>Perdita dei blocchi marginali non transformabili </strong> - La rotazione senza perdita
-di qualit&agrave &egrave perfetta solo per immagini le cui dimensioni sono multiple di quelle del
+<p><strong>Perdita dei blocchi marginali non trasformabili </strong> - La rotazione senza perdita
+di qualit&agrave; &egrave; perfetta solo per immagini le cui dimensioni sono multiple di quelle del
 blocco iMCU, normalmente 8 o 16. I blocchi "imperfetti" ai bordi possono essere rifilati, se si
-desidera, anche se ovviamente questa &egrave una operazione irreversibile . Ecco qualcosa in
-pi&ugrave preso dalla documentazione jpegtran:</p>
+desidera, anche se ovviamente questa &egrave; una operazione irreversibile . Ecco qualcosa in
+pi&ugrave; preso dalla documentazione jpegtran:</p>
 
 <pre>jpegtran's default behavior when transforming an odd-size image is designed to preserve exact
 reversibility and mathematical consistency of the transformation set.... Transpose is able to flip
@@ -156,11 +157,11 @@ edge pixels are defined to be the same as the end result of the corresponding tr
 sequence. </pre>
 
 <p><strong>Rendi Progressivo</strong> - Crea immagini adatte a visualizzazione incrementale su
-collegamenti a bassa velocit&agrave. I file 'Progressive JPEG' consistono in una serie di scansioni
-a qualit&agrave crescente.</p>
+collegamenti a bassa velocit&agrave;. I file 'Progressive JPEG' consistono in una serie di scansioni
+a qualit&agrave; crescente.</p>
 
-<p><strong>Ottimizzare con la Tavola di Huffman</strong> - Pi&ugrave lento, ma crea file leggermete
-pi&ugrave piccoli.</p>
+<p><strong>Ottimizzare con la Tavola di Huffman</strong> - Pi&ugrave; lento, ma crea file leggermente
+pi&ugrave; piccoli.</p>
 
 <p><strong>Scala di grigi</strong> - Semplicemente rimuove l'informazione colore (crominanza),
 lasciando intatti i dati sulla scala dei grigi (luminanza).</p>
@@ -177,17 +178,17 @@ Durante una presentazione, premere uno dei tasti F2-F12 per assegnare un'immagin
 questo punto, nella vista per miniature, sar&agrave; sufficiente premere F2-F12 per vedere le
 immagini del gruppo corrispondente. Si pu&ograve; anche premere &#8984;-F2(fino a F12) per
 modificare l'assegnazione di una immagine ad un gruppo sia nella vista presentazione sia miniature.
-Per cancellare tutte le assegnezioni a categorie, premere F1 durante una presentazione, o &#8984;-F1
+Per cancellare tutte le assegnazioni a categorie, premere F1 durante una presentazione, o &#8984;-F1
 guardando le miniature. Assegnare immagini a gruppi pu&ograve; essere utile per operazioni in
 blocco, per es. selezionare un gruppo di immagini su cui effettuare una rotazione JPEG.</p>
 
 <p>Naturalmente, non si possono utilizzare i tasti funzione riservati dal system o utilities di
-terze parti per altre cose, gli esempi pi&ugrave notevoli sono i tasti F9-F12 di default per
+terze parti per altre cose, gli esempi pi&ugrave; notevoli sono i tasti F9-F12 di default per
 Expos&eacute; e Dashboard. Tuttavia, normalmente si pu&ograve; aggirare il problema tenendo premuto
 contemporaneamente ai tasti F1-F12 il tasto control o alt (&#x2325;).</p>
 
 <p>Le Categorie sono temporanee e andranno perse con l'uscita da Phoenix Slides. Si pu&ograve;
-pensare a questa funzionalit&agrave come ad una sorta di meccanismo di selezione alternativo.</p>
+pensare a questa funzionalit&agrave; come ad una sorta di meccanismo di selezione alternativo.</p>
 
 
 
@@ -199,10 +200,10 @@ ruotare le immagini in modalit&agrave; pieno schermo. Cos&igrave; decisi di scri
 programma.</p>
 
 <p>Ricordate Curator, il programma ora abbandonato per organizzare immagini di Caffeine Software?
-&egrave; grazioso, ma (1) &egrave morto, (2) la formazione delle liste avviene in modo strano, e (3)
+&egrave; grazioso, ma (1) &egrave; morto, (2) la formazione delle liste avviene in modo strano, e (3)
 occorre attendere la formazione delle miniature prima di poter vedere un'immagine in una
 presentazione (PERCH&Egrave;?!). Volevo che il mio programma rimediasse a questi problemi,
-cos&igrave; Phoenix Slides &egrave ispirato in parte da Curator.</p>
+cos&igrave; Phoenix Slides &egrave; ispirato in parte da Curator.</p>
 
 <p>Perch&egrave; Phoenix? Accanto al suo significato mitologico, la fenice &egrave; anche
 rappresentata nella bandiera della citt&agrave; di San Francisco (dove abbiamo sede). In pi&ugrave;,
@@ -233,47 +234,87 @@ nella vostra lingua prego <a href="http://blyt.net/Contact.html">contattatemi</a
 
 
 <h2><a name="vers"></a>Storia delle Versioni</h2>
+
+2014.01.11 1.3
+<ul>
+	<li>Le miniature vengono caricate immediatamente con lo scorrimento delle immagini</li>
+	<li>Durante una presentazione è ora possibile cambiare da "casuale" a "sequenziale"</li>
+	<li>Il codice è testato per funzionare con Gatekeeper su OS X 10.7 o superiore</li>
+	<li>È stato posto un limite al numero delle miniature caricate automaticamente (Ciò evita crash all'applicazione. Si può impostare un valore qualunque tra 0 ed uno molto grande. Il valore di default è 3000. Digitare qualcosa come <tt>defaults write net.blyt.phoenixslides maxThumbsToLoad -int 8000</tt> in una finestra del Terminale.)</li>
+	<li>Premere "option-left/up" e "option-right/down" per saltare alla precedente/prossima immagine della sequenza quando si è in modalità casuale</li>
+	<li>È stato aggiunto un indicatore visuale quando si è in "Presentazione Ciclica"</li>
+	<li>Quando si rimuove l'ultima immagine ora lo schermo appare vuoto anziché andare all'indietro</li>
+	<li>L'impostazione "Rotazione Automatica" viene salvata tra un lancio e l'altro</li>
+	<li>L'impostazione "Rotazione Automatica" è disponibile anche nelle presentazioni</li>
+	<li>È stato disabilitato l'uso dello scorrimento tramite rotellina per avanzare nelle presentazioni in quanto non funzionava bene con il Magic Mouse</li>
+	<li>In fondo alla finestra del browser compare anche il percorso e non solo il nome del file</li>
+	<li>Ora sono riconosciuti anche file con estensione mista maiuscolo-minuscolo (.JpEg) </li>
+	<li>Gli elementi del menu JPEG ora sono abilitati correttamente anche se il primo file selezionato non è un JPEG</li>
+	<li>corretto il marcatore di "Mostra nomi file" nel menu Vista</li>
+	<li>corretto il problema quando si monta un nuovo disco</li>
+	<li>corretto il problema quando l'utente preme una combinazione di tasti sbagliata (es. option-e)</li>
+	<li>corretto l'errato messaggio "c'è una nuova versione" quando il server restituisce un "bad HTTP status code"</li>
+	<li>aggiornato a exiftags 1.0.1</li>
+	<li>migliorate le localizzazioni Italiana e Francese </li>
+	<li>aggiornamento e qualche correzione nella localizzazione italiana degli aiuti</li>
+</ul>
+
 2012.10.14 1.2.8
 <ul>
-	<li>info bar during slideshow is now hidden by default; showing/hiding of the info bar is now retained when quitting</li>
-	<li>universal binary again! the last version inadvertently dropped support for powerpc machines. (although, this will probably be the last version to support anything before 10.6)</li>
+	<li>la barra delle informazioni sulla foto ora é assente di default; la visualizzazione o meno della barra informazioni viene conservata per il termine della presentazione</li>
+	<li>Phoenix Slides torna alla versione universal binary con il supporto ai PPC inavvertitamente perso con l'ultima versione. (anche se probabilmente questa sarà l'ultima versione a supportare tutto ciò che precede OSX 10.6)</li>
 </ul>
 
 2012.07.27 1.2.7
 <ul>
-	<li>sort thumbnails by name or date</li>
-	<li>names in the browser are sorted by name now</li>
-	<li>thumbnail window now auto-rotates JPEGs with orientation tags (e.g. from your iPhone)</li>
-	<li>new "Rotate by Tag" command to apply a lossless JPEG rotation according to the orientation tag</li>
-	<li>in slideshow mode: added a new command to save the currently displayed orientation using lossless JPEG rotation</li>
-	<li>JPEG rotation commands are now applied relative to the currently displayed orientation</li>
-	<li>hitting '*' during slideshow now resetns rotation and flip (in addition to zoom)</li>
-	<li>added hidden preference to <em>not</em> re-randomize at the start of a new loop when both "Loop" and "Random" are active: type <tt>defaults write net.blyt.phoenixslides Slideshow:RerandomizeOnLoop -boolean NO</tt> in a Terminal window</li>
-	<li>fixed bug where super-skinny images might crash the browser (thanks to Luis Lozano)</li>
-	<li>fixed: white line on the right side of some 180-degree rotations</li>
-	<li>fixed bug where you're stuck in a slideshow if you dragged something to the Phoenix Slides icon, then switch to view a particular "category", then switched away from that window (e.g. another app) and back again (thanks to Doc O'Leary)</li>
-	<li>fixed bug where a jpeg would remain flipped in the slideshow after modifying it</li>
-	<li>fixed bug where slideshow rotations would be stored incorrectly after flipping</li>
-	<li>fixed: aliases in slideshows can now show EXIF info</li>
-	<li>fixed: replace thumb works with aliases</li>
-	<li>updated some localizations</li>
+	<li>possibilità di ordinare le miniature per nome o data</li>
+	<li>i nomi nel browser ora vengono ordinati per nome</li>
+	<li>la finestra delle miniature ora ruota automaticamente le immagini JPEG
+secondo i marcatori di orientazione che trova (ad es. dall'iPhone)</li>
+	<li>nuovo comando per applicare una rotazione JPEG senza perdita di qualità
+in accordo col marcatore di orientazione</li>
+	<li>nella modalità presentazione: aggiunto un nuovo comando per salvare
+l'orientazione attualmente visualizzata usando una rotazione JPEG</li>
+	<li>i comandi di rotazione JPEG ora vengono applicati relativamente
+all'orientazione visualizzata al momento</li>
+	<li>premendo '*' durante la presentazione ora resetta rotazione e
+ribaltamenti (oltre allo zoom)</li>
+	<li>aggiunta una preferenza nascosta per <em>non</em> ri-randomizzare all'avvio di un
+nuovo ciclo quando "Loop" and "Random" sono attivi: battere <tt>defaults write net.blyt.phoenixslides Slideshow:RerandomizeOnLoop -boolean NO</tt> in una finestra del Terminale</li>
+	<li>corretto errore per cui immagini molto scadenti potevano far bloccare il
+browser (ringrazio Luis Lozano)</li>
+	<li>correzione: linea bianca nel lato destro di alcune rotazioni di 180
+gradi</li>
+	<li>corretto errore per cui la presentazione si poteva bloccare se si
+trascinava qualcosa sull'icona di Phoenix Slides, poi si sceglieva di
+vedere una particolare "categoria", e infine si usciva da quella
+finestra (ad es. per un'altra app) e indietro di nuovo (ringrazio Doc
+O'Leary)</li>
+	<li>corretto errore per cui una jpeg rimaneva ribaltata nella presentazione
+dopo averla modificata</li>
+	<li>corretto errore per cui una rotazione nella presentazione veniva
+memorizzata incorrettamente dopo un ribaltamento</li>
+	<li>correzione: gli alias ora possono mostrare le informazioni EXIF durante
+le presentazioni</li>
+	<li>correzione: sostituisci miniatura funziona con gli alias</li>
+	<li>aggiornate alcune localizzazioni</li>
 </ul>
 
 31.08.2009 1.2.6
 <ul>
 	<li>funziona con Mac OS X 10.6 (Snow Leopard)</li>
-	<li>when slideshow is running, slideshow no longer switches screens</li>
+	<li>durante una presentazione, non cambia più lo schermo</li>
 	<li>quando funziona in modalità casuale E in modo ciclico, ricalcola l'ordine prima di ricominciare,</li>
 	<li>corretto il crash in caso di errate intestazioni EXIF ("field type mismatch")</li>
 	<li>migliorata la localizzazione in Italiano</li>
 </ul>
 
 23.03.2009 1.2.5 <ul> <li>eliminata la comparsa di
-una linea bianca nelle immagini rimpicciolite</li> <li>novit&agrave - possibilit&agrave di miniature
-pi&ugrave grandi</li> <li>novit&agrave - opzione nelle preferenze per consentire di scegliere se
-muovere i files o crearne degli alias</li> <li>novit&agrave - possibilit&agrave di capovolgere le immagini durante le presentazioni premendo il tasto'f'
-</li> <li>novit&agrave - aggiunta la combinazione &#8679;-spazio per
-mandare indietro</li> <li>novit&agrave - aggiunta la scelta del colore di sfondo delle
+una linea bianca nelle immagini rimpicciolite</li> <li>novit&agrave; - possibilit&agrave; di miniature
+pi&ugrave; grandi</li> <li>novit&agrave; - opzione nelle preferenze per consentire di scegliere se
+muovere i file o crearne degli alias</li> <li>novit&agrave; - possibilit&agrave; di capovolgere le immagini durante le presentazioni premendo il tasto'f'
+</li> <li>novit&agrave; - aggiunta la combinazione &#8679;-spazio per
+mandare indietro</li> <li>novit&agrave; - aggiunta la scelta del colore di sfondo delle
 miniature (agisce alla prossima apertura di una finestra)</li> <li>correzione - il trascinamento nel cestino ora rimuove anche la miniatura 
 (baco introdotto con la v. 1.2)</li> <li>corretto un baco nella lettura dei Commenti JPEG con
 caratteri a 8-bit</li> </ul>
@@ -288,9 +329,9 @@ Leopard)</li> </ul>
 ora corrisponde all'ultima foto vista</li> <li>Ora i file vengono ordinati per nome (come nel
 Finder)</li> <li>Le cartelle con nome "Thumbs" vengono saltate (per sfogliare meglio le librerie di
 iPhoto)</li> <li>correzione - il menu popup exif thumb ora sparire quando la finestra
-informarmazioni &egrave; collassata</li> <li>correzione - il fantasma dell'ultima miniatura non
+informazioni &egrave; collassata</li> <li>correzione - il fantasma dell'ultima miniatura non
 rimane pi&ugrave; quando si cancella un file</li> <li>correzione - le trasformazioni jpeg non
-provocano pi&ugrave; l'apparizione della barramenu/dock durante le presentazioni</li> <li>aggiunta
+provocano pi&ugrave; l'apparizione della barra menu/dock durante le presentazioni</li> <li>aggiunta
 la localizzazione in lingua Italiana </li> </ul>
 
 25.10.2006 1.2.2 <ul>
@@ -299,7 +340,7 @@ la localizzazione in lingua Italiana </li> </ul>
 rotationi JPEG ora resettano l'informazione orientazione, correggendo una incompatibilit&agrave; con
 Anteprima</li> <li>&quot;reset orientation tag&quot;, elimina/ricostruisce la miniatura EXIF</li>
 
-<li>le rotationi JPEG ruotano anche le miniature EXIF</li> <li>il click-sinistro fa andare avanti e
+<li>le rotazioni JPEG ruotano anche le miniature EXIF</li> <li>il click-sinistro fa andare avanti e
 click-destro indietro nella presentazione; un doppio-click arresta la presentazione</li> <li>la
 rotella di scorrimento pu&ograve; essere usata per navigare nella presentazione</li> <li>&#8984;-+/-
 ora possono far zoomare avanti/indietro nella presentazione</li> <li>il cursore manina appare quando
@@ -309,7 +350,7 @@ molto 'cool')</li> <li>colonne ridimensionabili nel browser cartelle </li> <li>s
 quando si esce dalla  presentazione con immagini in attesa di essere memorizzate in cache (reso
 inoltre volatile l'Indice in atto)</li> <li>correzione: i file jpeg con marcatori APP1 non-EXIF non
 provocano pi&ugrave; problemi nella selezione e nel mostrare informazioni</li> <li>correzione: le
-rotationi jpeg durante una presentazione non si aggiornavano se era stato scelto "no cambiare la
+rotazioni jpeg durante una presentazione non si aggiornavano se era stato scelto "non cambiare la
 data di modifica"</li> <li>correzione: anche ruotare e cestinare file nella finestra miniature ora
 fa aggiornare la presentazione</li> <li>aggiunta la localizzazione in lingua Francese</li> </ul>
 
@@ -319,18 +360,18 @@ avvia immediatamente la presentazione</li> <li>i settaggi dello zoom ora rimango
 chiusura</li> <li>possibilit&agrave; di preservare la data di modifica dei file quando si effettuano
 trasformazioni JPEG senza perdita di qualit&agrave;</li> <li>corrette le voci di menu erroneamente
 abilitate durante presentazione</li> <li>corretto errore di scroll con i numeri 2, 4, 6, 8 del
-tastierino numerico</li> <li>correzione drawing glitch when hiding presentazione cheat sheet</li>
+tastierino numerico</li> <li>correzione problema di tracciamento nascondendo le info della presentazione</li>
 <li>corretto errore per cui la presentazione appariva nel posto sbagliato con monitor multipli</li>
 <li>compilato per funzionare sia su architetture PPC che x86 (Intel)</li> <li>aggiunta la
 localizzazione in lingua Spagnola</li> </ul>
 
-03.08.2005 1.2 <ul> <li>zoom avanti/indietro in presentazione</li> <li>rotationi/trasformazioni JPEG
+03.08.2005 1.2 <ul> <li>zoom avanti/indietro in presentazione</li> <li>rotazioni/trasformazioni JPEG
  senza perdita di qualit&agrave; </li> <li>finestra informazioni con info EXIF, commenti JPEG,
 ecc.</li> <li>possibilit&agrave; di aprire finestre multiple di miniature</li>
-<li>possibilit&agrave; di assegnare immagini a grouppi/categorie temporanei </li> <li>presentazioni
+<li>possibilit&agrave; di assegnare immagini a gruppi/categorie temporanei </li> <li>presentazioni
 in ordine casuale</li> <li>caricamento leggermente pi&ugrave; veloce delle miniature non-JPEG</li>
 <li>controllo automatico della versione</li> <li>localizzazione in lingua Tedesca</li> <li>corretto
-- saltuario mancato salvataggio delle preferenze alla chisura</li> </ul>
+- saltuario mancato salvataggio delle preferenze alla chiusura</li> </ul>
 
 06.07.2005 1.1 <ul> <li>barra di stato (nome, dimensione, ingombro)</li> <li>miniature
 ridimensionabili </li> <li>GIF animate nella presentazione</li> <li>opzione nella presentazione per
@@ -379,7 +420,7 @@ rdf:resource="http://web.resource.org/cc/ShareAlike" /> </License>
 
 -->
 
-<p> Copyright 2005-2009 by Dominic Yu. Questo software &egrave; gratuito e a codice aperto (open
+<p> Copyright 2005-2014 by Dominic Yu. Questo software &egrave; gratuito e a codice aperto (open
 source). Pu&ograve; essere usato liberamente per scopi non commerciali. Eventuali opere derivate
 devono rendermi appropriato merito ed essere distribuite con lo stesso tipo di licenza, a meno che
 io non dia permesso scritto in altro senso.</p>

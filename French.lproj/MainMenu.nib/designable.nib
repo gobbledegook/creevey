@@ -402,7 +402,7 @@
 					</object>
 					<object class="NSMenuItem" id="824585005">
 						<reference key="NSMenu" ref="172240515"/>
-						<string key="NSTitle">Présentacion</string>
+						<string key="NSTitle">Présentation</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="1065749072"/>
@@ -410,7 +410,7 @@
 						<string key="NSAction">submenuAction:</string>
 						<int key="NSTag">200</int>
 						<object class="NSMenu" key="NSSubmenu" id="656990264">
-							<string key="NSTitle">Présentacion</string>
+							<string key="NSTitle">Présentation</string>
 							<object class="NSMutableArray" key="NSMenuItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
 								<object class="NSMenuItem" id="644820444">
@@ -445,7 +445,7 @@
 								</object>
 								<object class="NSMenuItem" id="791399308">
 									<reference key="NSMenu" ref="656990264"/>
-									<string key="NSTitle">Show File Names</string>
+									<string key="NSTitle">Afficher les titres</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="1065749072"/>
@@ -1232,7 +1232,7 @@
 												<object class="NSTextFieldCell" key="NSCell" id="127766434">
 													<int key="NSCellFlags">67239424</int>
 													<int key="NSCellFlags2">272629760</int>
-													<string key="NSContents">Thumbnail Background Color</string>
+													<string key="NSContents">Couleur de fond des icônes</string>
 													<reference key="NSSupport" ref="58168409"/>
 													<reference key="NSControlView" ref="313950124"/>
 													<reference key="NSBackgroundColor" ref="815131025"/>
@@ -1378,7 +1378,7 @@
 												<object class="NSTextFieldCell" key="NSCell" id="333209968">
 													<int key="NSCellFlags">67239424</int>
 													<int key="NSCellFlags2">272629760</int>
-													<string key="NSContents">Maximum Thumbnail Width</string>
+													<string key="NSContents">Largeur maximale des icônes</string>
 													<reference key="NSSupport" ref="58168409"/>
 													<reference key="NSControlView" ref="720049030"/>
 													<reference key="NSBackgroundColor" ref="815131025"/>

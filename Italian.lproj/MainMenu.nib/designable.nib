@@ -707,7 +707,7 @@
 								</object>
 								<object class="NSMenuItem" id="161431748">
 									<reference key="NSMenu" ref="26672670"/>
-									<string key="NSTitle">Prezentazione Ciclica</string>
+									<string key="NSTitle">Presentazione Ciclica</string>
 									<string key="NSKeyEquiv">l</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>

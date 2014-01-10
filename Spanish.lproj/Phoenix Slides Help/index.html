@@ -219,6 +219,29 @@ Tambi&eacute;n puede contribuir ofreciendo ayuda para la programaci&oacute;n o r
 
 
 <h2><a name="vers"></a>Historial de cambios </h2>
+2014.01.11 1.3
+<ul>
+	<li>thumbnails load immediately when you scroll to them</li>
+	<li>you can now change from random to sequential during a slideshow</li>
+	<li>code-signed to run with Gatekeeper on 10.7+</li>
+	<li>limit placed on number of thumbnails automatically loaded (This avoids app crashes. You can change this value to anything from 0 to something very large. The default is 3000. Type something like <tt>defaults write net.blyt.phoenixslides maxThumbsToLoad -int 8000</tt> in a Terminal window.)</li>
+	<li>hit option-left/up and option-right/down to jump to the previous/next sequential slide while in random mode</li>
+	<li>added visual indicator when looping a slideshow</li>
+	<li>now shows empty screen when removing last slide (instead of going backwards)</li>
+	<li>autorotate setting saved across launches</li>
+	<li>autorotate setting available in slideshows as well</li>
+	<li>disabled use of scrollwheel/scrolling to advance slideshows (this feature didn't play well with the Magic Mouse)</li>
+	<li>relative paths (not just file names) are shown at the bottom of the browser window</li>
+	<li>handles mixed-case file extensions (.JpEg)</li>
+	<li>JPEG menu items now correctly enabled even if first selected item is not a JPEG</li>
+	<li>fixed "show file names" menu item checkmark</li>
+	<li>fixed exception when mounting a new disk</li>
+	<li>fixed exception when user typed a dead key (e.g. option-e)</li>
+	<li>fixed erroneous "there is a new version" message when the server returns a bad HTTP status code</li>
+	<li>updated to exiftags 1.01</li>
+	<li>improved French and Italian localizations</li>
+</ul>
+
 2012.10.14 1.2.8
 <ul>
 	<li>info bar during slideshow is now hidden by default; showing/hiding of the info bar is now retained when quitting</li>
@@ -233,7 +256,7 @@ Tambi&eacute;n puede contribuir ofreciendo ayuda para la programaci&oacute;n o r
 	<li>new "Rotate by Tag" command to apply a lossless JPEG rotation according to the orientation tag</li>
 	<li>in slideshow mode: added a new command to save the currently displayed orientation using lossless JPEG rotation</li>
 	<li>JPEG rotation commands are now applied relative to the currently displayed orientation</li>
-	<li>hitting '*' during slideshow now resetns rotation and flip (in addition to zoom)</li>
+	<li>hitting '*' during slideshow now resets rotation and flip (in addition to zoom)</li>
 	<li>added hidden preference to <em>not</em> re-randomize at the start of a new loop when both "Loop" and "Random" are active: type <tt>defaults write net.blyt.phoenixslides Slideshow:RerandomizeOnLoop -boolean NO</tt> in a Terminal window</li>
 	<li>fixed bug where super-skinny images might crash the browser (thanks to Luis Lozano)</li>
 	<li>fixed: white line on the right side of some 180-degree rotations</li>
@@ -396,7 +419,7 @@ Este producto est&aacute; licenciado bajo una licencia de tipo <a rel="license" 
 -->
 
 <p>
-Copyright 2005-2007 by Dominic Yu. Este software es gratis y de c&oacute;digo abierto. Usted puede usarlo de forma gratuita para prop&oacute;sitos no comerciales. Los trabajos derivados deben dar cr&eacute;dito a mi y deben ser compartidos bajo la misma licencia, salvo que se obtenga permiso por escrito de mi que indique lo contrario.</p>
+Copyright 2005-2014 by Dominic Yu. Este software es gratis y de c&oacute;digo abierto. Usted puede usarlo de forma gratuita para prop&oacute;sitos no comerciales. Los trabajos derivados deben dar cr&eacute;dito a mi y deben ser compartidos bajo la misma licencia, salvo que se obtenga permiso por escrito de mi que indique lo contrario.</p>
 
 </body>
 </html>

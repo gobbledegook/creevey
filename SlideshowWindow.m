@@ -424,7 +424,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (currentIndex == [filenames count]) { // if the last image was deleted, show a blank screen
 		[catsFld setHidden:YES];
 		[infoFld setHidden:NO];
-		[infoFld setStringValue:@"End of slideshow (last file was deleted)"];
+		[infoFld setStringValue:NSLocalizedString(@"End of slideshow (last file was deleted)", @"")];
 		[infoFld sizeToFit];
 		[exifFld setString:@""];
 		[imgView setImage:nil];
