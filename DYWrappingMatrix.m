@@ -572,6 +572,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				if (newImage) {
 					[images replaceObjectAtIndex:i withObject:newImage];
 					img = newImage;
+					++numThumbsLoaded;
 				} else {
 					[requestedFilenames addObject:filename];
 				}
@@ -834,6 +835,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	if ([images objectAtIndex:i] != theImage) {
 		[images replaceObjectAtIndex:i withObject:theImage];
+		++numThumbsLoaded;
 		[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
 	}
 }
@@ -862,9 +864,16 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 }
 
+- (unsigned int)numThumbsLoaded {
+	return numThumbsLoaded;
+}
+
 #pragma mark add/delete images stuff
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
-	if (!theImage) theImage = loadingImage;
+	if (!theImage)
+		theImage = loadingImage;
+	else
+		++numThumbsLoaded;
 	[images addObject:theImage];
 	[filenames addObject:s];
 	numCells++;
@@ -879,6 +888,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[images removeAllObjects];
 	[filenames removeAllObjects];
 	[requestedFilenames removeAllObjects];
+	numThumbsLoaded = 0;
 	// ** [self resize:nil];
 	//[self setNeedsDisplay:YES]; // ** I suppose should call on main thread too
 	[self performSelectorOnMainThread:@selector(resize:)
@@ -896,7 +906,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 */
 - (void)removeImageAtIndex:(unsigned int)i {
-	//** check if i is in range?
+	// check if i is in range
+	if (i >= [images count]) return;
+	// adjust numLoaded if necessary
+	if ([images objectAtIndex:i] != loadingImage) {
+		--numThumbsLoaded;
+	}
 	numCells--;
 	[images removeObjectAtIndex:i];
 	[requestedFilenames removeObject:[filenames objectAtIndex:i]];

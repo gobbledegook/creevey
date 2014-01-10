@@ -38,6 +38,7 @@
 	NSMutableArray *images;
 	NSMutableArray *filenames;
 	NSMutableSet *requestedFilenames; // keep track of which files we've requested images for
+	volatile unsigned int numThumbsLoaded;
 	float cellWidth;
 	unsigned int numCells;
 	NSMutableIndexSet *selectedIndexes;
@@ -86,6 +87,7 @@
 - (void)setAutoRotate:(BOOL)b;
 
 - (void)updateStatusString; // ** rename me
+- (unsigned int)numThumbsLoaded;
 - (void)setDelegate:(id)d;
 
 @end

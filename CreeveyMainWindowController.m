@@ -758,7 +758,7 @@
 		NSSize cellSize = [DYWrappingMatrix maxCellSize];
 		NSImage *thumb = [thumbsCache imageForKey:theFile];
 		if (!thumb) {
-			[self setStatusString:[NSString stringWithFormat:loadingMsg, [[d objectForKey:@"index"] unsignedIntValue]+1, [imgMatrix numCells]]];
+			[self setStatusString:[NSString stringWithFormat:loadingMsg, [imgMatrix numThumbsLoaded]+1, [imgMatrix numCells]]];
 			if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
 				DYImageInfo *result;
 				result = [[DYImageInfo alloc] initWithPath:theFile];
