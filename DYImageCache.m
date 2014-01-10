@@ -110,8 +110,12 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	
 	NSSize maxSize = boundingSize;
 	NSImage *orig, *result = nil;
+
+	// use this if you're targeting 10.6 or later
+	orig = [[NSImage alloc] initWithDataIgnoringOrientation:[NSData dataWithContentsOfFile:ResolveAliasToPath(imgInfo->path)]];
+
 	// calc pixelSize
-	orig = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo->path)];
+	//orig = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo->path)];
 	   /* You MUST either setDataRetained:YES OR setCacheMode:NSImageCacheNever.
 		* Once the image is composited, NSImage will throw away the original
 		* data and save only a cached (read: reduced) version. It seems that
