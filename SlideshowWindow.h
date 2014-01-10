@@ -14,6 +14,7 @@
 #import <Cocoa/Cocoa.h>
 #import "DYImageView.h"
 #import "DYImageCache.h"
+@class DYRandomizableArray;
 
 @interface SlideshowWindow : NSWindow
 {
@@ -28,7 +29,7 @@
 	NSTimeInterval timerIntvl; BOOL timerPaused;
 	NSTimer *autoTimer;
 	
-	NSMutableArray *filenames;
+	DYRandomizableArray *filenames;
 	NSMutableDictionary *rotations, *zooms, *flips;
 	
 	NSString *basePath;
@@ -37,8 +38,9 @@
 	int lastIndex; // for outside access to last slide shown
 	
 	NSTextView *helpFld;
+	NSImageView *loopImageView;
 	
-	BOOL loopMode, randomMode, rerandomizeOnLoop;
+	BOOL loopMode, randomMode, rerandomizeOnLoop, autoRotate;
 	unsigned char keyIsRepeating;
 	
 	BOOL mouseDragged;
@@ -58,6 +60,7 @@
 
 - (int)currentIndex;
 - (NSString *)currentFile;
+- (NSString *)basePath;
 - (unsigned short)currentOrientation; // returns an EXIF orientation
 - (unsigned short)currentFileExifOrientation;
 - (void)displayImage; // to reload current file, assuming the mod date is different (oops - don't use this anymore)
@@ -69,6 +72,8 @@
 - (void)unsetFilename:(NSString *)s; // use this if something's been deleted
 
 - (void)setRerandomizeOnLoop:(BOOL)b;
+- (void)setAutoRotate:(BOOL)b;
+- (BOOL)autoRotate;
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;

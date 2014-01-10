@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 45;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -41,8 +41,11 @@
 		F25EA2840867329C003728C2 /* epeg_memfile.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA2790867329C003728C2 /* epeg_memfile.c */; };
 		F25EA2850867329C003728C2 /* epeg_main.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA27A0867329C003728C2 /* epeg_main.c */; };
 		F25EA2860867329C003728C2 /* Epeg.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA27B0867329C003728C2 /* Epeg.h */; };
+		F261A049182B5ED4001D9336 /* loading.png in Resources */ = {isa = PBXBuildFile; fileRef = F261A048182B5ED4001D9336 /* loading.png */; };
 		F262D802089AE58200CD3701 /* DYVersChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = F262D800089AE58200CD3701 /* DYVersChecker.h */; };
 		F262D803089AE58200CD3701 /* DYVersChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = F262D801089AE58200CD3701 /* DYVersChecker.m */; };
+		F2711712182AADE6008F97E1 /* DYRandomizableArray.h in Headers */ = {isa = PBXBuildFile; fileRef = F2711710182AADE6008F97E1 /* DYRandomizableArray.h */; };
+		F2711713182AADE6008F97E1 /* DYRandomizableArray.m in Sources */ = {isa = PBXBuildFile; fileRef = F2711711182AADE6008F97E1 /* DYRandomizableArray.m */; };
 		F28C1E1D0A86723000682516 /* general.gif in Resources */ = {isa = PBXBuildFile; fileRef = F28C1E1C0A86723000682516 /* general.gif */; };
 		F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */; };
 		F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */; };
@@ -54,6 +57,7 @@
 		F2968B71081183860082207C /* HorribleNSBrowserFix.m in Sources */ = {isa = PBXBuildFile; fileRef = F2968B70081183860082207C /* HorribleNSBrowserFix.m */; };
 		F299B06207FDF5F7006028C1 /* DYImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = F299B06007FDF5F7006028C1 /* DYImageView.h */; };
 		F299B06307FDF5F7006028C1 /* DYImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F299B06107FDF5F7006028C1 /* DYImageView.m */; };
+		F29C7B591825990500B7E6E6 /* UKFileWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = F29C7B581825990500B7E6E6 /* UKFileWatcher.m */; };
 		F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */ = {isa = PBXBuildFile; fileRef = F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */; };
 		F29CD2370800C372000B0F91 /* DYCarbonGoodies.m in Sources */ = {isa = PBXBuildFile; fileRef = F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */; };
 		F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */ = {isa = PBXBuildFile; fileRef = F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */; };
@@ -169,10 +173,13 @@
 		F25EA2790867329C003728C2 /* epeg_memfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_memfile.c; path = Epeg/epeg_memfile.c; sourceTree = "<group>"; };
 		F25EA27A0867329C003728C2 /* epeg_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_main.c; path = Epeg/epeg_main.c; sourceTree = "<group>"; };
 		F25EA27B0867329C003728C2 /* Epeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Epeg.h; path = Epeg/Epeg.h; sourceTree = "<group>"; };
+		F261A048182B5ED4001D9336 /* loading.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = loading.png; sourceTree = "<group>"; };
 		F26268BA08987A500045DEFC /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh_TW; path = zh_TW.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F262D800089AE58200CD3701 /* DYVersChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYVersChecker.h; sourceTree = "<group>"; };
 		F262D801089AE58200CD3701 /* DYVersChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYVersChecker.m; sourceTree = "<group>"; };
 		F26F29EF0AEF271D00F60799 /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/EXIF.strings; sourceTree = "<group>"; };
+		F2711710182AADE6008F97E1 /* DYRandomizableArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYRandomizableArray.h; sourceTree = "<group>"; };
+		F2711711182AADE6008F97E1 /* DYRandomizableArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYRandomizableArray.m; sourceTree = "<group>"; };
 		F28C1E1C0A86723000682516 /* general.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = general.gif; sourceTree = "<group>"; };
 		F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSIndexSetSymDiffExtension.h; sourceTree = "<group>"; };
 		F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSIndexSetSymDiffExtension.m; sourceTree = "<group>"; };
@@ -186,6 +193,7 @@
 		F2968B70081183860082207C /* HorribleNSBrowserFix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HorribleNSBrowserFix.m; sourceTree = "<group>"; };
 		F299B06007FDF5F7006028C1 /* DYImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageView.h; sourceTree = "<group>"; };
 		F299B06107FDF5F7006028C1 /* DYImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageView.m; sourceTree = "<group>"; };
+		F29C7B581825990500B7E6E6 /* UKFileWatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UKFileWatcher.m; path = UKkqueue/UKFileWatcher.m; sourceTree = "<group>"; };
 		F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYCarbonGoodies.h; sourceTree = "<group>"; };
 		F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYCarbonGoodies.m; sourceTree = "<group>"; };
 		F2AC5BEB0819F61700E5E5E6 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = zh_TW; path = zh_TW.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
@@ -336,6 +344,8 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				F2711710182AADE6008F97E1 /* DYRandomizableArray.h */,
+				F2711711182AADE6008F97E1 /* DYRandomizableArray.m */,
 				F254E0E40BD30A6A0053F673 /* FinderCompare.h */,
 				F254E0E00BD30A420053F673 /* FinderCompare.m */,
 				F2FE4FA808842F2600550533 /* libjpeg */,
@@ -373,6 +383,7 @@
 				F2029D2D0820B68D00CE44FA /* phxslides.icns */,
 				F29447970820946000B932C1 /* Credits.html */,
 				F2C940B508200F6F0019D0D3 /* multipledocs.gif */,
+				F261A048182B5ED4001D9336 /* loading.png */,
 				F29447A60820970100B932C1 /* logo.tiff */,
 				F21AD0D30892B49F0054EA35 /* Phoenix Slides Help */,
 				F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */,
@@ -405,6 +416,7 @@
 				F2FE4F9408842EBE00550533 /* UKKQueue.m */,
 				F2FE4F9508842EBE00550533 /* UKKQueue.h */,
 				F2FE4F9608842EBE00550533 /* UKFileWatcher.h */,
+				F29C7B581825990500B7E6E6 /* UKFileWatcher.m */,
 			);
 			name = kqueue;
 			sourceTree = "<group>";
@@ -501,6 +513,7 @@
 				F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */,
 				F28F0C0B07F5E642009BF709 /* DYWrappingMatrix.h in Headers */,
 				F299B06207FDF5F7006028C1 /* DYImageView.h in Headers */,
+				F2711712182AADE6008F97E1 /* DYRandomizableArray.h in Headers */,
 				F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */,
 				F21F1A7A08079DF100A77552 /* NSArrayIndexSetExtension.h in Headers */,
 				F2F54190080A3846008AE60F /* DYCreeveyBrowser.h in Headers */,
@@ -603,6 +616,7 @@
 				F29447A70820970100B932C1 /* logo.tiff in Resources */,
 				F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */,
 				F254E82908917BA600DE9C38 /* DYJpegtranPanel.nib in Resources */,
+				F261A049182B5ED4001D9336 /* loading.png in Resources */,
 				F254E9940891A7FB00DE9C38 /* EXIF.strings in Resources */,
 				F28C1E1D0A86723000682516 /* general.gif in Resources */,
 				F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */,
@@ -637,6 +651,7 @@
 				F2FE4FCA08842F5500550533 /* DYJpegtran.m in Sources */,
 				F2FE4FCC08842F5500550533 /* transupp.c in Sources */,
 				F2FE507308848C9400550533 /* leica.c in Sources */,
+				F29C7B591825990500B7E6E6 /* UKFileWatcher.m in Sources */,
 				F2FE507508848C9400550533 /* minolta.c in Sources */,
 				F2FE507608848C9400550533 /* nikon.c in Sources */,
 				F2FE507708848C9400550533 /* sigma.c in Sources */,
@@ -647,6 +662,7 @@
 				F2FE507E08848C9400550533 /* fuji.c in Sources */,
 				F2FE508308848C9400550533 /* exifgps.c in Sources */,
 				F2FE508408848C9400550533 /* canon.c in Sources */,
+				F2711713182AADE6008F97E1 /* DYRandomizableArray.m in Sources */,
 				F2FE508508848C9400550533 /* exifutil.c in Sources */,
 				F2FE508608848C9400550533 /* DYExiftags.m in Sources */,
 				F2FE508808848C9400550533 /* sanyo.c in Sources */,
@@ -796,7 +812,7 @@
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "Phoenix Slides";
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SDKROOT = macosx10.4;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -838,7 +854,7 @@
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "Phoenix Slides";
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SDKROOT = macosx10.4;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -890,7 +906,7 @@
 				GCC_VERSION = 4.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.6.sdk";
+				SDKROOT = macosx10.6;
 				ZERO_LINK = YES;
 			};
 			name = Development;
@@ -898,10 +914,9 @@
 		F25EA24208672CB4003728C2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "x86_64 i386 ppc";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.6.sdk";
+				SDKROOT = macosx10.6;
 			};
 			name = Deployment;
 		};
@@ -909,7 +924,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.6.sdk";
+				SDKROOT = macosx10.6;
 			};
 			name = Default;
 		};

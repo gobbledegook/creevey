@@ -1,7 +1,7 @@
 ﻿Phoenix Slides source code README
 by Dominic Yu
 created 2005 June 8
-modified 2012 October
+modified 2013 December
 
 creevey was the code name for Phoenix Slides. Colin Creevey is the
 kid in Harry Potter who keeps taking pictures.
@@ -50,6 +50,28 @@ Enjoy!
 
 Version History
 ---------------
+1.3
+---
+thumbnails load immediately when you scroll to them
+code-signed to run with Gatekeeper on 10.7+
+limit placed on number of thumbnails automatically loaded (This avoids app crashes. You can change this value to anything from 0 to something very large. The default is 3000. Type something like "defaults write net.blyt.phoenixslides maxThumbsToLoad -int 8000" in a Terminal window.)
+you can now change from random to sequential during a slideshow
+hit option-left/up and option-right/down to jump to the previous/next sequential slide while in random mode
+added visual indicator when looping a slideshow
+now shows empty screen when removing last slide (instead of going backwards)
+autorotate setting saved across launches
+autorotate setting available in slideshows as well
+disabled use of scrollwheel/scrolling to advance slideshows (this feature didn't play well with the Magic Mouse)
+relative paths (not just file names) are shown at the bottom of the browser window
+handles mixed-case file extensions (.JpEg)
+JPEG menu items now correctly enabled even if first selected item is not a JPEG
+fixed "show file names" menu item checkmark
+fixed exception when mounting a new disk
+fixed exception when user typed a dead key (e.g. option-e)
+fixed erroneous "there is a new version" message when the server returns a bad HTTP status code
+updated to exiftags 1.01
+improved/fixed French, Italian, and Spanish localizations
+
 1.2.8
 -----
 make universal binary again (you have to compile with XCode 3.2.6)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.36 2004/12/23 20:38:52 ejohnst Exp $
+ * $Id: exif.h,v 1.38 2007/12/16 03:44:32 ejohnst Exp $
  */
 
 /*
@@ -48,13 +48,18 @@
 
 
 /*
- * XXX Only checking for Solaris & Windows now.  Other platforms will
+ * XXX Only checking for Solaris, HP, & Windows now.  Other platforms will
  * probably need something similar if they don't have u_int16_t or u_int32_t.
  */
 
 #if (defined(sun) && (defined(__svr4__) || defined(__SVR4)))
 typedef unsigned short u_int16_t;
 typedef unsigned int u_int32_t;
+#endif
+
+#if (defined(__hpux))
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
 #endif
 
 #ifdef WIN32
@@ -219,6 +224,7 @@ struct tiffmeta {
 	enum byteorder order;	/* Endianness of IFD. */
 	unsigned char *btiff;	/* Beginning of TIFF (offset base). */
 	unsigned char *etiff;	/* End of TIFF. */
+	void *ifdoffs;		/* List of IFD offsets (internal only). */
 };
 
 

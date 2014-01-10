@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2003, Javier Crespo <jcrespoc@dsland.org>
- * Copyright (c) 2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2003-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.28 2004/12/23 20:38:52 ejohnst Exp $
+ * $Id: minolta.c,v 1.29 2007/12/15 21:01:23 ejohnst Exp $
  *
  */ 
 
@@ -664,7 +664,8 @@ minolta_naval(struct exifprop *props, struct exiftag *tags, int16_t tag)
 	prop->str = NULL;
 	exifstralloc(&prop->str, strlen(na) + 1);
 	strcpy(prop->str, na);
-	prop->lvl = ED_BAD;
+	if (!(prop->lvl & ED_UNK))
+		prop->lvl = ED_VRB;
 }
 
 

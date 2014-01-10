@@ -131,7 +131,7 @@
 	
     sourceDragMask = [sender draggingSourceOperationMask];
 	pboard = [sender draggingPasteboard];
-	NSLog(@"%g", NSAppKitVersionNumber);
+	//NSLog(@"%g", NSAppKitVersionNumber);
     if ( [[pboard types] containsObject:NSFilenamesPboardType] ) {
         if ((sourceDragMask & NSDragOperationGeneric)
 			&& floor(NSAppKitVersionNumber) <= 949) { // disable the grey box for 10.6, since dragging doesn't work in the nsbrowser anyway

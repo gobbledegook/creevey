@@ -15,6 +15,7 @@
 
 @interface DYVersChecker : NSObject {
 	BOOL notify;
+	int responseCode;
 	NSMutableData *receivedData;
 }
 - initWithNotify:(BOOL)newNotify; // returns nil if can't open connection

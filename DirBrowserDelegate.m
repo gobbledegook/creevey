@@ -69,8 +69,8 @@
 
 -(void) kqueue: (UKKQueue*)q receivedNotification: (NSString*)nm forFile: (NSString*)fpath
 {
-	NSLog(@"got %@ for %@", nm, fpath);
-	if ([nm isEqualToString:UKKQueueFileRenamedNotification]) {
+	//NSLog(@"got %@ for %@", nm, fpath);
+	if ([nm isEqualToString:UKFileWatcherRenameNotification]) {
 		[kq removePathFromQueue:fpath];
 		
 	}
@@ -84,6 +84,7 @@
 	[_b loadColumnZero];
 	NSString *newPath = AliasToPath(currAlias);
 	// if no newPath (files deleted?) fall back to currPath
+	browserInited = NO;
 	[self setPath:newPath ? newPath : currPath]; // don't actually set currPath here
 												 // wait for browserWillSendAction to do it
 	[_b sendAction];

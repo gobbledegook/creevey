@@ -359,7 +359,7 @@
 								</object>
 								<object class="NSMenuItem" id="863268556">
 									<reference key="NSMenu" ref="958610340"/>
-									<string key="NSTitle">Elimiar</string>
+									<string key="NSTitle">Eliminar</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
