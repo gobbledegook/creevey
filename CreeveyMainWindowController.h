@@ -51,6 +51,7 @@
 - (BOOL)filenamesDone;
 - (short int)sortOrder;
 - (void)setSortOrder:(short int)n;
+- (void)changeSortOrder:(short int)n;
 - (DYWrappingMatrix *)imageMatrix;
 
 //other

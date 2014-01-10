@@ -92,6 +92,9 @@
 - (short int)sortOrder {	return sortOrder; }
 - (void)setSortOrder:(short int)n {
 	sortOrder = n;
+}
+- (void)changeSortOrder:(short int)n {
+	sortOrder = n;
 	[NSThread detachNewThreadSelector:@selector(loadImages:)
 							 toTarget:self
 						   withObject:nil];

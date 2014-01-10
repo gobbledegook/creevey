@@ -134,6 +134,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[dict setObject:[NSKeyedArchiver archivedDataWithRootObject:[NSColor blackColor]] forKey:@"slideshowBgColor"];
 	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"exifThumbnailShow"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"showFilenames"];
+	[dict setObject:[NSNumber numberWithInt:1] forKey:@"sortBy"]; // sort by filename, ascending
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"Slideshow:RerandomizeOnLoop"];
 	[dict setObject:[NSNumber numberWithInt:3000] forKey:@"maxThumbsToLoad"];
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoRotateByOrientationTag"];
@@ -626,6 +627,14 @@ enum {
 	}
 }
 
+- (void)updateMenuItemsForSorting:(int)sortNum {
+	int sortType = abs(sortNum);
+	int sortAscending = sortNum > 0;
+	NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
+	[[m itemWithTag:sortType == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+	[[m itemWithTag:200+sortType] setState:sortAscending ? NSOnState : NSMixedState];
+}
+
 - (IBAction)sortThumbnails:(id)sender {
 	short int newSort, oldSort;
 	oldSort = [frontWindow sortOrder];
@@ -633,14 +642,13 @@ enum {
 	
 	if (newSort == abs(oldSort)) {
 		newSort = -oldSort; // reverse the sort if user selects it again
-		[sender setState:newSort < 0 ? NSMixedState : NSOnState];
 	} else {
-		[sender setState:NSOnState];
-
-		NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
-		[[m itemWithTag:newSort == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+		if (newSort == 2) newSort = -2; // default to reverse sort if sorting by date
 	}
-	[frontWindow setSortOrder:newSort];
+	[self updateMenuItemsForSorting:newSort];
+	[frontWindow changeSortOrder:newSort];
+	if ([creeveyWindows count] == 1) // save as default if this is the only window
+		[[NSUserDefaults standardUserDefaults] setInteger:newSort forKey:@"sortBy"];
 }
 
 - (IBAction)doShowFilenames:(id)sender {
@@ -850,16 +858,16 @@ enum {
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowClosed:) name:NSWindowWillCloseNotification object:[wc window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
 	[wc showWindow:nil]; // or override wdidload
+	short int sortOrder = [[NSUserDefaults standardUserDefaults] integerForKey:@"sortBy"];
+	[wc setSortOrder:sortOrder];
 	[[wc imageMatrix] setShowFilenames:[[NSUserDefaults standardUserDefaults] boolForKey:@"showFilenames"]];
 	[[wc imageMatrix] setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
 	if (sender)
 		[wc setDefaultPath];
 
 	// make sure menu items are checked properly (code copied from windowChanged:)
-	short int sortOrder = [wc sortOrder];
 	NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
-	[[m itemWithTag:200+abs(sortOrder)] setState:sortOrder > 0 ? NSOnState : NSMixedState];
-	[[m itemWithTag:abs(sortOrder) == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+	[self updateMenuItemsForSorting:sortOrder];
 	[[m itemWithTag:SHOW_FILE_NAMES] setState:[[wc imageMatrix] showFilenames] ? NSOnState : NSOffState];
 	[[m itemWithTag:AUTO_ROTATE] setState:[[wc imageMatrix] autoRotate] ? NSOnState : NSOffState];
 }
@@ -885,8 +893,7 @@ enum {
 	
 	short int sortOrder = [frontWindow sortOrder];
 	NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
-	[[m itemWithTag:200+abs(sortOrder)] setState:sortOrder > 0 ? NSOnState : NSMixedState];
-	[[m itemWithTag:abs(sortOrder) == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
+	[self updateMenuItemsForSorting:sortOrder];
 	[[m itemWithTag:SHOW_FILE_NAMES] setState:[[frontWindow imageMatrix] showFilenames] ? NSOnState : NSOffState];
 	[[m itemWithTag:AUTO_ROTATE] setState:[[frontWindow imageMatrix] autoRotate] ? NSOnState : NSOffState];
 }
