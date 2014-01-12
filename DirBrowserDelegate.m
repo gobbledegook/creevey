@@ -48,9 +48,6 @@
     if (self = [super init]) {
 		cols = [[NSMutableArray alloc] init];
 		colsInternal = [[NSMutableArray alloc] init];
-		hidden = floor(NSAppKitVersionNumber) <= 743
-			? [[[NSString stringWithContentsOfFile:@"/.hidden"] componentsSeparatedByString:@"\n"] retain]
-			: [[NSArray alloc] init]; // no .hidden in 10.4
 		
 		kq = [[UKKQueue alloc] init];
 		[kq addPathToQueue:BROWSER_ROOT notifyingAbout:NOTE_WRITE];
@@ -64,7 +61,6 @@
 	[kq release];
 	[cols release];
 	[colsInternal release];
-	[hidden release];
 	[rootVolumeName release];
 	[currPath release];
 	DisposeHandle((Handle)currAlias);
@@ -184,8 +180,6 @@
 			if ([obj characterAtIndex:0] == '.') continue; // dot-files
 			if (n==1 && [fullpath isEqualToString:@"/Volumes"])
 				continue; // always skip /Volumes
-			if (n==1 && [hidden containsObject:obj])
-				continue;
 			if (FileIsInvisible(fullpath)) {
 				// if trying to browse to a specific directory, show it even if it's invisible
 				if (nextColumn && [obj isEqualToString:nextColumn]) {

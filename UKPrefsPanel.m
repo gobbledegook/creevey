@@ -130,13 +130,7 @@
 	[self mapTabsToToolbar];
 	
 	// remove the toolbar button! -DY 2006.08.06
-	if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_3) {
-		/* On a 10.3 - 10.3.x system */
-		[[[tabView window] standardWindowButton:NSWindowToolbarButton] setHidden:YES];
-	} else {
-		/* Tiger or later system */
-		[[tabView window] setShowsToolbarButton:NO];
-	}
+	[[tabView window] setShowsToolbarButton:NO];
 	// and make sure it's tabless -DY
 	[tabView setTabViewType:NSNoTabsBezelBorder];
 	//[tabView setDrawsBackground:NO];

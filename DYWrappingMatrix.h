@@ -38,9 +38,9 @@
 	NSMutableArray *images;
 	NSMutableArray *filenames;
 	NSMutableSet *requestedFilenames; // keep track of which files we've requested images for
-	volatile unsigned int numThumbsLoaded;
+	volatile NSUInteger numThumbsLoaded;
 	float cellWidth;
-	unsigned int numCells;
+	NSUInteger numCells;
 	NSMutableIndexSet *selectedIndexes;
 	
 	BOOL dragEntered;
@@ -87,7 +87,7 @@
 - (void)setAutoRotate:(BOOL)b;
 
 - (void)updateStatusString; // ** rename me
-- (unsigned int)numThumbsLoaded;
+- (NSUInteger)numThumbsLoaded;
 - (void)setDelegate:(id)d;
 
 @end
@@ -96,6 +96,6 @@
 - (IBAction)moveToTrash:(id)sender; // dragging to trashcan will call this
 - (IBAction)moveElsewhere:(id)sender; // moving a file to the Finder will call this
 - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)s;
-- (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(unsigned int)i;
+- (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i;
 @end
 

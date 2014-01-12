@@ -10,13 +10,11 @@
 #import "CreeveyMainWindowController.h"
 #import "EpegWrapper.h"
 #import "DYCarbonGoodies.h"
-#import "NSArrayIndexSetExtension.h"
 #import "DirBrowserDelegate.h"
 #import "NSStringDYBasePathExtension.h"
 
 #import "CreeveyController.h"
 #import "DYImageCache.h"
-#import "RBSplitView.h"
 #import "DYWrappingMatrix.h"
 #import "FinderCompare.h"
 
@@ -42,8 +40,6 @@
 @end
 
 @implementation CreeveyMainWindowController
-
-+(void)initialize { [RBSplitView class]; } // force linker
 
 - (id)initWithWindowNibName:(NSString *)windowNibName {
 	if (self = [super initWithWindowNibName:windowNibName]) {
@@ -208,14 +204,14 @@
 		}
 	}
 	if (!thumb) thumb = [NSImage imageNamed:@"brokendoc.tif"];
-	unsigned int mtrxIdx = [[imgMatrix filenames] indexOfObject:s];
+	NSUInteger mtrxIdx = [[imgMatrix filenames] indexOfObject:s];
 	if (mtrxIdx != NSNotFound)
 		[imgMatrix setImage:thumb forIndex:mtrxIdx];
 }
 	
 - (void)fileWasDeleted:(NSString *)s {
 	if (![self pathIsVisible:s]) return;
-	unsigned mtrxIdx, i = [filenames indexOfObject:s];
+	NSUInteger mtrxIdx, i = [filenames indexOfObject:s];
 	// ** linear search; should we make faster?
 	if (i != NSNotFound) {
 		stopCaching = YES;
@@ -278,8 +274,8 @@
 	}
 	stopCaching = NO;
 	
-	unsigned int i = 0;
-	unsigned int numFiles;
+	NSUInteger i = 0;
+	NSUInteger numFiles;
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSString *origPath, *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
 		// pull this function call out of the loop
@@ -318,8 +314,8 @@
 			{
 				[filenames addObject:aPath];
 				if (++i % 100 == 0)
-					[self setStatusString:[NSString stringWithFormat:@"%@ (%i)",
-						loadingMsg, i]];
+					[self setStatusString:[NSString stringWithFormat:@"%@ (%lu)",
+						loadingMsg, (unsigned long)i]];
 			}
 			// NSFileTypeForHFSTypeCode([[atts objectForKey:NSFileHFSCreatorCode] unsignedLongValue]),
 			if (stopCaching == YES) {
@@ -414,7 +410,7 @@
 				[imageCacheQueueLock lock];
 				NSMutableDictionary *d = [[NSMutableDictionary alloc] initWithCapacity:3];
 				[d setObject:origPath forKey:@"filename"];
-				[d setObject:[NSNumber numberWithUnsignedInt:i] forKey:@"index"];
+				[d setObject:[NSNumber numberWithUnsignedInteger:i] forKey:@"index"];
 				[secondaryImageCacheQueue addObject:[d autorelease]];
 				[imageCacheQueueLock unlockWithCondition:1];
 			}
@@ -560,12 +556,6 @@
 	//pass nil to mean continue where we left off
 }
 
-
-#pragma mark splitview delegate methods
-- (void)splitView:(RBSplitView*)sender wasResizedFrom:(float)oldDimension to:(float)newDimension {
-	[sender adjustSubviewsExcepting:[sender subviewAtPosition:0]];
-}
-
 - (void)updateExifInfo:(id)sender {
 	NSTextView *exifTextView = [[NSApp delegate] exifTextView];
 	NSView *mainView = [[exifTextView window] contentView];
@@ -649,14 +639,14 @@
 	 [self updateExifInfo];
 }
 
-- (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(unsigned int)i {
+- (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i {
 	DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
 	NSImage *thumb = [thumbsCache imageForKey:filename];
 	if (thumb) return thumb;
 	[imageCacheQueueLock lock];
 	NSMutableDictionary *d = [[NSMutableDictionary alloc] initWithCapacity:3];
 	[d setObject:filename forKey:@"filename"];
-	[d setObject:[NSNumber numberWithUnsignedInt:i] forKey:@"index"];
+	[d setObject:[NSNumber numberWithUnsignedInteger:i] forKey:@"index"];
 	[imageCacheQueue insertObject:[d autorelease] atIndex:0];
 	[imageCacheQueueLock unlockWithCondition:1];
 	return nil;

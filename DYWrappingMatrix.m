@@ -6,7 +6,6 @@
 //California 94305, USA.
 
 #import "DYWrappingMatrix.h"
-#import "NSArrayIndexSetExtension.h"
 #import "NSIndexSetSymDiffExtension.h"
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
@@ -161,7 +160,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
         return NO;
  	[pboard declareTypes:[NSArray arrayWithObject:NSFilenamesPboardType]
 				   owner:nil];
-	return [pboard setPropertyList:[filenames subarrayWithIndexSet:selectedIndexes]
+	return [pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
 						   forType:NSFilenamesPboardType];
 }
 
@@ -296,7 +295,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 										   x+area_w-x2,r.size.height)]; // right
 }
 
-- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal {
+- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal {
 	if (isLocal) return NSDragOperationNone;
 	unsigned int o = NSDragOperationGeneric | NSDragOperationDelete | NSDragOperationCopy;
 	if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYWrappingMatrixAllowMove"])
@@ -354,7 +353,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[[self window] makeFirstResponder:self];
 	BOOL keepOn = YES;
 	char doDrag = 0;
-	int cellNum, a, b, i;
+	NSUInteger cellNum, a, b, i;
 	NSRange draggedRange;
 	NSMutableIndexSet *oldSelection = [selectedIndexes mutableCopy];
 	NSMutableIndexSet *lastIterationSelection = [oldSelection mutableCopy];
@@ -447,7 +446,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
 		[pboard declareTypes:[NSArray arrayWithObject:NSFilenamesPboardType]
 					   owner:nil];
-		[pboard setPropertyList:[filenames subarrayWithIndexSet:selectedIndexes]
+		[pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
 						forType:NSFilenamesPboardType];
 		//loc, img
 		NSImage *dragImg, *transparentImg;
@@ -511,31 +510,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self setNeedsDisplay:YES];
 }
 
-// needsToDrawRect: is broken in Panther (10.3)
-// see TN2107
-// purportedly fixed in 10.4
-- (BOOL)needsToDrawRect:(NSRect)rect rectListBounds:(NSRect)rectListBounds
-{
-    const NSRect *rectList;
-    int count;
-    int i;
-    
-    if (!NSIntersectsRect(rect, rectListBounds)) {
-        return NO;
-    }
-    [self getRectsBeingDrawn:&rectList count:&count];
-    if (count == 1) {
-        return YES;
-    } else {
-        for (i = 0; i < count; i++) {
-            if (NSIntersectsRect(rect, rectList[i])) {
-                return YES;
-            }
-        }
-        return NO;
-    }
-}
-
 - (void)drawRect:(NSRect)rect {
 	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
 	NSImageInterpolation oldInterp = [cg imageInterpolation];
@@ -554,7 +528,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		row = i/numCols;
 		col = i%numCols;
 		areaRect.origin = NSMakePoint(area_w*col, area_h*row);
-		if (![self needsToDrawRect:areaRect rectListBounds:rect]) continue; // 10.3
+		if (![self needsToDrawRect:areaRect]) continue;
 		// color the selection
 		if ([selectedIndexes containsIndex:i]) {
 			[([myWindow firstResponder] == self && [myWindow isKeyWindow]
@@ -585,9 +559,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			textCellRect.origin.y = areaRect.origin.y + area_h - textHeight - VERTPADDING/2;
 		}
 		cellRect = [self imageRectForIndex:i];
-		if (![self needsToDrawRect:cellRect	rectListBounds:rect] &&
+		if (![self needsToDrawRect:cellRect] &&
 			(textHeight == 0
-			 || ![self needsToDrawRect:textCellRect	rectListBounds:rect])) {
+			 || ![self needsToDrawRect:textCellRect])) {
 			//NSLog(@"skipped cell %i", i);
 			continue;
 		}
@@ -775,7 +749,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (NSArray *)selectedFilenames {
-	return [filenames subarrayWithIndexSet:selectedIndexes];
+	return [filenames objectsAtIndexes:selectedIndexes];
 }
 
 - (NSString *)firstSelectedFilename {
@@ -826,7 +800,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)setImageWithFileInfo:(NSDictionary *)d {
 	NSString *s = [d objectForKey:@"filename"];
 	[requestedFilenames removeObject:s];
-	unsigned int i = [[d objectForKey:@"index"] unsignedIntValue];
+	NSUInteger i = [[d objectForKey:@"index"] unsignedIntegerValue];
 	NSImage *theImage = [d objectForKey:@"image"];
 	if (i >= numCells) return;
 	if (![[filenames objectAtIndex:i] isEqualToString:s]) {
@@ -843,7 +817,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (BOOL)imageWithFileInfoNeedsDisplay:(NSDictionary *)d {
 	NSString *s = [d objectForKey:@"filename"];
 	if (![requestedFilenames containsObject:s]) return NO;
-	unsigned int i = [[d objectForKey:@"index"] unsignedIntValue];
+	NSUInteger i = [[d objectForKey:@"index"] unsignedIntegerValue];
 	if (i >= numCells) return NO;
 	// simple check to see if nothing's changed and the rect is visible
 	if ([[filenames objectAtIndex:i] isEqualToString:s]) {
@@ -864,7 +838,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 }
 
-- (unsigned int)numThumbsLoaded {
+- (NSUInteger)numThumbsLoaded {
 	return numThumbsLoaded;
 }
 

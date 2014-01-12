@@ -10,11 +10,11 @@
 
 int main(int argc, const char *argv[])
 {
-	if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2_3) { 
+	if (floor(NSAppKitVersionNumber) <= 1187) {
 		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init]; 
 		NSApplicationLoad();
 		NSRunAlertPanel(@"Incompatible System Version", 
-						@"This program requires OS X 10.3 (Panther) or later.", 
+						@"This program requires OS X 10.9 (Mavericks) or later.",
 						nil, nil, nil);
 		[pool release];
 		return 0;

@@ -111,24 +111,8 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSSize maxSize = boundingSize;
 	NSImage *orig, *result = nil;
 
-	// use this if you're targeting 10.6 or later
 	orig = [[NSImage alloc] initWithDataIgnoringOrientation:[NSData dataWithContentsOfFile:ResolveAliasToPath(imgInfo->path)]];
 
-	// calc pixelSize
-	//orig = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo->path)];
-	   /* You MUST either setDataRetained:YES OR setCacheMode:NSImageCacheNever.
-		* Once the image is composited, NSImage will throw away the original
-		* data and save only a cached (read: reduced) version. It seems that
-		* if [orig size] is smaller than the raw pixel size, NSImage immediately
-		* throws away the original data and caches a smaller scaled-down
-		* raw size == stated size version. If the data is not retained, when we
-		* try to draw a larger image which requires the missing data, the NSImage
-		* simply blows up the cached image into a larger pixely image.
-		* We can fix this by telling it not to cache at all, or by retaining the
-		* original data.
-		* A better way: setScalesWhenResized
-		*/
-	[orig setScalesWhenResized:YES];
 	// now scale the img
 	if (orig && [[orig representations] count]) { // why doesn't it return nil for corrupt jpegs?
 		NSImageRep *oldRep = [[orig representations] objectAtIndex:0];

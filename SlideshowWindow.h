@@ -34,8 +34,8 @@
 	
 	NSString *basePath;
 	NSRect screenRect;
-	volatile int currentIndex;
-	int lastIndex; // for outside access to last slide shown
+	volatile NSUInteger currentIndex;
+	NSUInteger lastIndex; // for outside access to last slide shown
 	
 	NSTextView *helpFld;
 	NSImageView *loopImageView;

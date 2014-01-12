@@ -36,7 +36,7 @@
 @interface DYCreeveyBrowserMatrix : NSMatrix
 @end
 @implementation DYCreeveyBrowserMatrix
-- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
 	if ([menuItem action] == @selector(selectAll:)) return YES;
 	return [super validateMenuItem:menuItem];
 }

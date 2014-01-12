@@ -11,7 +11,6 @@
 #import "EpegWrapper.h"
 #import "DYJpegtran.h"
 #import "DYCarbonGoodies.h"
-#import "NSArrayIndexSetExtension.h"
 
 #import "DYWrappingMatrix.h"
 #import "CreeveyMainWindowController.h"
@@ -399,7 +398,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
 - (char)trashFile:(NSString *)fullpath numLeft:(unsigned int)numFiles {
-	int tag;
+	NSInteger tag;
 	if ([[NSWorkspace sharedWorkspace]
 performFileOperation:NSWorkspaceRecycleOperation
 			  source:[fullpath stringByDeletingLastPathComponent]
@@ -559,7 +558,7 @@ enum {
 };
 
 
-- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
 	int t = [menuItem tag];
 	int test_t = t;
 	if (![NSApp mainWindow]) {

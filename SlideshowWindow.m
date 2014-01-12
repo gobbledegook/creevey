@@ -18,11 +18,7 @@
 #import "DYRandomizableArray.h"
 
 static BOOL UsingMagicMouse(NSEvent *e) {
-	if (NSAppKitVersionNumber >= 1138) { // phase/momentumPhase supported in 10.7+
-		return [e phase] != NSEventPhaseNone || [e momentumPhase] != NSEventPhaseNone;
-	}
-	// if user is on 10.6 and using a magic mouse... unfortunately i haven't found a good way to detect it, so they'll have to put up with overzealous scroll-to-navigate behavior. there shouldn't be very many users in that situation...
-	return NO;
+	return [e phase] != NSEventPhaseNone || [e momentumPhase] != NSEventPhaseNone;
 }
 
 @interface SlideshowWindow (Private)
@@ -64,7 +60,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // when key is held down, max to cache before skipping over
 
 // this is the designated initializer
-- (id)initWithContentRect:(NSRect)r styleMask:(unsigned int)m backing:(NSBackingStoreType)b defer:(BOOL)d {
+- (id)initWithContentRect:(NSRect)r styleMask:(NSUInteger)m backing:(NSBackingStoreType)b defer:(BOOL)d {
 	// full screen window, force it to be NSBorderlessWindowMask
 	if (self = [super initWithContentRect:r styleMask:NSBorderlessWindowMask backing:b defer:d]) {
 		filenames = [[DYRandomizableArray alloc] init];
@@ -75,7 +71,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		
  		[self setBackgroundColor:[NSColor blackColor]];
 		[self setOpaque:NO];
-		if (floor(NSAppKitVersionNumber) > 1187) [self setCollectionBehavior:NSWindowCollectionBehaviorTransient]; // needed for new screen/spaces in 10.9.
+		[self setCollectionBehavior:NSWindowCollectionBehaviorTransient]; // needed for new screen/spaces in 10.9.
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = -1;//blurr=8;
    }
@@ -382,8 +378,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	if (r < 0) r = -r;
 	float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
-	[infoFld setStringValue:[NSString stringWithFormat:@"[%i/%i] %@ - %@ - %@%@%@%@ %@",
-		currentIndex+1, [filenames count],
+	[infoFld setStringValue:[NSString stringWithFormat:@"[%lu/%lu] %@ - %@ - %@%@%@%@ %@",
+		currentIndex+1, (unsigned long)[filenames count],
 		[self currentShortFilename],
 		FileSize2String(info->fileSize),
 		[info pixelSizeAsString],
@@ -496,8 +492,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)showLoopAnimation {
-	if (floor(NSAppKitVersionNumber) < NSAppKitVersionNumber10_4) return; // NSAnimation
-
 	if (!loopImageView) {
 		NSImage *loopImage = [NSImage imageNamed:@"loop_forward.tiff"];
 		NSSize s = [loopImage size];
@@ -554,7 +548,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSBeep();
 			return;
 		}
-		unsigned int newIndex = n < 0 ? [filenames orderedIndexOfObjectBeforeIndex:currentIndex] : [filenames orderedIndexOfObjectAfterIndex:currentIndex];
+		NSUInteger newIndex = n < 0 ? [filenames orderedIndexOfObjectBeforeIndex:currentIndex] : [filenames orderedIndexOfObjectAfterIndex:currentIndex];
 		if (newIndex == NSNotFound) {
 			NSBeep();
 			return;
@@ -1043,7 +1037,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 
 #pragma mark menu methods
-- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
 	if ([menuItem tag] == 3) // Loop
 		return YES;
 	if ([menuItem tag] == 8) // Scale Up

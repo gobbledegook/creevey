@@ -68,7 +68,7 @@ OSStatus GetFinderPSN(ProcessSerialNumber *psn) {
 	psn->highLongOfPSN      = kNoProcess;
 	info.processInfoLength  = sizeof(ProcessInfoRec);
 	info.processName        = nil;
-	info.processAppSpec     = nil;
+	info.processAppRef     = nil;
 	
 	do {
 		err = GetNextProcess(psn);

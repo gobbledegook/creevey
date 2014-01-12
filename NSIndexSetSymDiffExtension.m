@@ -42,7 +42,7 @@
 
 - (void)symmetricDifference:(NSIndexSet *)setB
 {
-	unsigned int *a, *b, aCount, bCount, i, j;
+	NSUInteger *a, *b, aCount, bCount, i, j;
 	aCount = [self count]; i = 0;
 	bCount = [setB count]; j = 0;
 	
@@ -53,8 +53,8 @@
 		return;
 	}
 	// now the meat
-	a = malloc(aCount*sizeof(unsigned int)); if (!a) return; // **
-	b = malloc(bCount*sizeof(unsigned int)); if (!b) { free(a); return; }
+	a = malloc(aCount*sizeof(NSUInteger)); if (!a) return; // **
+	b = malloc(bCount*sizeof(NSUInteger)); if (!b) { free(a); return; }
 	[self getIndexes:a maxCount:aCount inIndexRange:NULL];
 	[setB getIndexes:b maxCount:bCount inIndexRange:NULL];
 	while (i < aCount && j < bCount) {

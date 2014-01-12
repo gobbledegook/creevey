@@ -1,8 +1,8 @@
 Phoenix Slides
 ==============
 
-for ease of development, the xcode project in the master branch should build
-and compile using xcode 5 and the new apple llvm compiler.
+The master branch now compiles and runs only on OS X 10.9+/Xcode 5.1.
 
-branch xcode326 has the old project, which will compile a universal binary
-with PPC support but requires Xcode 3.2.6.
+Commit 7d0cc7e (tag "v1.3.1i") should compile for 10.6+.
+
+Branch xcode326 will compile a universal binary with PPC support but requires Xcode 3.2.6.
