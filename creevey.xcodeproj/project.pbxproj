@@ -155,7 +155,7 @@
 		F254E86008917C5E00DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
 		F254E96D08919E2B00DE9C38 /* makers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = makers.h; path = exiftags/makers.h; sourceTree = "<group>"; };
 		F254E96E08919E2B00DE9C38 /* makers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = makers.c; path = exiftags/makers.c; sourceTree = "<group>"; };
-		F254E98F0891A7E100DE9C38 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/EXIF.strings; sourceTree = "<group>"; };
+		F254E98F0891A7E100DE9C38 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F254E9950891A80400DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh_TW; path = zh_TW.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F25C834D0895D35D009C0A03 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = folder; name = zh_TW; path = "zh_TW.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
 		F25EA2710867329C003728C2 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = Epeg/config.h; sourceTree = "<group>"; };
@@ -177,7 +177,7 @@
 		F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSIndexSetSymDiffExtension.m; sourceTree = "<group>"; };
 		F28F0C0907F5E642009BF709 /* DYWrappingMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYWrappingMatrix.h; sourceTree = "<group>"; };
 		F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYWrappingMatrix.m; sourceTree = "<group>"; };
-		F2910A4108198D2900D3878C /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F2910A4108198D2900D3878C /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2910A4B08198D6100D3878C /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh_TW; path = zh_TW.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2910A840819A2E400D3878C /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		F29447970820946000B932C1 /* Credits.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = Credits.html; sourceTree = "<group>"; };
