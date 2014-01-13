@@ -439,7 +439,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fullpath];
 				if ([slidesWindow isVisible])
-					[slidesWindow unsetFilename:fullpath];
+					[slidesWindow removeImageForFile:fullpath];
 			} else if (result == 2)
 				break;
 		}
