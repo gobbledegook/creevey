@@ -110,9 +110,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 @interface DYWrappingMatrix (Private)
 - (void)resize:(id)anObject; // called to recalc, set frame height
-- (NSImage *)imageForIndex:(unsigned int)n;
-- (NSSize)imageSizeForIndex:(unsigned int)n;
-- (unsigned short)exifOrientationForIndex:(unsigned int)n;
+- (NSImage *)imageForIndex:(NSUInteger)n;
+- (NSSize)imageSizeForIndex:(NSUInteger)n;
+- (unsigned short)exifOrientationForIndex:(NSUInteger)n;
 @end
 
 @implementation DYWrappingMatrix
@@ -255,20 +255,20 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	area_w = cellWidth + columnSpacing;
 	area_h = cellHeight + VERTPADDING + textHeight;
 }
-- (int)point2cellnum:(NSPoint)p {
-	int col = MIN(numCols-1, (int)p.x/area_w); if (col < 0) col = 0;
-	int row = (int)p.y/area_h;
-	int n = col + numCols*row; if (n<0) n=0;
+- (NSInteger)point2cellnum:(NSPoint)p {
+	NSInteger col = MIN(numCols-1, (NSInteger)p.x/area_w); if (col < 0) col = 0;
+	NSInteger row = (NSInteger)p.y/area_h;
+	NSInteger n = col + numCols*row; if (n<0) n=0;
 	return n; // n might be > numCells-1
 }
-- (NSRect)cellnum2rect:(unsigned int)n {
+- (NSRect)cellnum2rect:(NSUInteger)n {
 	int row, col;
 	row = n/numCols;
 	col = n%numCols;
 	return NSMakeRect(area_w*col,area_h*row,area_w, area_h);
 }
-- (NSRect)imageRectForIndex:(unsigned int)n {
-	int row, col;
+- (NSRect)imageRectForIndex:(NSUInteger)n {
+	NSUInteger row, col;
 	row = n/numCols;
 	col = n%numCols;
 	return ScaledCenteredRect([self imageSizeForIndex:n],
@@ -277,8 +277,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 										 cellWidth, cellHeight)); // rect for cell only
 }
 
-- (void)selectionNeedsDisplay:(unsigned int)n {
-	int row, col;
+- (void)selectionNeedsDisplay:(NSUInteger)n {
+	NSUInteger row, col;
 	row = n/numCols;
 	col = n%numCols;
 	float x, y, x2, y2;
@@ -332,7 +332,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)setShowFilenames:(BOOL)b {
 	// preserve the scrollpoint relative to the top left visible thumbnail
 	NSPoint mouseLoc = [self convertPoint:NSMakePoint(1, 1) fromView:[self enclosingScrollView]]; // for some reason NSZeroPoint isn't quite right...
-	int row = (int)mouseLoc.y/area_h;
+	NSInteger row = (NSInteger)mouseLoc.y/area_h;
 	float dy = mouseLoc.y - area_h*row;
 
 	// show/hide filenames
@@ -362,7 +362,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 	NSPoint mouseLoc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	NSPoint mouseDownLoc = mouseLoc;
-	int mouseDownCellNum = [self point2cellnum:mouseLoc];
+	NSUInteger mouseDownCellNum = [self point2cellnum:mouseLoc];
 	if (![selectedIndexes containsIndex:mouseDownCellNum] && !shiftKeyDown && !cmdKeyDown) {
 		[oldSelection removeAllIndexes];
 	}
@@ -484,7 +484,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)resize:(id)anObject { // called by notification center
 	[self calculateCellSizes];
 	NSSize mySize = [self frame].size;
-	int numRows = numCells == 0 ? 0 : (numCells-1)/numCols + 1;
+	NSUInteger numRows = numCells == 0 ? 0 : (numCells-1)/numCols + 1;
 	float h = MAX(numRows*area_h, [[self superview] frame].size.height);
 	if (mySize.height != h) {
 		mySize.height = h;
@@ -518,7 +518,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[bgColor set];
 	[NSBezierPath fillRect:rect];
 	//NSLog(@"---------------------------");
-	int i, row, col;
+	NSUInteger i, row, col;
 	NSRect areaRect = NSMakeRect(0, 0, area_w, area_h);
 	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + VERTPADDING/2);
 	NSRect cellRect;
@@ -616,7 +616,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	[cg setImageInterpolation:oldInterp];
 }
-- (void)scrollSelectionToVisible:(unsigned int)n {
+- (void)scrollSelectionToVisible:(NSUInteger)n {
 	[self updateStatusString];
 	NSRect r = [self cellnum2rect:n];
 	[self selectionNeedsDisplay:n];
@@ -649,7 +649,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			[super keyDown:e];
 			return;
 	}
-	unsigned int n;
+	NSUInteger n;
 	if ([selectedIndexes count] == 1) {
 		n = [selectedIndexes firstIndex];
 		[self selectionNeedsDisplay:n];
@@ -685,7 +685,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self scrollSelectionToVisible:n];
 }
 
-- (void)selectIndex:(unsigned int)i {
+- (void)selectIndex:(NSUInteger)i {
 	// redraw the old selection (assume this only gets called if single selection)
 	if ([selectedIndexes count])
 		[self selectionNeedsDisplay:[selectedIndexes firstIndex]];
@@ -700,7 +700,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return autoRotate;
 }
 - (void)setAutoRotate:(BOOL)b {
-	int i;
+	NSUInteger i;
 	// once for the old areas
 	for (i=0; i<numCells; ++i) {
 		if ([self exifOrientationForIndex:i] <= 1) continue;
@@ -713,7 +713,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self setNeedsDisplayInRect:[self imageRectForIndex:i]];
 	}
 }
-- (NSImage *)imageForIndex:(unsigned int)n {
+- (NSImage *)imageForIndex:(NSUInteger)n {
 	if (autoRotate) {
 		return [[images objectAtIndex:n] rotateByExifOrientation:
 				[self exifOrientationForIndex:n]];
@@ -721,7 +721,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		return [images objectAtIndex:n];
 	}
 }
-- (NSSize)imageSizeForIndex:(unsigned int)n {
+- (NSSize)imageSizeForIndex:(NSUInteger)n {
 	NSSize s = [[images objectAtIndex:n] size];
 	if (autoRotate && [self exifOrientationForIndex:n] >= 5) {
 		float tmp;
@@ -731,7 +731,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	return s;
 }
-- (unsigned short)exifOrientationForIndex:(unsigned int)n {
+- (unsigned short)exifOrientationForIndex:(NSUInteger)n {
 	DYImageInfo *i = [[(CreeveyController *)[NSApp delegate] thumbsCache]
 					  infoForKey:ResolveAliasToPath([filenames objectAtIndex:n])];
 	return i ? i->exifOrientation : 0;
@@ -758,7 +758,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (IBAction)selectAll:(id)sender {
 	[selectedIndexes addIndexesInRange:NSMakeRange(0,numCells)];
-	unsigned int i;
+	NSUInteger i;
 	for (i=0; i<numCells; ++i) {
 		[self selectionNeedsDisplay:i];
 	}
@@ -767,18 +767,18 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (IBAction)selectNone:(id)sender {
 	[selectedIndexes removeAllIndexes];
-	unsigned int i;
+	NSUInteger i;
 	for (i=0; i<numCells; ++i) {
 		[self selectionNeedsDisplay:i];
 	}
 	[self updateStatusString];
 }
 
-- (unsigned int)numCells {
+- (NSUInteger)numCells {
 	return numCells;
 }
 
-- (void)addSelectedIndex:(unsigned int)i {
+- (void)addSelectedIndex:(NSUInteger)i {
 	[selectedIndexes addIndex:i];
 	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
 	[NSObject cancelPreviousPerformRequestsWithTarget:self
@@ -790,7 +790,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 // call this when an image changes (filename is already set)
-- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i {
+- (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i {
 	if (i >= numCells) return;
 	[images replaceObjectAtIndex:i withObject:theImage];
 	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
@@ -879,7 +879,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self setNeedsDisplay:YES];
 }
 */
-- (void)removeImageAtIndex:(unsigned int)i {
+- (void)removeImageAtIndex:(NSUInteger)i {
 	// check if i is in range
 	if (i >= [images count]) return;
 	// adjust numLoaded if necessary

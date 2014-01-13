@@ -38,14 +38,14 @@ NSString *FileSize2String(unsigned long long fileSize);
 	NSMutableSet *pending;
 	
 	NSSize boundingSize;
-	unsigned int maxImages;
+	NSUInteger maxImages;
 	volatile BOOL cachingShouldStop;
 	
 	NSFileManager *fm;
 	NSImageInterpolation interpolationType;
 }
 
-- (id)initWithCapacity:(unsigned int)n;
+- (id)initWithCapacity:(NSUInteger)n;
 
 - (float)boundingWidth;
 - (void)setBoundingSize:(NSSize)aSize;

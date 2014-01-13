@@ -70,7 +70,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 
 @implementation DYImageCache
 // this is the designated initializer
-- (id)initWithCapacity:(unsigned int)n {
+- (id)initWithCapacity:(NSUInteger)n {
 	if (self = [super init]) {
 		cacheOrder = [[NSMutableArray alloc] init];
 		images = [[NSMutableDictionary alloc] init];

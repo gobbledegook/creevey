@@ -20,7 +20,7 @@
 
 	NSMutableArray *filenames, *displayedFilenames;
 	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
-	volatile BOOL stopCaching;
+	volatile char stopCaching;
 	
 	NSConditionLock *imageCacheQueueLock;
 	NSMutableArray *imageCacheQueue, *secondaryImageCacheQueue;
@@ -44,7 +44,7 @@
 - (BOOL)setPath:(NSString *)s;
 - (NSArray *)currentSelection;
 - (NSIndexSet *)selectedIndexes;
-- (void)selectIndex:(unsigned int)i;
+- (void)selectIndex:(NSUInteger)i;
 - (NSString *)firstSelectedFilename;
 - (NSArray *)displayedFilenames;
 - (BOOL)currentFilesDeletable;

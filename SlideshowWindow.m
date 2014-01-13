@@ -25,7 +25,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 //- (void)displayImage;
 - (void)jump:(int)n;
-- (void)jumpTo:(int)n;
+- (void)jumpTo:(NSUInteger)n;
 - (void)setTimer:(NSTimeInterval)s;
 - (void)runTimer;
 - (void)killTimer;
@@ -198,7 +198,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (void)startSlideshow {
 	[self startSlideshowAtIndex:-1]; // to distinguish from 0, for random mode
 }
-- (void)startSlideshowAtIndex:(int)startIndex {
+- (void)startSlideshowAtIndex:(NSUInteger)startIndex {
 	if ([filenames count] == 0) {
 		NSBeep();
 		return;
@@ -483,7 +483,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if ([self isMainWindow] && ![imgView dragMode])
 		[NSCursor setHiddenUntilMouseMoves:YES];
 
-	int i;
+	short int i;
 	for (i=1; i<=2; i++) {
 		if (currentIndex+i >= [filenames count])
 			break;
@@ -536,6 +536,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSBeep();
 		}
 	} else {
+		if (n < 0 && abs(n) > currentIndex) {
+			n = -currentIndex;
+		} else if (n > 0 && n >= [filenames count] - currentIndex) {
+			n = [filenames count] - 1 - currentIndex;
+		}
 		[self jumpTo:currentIndex+n];
 	}
 }
@@ -559,14 +564,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 }
 
-- (void)jumpTo:(int)n {
+- (void)jumpTo:(NSUInteger)n {
 	//NSLog(@"jumping to %d", n);
 	[self killTimer];
 	// we rely on this only being called when changing pics, not at startup
 	[self saveZoomInfo];
 	// above code is repeated in endSlideshow, setBasePath
 	
-	currentIndex = n < 0 ? 0 : n >= [filenames count] ? [filenames count] - 1 : n;
+	currentIndex = n >= [filenames count] ? [filenames count] - 1 : n;
 	[self displayImage];
 }
 
@@ -953,7 +958,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (BOOL)isActive {
 	return currentIndex != -1;
 }
-- (int)currentIndex {
+- (NSUInteger)currentIndex {
 	return currentIndex == -1 ? lastIndex : currentIndex;
 }
 - (NSString *)currentFile {
@@ -982,7 +987,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)removeImageForFile:(NSString *)s {
-	int n = [filenames indexOfObject:s];
+	NSUInteger n = [filenames indexOfObject:s];
 	[filenames removeObjectAtIndex:n];
 	[imgCache removeImageForKey:s];
 	// if file before current file was deleted, shift index back one

@@ -40,7 +40,7 @@
 
 
 @interface DirBrowserDelegate (Private)
-- (int)loadDir:(NSString *)path inCol:(int)n;
+- (NSInteger)loadDir:(NSString *)path inCol:(NSInteger)n;
 @end
 
 @implementation DirBrowserDelegate
@@ -149,7 +149,7 @@
 #pragma mark private
 // puts array of directory names located in path
 // into our display and internal arrays
-- (int)loadDir:(NSString *)path inCol:(int)n {
+- (NSInteger)loadDir:(NSString *)path inCol:(NSInteger)n {
 	NSFileManager *fm = [NSFileManager defaultManager];
 	while ([cols count] < n+1) {
 		[cols addObject:[NSMutableArray arrayWithCapacity:15]];
@@ -212,21 +212,21 @@
 }
 
 #pragma mark NSBrowser delegate methods
-- (int)browser:(NSBrowser *)b numberOfRowsInColumn:(int)c {
+- (NSInteger)browser:(NSBrowser *)b numberOfRowsInColumn:(NSInteger)c {
 	return [self loadDir:(c == 0
 						  ? BROWSER_ROOT
 						  : [self browserpath2syspath:[b pathToColumn:c]])
 				   inCol:c];
 }
 
-- (void)browser:(NSBrowser *)b willDisplayCell:(id)cell atRow:(int)row column:(int)column {
+- (void)browser:(NSBrowser *)b willDisplayCell:(id)cell atRow:(NSInteger)row column:(NSInteger)column {
 	[cell setStringValue:[[colsInternal objectAtIndex:column] objectAtIndex:row]];
 	[cell setTitle:[[cols objectAtIndex:column] objectAtIndex:row]];
 }
 
-- (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(int)column {
+- (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(NSInteger)column {
 	NSMutableArray *a = [cols objectAtIndex:column]; // use cols, not colsInternal here, since we sort by display names
-	unsigned int i, n = [a count];
+	NSUInteger i, n = [a count];
 	for (i=0; i<n; ++i) {
 		if ([[a objectAtIndex:i] caseInsensitiveCompare:s] >= 0)
 			break;

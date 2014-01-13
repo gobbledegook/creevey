@@ -54,12 +54,12 @@
 + (NSSize)maxCellSize;
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
-- (void)setImage:(NSImage *)theImage forIndex:(unsigned int)i;
+- (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i;
 - (void)setImageWithFileInfo:(NSDictionary *)d; // to be called on main thread from other thread
 - (BOOL)imageWithFileInfoNeedsDisplay:(NSDictionary *)d;
 - (void)removeAllImages;
 //- (void)removeSelectedImages;
-- (void)removeImageAtIndex:(unsigned int)i;
+- (void)removeImageAtIndex:(NSUInteger)i;
 
 // call when no images, preparing to add (for two-pass adding)
 //- (void)setFilenames:(NSArray *)a;
@@ -71,10 +71,10 @@
 - (NSString *)firstSelectedFilename;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
-- (void)addSelectedIndex:(unsigned int)i;
-- (void)selectIndex:(unsigned int)i;
+- (void)addSelectedIndex:(NSUInteger)i;
+- (void)selectIndex:(NSUInteger)i;
 
-- (unsigned int)numCells;
+- (NSUInteger)numCells;
 - (NSSize)cellSize;
 - (float)maxCellWidth;
 - (float)minCellWidth;

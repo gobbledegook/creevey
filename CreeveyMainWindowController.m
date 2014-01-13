@@ -155,7 +155,7 @@
 - (NSIndexSet *)selectedIndexes {
 	return [imgMatrix selectedIndexes];
 }
-- (void)selectIndex:(unsigned int)i {
+- (void)selectIndex:(NSUInteger)i {
 	[imgMatrix selectIndex:i];
 }
 
@@ -163,7 +163,7 @@
 	if (doSlides) {
 		startSlideshowWhenReady = YES;
 		NSSet *filetypes = [[NSApp delegate] filetypes];
-		unsigned int i, n = [a count];
+		NSUInteger i, n = [a count];
 		NSString *theFile;
 		for (i=0; i<n; ++i) {
 			theFile = [a objectAtIndex:i];
@@ -214,7 +214,7 @@
 	NSUInteger mtrxIdx, i = [filenames indexOfObject:s];
 	// ** linear search; should we make faster?
 	if (i != NSNotFound) {
-		stopCaching = YES;
+		stopCaching = 1;
 		[loadImageLock lock];
 		
 		if ((mtrxIdx = [[imgMatrix filenames] indexOfObject:s]) != NSNotFound)
@@ -272,7 +272,7 @@
 		[loadImageLock unlock];
 		return;
 	}
-	stopCaching = NO;
+	stopCaching = 0;
 	
 	NSUInteger i = 0;
 	NSUInteger numFiles;
@@ -318,7 +318,7 @@
 						loadingMsg, (unsigned long)i]];
 			}
 			// NSFileTypeForHFSTypeCode([[atts objectForKey:NSFileHFSCreatorCode] unsignedLongValue]),
-			if (stopCaching == YES) {
+			if (stopCaching == 1) {
 				[filenames removeAllObjects]; // so it fails count > 0 test below
 				break;
 			}
@@ -367,7 +367,7 @@
 	}
 	if (sortOrder < 0 && [displayedFilenames count]) {
 		// reverse the array
-		unsigned int a, b;
+		NSUInteger a, b;
 		a = 0;
 		b = [displayedFilenames count]-1;
 		while (a < b) {
@@ -394,7 +394,7 @@
 		for (i=thePath ? 0 : [imgMatrix numCells]; i<numFiles; ++i) {
 			if (stopCaching) {
 				//NSLog(@"aborted1 %@", origPath);
-				if (stopCaching == YES)
+				if (stopCaching == 1)
 					break;
 				[NSThread sleepUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
 			}
@@ -435,7 +435,7 @@
 - (IBAction)displayDir:(id)sender {
 	// appkit drawing issues
 	// nsbrowser animation hangs the app!
-	stopCaching = YES;	
+	stopCaching = 1;
 	currentFilesDeletable = NO;
 	filenamesDone = NO;
 	currCat = 0;
@@ -477,7 +477,7 @@
 	if (filenamesDone && c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
 		c = c - NSF1FunctionKey + 1;
 		if (([e modifierFlags] & NSCommandKeyMask) != 0) {
-			int i; // not unsigned b/c we decrement
+			NSUInteger i;
 			short j;
 			NSArray *a = [imgMatrix selectedFilenames];
 			if (![a count]) {
@@ -486,7 +486,7 @@
 			}
 			
 			NSMutableSet **cats = [[NSApp delegate] cats];
-			for (i=[a count]-1; i>=0; i--) {
+			for (i=[a count]-1; i != -1; i--) {
 				id fname = [a objectAtIndex:i];
 				if (c == 1) {
 					for (j=0; j<NUM_FNKEY_CATS; ++j)
@@ -514,7 +514,7 @@
 			// but we're reloading anyway, it's OK
 		}
 		
-		stopCaching = YES; // don't need to lock, not changing anything
+		stopCaching = 1; // don't need to lock, not changing anything
 		currentFilesDeletable = NO; // dup code from displayDir?
 		filenamesDone = NO;
 		[slidesBtn setEnabled:NO];
@@ -530,18 +530,18 @@
 #pragma mark window delegate methods
 - (void)windowDidResignMain:(NSNotification *)aNotification {
 	if (!filenamesDone || !loadingDone) {
-		stopCaching = 2; // **
+		stopCaching = 2;
 	}
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification {
 	[self updateExifInfo];
 	if (!filenamesDone || !loadingDone)// && stopCaching)
-		stopCaching = NO;
+		stopCaching = 0;
 	if (filenamesDone && currCat) { // reload in case category membership of certain files changed;
 		// ** we should probably notify when cats change instead
 		// ** and also handle the case where you change something's category so it no longer belongs in the current view
-		stopCaching = YES;
+		stopCaching = 1;
 		[loadImageLock lock];
 		// make reloading less bad by saving selection
 		[filesBeingOpened addObjectsFromArray:[imgMatrix selectedFilenames]];
@@ -657,7 +657,7 @@
 	// only use exif thumbs if we're at the smallest thumbnail  setting
 	BOOL useExifThumbs = [[NSUserDefaults standardUserDefaults]
 						  integerForKey:@"DYWrappingMatrixMaxCellWidth"] == 160;
-	unsigned int i, lastCount = 0;
+	NSUInteger i, lastCount = 0;
 	NSMutableArray *visibleQueue = [[NSMutableArray alloc] initWithCapacity:100];
 	NSString *loadingMsg = NSLocalizedString(@"Loading %i of %u...", @"");
 	while (YES) {

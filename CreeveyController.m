@@ -32,7 +32,7 @@ BOOL FileIsJPEG(NSString *s) {
 
 BOOL FilesContainJPEG(NSArray *a) {
 	// find out if at least one file is a JPEG
-	unsigned i, n = [a count];
+	NSUInteger i, n = [a count];
 	if (n > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check
 	for (i=0; i<n; ++i) {
 		if (FileIsJPEG([a objectAtIndex:i]))
@@ -135,7 +135,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"showFilenames"];
 	[dict setObject:[NSNumber numberWithInt:1] forKey:@"sortBy"]; // sort by filename, ascending
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"Slideshow:RerandomizeOnLoop"];
-	[dict setObject:[NSNumber numberWithInt:3000] forKey:@"maxThumbsToLoad"];
+	[dict setObject:[NSNumber numberWithInt:3000] forKey:@"maxThumbsToLoad"]; // note this is a 32-bit int
 	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoRotateByOrientationTag"];
     [defaults registerDefaults:dict];
 
@@ -270,7 +270,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // moral: name your functions correctly from the start.
 - (IBAction)rotateTest:(id)sender {
 	DYJpegtranInfo jinfo;
-	int t = [sender tag] - 100;
+	NSInteger t = [sender tag] - 100;
 	if (t == 0) {
 		if (!jpegController)
 			if (![NSBundle loadNibNamed:@"DYJpegtranPanel" owner:self]) return;
@@ -334,7 +334,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[NSApp runModalSession:session];
 	[jpegProgressBar startAnimation:self];
 
-	unsigned int n;
+	NSUInteger n;
 	NSString *s, *resolvedPath;
 	NSSize maxThumbSize = NSMakeSize(160,160);
 	for (n = 0; n < [a count]; ++n) {
@@ -397,7 +397,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
-- (char)trashFile:(NSString *)fullpath numLeft:(unsigned int)numFiles {
+- (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles {
 	NSInteger tag;
 	if ([[NSWorkspace sharedWorkspace]
 performFileOperation:NSWorkspaceRecycleOperation
@@ -428,7 +428,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 		}
 	} else {
 		NSArray *a = [frontWindow currentSelection];
-		unsigned int i, n = [a count];
+		NSUInteger i, n = [a count];
 		// we have to go backwards b/c we're deleting from the imgMatrix
 		// wait... we don't, because we're not using indexes anymore
 		for (i=0; i < n; ++i) {
@@ -559,8 +559,8 @@ enum {
 
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
-	int t = [menuItem tag];
-	int test_t = t;
+	NSInteger t = [menuItem tag];
+	NSInteger test_t = t;
 	if (![NSApp mainWindow]) {
 		// menu items with tags only enabled if there's a window
 		return !t;
@@ -574,7 +574,7 @@ enum {
 		test_t = JPEG_OP;
 	}
 	if (![creeveyWindows count]) frontWindow = nil;
-	unsigned int numSelected = frontWindow ? [[frontWindow selectedIndexes] count] : 0;
+	NSUInteger numSelected = frontWindow ? [[frontWindow selectedIndexes] count] : 0;
 	BOOL writable, isjpeg;
 	
 	switch (test_t) {
@@ -626,9 +626,9 @@ enum {
 	}
 }
 
-- (void)updateMenuItemsForSorting:(int)sortNum {
-	int sortType = abs(sortNum);
-	int sortAscending = sortNum > 0;
+- (void)updateMenuItemsForSorting:(short int)sortNum {
+	short int sortType = abs(sortNum);
+	BOOL sortAscending = sortNum > 0;
 	NSMenu *m = [[[NSApp mainMenu] itemWithTag:VIEW_MENU] submenu];
 	[[m itemWithTag:sortType == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
 	[[m itemWithTag:200+sortType] setState:sortAscending ? NSOnState : NSMixedState];
@@ -787,7 +787,7 @@ enum {
 #pragma mark exif thumb
 - (IBAction)toggleExifThumbnail:(id)sender {
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
-	int b =	![u boolForKey:@"exifThumbnailShow"];
+	BOOL b = ![u boolForKey:@"exifThumbnailShow"];
 	[self showExifThumbnail:b shrinkWindow:YES];
 	[u setBool:b forKey:@"exifThumbnailShow"];
 }
@@ -822,7 +822,7 @@ enum {
 		if (!shrink)
 			[v2 setFrame:q];
 		else {
-			unsigned int oldMask = [v2 autoresizingMask];
+			NSUInteger oldMask = [v2 autoresizingMask];
 			[v2 setAutoresizingMask:NSViewMaxXMargin];
 			[w setFrame:r display:YES animate:YES];
 			[v2 setAutoresizingMask:oldMask];
@@ -919,7 +919,7 @@ enum {
 		[[exifTextView window] orderFront:nil];
 	if ([creeveyWindows count] && [[frontWindow currentSelection] count] <= 1) {
 		NSArray *a = [frontWindow displayedFilenames];
-		int i = [slidesWindow currentIndex];
+		NSUInteger i = [slidesWindow currentIndex];
 		if (i < [a count]
 			&& [[a objectAtIndex:i] isEqualToString:[slidesWindow currentFile]])
 			[frontWindow selectIndex:i];

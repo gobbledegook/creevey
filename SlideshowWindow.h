@@ -51,14 +51,14 @@
 - (void)setFilenames:(NSArray *)files; // call this before starting the slideshow
 - (void)setBasePath:(NSString *)s;
 - (void)startSlideshow;
-- (void)startSlideshowAtIndex:(int)n;
+- (void)startSlideshowAtIndex:(NSUInteger)n;
 - (void)endSlideshow;
 - (void)sendToBackground;
 - (void)bringToForeground;
 
 - (void)setAutoadvanceTime:(NSTimeInterval)s; // 0 to turn off
 
-- (int)currentIndex;
+- (NSUInteger)currentIndex;
 - (NSString *)currentFile;
 - (NSString *)basePath;
 - (unsigned short)currentOrientation; // returns an EXIF orientation
