@@ -17,6 +17,14 @@
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
 
+static BOOL UsingMagicMouse(NSEvent *e) {
+	if (NSAppKitVersionNumber >= 1138) { // phase/momentumPhase supported in 10.7+
+		return [e phase] != NSEventPhaseNone || [e momentumPhase] != NSEventPhaseNone;
+	}
+	// if user is on 10.6 and using a magic mouse... unfortunately i haven't found a good way to detect it, so they'll have to put up with overzealous scroll-to-navigate behavior. there shouldn't be very many users in that situation...
+	return NO;
+}
+
 @interface SlideshowWindow (Private)
 
 //- (void)displayImage;
@@ -906,14 +914,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[super sendEvent:e];
 }
 
-// with the current wireless magic mouse, this is more annoying than useful
-//- (void)scrollWheel:(NSEvent *)e {
-//	float y = [e deltaY];
-//	int sign = y < 0 ? 1 : -1;
-//	[self jump:sign*(floor(fabs(y)/7.0)+1)];
-//}
+- (void)scrollWheel:(NSEvent *)e {
+	if (UsingMagicMouse(e)) return;
+	float y = [e deltaY];
+	int sign = y < 0 ? 1 : -1;
+	[self jump:sign*(floor(fabs(y)/7.0)+1)];
+}
 
-	
+
 #pragma mark cache stuff
 
 - (NSImage *)loadFromCache:(NSString *)s {
