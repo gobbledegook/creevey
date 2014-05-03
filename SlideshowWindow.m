@@ -392,7 +392,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[imgView isImageFlipped] ? NSLocalizedString(@" flipped", @"") : @"",
 		r ? [NSString stringWithFormat:
 			NSLocalizedString(@" rotated%@ %i%C", @""), dir, r, 0xb0] : @"", //degrees
-		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1g%@) %@",
+		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1f%@) %@",
 			NSLocalizedString(@"Auto-advance", @""),
 			timerIntvl,
 			NSLocalizedString(@"seconds", @""),
