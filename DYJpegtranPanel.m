@@ -10,7 +10,7 @@
 @implementation DYJpegtranPanel
 - (IBAction)transformChanged:(id)sender
 {
-	[trimBtn setEnabled:[[sender selectedItem] tag]==JXFORM_NONE || [[sender selectedItem] tag]==JXFORM_TRANSPOSE
+	[self.trimBtn setEnabled:[[sender selectedItem] tag]==JXFORM_NONE || [[sender selectedItem] tag]==JXFORM_TRANSPOSE
 		? NSOffState : NSOnState];
 }
 
@@ -26,25 +26,25 @@
 
 - (BOOL)runOptionsPanel:(DYJpegtranInfo *)i {
 	// set defaults
-	[transformMenu selectItemAtIndex:0];
-	[trimBtn setEnabled:NO]; [trimBtn setState:NSOffState];
-	[grayscaleBtn setState:NSOffState];
-	[copyMarkersMenu selectItemAtIndex:0];
-	[progressiveBtn setState:NSOffState];
-	[optimizeBtn setState:NSOffState];
+	[self.transformMenu selectItemAtIndex:0];
+	[self.trimBtn setEnabled:NO]; [self.trimBtn setState:NSOffState];
+	[self.grayscaleBtn setState:NSOffState];
+	[self.markersMenu selectItemAtIndex:0];
+	[self.progressiveBtn setState:NSOffState];
+	[self.optimizeBtn setState:NSOffState];
 	
 	// run dialog
-	int n = [NSApp runModalForWindow:[transformMenu window]];
-	[[transformMenu window] orderOut:nil];
+	int n = [NSApp runModalForWindow:[self.transformMenu window]];
+	[[self.transformMenu window] orderOut:nil];
 	if (n != 100) return NO;
 	
 	// fill in the blanks
-	i->tinfo.transform = [[transformMenu selectedItem] tag];
-	i->tinfo.trim = [trimBtn isEnabled] && [trimBtn state];
-	i->tinfo.force_grayscale = [grayscaleBtn state];
-	i->cp = [[copyMarkersMenu selectedItem] tag];
-	i->progressive = [progressiveBtn state];
-	i->optimize = [optimizeBtn state];
+	i->tinfo.transform = [[self.transformMenu selectedItem] tag];
+	i->tinfo.trim = [self.trimBtn isEnabled] && [self.trimBtn state];
+	i->tinfo.force_grayscale = [self.grayscaleBtn state];
+	i->cp = [[self.markersMenu selectedItem] tag];
+	i->progressive = [self.progressiveBtn state];
+	i->optimize = [self.optimizeBtn state];
 	i->thumbOnly = 0;
 	i->autorotate = 0;
 	i->resetOrientation = 0;

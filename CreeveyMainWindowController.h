@@ -9,11 +9,11 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class DYWrappingMatrix;
+@class DYWrappingMatrix, DYCreeveyBrowser;
 
 @interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate>
 {
-    IBOutlet NSBrowser *dirBrowser;
+    IBOutlet DYCreeveyBrowser *dirBrowser;
 	IBOutlet NSButton *slidesBtn;
 	IBOutlet DYWrappingMatrix *imgMatrix;
 	IBOutlet NSTextField *statusFld, *bottomStatusFld;
@@ -58,6 +58,7 @@
 - (void)setDefaultPath;
 - (void)updateDefaults;
 - (void)openFiles:(NSArray *)a withSlideshow:(BOOL)b;
+- (void)fakeKeyDown:(NSEvent *)e;
 
 // notifiers
 - (void)fileWasChanged:(NSString *)s;

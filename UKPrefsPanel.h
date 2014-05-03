@@ -47,7 +47,7 @@
 	Classes:
    -------------------------------------------------------------------------- */
 
-@interface UKPrefsPanel : NSObject
+@interface UKPrefsPanel : NSObject <NSToolbarDelegate>
 {
 	IBOutlet NSTabView*		tabView;			///< The tabless tab-view that we're a switcher for.
 	NSMutableDictionary*	itemsList;			///< Auto-generated from tab view's items.

@@ -39,10 +39,6 @@
 @end
 
 
-@interface DirBrowserDelegate (Private)
-- (NSInteger)loadDir:(NSString *)path inCol:(NSInteger)n;
-@end
-
 @implementation DirBrowserDelegate
 - (id)init {
     if (self = [super init]) {
@@ -165,12 +161,12 @@
 	if ([currBrowserPathComponents count] > n+1)
 		nextColumn = [currBrowserPathComponents objectAtIndex:n+1];
 	
-	NSEnumerator *e = [[fm directoryContentsAtPath:path] objectEnumerator];
+	NSEnumerator *e = [[fm contentsOfDirectoryAtPath:path error:NULL] objectEnumerator];
 	BOOL isDir;
 	NSString *obj, *fullpath;
 	while (obj = [e nextObject]) {
 		fullpath = [path stringByAppendingPathComponent:obj];
-		if (n==0 && [[fm pathContentOfSymbolicLinkAtPath:fullpath] isEqualToString:@"/"]) {
+		if (n==0 && [[fm destinationOfSymbolicLinkAtPath:fullpath error:NULL] isEqualToString:@"/"]) {
 			// initialize rootVolumeName here
 			// executes only on loadColumnZero, saves @"/Macintosh HD" or so
 			[rootVolumeName release];
@@ -224,6 +220,7 @@
 	[cell setTitle:[[cols objectAtIndex:column] objectAtIndex:row]];
 }
 
+#pragma mark DYCreeveyBrowserDelegate methods
 - (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(NSInteger)column {
 	NSMutableArray *a = [cols objectAtIndex:column]; // use cols, not colsInternal here, since we sort by display names
 	NSUInteger i, n = [a count];

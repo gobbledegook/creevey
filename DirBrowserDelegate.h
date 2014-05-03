@@ -8,9 +8,10 @@
 /* DirBrowserDelegate */
 
 #import <Cocoa/Cocoa.h>
+#import "DYCreeveyBrowser.h"
 @class UKKQueue;
 
-@interface DirBrowserDelegate : NSObject
+@interface DirBrowserDelegate : NSObject <DYCreeveyBrowserDelegate>
 {
 	NSMutableArray *cols, *colsInternal;
 	NSString *rootVolumeName;
@@ -25,7 +26,4 @@
 	UKKQueue *kq;
 	IBOutlet NSBrowser *_b;
 }
--(NSString*)path;
--(BOOL)setPath:(NSString *)s;
--(void)setShowInvisibles:(BOOL)b;
 @end

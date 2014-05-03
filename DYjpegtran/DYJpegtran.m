@@ -426,16 +426,15 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	NSMutableArray *fkeys = [NSMutableArray arrayWithObjects:NSFileCreationDate, NSFileHFSCreatorCode, NSFileHFSTypeCode, nil];
 	if (i.preserveModificationDate)
 		[fkeys addObject:NSFileModificationDate];
-	NSArray *fatts = [[[NSFileManager defaultManager] fileAttributesAtPath:thePath traverseLink:YES]
-		objectsForKeys:fkeys notFoundMarker:[NSNull null]];
+	NSArray *fatts = [[[NSFileManager defaultManager] attributesOfItemAtPath:[thePath stringByResolvingSymlinksInPath] error:NULL] objectsForKeys:fkeys notFoundMarker:[NSNull null]];
 	//NSLog(@"%@", [fatts objectAtIndex:0]);
 	NSData *theData = [[NSData alloc] initWithBytesNoCopy:thebytes length:numbytes freeWhenDone:YES];
 	[theData writeToFile:thePath atomically:YES];
 	[theData release];
 	
 	//restore date created, hfs codes
-	[[NSFileManager defaultManager] changeFileAttributes:[NSDictionary dictionaryWithObjects:fatts forKeys:fkeys]
-												  atPath:thePath];
+	[[NSFileManager defaultManager] setAttributes:[NSDictionary dictionaryWithObjects:fatts forKeys:fkeys]
+									 ofItemAtPath:thePath error:NULL];
 	
 	/* All done. */
 	return YES;//exit(jsrcerr.num_warnings + jdsterr.num_warnings ?EXIT_WARNING:EXIT_SUCCESS);

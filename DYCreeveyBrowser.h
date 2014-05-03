@@ -9,6 +9,7 @@
 
 #import <Cocoa/Cocoa.h>
 @class DYTransparentGreyView;
+@protocol DYCreeveyBrowserDelegate;
 
 // allows typing to select items (assumes lists are sorted)
 // allows drag and drop
@@ -19,12 +20,14 @@
 	NSTimeInterval lastKeyTime;
 	DYTransparentGreyView *greyview; // for drag-and-drop
 }
+- (id <NSBrowserDelegate,DYCreeveyBrowserDelegate>)delegate;
 @end
 
-
-@interface NSObject (DYCreeveyBrowserDelegate)
+@protocol DYCreeveyBrowserDelegate <NSObject>
+- (NSString*)path;
+- (BOOL)setPath:(NSString *)s;
+- (void)setShowInvisibles:(BOOL)b;
 - (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(NSInteger)column;
 - (void)browserWillSendAction:(NSBrowser *)sender;
-- (void)fakeKeyDown:(NSEvent *)e; // for redirecting pgup/down
 @end
 

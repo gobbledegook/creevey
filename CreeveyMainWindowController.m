@@ -14,6 +14,7 @@
 #import "NSStringDYBasePathExtension.h"
 
 #import "CreeveyController.h"
+#import "DYCreeveyBrowser.h"
 #import "DYImageCache.h"
 #import "DYWrappingMatrix.h"
 #import "FinderCompare.h"
@@ -24,8 +25,8 @@
 {
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSComparisonResult r;
-	r = [[[fm fileAttributesAtPath:self traverseLink:YES] fileModificationDate]
-			compare:[[fm fileAttributesAtPath:other traverseLink:YES] fileModificationDate]];
+	r = [[[fm attributesOfItemAtPath:[self stringByResolvingSymlinksInPath] error:NULL] fileModificationDate]
+			compare:[[fm attributesOfItemAtPath:[other stringByResolvingSymlinksInPath] error:NULL] fileModificationDate]];
 	if (r == NSOrderedSame) { // use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
 		return [self finderCompare:other];
 	}
@@ -498,7 +499,7 @@
 						[cats[c-2] addObject:fname];
 				}
 			}
-			if (!currCat || c && c != currCat) {
+			if (!currCat || (c && c != currCat)) {
 				[statusFld setStringValue:[NSString stringWithFormat:
 					NSLocalizedString(@"%u image(s) updated for Group %i", @""),
 					[a count], c]];
@@ -567,7 +568,7 @@
 		if ([selectedIndexes count] == 1) {
 			attStr = Fileinfo2EXIFString([imgMatrix firstSelectedFilename],
 										 [[NSApp delegate] thumbsCache],
-										 [moreBtn state], YES);
+										 [moreBtn state]);
 			// exif thumbnail
 			[thumbView setImage:
 				[EpegWrapper exifThumbForPath:ResolveAliasToPath([imgMatrix firstSelectedFilename])]];

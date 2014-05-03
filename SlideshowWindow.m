@@ -340,7 +340,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (currentIndex == [filenames count]) return;
 	NSMutableAttributedString *attStr;
 	attStr = Fileinfo2EXIFString([filenames objectAtIndex:currentIndex],
-								 imgCache,moreExif,YES);
+								 imgCache,moreExif);
 	NSRange r = NSMakeRange(0,[attStr length]);
 	NSShadow *shdw = [[[NSShadow alloc] init] autorelease];
 	[shdw setShadowColor:[NSColor blackColor]];

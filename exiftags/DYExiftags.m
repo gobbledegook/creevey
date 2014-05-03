@@ -72,15 +72,15 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 		if (list->lvl == lvl) {
 			// fancy localization footwork
 			//n = list->descr ? list->descr : list->name;
-			id internalKey = [NSString stringWithCString:list->name];
+			id internalKey = [NSString stringWithCString:list->name encoding:NSISOLatin1StringEncoding];
 			id locString = NSLocalizedStringFromTable(internalKey,
 													  @"EXIF", @"");
 			if (locString == internalKey && list->descr)
 				// failed, use exiftag's English desc
 				// but check if it's NULL
-				locString = [NSString stringWithCString:list->descr];
+				locString = [NSString stringWithCString:list->descr encoding:NSISOLatin1StringEncoding];
 			if (list->str)
-				[result appendFormat:@"\t%@:\t%s\n", locString, list->str];
+				[result appendFormat:@"\t%@:\t%s\n", locString, list->str]; // %s strings seem to get interpreted as MacRoman, which is good enough for now, given that EXIF doesn't have a standard encoding for string values
 			else
 				[result appendFormat:@"\t%@:\t%d\n", locString, list->value];
 		}

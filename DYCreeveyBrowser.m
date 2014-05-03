@@ -41,7 +41,7 @@
 	return [super validateMenuItem:menuItem];
 }
 - (void)selectAll:(id)sender {
-	[[[self window] delegate] selectAll:sender]; // to pass it to image matrix
+	[(CreeveyMainWindowController *)[[self window] delegate] selectAll:sender]; // to pass it to image matrix
 }
 - (void)keyDown:(NSEvent *)e {
 	unichar c = [[e characters] characterAtIndex:0];
@@ -49,7 +49,7 @@
 		if ([self frame].size.height > [[self superview] frame].size.height)
 			[[self superview] keyDown:e]; // scroll ourselves
 		else
-			[[[self window] delegate] fakeKeyDown:e]; // scroll img matrix
+			[(CreeveyMainWindowController *)[[self window] delegate] fakeKeyDown:e]; // scroll img matrix
 	else
 		[super keyDown:e];
 }
@@ -89,6 +89,10 @@
 - (void)dealloc {
 	[typedString release];
 	[super dealloc];
+}
+
+- (id <NSBrowserDelegate,DYCreeveyBrowserDelegate>)delegate {
+	return (id <NSBrowserDelegate,DYCreeveyBrowserDelegate>)[super delegate];
 }
 
 #define KEYPRESS_INTERVAL 0.5
@@ -163,7 +167,7 @@
 		
         if (sourceDragMask & NSDragOperationGeneric) {
 			
-            [[[self window] delegate] openFiles:files withSlideshow:NO]; // **
+            [(CreeveyMainWindowController *)[[self window] delegate] openFiles:files withSlideshow:NO]; // **
 			
         }
 		

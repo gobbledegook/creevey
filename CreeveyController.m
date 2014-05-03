@@ -42,32 +42,28 @@ BOOL FilesContainJPEG(NSArray *a) {
 }
 
 #define TAB(x,y)	[[[NSTextTab alloc] initWithType:x location:y] autorelease]
-NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache,
-											   BOOL moreExif, BOOL basicInfo) {
-	// basicInfo was added for the slideshow view
-	// it's defunct now that i've decided to stick the filename in
+NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache, BOOL moreExif) {
 	id s, path;
 	path = ResolveAliasToPath(origPath);
 	s = [[NSMutableString alloc] init];
-	if (basicInfo) [s appendString:[origPath lastPathComponent]];
+	[s appendString:[origPath lastPathComponent]];
 	if (path != origPath)
 		[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
 	DYImageInfo *i = [cache infoForKey:origPath];
 	if (!i) i = [cache infoForKey:path]; // if no info from the given path, try resolving the alias.
 	if (i) {
 		id exifStr = [DYExiftags tagsForFile:path moreTags:moreExif];
-		if (basicInfo)
-			[s appendFormat:@"\n%@ (%qu bytes)\n%@: %d %@: %d",
-				FileSize2String(i->fileSize), i->fileSize,
-				NSLocalizedString(@"Width", @""), (int)i->pixelSize.width,
-				NSLocalizedString(@"Height", @""), (int)i->pixelSize.height];
+		[s appendFormat:@"\n%@ (%qu bytes)\n%@: %d %@: %d",
+			FileSize2String(i->fileSize), i->fileSize,
+			NSLocalizedString(@"Width", @""), (int)i->pixelSize.width,
+			NSLocalizedString(@"Height", @""), (int)i->pixelSize.height];
 		if (exifStr) {
-			if (basicInfo) [s appendString:@"\n"];
+			[s appendString:@"\n"];
 			[s appendString:exifStr];
 		}
-	} else if (basicInfo) {
+	} else {
 		unsigned long long fsize;
-		fsize = [[[NSFileManager defaultManager] fileAttributesAtPath:path traverseLink:YES] fileSize];
+		fsize = [[[NSFileManager defaultManager] attributesOfItemAtPath:[path stringByResolvingSymlinksInPath] error:NULL] fileSize];
 		[s appendFormat:@"\n%@ (%qu bytes)\n%@",
 			FileSize2String(fsize), fsize,
 			NSLocalizedString(@"Unable to read file", @"")];
@@ -272,9 +268,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	DYJpegtranInfo jinfo;
 	NSInteger t = [sender tag] - 100;
 	if (t == 0) {
-		if (!jpegController)
-			if (![NSBundle loadNibNamed:@"DYJpegtranPanel" owner:self]) return;
-		if (![jpegController runOptionsPanel:&jinfo]) return;
+		if (!self.jpegController)
+			if (![[NSBundle mainBundle] loadNibNamed:@"DYJpegtranPanel" owner:self topLevelObjects:NULL]) return;
+		if (![self.jpegController runOptionsPanel:&jinfo]) return;
 	} else {
 		jinfo.thumbOnly = t > 30;
 		if (jinfo.thumbOnly) t -= 30;
@@ -679,28 +675,18 @@ enum {
 }
 - (IBAction)chooseStartupDir:(id)sender; {
     NSOpenPanel *op=[NSOpenPanel openPanel];
+	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	
     [op setCanChooseDirectories:YES];
     [op setCanChooseFiles:NO];
-    [op beginSheetForDirectory:[[NSUserDefaults standardUserDefaults] stringForKey:@"picturesFolderPath"]
-						  file:NULL types:NULL
-				modalForWindow:prefsWin modalDelegate:self
-				didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
-				   contextInfo:NULL];
-}
-- (void)openPanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo
-{
-	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
-	if (returnCode == NSOKButton) {
-		NSString *s = [[sheet filenames] objectAtIndex:0];
-		//[startupDirFld setStringValue:s];
-		[u setObject:s forKey:@"picturesFolderPath"];
-		[u setInteger:1 forKey:@"startupOption"];
-		//[[startupOptionMatrix cellWithTag:0] setState:0];
-		//[[startupOptionMatrix cellWithTag:1] setState:1];
-	}
-	[sheet orderOut:self];
-	[prefsWin makeKeyAndOrderFront:nil]; // otherwise unkeys
+	[op setDirectoryURL:[NSURL fileURLWithPath:[u stringForKey:@"picturesFolderPath"] isDirectory:YES]];
+	[op beginSheetModalForWindow:prefsWin completionHandler:^(NSInteger result) {
+		if (result == NSFileHandlingPanelOKButton) {
+			NSString *s = [[[op URLs] firstObject] path];
+			[u setObject:s forKey:@"picturesFolderPath"];
+			[u setInteger:1 forKey:@"startupOption"];
+		}
+	}];
 }
 
 - (IBAction)changeStartupOption:(id)sender; {
@@ -877,7 +863,7 @@ enum {
 		frontWindow = nil; // ** in case something funny happens between her and wChanged?
 		if ([creeveyWindows count] == 1) {
 			[[creeveyWindows objectAtIndex:0] updateDefaults];
-			if (exifWasVisible = [[exifTextView window] isVisible]) {
+			if ((exifWasVisible = [[exifTextView window] isVisible])) {
 				[[exifTextView window] orderOut:nil];
 			}
 		}

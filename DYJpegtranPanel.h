@@ -11,17 +11,15 @@
 #import "DYJpegtran.h"
 
 @interface DYJpegtranPanel : NSObject
-{
-    IBOutlet NSPopUpButton *copyMarkersMenu;
-    IBOutlet NSButton *grayscaleBtn;
-    IBOutlet NSButton *optimizeBtn;
-    IBOutlet NSButton *progressiveBtn;
-    IBOutlet NSPopUpButton *transformMenu;
-    IBOutlet NSButton *trimBtn;
-}
+@property (retain) IBOutlet NSPanel *topLevel;
+@property (assign) IBOutlet NSPopUpButton *markersMenu;
+@property (assign) IBOutlet NSButton *grayscaleBtn;
+@property (assign) IBOutlet NSButton *optimizeBtn;
+@property (assign) IBOutlet NSButton *progressiveBtn;
+@property (assign) IBOutlet NSPopUpButton *transformMenu;
+@property (assign) IBOutlet NSButton *trimBtn;
 - (IBAction)convert:(id)sender;
 - (IBAction)stopModal:(id)sender;
 - (IBAction)transformChanged:(id)sender;
-
 - (BOOL)runOptionsPanel:(DYJpegtranInfo *)i;
 @end

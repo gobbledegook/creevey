@@ -46,9 +46,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		path = [s copy];
 		
 		// get modTime
-		NSDictionary *fattrs = [[NSFileManager
-			defaultManager] fileAttributesAtPath:ResolveAliasToPath(s)
-									traverseLink:NO];
+		NSDictionary *fattrs = [[NSFileManager defaultManager] attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL];
 		modTime = [[fattrs fileModificationDate] retain];
 		
 		// get fileSize
@@ -154,7 +152,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 				[orig setSize:newSize];
 				result = [[NSImage alloc] initWithSize:newSize];
 				[result lockFocus];
-				[orig compositeToPoint:NSZeroPoint operation:NSCompositeSourceOver];
+				[orig drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositeSourceOver fraction:1.0];
 				[result unlockFocus];
 			}
 			//oldSize = [oldRep size];
@@ -295,8 +293,8 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	if (imgInfo) {
 		// must resolve alias before getting mod time
 		// b/c that's what we do in scaleImage
-		NSDate *modTime = [[fm fileAttributesAtPath:ResolveAliasToPath(s)
-									   traverseLink:NO] fileModificationDate];
+		NSDate *modTime = [[fm attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL] fileModificationDate];
+
 		// == nil if file doesn't exist
 		if ((modTime == nil && imgInfo->modTime == nil)
 			|| (modTime && imgInfo->modTime && [modTime isEqualToDate:imgInfo->modTime]))

@@ -212,7 +212,7 @@
 	const void *pixels;
 	unsigned long outsize;
 	NSBitmapImageRep *imageRep = nil;
-	if (pixels = epeg_exif_thumb(im, &outsize)) {
+	if ((pixels = epeg_exif_thumb(im, &outsize))) {
 		NSData *data = [[NSData alloc] initWithBytesNoCopy:(void *)pixels length:outsize]; //outbuffer will be freed by NSData
 		imageRep = [[NSBitmapImageRep alloc] initWithData:data];
 		[data release];

@@ -13,8 +13,7 @@
 @class CreeveyMainWindowController, DYImageCache, SlideshowWindow, DYJpegtranPanel;
 
 BOOL FileIsJPEG(NSString *s);
-NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache,
-											   BOOL moreExif, BOOL basicInfo);
+NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache, BOOL moreExif);
 
 #define NUM_FNKEY_CATS 11
 
@@ -25,7 +24,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	IBOutlet NSProgressIndicator *jpegProgressBar;
 	IBOutlet NSTextView *exifTextView; BOOL exifWasVisible;
 	IBOutlet NSButton *exifThumbnailDiscloseBtn;
-	DYJpegtranPanel *jpegController;
 
 	NSSet *filetypes;
 	NSMutableArray *creeveyWindows;
@@ -40,6 +38,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	IBOutlet NSButton *slideshowApplyBtn;
 	NSColor *slideshowBgColor;
 }
+
+@property (retain) IBOutlet DYJpegtranPanel *jpegController;
+
 // accessors
 - (NSMutableSet **)cats;
 - (DYImageCache *)thumbsCache;

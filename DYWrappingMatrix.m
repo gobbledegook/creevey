@@ -368,7 +368,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	if (!cmdKeyDown && mouseDownCellNum < numCells &&
 		([selectedIndexes containsIndex:mouseDownCellNum] ||
-		 NSPointInRect(mouseLoc, [self imageRectForIndex:mouseDownCellNum]) && !shiftKeyDown)) {
+		 (NSPointInRect(mouseLoc, [self imageRectForIndex:mouseDownCellNum]) && !shiftKeyDown))) {
 		// we should drag if started in selection
 		// or dragging the actual image
 		doDrag = 1;
@@ -940,7 +940,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
         if (sourceDragMask & NSDragOperationGeneric) {
 			
-            [[[self window] delegate] openFiles:files withSlideshow:NO]; // **
+            [(CreeveyMainWindowController *)[[self window] delegate] openFiles:files withSlideshow:NO]; // **
 			
         }
 		
