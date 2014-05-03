@@ -75,11 +75,12 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		
  		[self setBackgroundColor:[NSColor blackColor]];
 		[self setOpaque:NO];
+		if (NSAppKitVersionNumber > 1187) [self setCollectionBehavior:NSWindowCollectionBehaviorTransient]; // needed for new screen/spaces in 10.9.
+		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = -1;//blurr=8;
    }
     return self;
 }
-
 
 - (void)awakeFromNib {
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
