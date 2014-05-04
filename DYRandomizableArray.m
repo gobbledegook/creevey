@@ -120,7 +120,7 @@
 		[randomToOrdered exchangeObjectAtIndex:startIndex withObjectAtIndex:i];
 	}
 	while (--i) {
-		NSUInteger randomIndex = random()%(i+1);
+		NSUInteger randomIndex = arc4random()%(i+1);
 		[array exchangeObjectAtIndex:i withObjectAtIndex:randomIndex];
 		[randomToOrdered exchangeObjectAtIndex:i withObjectAtIndex:randomIndex]; // simultaneously save r2o array (it's parallel)
 		[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:i] unsignedIntegerValue]

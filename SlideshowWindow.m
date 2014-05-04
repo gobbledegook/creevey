@@ -48,7 +48,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 @implementation SlideshowWindow
 
 + (void)initialize {
-	srandom((unsigned long)time(NULL));
 	[[NSUserDefaults standardUserDefaults] registerDefaults:
 	 [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0]
 								 forKey:@"DYSlideshowWindowVisibleFields"]];
