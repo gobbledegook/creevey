@@ -17,13 +17,15 @@
 - initWithNotify:(BOOL)b {
 	if (self = [super init]) {
 		notify = b;
-		long vers;
-		Gestalt(gestaltSystemVersion,&vers);
+		SInt32 v1, v2, v3;
+		Gestalt(gestaltSystemVersionMajor,&v1);
+		Gestalt(gestaltSystemVersionMinor,&v2);
+		Gestalt(gestaltSystemVersionBugFix,&v3);
 		NSURLRequest *theRequest
 			= [NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:
-				@"http://blyt.net/cgi-bin/vers.cgi?v=%@&s=%X",
+				@"http://blyt.net/cgi-bin/vers.cgi?v=%@&s=%i&t=%i&u=%i",
 				[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"],
-				vers]]
+				v1, v2, v3]]
 							   cachePolicy:NSURLRequestUseProtocolCachePolicy
 						   timeoutInterval:60.0];
 		NSURLConnection *theConnection
