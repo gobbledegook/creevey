@@ -11,7 +11,6 @@
 #import "DYExiftags.h"
 
 #import "SlideshowWindow.h"
-#import <Carbon/Carbon.h>
 #import "DYCarbonGoodies.h"
 #import "NSStringDYBasePathExtension.h"
 #import "CreeveyController.h"
@@ -239,26 +238,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)becomeMainWindow { // need this when switching apps
-	//[self bringToForeground];
-	//HideMenuBar(); // in Carbon
-	//OSStatus Error = 
-	SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
-    //if (Error != noErr) NSLog(@"Error couldn't set SystemUIMode: %ld", (long)Error);
+	[NSApp setPresentationOptions:NSApplicationPresentationHideDock|NSApplicationPresentationAutoHideMenuBar];
 	[super becomeMainWindow];
 }
 
 - (void)resignMainWindow {
-	SetSystemUIMode(kUIModeNormal, 0);	
+	[NSApp setPresentationOptions:NSApplicationPresentationDefault];
 	[super resignMainWindow];
-}
-
-- (void)sendToBackground {
-	//[self setLevel:NSNormalWindowLevel-1];
-}
-
-- (void)bringToForeground {
-	//[self setLevel:NSNormalWindowLevel]; //**debugging
-//	[self setLevel:NSFloatingWindowLevel];//CGShieldingWindowLevel()];//NSMainMenuWindowLevel+1
 }
 
 #pragma mark timer stuff

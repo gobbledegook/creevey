@@ -235,16 +235,23 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (IBAction)revealSelectedFilesInFinder:(id)sender {
 	if ([slidesWindow isMainWindow]) {
-		if ([slidesWindow currentFile])
-			RevealItemsInFinder([NSArray arrayWithObject:[slidesWindow currentFile]]);
-		else
+		if ([slidesWindow currentFile]) {
+			NSString *s = [slidesWindow currentFile];
+			[[NSWorkspace sharedWorkspace] selectFile:s inFileViewerRootedAtPath:[s stringByDeletingLastPathComponent]];
+		} else {
 			[[NSWorkspace sharedWorkspace] openFile:[slidesWindow basePath]];
+		}
 	} else {
 		NSArray *a = [frontWindow currentSelection];
-		if ([a count])
-			RevealItemsInFinder(a);
-		else
+		if ([a count]) {
+			NSMutableArray *b = [NSMutableArray arrayWithCapacity:[a count]];
+			for (NSString *s in a) {
+				[b addObject:[NSURL fileURLWithPath:s]];
+			}
+			[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:b];
+		} else {
 			[[NSWorkspace sharedWorkspace] openFile:[frontWindow path]];
+		}
 	}
 }
 
@@ -253,13 +260,16 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSString *s = [slidesWindow isMainWindow]
 		? [slidesWindow currentFile]
 		: [[frontWindow currentSelection] objectAtIndex:0];
-	OSErr err = SetDesktopPicture(ResolveAliasToPath(s),0);
-	if (err != noErr) {
+	NSError *error = nil;
+	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s]
+											forScreen:[NSScreen mainScreen]
+											  options:nil
+												error:&error];
+	if (error)  {
 		NSRunAlertPanel(nil, //title
-						NSLocalizedString(@"Could not set the desktop because an error of type %i occurred.", @""),
-						@"Cancel", nil, nil,
-						err);
-	}
+						[error localizedDescription],
+						@"Cancel", nil, nil);
+	};
 }
 
 // this is called "test" even though it works now.
@@ -494,10 +504,6 @@ performFileOperation:NSWorkspaceRecycleOperation
 	[u synchronize];
 }
 
-
-- (void)applicationDidResignActive:(NSNotification *)aNotification {
-	[slidesWindow sendToBackground];
-}
 
 - (BOOL)application:(NSApplication *)sender
 		   openFile:(NSString *)filename {

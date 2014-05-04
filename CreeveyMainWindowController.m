@@ -17,7 +17,6 @@
 #import "DYCreeveyBrowser.h"
 #import "DYImageCache.h"
 #import "DYWrappingMatrix.h"
-#import "FinderCompare.h"
 
 @implementation NSString (DateModifiedCompare)
 
@@ -28,7 +27,7 @@
 	r = [[[fm attributesOfItemAtPath:[self stringByResolvingSymlinksInPath] error:NULL] fileModificationDate]
 			compare:[[fm attributesOfItemAtPath:[other stringByResolvingSymlinksInPath] error:NULL] fileModificationDate]];
 	if (r == NSOrderedSame) { // use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
-		return [self finderCompare:other];
+		return [self localizedStandardCompare:other];
 	}
 	return r;
 }
@@ -362,7 +361,7 @@
 		}
 	}
 	if (abs(sortOrder) == 1) {
-		[displayedFilenames sortUsingSelector:@selector(finderCompare:)];
+		[displayedFilenames sortUsingSelector:@selector(localizedStandardCompare:)];
 	} else {
 		[displayedFilenames sortUsingSelector:@selector(dateModifiedCompare:)];
 	}

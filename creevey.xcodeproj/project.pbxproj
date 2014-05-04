@@ -26,8 +26,6 @@
 		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
 		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
 		F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */ = {isa = PBXBuildFile; fileRef = F23DC5120A86CEF7005E49FD /* slideshow.tif */; };
-		F254E0E10BD30A420053F673 /* FinderCompare.m in Sources */ = {isa = PBXBuildFile; fileRef = F254E0E00BD30A420053F673 /* FinderCompare.m */; };
-		F254E0E50BD30A6A0053F673 /* FinderCompare.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E0E40BD30A6A0053F673 /* FinderCompare.h */; };
 		F254E82908917BA600DE9C38 /* DYJpegtranPanel.nib in Resources */ = {isa = PBXBuildFile; fileRef = F254E82808917BA600DE9C38 /* DYJpegtranPanel.nib */; };
 		F254E96F08919E2B00DE9C38 /* makers.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E96D08919E2B00DE9C38 /* makers.h */; };
 		F254E97008919E2B00DE9C38 /* makers.c in Sources */ = {isa = PBXBuildFile; fileRef = F254E96E08919E2B00DE9C38 /* makers.c */; };
@@ -66,7 +64,6 @@
 		F2D2AC63080B82840075532A /* brokendoc.tif in Resources */ = {isa = PBXBuildFile; fileRef = F2D2AC62080B82840075532A /* brokendoc.tif */; };
 		F2EFCFC20963D99F0033F328 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F2EFCFC10963D99F0033F328 /* libjpeg.a */; };
 		F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = F2F2641307EEA114006164BF /* SlideshowWindow.h */; };
-		F2F3B48307F7939100D9C639 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2F3B48207F7939100D9C639 /* Carbon.framework */; };
 		F2F3B72207F7B49400D9C639 /* SlideshowWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */; };
 		F2F54190080A3846008AE60F /* DYCreeveyBrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = F2F5418E080A3846008AE60F /* DYCreeveyBrowser.h */; };
 		F2F54191080A3846008AE60F /* DYCreeveyBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */; };
@@ -148,8 +145,6 @@
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
 		F23DC5120A86CEF7005E49FD /* slideshow.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = slideshow.tif; sourceTree = "<group>"; };
-		F254E0E00BD30A420053F673 /* FinderCompare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FinderCompare.m; sourceTree = "<group>"; };
-		F254E0E40BD30A6A0053F673 /* FinderCompare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FinderCompare.h; sourceTree = "<group>"; };
 		F254E11F0BD30DD80053F673 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Italian; path = Italian.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F254E85D08917C5400DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
 		F254E86008917C5E00DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
@@ -209,7 +204,6 @@
 		F2E83B920BD09D8F0092E425 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Italian; path = Italian.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F2EFCFC10963D99F0033F328 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = libjpeg/libjpeg.a; sourceTree = "<group>"; };
 		F2F2641307EEA114006164BF /* SlideshowWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowWindow.h; sourceTree = "<group>"; };
-		F2F3B48207F7939100D9C639 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SlideshowWindow.m; sourceTree = "<group>"; };
 		F2F5418E080A3846008AE60F /* DYCreeveyBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYCreeveyBrowser.h; sourceTree = "<group>"; };
 		F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYCreeveyBrowser.m; sourceTree = "<group>"; };
@@ -258,7 +252,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				F2F3B48307F7939100D9C639 /* Carbon.framework in Frameworks */,
 				F2EFCFC20963D99F0033F328 /* libjpeg.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -292,7 +285,6 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				F2F3B48207F7939100D9C639 /* Carbon.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 			);
 			name = "Linked Frameworks";
@@ -333,8 +325,6 @@
 			children = (
 				F2711710182AADE6008F97E1 /* DYRandomizableArray.h */,
 				F2711711182AADE6008F97E1 /* DYRandomizableArray.m */,
-				F254E0E40BD30A6A0053F673 /* FinderCompare.h */,
-				F254E0E00BD30A420053F673 /* FinderCompare.m */,
 				F2FE4FA808842F2600550533 /* libjpeg */,
 				F25EA26E08673274003728C2 /* Epeg */,
 				F2FE4F9E08842EF400550533 /* jpegtran */,
@@ -516,7 +506,6 @@
 				F254E96F08919E2B00DE9C38 /* makers.h in Headers */,
 				F262D802089AE58200CD3701 /* DYVersChecker.h in Headers */,
 				F20A7A4C0A85E1E300F4221C /* UKPrefsPanel.h in Headers */,
-				F254E0E50BD30A6A0053F673 /* FinderCompare.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -645,7 +634,6 @@
 				F254E97008919E2B00DE9C38 /* makers.c in Sources */,
 				F262D803089AE58200CD3701 /* DYVersChecker.m in Sources */,
 				F20A7A4D0A85E1E300F4221C /* UKPrefsPanel.m in Sources */,
-				F254E0E10BD30A420053F673 /* FinderCompare.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

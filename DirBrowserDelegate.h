@@ -21,7 +21,7 @@
 	NSString *currPath;
 	NSArray *currBrowserPathComponents;
 	NSMutableSet *revealedDirectories;
-	AliasHandle currAlias;
+	NSData *currAlias;
 	
 	UKKQueue *kq;
 	IBOutlet NSBrowser *_b;

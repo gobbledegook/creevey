@@ -15,14 +15,5 @@
 // returns path if it's not an alias, or if not resolvable
 NSString *ResolveAliasToPath(NSString *path);
 
-// returns nil on error
-NSString *AliasToPath(AliasHandle aHndl);
-
-// can reveal multiple items, unlike NSWorkspace
-void RevealItemsInFinder(NSArray *a);
-
 // check if a files invisible flag is set
 BOOL FileIsInvisible(NSString *path);
-
-// use AppleEvent to set desktop pic
-OSErr SetDesktopPicture(NSString *picturePath,SInt32 pIndex);

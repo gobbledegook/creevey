@@ -59,7 +59,7 @@
 	[colsInternal release];
 	[rootVolumeName release];
 	[currPath release];
-	DisposeHandle((Handle)currAlias);
+	[currAlias release];
 	[revealedDirectories release];
 	[super dealloc];
 }
@@ -77,7 +77,7 @@
 
 -(void)reload {
 	[_b loadColumnZero];
-	NSString *newPath = AliasToPath(currAlias);
+	NSString *newPath = [[NSURL URLByResolvingBookmarkData:currAlias options:(NSURLBookmarkResolutionWithoutUI|NSURLBookmarkResolutionWithoutMounting) relativeToURL:nil bookmarkDataIsStale:NULL error:NULL] path];
 	// if no newPath (files deleted?) fall back to currPath
 	browserInited = NO;
 	[self setPath:newPath ?: currPath]; // don't actually set currPath here, wait for browserWillSendAction to do it
@@ -273,12 +273,7 @@
 
 	[currPath autorelease];
 	currPath = [newPath retain];
-	
-	FSRef f;
-	DisposeHandle((Handle)currAlias);
-	currAlias = NULL;
-	if (FSPathMakeRef([[self path] fileSystemRepresentation],&f,NULL) == noErr) {
-		FSNewAlias(NULL,&f,&currAlias);
-	}
+	[currAlias autorelease];
+	currAlias = [[[NSURL fileURLWithPath:currPath isDirectory:YES] bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL] retain];
 }
 @end

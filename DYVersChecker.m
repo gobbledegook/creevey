@@ -10,7 +10,6 @@
 //  Created by d on 2005.07.29.
 
 #import "DYVersChecker.h"
-#import <Carbon/Carbon.h>
 
 @implementation DYVersChecker
 

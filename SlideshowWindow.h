@@ -53,8 +53,6 @@
 - (void)startSlideshow;
 - (void)startSlideshowAtIndex:(NSUInteger)n;
 - (void)endSlideshow;
-- (void)sendToBackground;
-- (void)bringToForeground;
 
 - (void)setAutoadvanceTime:(NSTimeInterval)s; // 0 to turn off
 
