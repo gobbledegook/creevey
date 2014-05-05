@@ -1,0 +1,69 @@
+
+/* Class = "NSPanel"; title = "Traitement des fichiers JPEG"; ObjectID = "7"; */
+"7.title" = "Traitement des fichiers JPEG";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "9"; */
+"9.title" = "Box";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "16"; */
+"16.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "Rotation à droite"; ObjectID = "17"; */
+"17.title" = "Rotation à droite";
+
+/* Class = "NSMenuItem"; title = "Transposition ↙"; ObjectID = "18"; */
+"18.title" = "Transposition ↙";
+
+/* Class = "NSMenuItem"; title = "Rotation 180°"; ObjectID = "19"; */
+"19.title" = "Rotation 180°";
+
+/* Class = "NSMenuItem"; title = "Pas de transformation"; ObjectID = "20"; */
+"20.title" = "Pas de transformation";
+
+/* Class = "NSMenuItem"; title = "Transposition transversale ↘"; ObjectID = "21"; */
+"21.title" = "Transposition transversale ↘";
+
+/* Class = "NSMenuItem"; title = "Symétrie axe vertical ↕"; ObjectID = "23"; */
+"23.title" = "Symétrie axe vertical ↕";
+
+/* Class = "NSMenuItem"; title = "Symétrie axe horizontal ↔"; ObjectID = "24"; */
+"24.title" = "Symétrie axe horizontal ↔";
+
+/* Class = "NSMenuItem"; title = "Rotation à gauche"; ObjectID = "26"; */
+"26.title" = "Rotation à gauche";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "29"; */
+"29.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "Ne conserver que les infos JPEG (Supprimer EXIF et autres)"; ObjectID = "30"; */
+"30.title" = "Ne conserver que les infos JPEG (Supprimer EXIF et autres)";
+
+/* Class = "NSMenuItem"; title = "Conserver toutes les infos"; ObjectID = "31"; */
+"31.title" = "Conserver toutes les infos";
+
+/* Class = "NSMenuItem"; title = "Supprimer toutes les infos"; ObjectID = "32"; */
+"32.title" = "Supprimer toutes les infos";
+
+/* Class = "NSButtonCell"; title = "Encoder en JPEG progressif ⌘P"; ObjectID = "52"; */
+"52.title" = "Encoder en JPEG progressif ⌘P";
+
+/* Class = "NSTextFieldCell"; title = "Options:"; ObjectID = "53"; */
+"53.title" = "Options:";
+
+/* Class = "NSButtonCell"; title = "Annuler"; ObjectID = "54"; */
+"54.title" = "Annuler";
+
+/* Class = "NSButtonCell"; title = "Convertir en niveaux de gris ⌘G"; ObjectID = "55"; */
+"55.title" = "Convertir en niveaux de gris ⌘G";
+
+/* Class = "NSButtonCell"; title = "Convertir"; ObjectID = "57"; */
+"57.title" = "Convertir";
+
+/* Class = "NSButtonCell"; title = "Ignorer les blocs non-transformables dans les bords ⌘D"; ObjectID = "59"; */
+"59.title" = "Ignorer les blocs non-transformables dans les bords ⌘D";
+
+/* Class = "NSTextFieldCell"; title = "Transformation:"; ObjectID = "60"; */
+"60.title" = "Transformation:";
+
+/* Class = "NSButtonCell"; title = "Optimiser la table de Huffman ⌘O"; ObjectID = "61"; */
+"61.title" = "Optimiser la table de Huffman ⌘O";

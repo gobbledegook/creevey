@@ -1,0 +1,357 @@
+
+/* Class = "NSMenuItem"; title = "Porta tutto avanti"; ObjectID = "5"; */
+"5.title" = "Porta tutto avanti";
+
+/* Class = "NSMenuItem"; title = "Finestra"; ObjectID = "19"; */
+"19.title" = "Finestra";
+
+/* Class = "NSMenuItem"; title = "Contrai"; ObjectID = "23"; */
+"23.title" = "Contrai";
+
+/* Class = "NSMenu"; title = "Finestra"; ObjectID = "24"; */
+"24.title" = "Finestra";
+
+/* Class = "NSMenu"; title = "MainMenu"; ObjectID = "29"; */
+"29.title" = "MainMenu";
+
+/* Class = "NSMenuItem"; title = "Phœnix Slides"; ObjectID = "56"; */
+"56.title" = "Phœnix Slides";
+
+/* Class = "NSMenu"; title = "Phœnix Slides"; ObjectID = "57"; */
+"57.title" = "Phœnix Slides";
+
+/* Class = "NSMenuItem"; title = "Informazioni su Phoenix Slides"; ObjectID = "58"; */
+"58.title" = "Informazioni su Phoenix Slides";
+
+/* Class = "NSMenu"; title = "File"; ObjectID = "81"; */
+"81.title" = "File";
+
+/* Class = "NSMenuItem"; title = "File"; ObjectID = "83"; */
+"83.title" = "File";
+
+/* Class = "NSMenuItem"; title = "Aiuto"; ObjectID = "103"; */
+"103.title" = "Aiuto";
+
+/* Class = "NSMenu"; title = "Aiuto"; ObjectID = "106"; */
+"106.title" = "Aiuto";
+
+/* Class = "NSMenuItem"; title = "Aiuto di Phoenix Slides"; ObjectID = "111"; */
+"111.title" = "Aiuto di Phoenix Slides";
+
+/* Class = "NSMenuItem"; title = "Preferenze…"; ObjectID = "129"; */
+"129.title" = "Preferenze…";
+
+/* Class = "NSMenu"; title = "Servizi"; ObjectID = "130"; */
+"130.title" = "Servizi";
+
+/* Class = "NSMenuItem"; title = "Servizi"; ObjectID = "131"; */
+"131.title" = "Servizi";
+
+/* Class = "NSMenuItem"; title = "Nascondi Phoenix Slides"; ObjectID = "134"; */
+"134.title" = "Nascondi Phoenix Slides";
+
+/* Class = "NSMenuItem"; title = "Chiudi Phoenix Slides"; ObjectID = "136"; */
+"136.title" = "Chiudi Phoenix Slides";
+
+/* Class = "NSMenuItem"; title = "Nascondi il resto"; ObjectID = "145"; */
+"145.title" = "Nascondi il resto";
+
+/* Class = "NSMenuItem"; title = "Mostra tutto"; ObjectID = "150"; */
+"150.title" = "Mostra tutto";
+
+/* Class = "NSMenuItem"; title = "Copia"; ObjectID = "157"; */
+"157.title" = "Copia";
+
+/* Class = "NSMenuItem"; title = "Annulla"; ObjectID = "158"; */
+"158.title" = "Annulla";
+
+/* Class = "NSMenuItem"; title = "Taglia"; ObjectID = "160"; */
+"160.title" = "Taglia";
+
+/* Class = "NSMenuItem"; title = "Composizione"; ObjectID = "163"; */
+"163.title" = "Composizione";
+
+/* Class = "NSMenuItem"; title = "Elimina"; ObjectID = "164"; */
+"164.title" = "Elimina";
+
+/* Class = "NSMenu"; title = "Composizione"; ObjectID = "169"; */
+"169.title" = "Composizione";
+
+/* Class = "NSMenuItem"; title = "Incolla"; ObjectID = "171"; */
+"171.title" = "Incolla";
+
+/* Class = "NSMenuItem"; title = "Seleziona tutto"; ObjectID = "172"; */
+"172.title" = "Seleziona tutto";
+
+/* Class = "NSMenuItem"; title = "Ripristina"; ObjectID = "173"; */
+"173.title" = "Ripristina";
+
+/* Class = "NSMenuItem"; title = "Zoom"; ObjectID = "197"; */
+"197.title" = "Zoom";
+
+/* Class = "SlideshowWindow"; title = "Slideshow Window"; ObjectID = "210"; */
+"210.title" = "Slideshow Window";
+
+/* Class = "NSMenuItem"; title = "Presentazione"; ObjectID = "317"; */
+"317.title" = "Presentazione";
+
+/* Class = "NSMenu"; title = "Presentazione"; ObjectID = "318"; */
+"318.title" = "Presentazione";
+
+/* Class = "NSMenuItem"; title = "Avvia la Presentazione"; ObjectID = "319"; */
+"319.title" = "Avvia la Presentazione";
+
+/* Class = "NSMenuItem"; title = "Esci dalla Presentazione"; ObjectID = "329"; */
+"329.title" = "Esci dalla Presentazione";
+
+/* Class = "NSMenuItem"; title = "Presentazione Ciclica"; ObjectID = "331"; */
+"331.title" = "Presentazione Ciclica";
+
+/* Class = "NSMenuItem"; title = "Deseleziona tutto"; ObjectID = "334"; */
+"334.title" = "Deseleziona tutto";
+
+/* Class = "NSMenuItem"; title = "Mostra nel Finder"; ObjectID = "341"; */
+"341.title" = "Mostra nel Finder";
+
+/* Class = "NSMenuItem"; title = "Sposta nel Cestino"; ObjectID = "343"; */
+"343.title" = "Sposta nel Cestino";
+
+/* Class = "NSMenuItem"; title = "Usa come Sfondo Scrivania"; ObjectID = "391"; */
+"391.title" = "Usa come Sfondo Scrivania";
+
+/* Class = "NSPanel"; title = "Preferenze"; ObjectID = "394"; */
+"394.title" = "Preferenze";
+
+/* Class = "NSButtonCell"; title = "Va alla cartella specificata:"; ObjectID = "399"; */
+"399.title" = "Va alla cartella specificata:";
+
+/* Class = "NSButtonCell"; title = "Va alla cartella più recente"; ObjectID = "400"; */
+"400.title" = "Va alla cartella più recente";
+
+/* Class = "NSMenuItem"; title = "Mostra Scorciatoie da tastiera"; ObjectID = "418"; */
+"418.title" = "Mostra Scorciatoie da tastiera";
+
+/* Class = "NSMenuItem"; title = "Espandi le Immagini Piccole"; ObjectID = "447"; */
+"447.title" = "Espandi le Immagini Piccole";
+
+/* Class = "NSMenuItem"; title = "JPEG"; ObjectID = "449"; */
+"449.title" = "JPEG";
+
+/* Class = "NSMenu"; title = "JPEG"; ObjectID = "450"; */
+"450.title" = "JPEG";
+
+/* Class = "NSMenuItem"; title = "Ruota a Destra"; ObjectID = "451"; */
+"451.title" = "Ruota a Destra";
+
+/* Class = "NSMenuItem"; title = "Ruota a Sinistra"; ObjectID = "453"; */
+"453.title" = "Ruota a Sinistra";
+
+/* Class = "NSPanel"; title = "Elaborazione Trasformazione JPEG..."; ObjectID = "455"; */
+"455.title" = "Elaborazione Trasformazione JPEG...";
+
+/* Class = "NSMenuItem"; title = "Rifletti in Orizzontale ↔"; ObjectID = "464"; */
+"464.title" = "Rifletti in Orizzontale ↔";
+
+/* Class = "NSMenuItem"; title = "Rifletti in Verticale ↕"; ObjectID = "465"; */
+"465.title" = "Rifletti in Verticale ↕";
+
+/* Class = "NSMenuItem"; title = "Ruota di 180°"; ObjectID = "466"; */
+"466.title" = "Ruota di 180°";
+
+/* Class = "NSMenuItem"; title = "Rendi Progressiva"; ObjectID = "469"; */
+"469.title" = "Rendi Progressiva";
+
+/* Class = "NSMenuItem"; title = "Opzioni Avanzate..."; ObjectID = "470"; */
+"470.title" = "Opzioni Avanzate...";
+
+/* Class = "NSPanel"; title = "Informazioni sull'immagine"; ObjectID = "481"; */
+"481.title" = "Informazioni sull'immagine";
+
+/* Class = "NSMenuItem"; title = "Informazioni"; ObjectID = "486"; */
+"486.title" = "Informazioni";
+
+/* Class = "NSMenuItem"; title = "Riflessione Diagonale a sin.↙"; ObjectID = "490"; */
+"490.title" = "Riflessione Diagonale a sin.↙";
+
+/* Class = "NSMenuItem"; title = "Riflessione Diagonale a destra ↘"; ObjectID = "491"; */
+"491.title" = "Riflessione Diagonale a destra ↘";
+
+/* Class = "NSMenuItem"; title = "Nuova Finestra"; ObjectID = "494"; */
+"494.title" = "Nuova Finestra";
+
+/* Class = "NSMenuItem"; title = "Chiudi la Finestra"; ObjectID = "499"; */
+"499.title" = "Chiudi la Finestra";
+
+/* Class = "NSMenuItem"; title = "Ordine casuale"; ObjectID = "540"; */
+"540.title" = "Ordine casuale";
+
+/* Class = "NSMenuItem"; title = "Invia commenti（Sito Web）"; ObjectID = "543"; */
+"543.title" = "Invia commenti（Sito Web）";
+
+/* Class = "NSMenuItem"; title = "Verifica la presenza di aggiornamenti…"; ObjectID = "544"; */
+"544.title" = "Verifica la presenza di aggiornamenti…";
+
+/* Class = "IBBindingConnection"; ibShadowedDisplayPattern = "Prossimo controllo: %{value1}@"; ObjectID = "568"; */
+"568.ibShadowedDisplayPattern" = "Prossimo controllo: %{value1}@";
+
+/* Class = "NSMenuItem"; title = "Mostra le Immagini Grandi in dimensioni reali"; ObjectID = "572"; */
+"572.title" = "Mostra le Immagini Grandi in dimensioni reali";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "575"; */
+"575.title" = "Box";
+
+/* Class = "NSTabViewItem"; label = "Generali"; ObjectID = "588"; */
+"588.label" = "Generali";
+
+/* Class = "NSTabViewItem"; label = "Presentazione"; ObjectID = "589"; */
+"589.label" = "Presentazione";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "633"; */
+"633.title" = "Box";
+
+/* Class = "NSMenuItem"; title = "EXIF"; ObjectID = "645"; */
+"645.title" = "EXIF";
+
+/* Class = "NSMenu"; title = "EXIF"; ObjectID = "646"; */
+"646.title" = "EXIF";
+
+/* Class = "NSMenuItem"; title = "Rigenera Miniatura EXIF…"; ObjectID = "647"; */
+"647.title" = "Rigenera Miniatura EXIF…";
+
+/* Class = "NSMenu"; title = "Menu"; ObjectID = "650"; */
+"650.title" = "Menu";
+
+/* Class = "NSMenuItem"; title = "Ruota a Sinistra"; ObjectID = "651"; */
+"651.title" = "Ruota a Sinistra";
+
+/* Class = "NSMenuItem"; title = "Ruota a Destra"; ObjectID = "652"; */
+"652.title" = "Ruota a Destra";
+
+/* Class = "NSMenuItem"; title = "Rimuovi le Miniature..."; ObjectID = "654"; */
+"654.title" = "Rimuovi le Miniature...";
+
+/* Class = "NSMenuItem"; title = "Resetta il marcatore di Orientazione…"; ObjectID = "658"; */
+"658.title" = "Resetta il marcatore di Orientazione…";
+
+/* Class = "NSMenuItem"; title = "Ruota i File JPEG in base al marcatore di Orientazione"; ObjectID = "660"; */
+"660.title" = "Ruota i File JPEG in base al marcatore di Orientazione";
+
+/* Class = "NSMenuItem"; title = "✎"; ObjectID = "671"; */
+"671.title" = "✎";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "673"; */
+"673.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "✎"; ObjectID = "674"; */
+"674.title" = "✎";
+
+/* Class = "NSMenuItem"; title = "Item2"; ObjectID = "675"; */
+"675.title" = "Item2";
+
+/* Class = "NSMenuItem"; title = "Item3"; ObjectID = "676"; */
+"676.title" = "Item3";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "690"; */
+"690.title" = "Box";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "732"; */
+"732.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "160"; ObjectID = "733"; */
+"733.title" = "160";
+
+/* Class = "NSMenuItem"; title = "320"; ObjectID = "734"; */
+"734.title" = "320";
+
+/* Class = "NSMenuItem"; title = "512"; ObjectID = "735"; */
+"735.title" = "512";
+
+/* Class = "NSTextFieldCell"; title = "All'Avvio:"; ObjectID = "742"; */
+"815.title" = "All'Avvio:";
+
+/* Class = "NSTextFieldCell"; placeholderString = "~/Pictures"; ObjectID = "743"; */
+"816.placeholderString" = "~/Pictures";
+
+/* Class = "NSButtonCell"; title = "Scegli..."; ObjectID = "744"; */
+"817.title" = "Scegli...";
+
+/* Class = "NSButtonCell"; title = "Verifica automaticamente la presenza di aggiornamenti"; ObjectID = "745"; */
+"818.title" = "Verifica automaticamente la presenza di aggiornamenti";
+
+/* Class = "NSButtonCell"; title = "Non cambiare la data di modifica per trasformazioni JPEG lossless"; ObjectID = "747"; */
+"820.title" = "Non cambiare la data di modifica per trasformazioni JPEG lossless";
+
+/* Class = "NSTextFieldCell"; title = "Colore di sfondo delle Miniature"; ObjectID = "748"; */
+"821.title" = "Colore di sfondo delle Miniature";
+
+/* Class = "NSButtonCell"; title = "Consenti Movimento files/Creazione Alias"; ObjectID = "749"; */
+"822.title" = "Consenti Movimento files/Creazione Alias";
+
+/* Class = "NSTextFieldCell"; title = "Ampiezza massima Miniature"; ObjectID = "751"; */
+"824.title" = "Ampiezza massima Miniature";
+
+/* Class = "NSButtonCell"; title = "Avanza Automaticamente ogni"; ObjectID = "752"; */
+"825.title" = "Avanza Automaticamente ogni";
+
+/* Class = "NSTextFieldCell"; title = "Preferenze per la Presentazione:"; ObjectID = "753"; */
+"826.title" = "Preferenze per la Presentazione:";
+
+/* Class = "NSTextFieldCell"; title = "secondi"; ObjectID = "755"; */
+"828.title" = "secondi";
+
+/* Class = "NSButtonCell"; title = "Dopo il termine, Ricomincia"; ObjectID = "756"; */
+"829.title" = "Dopo il termine, Ricomincia";
+
+/* Class = "NSButtonCell"; title = "Ordine casuale"; ObjectID = "757"; */
+"830.title" = "Ordine casuale";
+
+/* Class = "NSButtonCell"; title = "Espandi la Immagini Piccole"; ObjectID = "758"; */
+"831.title" = "Espandi la Immagini Piccole";
+
+/* Class = "NSButtonCell"; title = "Mostra le Immagini Grandi in dimensioni reali"; ObjectID = "759"; */
+"832.title" = "Mostra le Immagini Grandi in dimensioni reali";
+
+/* Class = "NSButtonCell"; title = "Applica i Settaggi"; ObjectID = "760"; */
+"833.title" = "Applica i Settaggi";
+
+/* Class = "NSTextFieldCell"; title = "Colore di sfondo/Trasparenza"; ObjectID = "761"; */
+"834.title" = "Colore di sfondo/Trasparenza";
+
+/* Class = "NSTextFieldCell"; title = "Elaborazione File in corso..."; ObjectID = "762"; */
+"835.title" = "Elaborazione File in corso...";
+
+/* Class = "NSButtonCell"; title = "Annulla"; ObjectID = "763"; */
+"836.title" = "Annulla";
+
+/* Class = "NSButtonCell"; title = "Altri marcatori EXIF"; ObjectID = "764"; */
+"837.title" = "Altri marcatori EXIF";
+
+/* Class = "NSButtonCell"; title = "Miniatura EXIF"; ObjectID = "766"; */
+"839.title" = "Miniatura EXIF";
+
+/* Class = "NSTextFieldCell"; placeholderString = "Nessuna Miniatura EXIF"; ObjectID = "768"; */
+"841.placeholderString" = "Nessuna Miniatura EXIF";
+
+/* Class = "NSButtonCell"; title = "Radio"; ObjectID = "770"; */
+"843.title" = "Radio";
+
+/* Class = "NSMenuItem"; title = "Vista"; ObjectID = "773"; */
+"848.title" = "Vista";
+
+/* Class = "NSMenu"; title = "Vista"; ObjectID = "774"; */
+"849.title" = "Vista";
+
+/* Class = "NSMenuItem"; title = "Organizza per nome"; ObjectID = "775"; */
+"850.title" = "Organizza per nome";
+
+/* Class = "NSMenuItem"; title = "Organizza per data di modifica"; ObjectID = "776"; */
+"851.title" = "Organizza per data di modifica";
+
+/* Class = "NSMenuItem"; title = "Mostra nomi file"; ObjectID = "780"; */
+"855.title" = "Mostra nomi file";
+
+/* Class = "NSMenuItem"; title = "Memorizza le Rotazioni"; ObjectID = "785"; */
+"857.title" = "Memorizza le Rotazioni";
+
+/* Class = "NSMenuItem"; title = "Rotazione Automatica in base ai dati EXIF"; ObjectID = "783"; */
+"860.title" = "Rotazione Automatica in base ai dati EXIF";

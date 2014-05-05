@@ -1,0 +1,69 @@
+
+/* Class = "NSPanel"; title = "轉換JPEG檔案"; ObjectID = "7"; */
+"7.title" = "轉換JPEG檔案";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "9"; */
+"9.title" = "Box";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "16"; */
+"16.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "向右旋轉"; ObjectID = "17"; */
+"17.title" = "向右旋轉";
+
+/* Class = "NSMenuItem"; title = "對角線翻轉 ↙"; ObjectID = "18"; */
+"18.title" = "對角線翻轉 ↙";
+
+/* Class = "NSMenuItem"; title = "旋轉180°"; ObjectID = "19"; */
+"19.title" = "旋轉180°";
+
+/* Class = "NSMenuItem"; title = "不要轉換"; ObjectID = "20"; */
+"20.title" = "不要轉換";
+
+/* Class = "NSMenuItem"; title = "對角線翻轉 ↘"; ObjectID = "21"; */
+"21.title" = "對角線翻轉 ↘";
+
+/* Class = "NSMenuItem"; title = "垂直翻轉 ↕"; ObjectID = "23"; */
+"23.title" = "垂直翻轉 ↕";
+
+/* Class = "NSMenuItem"; title = "水平翻轉 ↔"; ObjectID = "24"; */
+"24.title" = "水平翻轉 ↔";
+
+/* Class = "NSMenuItem"; title = "向左旋轉"; ObjectID = "26"; */
+"26.title" = "向左旋轉";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "29"; */
+"29.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "只保留JPEG註解 (刪除EXIF和其他標記)"; ObjectID = "30"; */
+"30.title" = "只保留JPEG註解 (刪除EXIF和其他標記)";
+
+/* Class = "NSMenuItem"; title = "保留所有標記"; ObjectID = "31"; */
+"31.title" = "保留所有標記";
+
+/* Class = "NSMenuItem"; title = "刪除所有標記"; ObjectID = "32"; */
+"32.title" = "刪除所有標記";
+
+/* Class = "NSButtonCell"; title = "轉成漸進JPEG檔案 ⌘P"; ObjectID = "52"; */
+"52.title" = "轉成漸進JPEG檔案 ⌘P";
+
+/* Class = "NSTextFieldCell"; title = "其他選向:"; ObjectID = "53"; */
+"53.title" = "其他選向:";
+
+/* Class = "NSButtonCell"; title = "取消"; ObjectID = "54"; */
+"54.title" = "取消";
+
+/* Class = "NSButtonCell"; title = "轉成黑白 ⌘G"; ObjectID = "55"; */
+"55.title" = "轉成黑白 ⌘G";
+
+/* Class = "NSButtonCell"; title = "轉換"; ObjectID = "57"; */
+"57.title" = "轉換";
+
+/* Class = "NSButtonCell"; title = "刪除不能轉換的邊緣數據塊 ⌘D"; ObjectID = "59"; */
+"59.title" = "刪除不能轉換的邊緣數據塊 ⌘D";
+
+/* Class = "NSTextFieldCell"; title = "轉換形式:"; ObjectID = "60"; */
+"60.title" = "轉換形式:";
+
+/* Class = "NSButtonCell"; title = "最佳化 Huffman 表 ⌘O"; ObjectID = "61"; */
+"61.title" = "最佳化 Huffman 表 ⌘O";

@@ -1,0 +1,18 @@
+
+/* Class = "NSWindow"; title = "Creevey"; ObjectID = "21"; */
+"21.title" = "Creevey";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Buscar en todas las subcarpetas (más lento)."; ObjectID = "370"; */
+"370.ibShadowedToolTip" = "Buscar en todas las subcarpetas (más lento).";
+
+/* Class = "NSTextFieldCell"; placeholderString = "0 files"; ObjectID = "515"; */
+"515.placeholderString" = "0 files";
+
+/* Class = "NSButtonCell"; title = "Pase de diapositivas"; ObjectID = "516"; */
+"516.title" = "Pase de diapositivas";
+
+/* Class = "NSButtonCell"; title = "Subcarpetas ⌘F"; ObjectID = "517"; */
+"517.title" = "Subcarpetas ⌘F";
+
+/* Class = "NSTextFieldCell"; placeholderString = "No images selected"; ObjectID = "518"; */
+"518.placeholderString" = "No images selected";

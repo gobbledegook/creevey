@@ -1,0 +1,69 @@
+
+/* Class = "NSPanel"; title = "Procesar archivos JPEG"; ObjectID = "7"; */
+"7.title" = "Procesar archivos JPEG";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "9"; */
+"9.title" = "Box";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "16"; */
+"16.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "Girar a la derecha"; ObjectID = "17"; */
+"17.title" = "Girar a la derecha";
+
+/* Class = "NSMenuItem"; title = "Trasponer (Voltear diagonalmente) ↙"; ObjectID = "18"; */
+"18.title" = "Trasponer (Voltear diagonalmente) ↙";
+
+/* Class = "NSMenuItem"; title = "Girar 180°"; ObjectID = "19"; */
+"19.title" = "Girar 180°";
+
+/* Class = "NSMenuItem"; title = "Sin transformación"; ObjectID = "20"; */
+"20.title" = "Sin transformación";
+
+/* Class = "NSMenuItem"; title = "Trasponer transversalmente ↘"; ObjectID = "21"; */
+"21.title" = "Trasponer transversalmente ↘";
+
+/* Class = "NSMenuItem"; title = "Voltear verticalmente ↕"; ObjectID = "23"; */
+"23.title" = "Voltear verticalmente ↕";
+
+/* Class = "NSMenuItem"; title = "Voltear horizontalmente ↔"; ObjectID = "24"; */
+"24.title" = "Voltear horizontalmente ↔";
+
+/* Class = "NSMenuItem"; title = "Girar a la izquierda"; ObjectID = "26"; */
+"26.title" = "Girar a la izquierda";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "29"; */
+"29.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "Sólo mantener los comentarios JPEG (Remover EXIF y otros)"; ObjectID = "30"; */
+"30.title" = "Sólo mantener los comentarios JPEG (Remover EXIF y otros)";
+
+/* Class = "NSMenuItem"; title = "Mantener los marcadores"; ObjectID = "31"; */
+"31.title" = "Mantener los marcadores";
+
+/* Class = "NSMenuItem"; title = "Eliminar todos los marcadores"; ObjectID = "32"; */
+"32.title" = "Eliminar todos los marcadores";
+
+/* Class = "NSButtonCell"; title = "Hacer progresivo ⌘P"; ObjectID = "52"; */
+"52.title" = "Hacer progresivo ⌘P";
+
+/* Class = "NSTextFieldCell"; title = "Opciones:"; ObjectID = "53"; */
+"53.title" = "Opciones:";
+
+/* Class = "NSButtonCell"; title = "Cancelar"; ObjectID = "54"; */
+"54.title" = "Cancelar";
+
+/* Class = "NSButtonCell"; title = "Convertir a escala de grises ⌘G"; ObjectID = "55"; */
+"55.title" = "Convertir a escala de grises ⌘G";
+
+/* Class = "NSButtonCell"; title = "Convertir"; ObjectID = "57"; */
+"57.title" = "Convertir";
+
+/* Class = "NSButtonCell"; title = "Eliminar el borde no transformable"; ObjectID = "59"; */
+"59.title" = "Eliminar el borde no transformable";
+
+/* Class = "NSTextFieldCell"; title = "Transformación:"; ObjectID = "60"; */
+"60.title" = "Transformación:";
+
+/* Class = "NSButtonCell"; title = "Optimizar la table Huffman ⌘O"; ObjectID = "61"; */
+"61.title" = "Optimizar la table Huffman ⌘O";

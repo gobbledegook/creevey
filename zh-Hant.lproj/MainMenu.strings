@@ -1,0 +1,357 @@
+
+/* Class = "NSMenuItem"; title = "將此程式所有視窗移至最前"; ObjectID = "5"; */
+"5.title" = "將此程式所有視窗移至最前";
+
+/* Class = "NSMenuItem"; title = "視窗"; ObjectID = "19"; */
+"19.title" = "視窗";
+
+/* Class = "NSMenuItem"; title = "縮到最小"; ObjectID = "23"; */
+"23.title" = "縮到最小";
+
+/* Class = "NSMenu"; title = "視窗"; ObjectID = "24"; */
+"24.title" = "視窗";
+
+/* Class = "NSMenu"; title = "MainMenu"; ObjectID = "29"; */
+"29.title" = "MainMenu";
+
+/* Class = "NSMenuItem"; title = "Phœnix Slides"; ObjectID = "56"; */
+"56.title" = "Phœnix Slides";
+
+/* Class = "NSMenu"; title = "Phœnix Slides"; ObjectID = "57"; */
+"57.title" = "Phœnix Slides";
+
+/* Class = "NSMenuItem"; title = "關於 Phoenix Slides"; ObjectID = "58"; */
+"58.title" = "關於 Phoenix Slides";
+
+/* Class = "NSMenu"; title = "檔案"; ObjectID = "81"; */
+"81.title" = "檔案";
+
+/* Class = "NSMenuItem"; title = "檔案"; ObjectID = "83"; */
+"83.title" = "檔案";
+
+/* Class = "NSMenuItem"; title = "輔助說明"; ObjectID = "103"; */
+"103.title" = "輔助說明";
+
+/* Class = "NSMenu"; title = "輔助說明"; ObjectID = "106"; */
+"106.title" = "輔助說明";
+
+/* Class = "NSMenuItem"; title = "Phoenix Slides 輔助說明"; ObjectID = "111"; */
+"111.title" = "Phoenix Slides 輔助說明";
+
+/* Class = "NSMenuItem"; title = "偏好設定⋯"; ObjectID = "129"; */
+"129.title" = "偏好設定⋯";
+
+/* Class = "NSMenu"; title = "服務"; ObjectID = "130"; */
+"130.title" = "服務";
+
+/* Class = "NSMenuItem"; title = "服務"; ObjectID = "131"; */
+"131.title" = "服務";
+
+/* Class = "NSMenuItem"; title = "隱藏 Phoenix Slides"; ObjectID = "134"; */
+"134.title" = "隱藏 Phoenix Slides";
+
+/* Class = "NSMenuItem"; title = "結束 Phoenix Slides"; ObjectID = "136"; */
+"136.title" = "結束 Phoenix Slides";
+
+/* Class = "NSMenuItem"; title = "隱藏其他"; ObjectID = "145"; */
+"145.title" = "隱藏其他";
+
+/* Class = "NSMenuItem"; title = "顯示全部"; ObjectID = "150"; */
+"150.title" = "顯示全部";
+
+/* Class = "NSMenuItem"; title = "拷貝"; ObjectID = "157"; */
+"157.title" = "拷貝";
+
+/* Class = "NSMenuItem"; title = "還原"; ObjectID = "158"; */
+"158.title" = "還原";
+
+/* Class = "NSMenuItem"; title = "剪下"; ObjectID = "160"; */
+"160.title" = "剪下";
+
+/* Class = "NSMenuItem"; title = "編輯"; ObjectID = "163"; */
+"163.title" = "編輯";
+
+/* Class = "NSMenuItem"; title = "刪除"; ObjectID = "164"; */
+"164.title" = "刪除";
+
+/* Class = "NSMenu"; title = "編輯"; ObjectID = "169"; */
+"169.title" = "編輯";
+
+/* Class = "NSMenuItem"; title = "貼上"; ObjectID = "171"; */
+"171.title" = "貼上";
+
+/* Class = "NSMenuItem"; title = "全選"; ObjectID = "172"; */
+"172.title" = "全選";
+
+/* Class = "NSMenuItem"; title = "重作"; ObjectID = "173"; */
+"173.title" = "重作";
+
+/* Class = "NSMenuItem"; title = "縮放"; ObjectID = "197"; */
+"197.title" = "縮放";
+
+/* Class = "SlideshowWindow"; title = "Slideshow Window"; ObjectID = "210"; */
+"210.title" = "Slideshow Window";
+
+/* Class = "NSMenuItem"; title = "幻燈片"; ObjectID = "317"; */
+"317.title" = "幻燈片";
+
+/* Class = "NSMenu"; title = "幻燈片"; ObjectID = "318"; */
+"318.title" = "幻燈片";
+
+/* Class = "NSMenuItem"; title = "播放幻燈片"; ObjectID = "319"; */
+"319.title" = "播放幻燈片";
+
+/* Class = "NSMenuItem"; title = "結束幻燈秀"; ObjectID = "329"; */
+"329.title" = "結束幻燈秀";
+
+/* Class = "NSMenuItem"; title = "循環"; ObjectID = "331"; */
+"331.title" = "循環";
+
+/* Class = "NSMenuItem"; title = "不選擇"; ObjectID = "334"; */
+"334.title" = "不選擇";
+
+/* Class = "NSMenuItem"; title = "顯示於 Finder"; ObjectID = "341"; */
+"341.title" = "顯示於 Finder";
+
+/* Class = "NSMenuItem"; title = "丟到垃圾桶"; ObjectID = "343"; */
+"343.title" = "丟到垃圾桶";
+
+/* Class = "NSMenuItem"; title = "設定為桌面背景"; ObjectID = "391"; */
+"391.title" = "設定為桌面背景";
+
+/* Class = "NSPanel"; title = "偏好設定"; ObjectID = "394"; */
+"394.title" = "偏好設定";
+
+/* Class = "NSButtonCell"; title = "前往所選的檔案夾："; ObjectID = "399"; */
+"399.title" = "前往所選的檔案夾：";
+
+/* Class = "NSButtonCell"; title = "前往最近使用的檔案夾"; ObjectID = "400"; */
+"400.title" = "前往最近使用的檔案夾";
+
+/* Class = "NSMenuItem"; title = "顯示簡單說明"; ObjectID = "418"; */
+"418.title" = "顯示簡單說明";
+
+/* Class = "NSMenuItem"; title = "將小影像放大"; ObjectID = "447"; */
+"447.title" = "將小影像放大";
+
+/* Class = "NSMenuItem"; title = "JPEG"; ObjectID = "449"; */
+"449.title" = "JPEG";
+
+/* Class = "NSMenu"; title = "JPEG"; ObjectID = "450"; */
+"450.title" = "JPEG";
+
+/* Class = "NSMenuItem"; title = "向右旋轉"; ObjectID = "451"; */
+"451.title" = "向右旋轉";
+
+/* Class = "NSMenuItem"; title = "向左旋轉"; ObjectID = "453"; */
+"453.title" = "向左旋轉";
+
+/* Class = "NSPanel"; title = "轉換JPEG⋯"; ObjectID = "455"; */
+"455.title" = "轉換JPEG⋯";
+
+/* Class = "NSMenuItem"; title = "水平翻轉 ↔"; ObjectID = "464"; */
+"464.title" = "水平翻轉 ↔";
+
+/* Class = "NSMenuItem"; title = "垂直翻轉 ↕"; ObjectID = "465"; */
+"465.title" = "垂直翻轉 ↕";
+
+/* Class = "NSMenuItem"; title = "旋轉180°"; ObjectID = "466"; */
+"466.title" = "旋轉180°";
+
+/* Class = "NSMenuItem"; title = "轉成漸進JPEG檔案"; ObjectID = "469"; */
+"469.title" = "轉成漸進JPEG檔案";
+
+/* Class = "NSMenuItem"; title = "進階⋯"; ObjectID = "470"; */
+"470.title" = "進階⋯";
+
+/* Class = "NSPanel"; title = "圖像簡介"; ObjectID = "481"; */
+"481.title" = "圖像簡介";
+
+/* Class = "NSMenuItem"; title = "簡介"; ObjectID = "486"; */
+"486.title" = "簡介";
+
+/* Class = "NSMenuItem"; title = "對角線翻轉 ↙"; ObjectID = "490"; */
+"490.title" = "對角線翻轉 ↙";
+
+/* Class = "NSMenuItem"; title = "對角線翻轉 ↘"; ObjectID = "491"; */
+"491.title" = "對角線翻轉 ↘";
+
+/* Class = "NSMenuItem"; title = "新增視窗"; ObjectID = "494"; */
+"494.title" = "新增視窗";
+
+/* Class = "NSMenuItem"; title = "關閉"; ObjectID = "499"; */
+"499.title" = "關閉";
+
+/* Class = "NSMenuItem"; title = "隨機"; ObjectID = "540"; */
+"540.title" = "隨機";
+
+/* Class = "NSMenuItem"; title = "發表意見（網站）"; ObjectID = "543"; */
+"543.title" = "發表意見（網站）";
+
+/* Class = "NSMenuItem"; title = "檢查更新⋯"; ObjectID = "544"; */
+"544.title" = "檢查更新⋯";
+
+/* Class = "IBBindingConnection"; ibShadowedDisplayPattern = "下次檢查: %{value1}@"; ObjectID = "568"; */
+"568.ibShadowedDisplayPattern" = "下次檢查: %{value1}@";
+
+/* Class = "NSMenuItem"; title = "以實際大小顯示大影像"; ObjectID = "572"; */
+"572.title" = "以實際大小顯示大影像";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "575"; */
+"575.title" = "Box";
+
+/* Class = "NSTabViewItem"; label = "一般"; ObjectID = "588"; */
+"588.label" = "一般";
+
+/* Class = "NSTabViewItem"; label = "幻燈片"; ObjectID = "589"; */
+"589.label" = "幻燈片";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "633"; */
+"633.title" = "Box";
+
+/* Class = "NSMenuItem"; title = "EXIF"; ObjectID = "645"; */
+"645.title" = "EXIF";
+
+/* Class = "NSMenu"; title = "EXIF"; ObjectID = "646"; */
+"646.title" = "EXIF";
+
+/* Class = "NSMenuItem"; title = "重新製作EXIF縮覽圖⋯"; ObjectID = "647"; */
+"647.title" = "重新製作EXIF縮覽圖⋯";
+
+/* Class = "NSMenu"; title = "Menu"; ObjectID = "650"; */
+"650.title" = "Menu";
+
+/* Class = "NSMenuItem"; title = "向左旋轉"; ObjectID = "651"; */
+"651.title" = "向左旋轉";
+
+/* Class = "NSMenuItem"; title = "向右旋轉"; ObjectID = "652"; */
+"652.title" = "向右旋轉";
+
+/* Class = "NSMenuItem"; title = "刪除縮覽圖⋯"; ObjectID = "654"; */
+"654.title" = "刪除縮覽圖⋯";
+
+/* Class = "NSMenuItem"; title = "重置方向屬性⋯"; ObjectID = "658"; */
+"658.title" = "重置方向屬性⋯";
+
+/* Class = "NSMenuItem"; title = "根據方向屬性旋轉JPEG檔案"; ObjectID = "660"; */
+"660.title" = "根據方向屬性旋轉JPEG檔案";
+
+/* Class = "NSMenuItem"; title = "✎"; ObjectID = "671"; */
+"671.title" = "✎";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "673"; */
+"673.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "✎"; ObjectID = "674"; */
+"674.title" = "✎";
+
+/* Class = "NSMenuItem"; title = "Item2"; ObjectID = "675"; */
+"675.title" = "Item2";
+
+/* Class = "NSMenuItem"; title = "Item3"; ObjectID = "676"; */
+"676.title" = "Item3";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "690"; */
+"690.title" = "Box";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "732"; */
+"732.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "160"; ObjectID = "733"; */
+"733.title" = "160";
+
+/* Class = "NSMenuItem"; title = "320"; ObjectID = "734"; */
+"734.title" = "320";
+
+/* Class = "NSMenuItem"; title = "512"; ObjectID = "735"; */
+"735.title" = "512";
+
+/* Class = "NSTextFieldCell"; title = "啟動時："; ObjectID = "810"; */
+"815.title" = "啟動時：";
+
+/* Class = "NSTextFieldCell"; placeholderString = "~/Pictures"; ObjectID = "811"; */
+"816.placeholderString" = "~/Pictures";
+
+/* Class = "NSButtonCell"; title = "選取⋯"; ObjectID = "812"; */
+"817.title" = "選取⋯";
+
+/* Class = "NSButtonCell"; title = "自動檢查更新"; ObjectID = "813"; */
+"818.title" = "自動檢查更新";
+
+/* Class = "NSButtonCell"; title = "執行無失真JPEG轉換時不要更改檔案修改日期"; ObjectID = "815"; */
+"820.title" = "執行無失真JPEG轉換時不要更改檔案修改日期";
+
+/* Class = "NSTextFieldCell"; title = "縮覽圖背景顏色"; ObjectID = "816"; */
+"821.title" = "縮覽圖背景顏色";
+
+/* Class = "NSButtonCell"; title = "允許搬移檔案、製作替身"; ObjectID = "817"; */
+"822.title" = "允許搬移檔案、製作替身";
+
+/* Class = "NSTextFieldCell"; title = "最大縮覽圖寬度"; ObjectID = "819"; */
+"824.title" = "最大縮覽圖寬度";
+
+/* Class = "NSButtonCell"; title = "每"; ObjectID = "820"; */
+"825.title" = "每";
+
+/* Class = "NSTextFieldCell"; title = "幻燈秀預設："; ObjectID = "821"; */
+"826.title" = "幻燈秀預設：";
+
+/* Class = "NSTextFieldCell"; title = "秒自動前往"; ObjectID = "823"; */
+"828.title" = "秒自動前往";
+
+/* Class = "NSButtonCell"; title = "循環"; ObjectID = "824"; */
+"829.title" = "循環";
+
+/* Class = "NSButtonCell"; title = "隨機"; ObjectID = "825"; */
+"830.title" = "隨機";
+
+/* Class = "NSButtonCell"; title = "將小影像放大"; ObjectID = "826"; */
+"831.title" = "將小影像放大";
+
+/* Class = "NSButtonCell"; title = "以實際大小顯示大影像"; ObjectID = "827"; */
+"832.title" = "以實際大小顯示大影像";
+
+/* Class = "NSButtonCell"; title = "立即套用設定"; ObjectID = "828"; */
+"833.title" = "立即套用設定";
+
+/* Class = "NSTextFieldCell"; title = "背景顏色及透明度"; ObjectID = "829"; */
+"834.title" = "背景顏色及透明度";
+
+/* Class = "NSTextFieldCell"; title = "正在處理檔案⋯"; ObjectID = "830"; */
+"835.title" = "正在處理檔案⋯";
+
+/* Class = "NSButtonCell"; title = "取消"; ObjectID = "831"; */
+"836.title" = "取消";
+
+/* Class = "NSButtonCell"; title = "更多EXIF屬性"; ObjectID = "832"; */
+"837.title" = "更多EXIF屬性";
+
+/* Class = "NSButtonCell"; title = "EXIF縮覽圖"; ObjectID = "834"; */
+"839.title" = "EXIF縮覽圖";
+
+/* Class = "NSTextFieldCell"; placeholderString = "無EXIF縮覽圖"; ObjectID = "836"; */
+"841.placeholderString" = "無EXIF縮覽圖";
+
+/* Class = "NSButtonCell"; title = "Radio"; ObjectID = "838"; */
+"843.title" = "Radio";
+
+/* Class = "NSMenuItem"; title = "顯示方式"; ObjectID = "841"; */
+"848.title" = "顯示方式";
+
+/* Class = "NSMenu"; title = "顯示方式"; ObjectID = "842"; */
+"849.title" = "顯示方式";
+
+/* Class = "NSMenuItem"; title = "根據修改日期排列"; ObjectID = "843"; */
+"850.title" = "根據修改日期排列";
+
+/* Class = "NSMenuItem"; title = "根據名稱排列"; ObjectID = "844"; */
+"851.title" = "根據名稱排列";
+
+/* Class = "NSMenuItem"; title = "顯示檔案名稱"; ObjectID = "850"; */
+"855.title" = "顯示檔案名稱";
+
+/* Class = "NSMenuItem"; title = "儲存旋轉方向"; ObjectID = "855"; */
+"857.title" = "儲存旋轉方向";
+
+/* Class = "NSMenuItem"; title = "根據方向屬性自動旋轉"; ObjectID = "853"; */
+"860.title" = "根據方向屬性自動旋轉";

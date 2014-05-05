@@ -1,0 +1,18 @@
+
+/* Class = "NSWindow"; title = "Creevey"; ObjectID = "21"; */
+"21.title" = "Creevey";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Search all subfolders for images (slower)."; ObjectID = "370"; */
+"370.ibShadowedToolTip" = "Search all subfolders for images (slower).";
+
+/* Class = "NSTextFieldCell"; placeholderString = "0 files"; ObjectID = "515"; */
+"515.placeholderString" = "0 files";
+
+/* Class = "NSButtonCell"; title = "Presentazione"; ObjectID = "516"; */
+"516.title" = "Presentazione";
+
+/* Class = "NSButtonCell"; title = "Sottocartelle ⌘F"; ObjectID = "517"; */
+"517.title" = "Sottocartelle ⌘F";
+
+/* Class = "NSTextFieldCell"; placeholderString = "No images selected"; ObjectID = "518"; */
+"518.placeholderString" = "No images selected";

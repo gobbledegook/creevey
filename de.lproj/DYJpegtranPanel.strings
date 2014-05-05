@@ -1,0 +1,69 @@
+
+/* Class = "NSPanel"; title = "Bearbeite JPEG-Dateien"; ObjectID = "7"; */
+"7.title" = "Bearbeite JPEG-Dateien";
+
+/* Class = "NSBox"; title = "Box"; ObjectID = "9"; */
+"9.title" = "Box";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "16"; */
+"16.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "Nach rechts drehen"; ObjectID = "17"; */
+"17.title" = "Nach rechts drehen";
+
+/* Class = "NSMenuItem"; title = "Spiegeln und drehen (links) ↙"; ObjectID = "18"; */
+"18.title" = "Spiegeln und drehen (links) ↙";
+
+/* Class = "NSMenuItem"; title = "Drehen um 180°"; ObjectID = "19"; */
+"19.title" = "Drehen um 180°";
+
+/* Class = "NSMenuItem"; title = "Keine Umwandlung"; ObjectID = "20"; */
+"20.title" = "Keine Umwandlung";
+
+/* Class = "NSMenuItem"; title = "Spiegeln und drehen (rechts) ↘"; ObjectID = "21"; */
+"21.title" = "Spiegeln und drehen (rechts) ↘";
+
+/* Class = "NSMenuItem"; title = "Vertikal spiegeln ↕"; ObjectID = "23"; */
+"23.title" = "Vertikal spiegeln ↕";
+
+/* Class = "NSMenuItem"; title = "Horizontal spiegeln ↔"; ObjectID = "24"; */
+"24.title" = "Horizontal spiegeln ↔";
+
+/* Class = "NSMenuItem"; title = "Nach links drehen"; ObjectID = "26"; */
+"26.title" = "Nach links drehen";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "29"; */
+"29.title" = "OtherViews";
+
+/* Class = "NSMenuItem"; title = "Nur JPEG Kommentare behalten (EXIF-Daten & Andere entfernen)"; ObjectID = "30"; */
+"30.title" = "Nur JPEG Kommentare behalten (EXIF-Daten & Andere entfernen)";
+
+/* Class = "NSMenuItem"; title = "Marker behalten"; ObjectID = "31"; */
+"31.title" = "Marker behalten";
+
+/* Class = "NSMenuItem"; title = "Alle Markierungen entfernen"; ObjectID = "32"; */
+"32.title" = "Alle Markierungen entfernen";
+
+/* Class = "NSButtonCell"; title = "Umwandeln in Progressiv-JPEG ⌘P"; ObjectID = "52"; */
+"52.title" = "Umwandeln in Progressiv-JPEG ⌘P";
+
+/* Class = "NSTextFieldCell"; title = "Optionen:"; ObjectID = "53"; */
+"53.title" = "Optionen:";
+
+/* Class = "NSButtonCell"; title = "Abbruch"; ObjectID = "54"; */
+"54.title" = "Abbruch";
+
+/* Class = "NSButtonCell"; title = "In Graustufen umwandeln ⌘G"; ObjectID = "55"; */
+"55.title" = "In Graustufen umwandeln ⌘G";
+
+/* Class = "NSButtonCell"; title = "Umwandeln"; ObjectID = "57"; */
+"57.title" = "Umwandeln";
+
+/* Class = "NSButtonCell"; title = "Nicht umwandelbare Kantenblöcke entfernen ⌘D"; ObjectID = "59"; */
+"59.title" = "Nicht umwandelbare Kantenblöcke entfernen ⌘D";
+
+/* Class = "NSTextFieldCell"; title = "Umwandlung:"; ObjectID = "60"; */
+"60.title" = "Umwandlung:";
+
+/* Class = "NSButtonCell"; title = "Huffman-Table optimieren ⌘O"; ObjectID = "61"; */
+"61.title" = "Huffman-Table optimieren ⌘O";
