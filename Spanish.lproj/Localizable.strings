@@ -26,7 +26,7 @@
 
 "The file %@ could not be moved to the trash because an error of %i occurred." = "El archivo %@ no pudo trasladarse a la Papelera debido al error %i.";
 
-"Could not set the desktop because an error of type %i occurred." = "No pude cambiar el escritorio debido al error %i.";
+"Could not set the desktop because an error occurred. %@" = "No pude cambiar el escritorio debido a un error. %@.";
 
 "Warning" = "Atención";
 "This operation cannot be undone! Are you sure you want to continue?" = "¡Esta operación no puede deshacerse! ¿Desea continuar?";

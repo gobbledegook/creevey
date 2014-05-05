@@ -174,6 +174,7 @@
 		F26F29EF0AEF271D00F60799 /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F2711710182AADE6008F97E1 /* DYRandomizableArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYRandomizableArray.h; sourceTree = "<group>"; };
 		F2711711182AADE6008F97E1 /* DYRandomizableArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYRandomizableArray.m; sourceTree = "<group>"; };
+		F277E1351917453600D2F574 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F28C1E1C0A86723000682516 /* general.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = general.gif; sourceTree = "<group>"; };
 		F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSIndexSetSymDiffExtension.h; sourceTree = "<group>"; };
 		F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSIndexSetSymDiffExtension.m; sourceTree = "<group>"; };
@@ -653,6 +654,7 @@
 				F26268BA08987A500045DEFC /* zh_TW */,
 				F221AAAB0960A924002B38F5 /* Spanish */,
 				F2E83B920BD09D8F0092E425 /* Italian */,
+				F277E1351917453600D2F574 /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

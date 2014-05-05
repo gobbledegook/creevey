@@ -25,7 +25,7 @@
 
 "The file %@ could not be moved to the trash because an error of %i occurred." = "Die Datei %@ kann nicht in den Papierkorb verschoben werden! Fehler: %i.";
 
-"Could not set the desktop because an error of type %i occurred." = "Schreibtischhintergrund kann nicht geändert werden! Fehler: %i.";
+"Could not set the desktop because an error occurred. %@" = "Schreibtischhintergrund kann nicht geändert werden! %@";
 
 "Warning" = "Achtung!";
 "This operation cannot be undone! Are you sure you want to continue?" = "Dieser Vorgang kann nicht rückgängig gemacht werden!! Fortfahren?";

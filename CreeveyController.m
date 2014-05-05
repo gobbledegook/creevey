@@ -266,8 +266,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 												error:&error];
 	if (error)  {
 		NSRunAlertPanel(nil, //title
-						[error localizedDescription],
-						@"Cancel", nil, nil);
+						NSLocalizedString(@"Could not set the desktop because an error occurred. %@", @""),
+						NSLocalizedString(@"Cancel", @""), nil, nil,
+						[error localizedDescription]);
 	};
 }
 

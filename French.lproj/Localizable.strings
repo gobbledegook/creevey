@@ -24,7 +24,7 @@
 
 "The file %@ could not be moved to the trash because an error of %i occurred." = "Le fichier %@ n'a pas pu être déplacé dans la corbeille à cause d'une erreur %i ";
 
-"Could not set the desktop because an error of type %i occurred." = "Le fond d'écran n'as pas pu être changé à cause d'une erreur %i";
+"Could not set the desktop because an error occurred. %@" = "Le fond d'écran n'as pas pu être changé à cause d'une erreur. %@";
 
 "Warning" = "Attention";
 "This operation cannot be undone! Are you sure you want to continue?" = "Cette opération ne peut pas être annulée. Voulez-vous continuer?";

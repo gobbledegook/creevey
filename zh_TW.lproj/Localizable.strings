@@ -24,7 +24,7 @@
 
 "The file %@ could not be moved to the trash because an error of %i occurred." = "檔案 %@ 不能移到垃圾桶，因為發生了 %i 錯誤。";
 
-"Could not set the desktop because an error of type %i occurred." = "不能設定桌面，因為發生了 %i 錯誤。";
+"Could not set the desktop because an error occurred. %@" = "不能設定桌面，因為發生了錯誤。%@";
 
 "Warning" = "警告";
 "This operation cannot be undone! Are you sure you want to continue?" = "此動作不能還原。確定要繼續?";
