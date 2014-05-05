@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D61" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment version="1090" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="CreeveyController">
+            <connections>
+                <outlet property="jpegController" destination="36" id="48"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <window title="Traitement des fichiers JPEG" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="7" userLabel="JPEG Panel" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="189" y="264" width="534" height="221"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
+            <view key="contentView" id="8">
+                <rect key="frame" x="0.0" y="0.0" width="534" height="221"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <popUpButton verticalHuggingPriority="750" id="15">
+                        <rect key="frame" x="133" y="177" width="230" height="26"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <popUpButtonCell key="cell" type="push" title="Pas de transformation" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="20" id="56">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <menu key="menu" title="OtherViews" id="16">
+                                <items>
+                                    <menuItem title="Pas de transformation" state="on" id="20"/>
+                                    <menuItem isSeparatorItem="YES" id="25">
+                                        <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                    </menuItem>
+                                    <menuItem title="Rotation à gauche" tag="7" id="26"/>
+                                    <menuItem title="Rotation à droite" tag="5" id="17"/>
+                                    <menuItem title="Rotation 180°" tag="6" id="19"/>
+                                    <menuItem isSeparatorItem="YES" id="22">
+                                        <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                    </menuItem>
+                                    <menuItem title="Symétrie axe horizontal ↔" tag="1" id="24"/>
+                                    <menuItem title="Symétrie axe vertical ↕" tag="2" id="23"/>
+                                    <menuItem title="Transposition ↙" tag="3" id="18"/>
+                                    <menuItem title="Transposition transversale ↘" tag="4" id="21"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="transformChanged:" target="36" id="50"/>
+                        </connections>
+                    </popUpButton>
+                    <button id="35">
+                        <rect key="frame" x="134" y="106" width="240" height="18"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="check" title="Optimiser la table de Huffman ⌘O" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="61">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent">o</string>
+                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                        </buttonCell>
+                    </button>
+                    <button id="14">
+                        <rect key="frame" x="134" y="86" width="227" height="18"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="check" title="Convertir en niveaux de gris ⌘G" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="55">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent">g</string>
+                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                        </buttonCell>
+                    </button>
+                    <button id="33">
+                        <rect key="frame" x="134" y="157" width="382" height="18"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="check" title="Ignorer les blocs non-transformables dans les bords ⌘D" bezelStyle="regularSquare" imagePosition="left" alignment="left" enabled="NO" inset="2" id="59">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent">d</string>
+                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                        </buttonCell>
+                    </button>
+                    <button id="11">
+                        <rect key="frame" x="134" y="126" width="217" height="18"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="check" title="Encoder en JPEG progressif ⌘P" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="52">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent">p</string>
+                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                        </buttonCell>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="34">
+                        <rect key="frame" x="17" y="183" width="114" height="17"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Transformation:" id="60">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="12">
+                        <rect key="frame" x="17" y="158" width="114" height="17"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Options:" id="53">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="9">
+                        <rect key="frame" x="136" y="148" width="378" height="5"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <font key="titleFont" metaFont="system"/>
+                    </box>
+                    <button verticalHuggingPriority="750" id="27">
+                        <rect key="frame" x="430" y="12" width="90" height="32"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="push" title="Convertir" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="57">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="convert:" target="36" id="46"/>
+                        </connections>
+                    </button>
+                    <popUpButton verticalHuggingPriority="750" id="28">
+                        <rect key="frame" x="133" y="56" width="230" height="26"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <popUpButtonCell key="cell" type="push" title="Conserver toutes les infos" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="2" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="31" id="58">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <menu key="menu" title="OtherViews" id="29">
+                                <items>
+                                    <menuItem title="Conserver toutes les infos" state="on" tag="2" id="31"/>
+                                    <menuItem title="Ne conserver que les infos JPEG (Supprimer EXIF et autres)" tag="1" id="30"/>
+                                    <menuItem title="Supprimer toutes les infos" id="32"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                    </popUpButton>
+                    <button verticalHuggingPriority="750" id="13">
+                        <rect key="frame" x="348" y="12" width="82" height="32"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="push" title="Annuler" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="54">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="stopModal:" target="36" id="45"/>
+                        </connections>
+                    </button>
+                </subviews>
+            </view>
+            <connections>
+                <outlet property="initialFirstResponder" destination="15" id="47"/>
+            </connections>
+        </window>
+        <customObject id="36" userLabel="DYJpegtranPanel" customClass="DYJpegtranPanel">
+            <connections>
+                <outlet property="copyMarkersMenu" destination="28" id="44"/>
+                <outlet property="grayscaleBtn" destination="14" id="43"/>
+                <outlet property="optimizeBtn" destination="35" id="42"/>
+                <outlet property="progressiveBtn" destination="11" id="40"/>
+                <outlet property="transformMenu" destination="15" id="37"/>
+                <outlet property="trimBtn" destination="33" id="39"/>
+            </connections>
+        </customObject>
+    </objects>
+</document>

@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		8D1107280486CEB800E47090 /* creevey_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */; };
-		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */ = {isa = PBXBuildFile; fileRef = F2029D2D0820B68D00CE44FA /* phxslides.icns */; };
+		F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */; };
+		F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */; };
+		F202E2CB19170E4900EDDCEC /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2C919170E4900EDDCEC /* MainMenu.xib */; };
 		F209762B081F51A300AD4E00 /* NSStringDYBasePathExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */; };
 		F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */; };
 		F20A7A4C0A85E1E300F4221C /* UKPrefsPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = F20A7A4A0A85E1E300F4221C /* UKPrefsPanel.h */; };
@@ -21,12 +23,10 @@
 		F20ACC0F088E011A004CFE14 /* DYJpegtranPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = F20ACC0D088E011A004CFE14 /* DYJpegtranPanel.m */; };
 		F20DC2910886240400986105 /* CreeveyMainWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = F20DC28F0886240400986105 /* CreeveyMainWindowController.h */; };
 		F20DC2920886240400986105 /* CreeveyMainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = F20DC2900886240400986105 /* CreeveyMainWindowController.m */; };
-		F20DC2950886251000986105 /* CreeveyWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = F20DC2930886251000986105 /* CreeveyWindow.nib */; };
 		F21AD0D40892B49F0054EA35 /* Phoenix Slides Help in Resources */ = {isa = PBXBuildFile; fileRef = F21AD0D30892B49F0054EA35 /* Phoenix Slides Help */; };
 		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
 		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
 		F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */ = {isa = PBXBuildFile; fileRef = F23DC5120A86CEF7005E49FD /* slideshow.tif */; };
-		F254E82908917BA600DE9C38 /* DYJpegtranPanel.nib in Resources */ = {isa = PBXBuildFile; fileRef = F254E82808917BA600DE9C38 /* DYJpegtranPanel.nib */; };
 		F254E96F08919E2B00DE9C38 /* makers.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E96D08919E2B00DE9C38 /* makers.h */; };
 		F254E97008919E2B00DE9C38 /* makers.c in Sources */ = {isa = PBXBuildFile; fileRef = F254E96E08919E2B00DE9C38 /* makers.c */; };
 		F254E9940891A7FB00DE9C38 /* EXIF.strings in Resources */ = {isa = PBXBuildFile; fileRef = F254E9930891A7FB00DE9C38 /* EXIF.strings */; };
@@ -108,27 +108,39 @@
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = creevey_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Phoenix Slides.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Phoenix Slides.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2029D2D0820B68D00CE44FA /* phxslides.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = phxslides.icns; sourceTree = "<group>"; };
+		F202E2B619170B9800EDDCEC /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DYJpegtranPanel.xib; sourceTree = "<group>"; };
+		F202E2B819170BA900EDDCEC /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = "zh-Hant"; path = "zh-Hant.lproj/DYJpegtranPanel.xib"; sourceTree = "<group>"; };
+		F202E2B919170BDD00EDDCEC /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/DYJpegtranPanel.xib; sourceTree = "<group>"; };
+		F202E2BA19170BFF00EDDCEC /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/DYJpegtranPanel.xib; sourceTree = "<group>"; };
+		F202E2BB19170C1100EDDCEC /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/DYJpegtranPanel.xib; sourceTree = "<group>"; };
+		F202E2BC19170C2500EDDCEC /* it */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = it; path = it.lproj/DYJpegtranPanel.xib; sourceTree = "<group>"; };
+		F202E2C219170DCD00EDDCEC /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CreeveyWindow.xib; sourceTree = "<group>"; };
+		F202E2C419170DE400EDDCEC /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = "zh-Hant"; path = "zh-Hant.lproj/CreeveyWindow.xib"; sourceTree = "<group>"; };
+		F202E2C519170DF300EDDCEC /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/CreeveyWindow.xib; sourceTree = "<group>"; };
+		F202E2C619170E0400EDDCEC /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/CreeveyWindow.xib; sourceTree = "<group>"; };
+		F202E2C719170E1700EDDCEC /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/CreeveyWindow.xib; sourceTree = "<group>"; };
+		F202E2C819170E2F00EDDCEC /* it */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = it; path = it.lproj/CreeveyWindow.xib; sourceTree = "<group>"; };
+		F202E2CA19170E4900EDDCEC /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		F202E2CC19170E6800EDDCEC /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = "zh-Hant"; path = "zh-Hant.lproj/MainMenu.xib"; sourceTree = "<group>"; };
+		F202E2CD19170E8000EDDCEC /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		F202E2CE19170E9600EDDCEC /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		F202E2CF19170EA100EDDCEC /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		F202E2D019170EB000EDDCEC /* it */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = it; path = it.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		F2097598081F3C4400AD4E00 /* English */ = {isa = PBXFileReference; lastKnownFileType = folder; name = English; path = "English.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
 		F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSStringDYBasePathExtension.h; sourceTree = "<group>"; };
 		F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSStringDYBasePathExtension.m; sourceTree = "<group>"; };
 		F20A7A4A0A85E1E300F4221C /* UKPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UKPrefsPanel.h; sourceTree = "<group>"; };
 		F20A7A4B0A85E1E300F4221C /* UKPrefsPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UKPrefsPanel.m; sourceTree = "<group>"; };
-		F20ACC0A088E010B004CFE14 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
 		F20ACC0C088E011A004CFE14 /* DYJpegtranPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYJpegtranPanel.h; sourceTree = "<group>"; };
 		F20ACC0D088E011A004CFE14 /* DYJpegtranPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYJpegtranPanel.m; sourceTree = "<group>"; };
 		F20DC28F0886240400986105 /* CreeveyMainWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreeveyMainWindowController.h; sourceTree = "<group>"; };
 		F20DC2900886240400986105 /* CreeveyMainWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyMainWindowController.m; sourceTree = "<group>"; };
-		F20DC2940886251000986105 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
-		F21AD0B70892AC1E0054EA35 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		F21AD0BA0892AC380054EA35 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
-		F21AD0BB0892AC3E0054EA35 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
 		F21AD0BC0892AC440054EA35 /* German */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = German; path = German.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F21AD0BD0892AC4C0054EA35 /* German */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = German; path = German.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F21AD0C00892AC700054EA35 /* German */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = German; path = German.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
@@ -139,15 +151,10 @@
 		F221AA6409608C70002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Spanish; path = Spanish.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F221AA6509608C70002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Spanish; path = Spanish.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F221AAAB0960A924002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Spanish; path = Spanish.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		F221AAAF0960A969002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Spanish; path = Spanish.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
-		F221AAB00960A969002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Spanish; path = Spanish.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		F221AAB10960A969002B38F5 /* Spanish */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Spanish; path = Spanish.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
 		F23DC5120A86CEF7005E49FD /* slideshow.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = slideshow.tif; sourceTree = "<group>"; };
 		F254E11F0BD30DD80053F673 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Italian; path = Italian.lproj/EXIF.strings; sourceTree = "<group>"; };
-		F254E85D08917C5400DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
-		F254E86008917C5E00DE9C38 /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
 		F254E96D08919E2B00DE9C38 /* makers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = makers.h; path = exiftags/makers.h; sourceTree = "<group>"; };
 		F254E96E08919E2B00DE9C38 /* makers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = makers.c; path = exiftags/makers.c; sourceTree = "<group>"; };
 		F254E98F0891A7E100DE9C38 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/EXIF.strings; sourceTree = "<group>"; };
@@ -174,7 +181,6 @@
 		F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYWrappingMatrix.m; sourceTree = "<group>"; };
 		F2910A4108198D2900D3878C /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2910A4B08198D6100D3878C /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh_TW; path = zh_TW.lproj/Localizable.strings; sourceTree = "<group>"; };
-		F2910A840819A2E400D3878C /* zh_TW */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = zh_TW; path = zh_TW.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		F29447970820946000B932C1 /* Credits.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = Credits.html; sourceTree = "<group>"; };
 		F29447A60820970100B932C1 /* logo.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = logo.tiff; sourceTree = "<group>"; };
 		F299B06007FDF5F7006028C1 /* DYImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageView.h; sourceTree = "<group>"; };
@@ -188,17 +194,11 @@
 		F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirBrowserDelegate.m; sourceTree = "<group>"; };
 		F2AE890C07EB9BB7008F2193 /* CreeveyController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreeveyController.h; sourceTree = "<group>"; };
 		F2AE890D07EB9BB7008F2193 /* CreeveyController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyController.m; sourceTree = "<group>"; };
-		F2B13BF50BCEE5B000CF252E /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
-		F2B13BFE0BCEE5B900CF252E /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
-		F2B13BFF0BCEE5C600CF252E /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		F2B13C000BCEE6F100CF252E /* Italian */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = Italian; path = Italian.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F2B13C050BCEE73500CF252E /* Italian */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Italian; path = "Italian.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
 		F2B13C0A0BCEE75700CF252E /* Italian */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Italian; path = Italian.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2C940B508200F6F0019D0D3 /* multipledocs.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = multipledocs.gif; sourceTree = "<group>"; };
 		F2D2AC62080B82840075532A /* brokendoc.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = brokendoc.tif; sourceTree = "<group>"; };
-		F2E2E1670AB50DEA001242BE /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		F2E2E16A0AB50DF7001242BE /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/CreeveyWindow.nib; sourceTree = "<group>"; };
-		F2E2E16D0AB50E00001242BE /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/DYJpegtranPanel.nib; sourceTree = "<group>"; };
 		F2E2E1710AB51122001242BE /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2E2E17A0AB51279001242BE /* French */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = French; path = French.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F2E83B920BD09D8F0092E425 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Italian; path = Italian.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -365,9 +365,9 @@
 				8D1107310486CEB800E47090 /* Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				F254E9930891A7FB00DE9C38 /* EXIF.strings */,
-				29B97318FDCFA39411CA2CEA /* MainMenu.nib */,
-				F20DC2930886251000986105 /* CreeveyWindow.nib */,
-				F254E82808917BA600DE9C38 /* DYJpegtranPanel.nib */,
+				F202E2C919170E4900EDDCEC /* MainMenu.xib */,
+				F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */,
+				F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -551,6 +551,11 @@
 				zh_TW,
 				Spanish,
 				Italian,
+				"zh-Hant",
+				de,
+				es,
+				fr,
+				it,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* creevey */;
 			projectDirPath = "";
@@ -566,10 +571,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */,
-				F20DC2950886251000986105 /* CreeveyWindow.nib in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				F2D2AC63080B82840075532A /* brokendoc.tif in Resources */,
+				F202E2CB19170E4900EDDCEC /* MainMenu.xib in Resources */,
 				F2910A4A08198D5300D3878C /* Localizable.strings in Resources */,
 				F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */,
 				F21AD0D40892B49F0054EA35 /* Phoenix Slides Help in Resources */,
@@ -577,10 +581,11 @@
 				F29447980820946000B932C1 /* Credits.html in Resources */,
 				F29447A70820970100B932C1 /* logo.tiff in Resources */,
 				F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */,
-				F254E82908917BA600DE9C38 /* DYJpegtranPanel.nib in Resources */,
 				F261A049182B5ED4001D9336 /* loading.png in Resources */,
 				F254E9940891A7FB00DE9C38 /* EXIF.strings in Resources */,
 				F28C1E1D0A86723000682516 /* general.gif in Resources */,
+				F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */,
+				F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */,
 				F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -651,30 +656,43 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
-		29B97318FDCFA39411CA2CEA /* MainMenu.nib */ = {
+		F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				29B97319FDCFA39411CA2CEA /* English */,
-				F2910A840819A2E400D3878C /* zh_TW */,
-				F21AD0B70892AC1E0054EA35 /* German */,
-				F221AAB00960A969002B38F5 /* Spanish */,
-				F2E2E1670AB50DEA001242BE /* French */,
-				F2B13BFF0BCEE5C600CF252E /* Italian */,
+				F202E2B619170B9800EDDCEC /* English */,
+				F202E2B819170BA900EDDCEC /* zh-Hant */,
+				F202E2B919170BDD00EDDCEC /* de */,
+				F202E2BA19170BFF00EDDCEC /* es */,
+				F202E2BB19170C1100EDDCEC /* fr */,
+				F202E2BC19170C2500EDDCEC /* it */,
 			);
-			name = MainMenu.nib;
+			name = DYJpegtranPanel.xib;
 			sourceTree = "<group>";
 		};
-		F20DC2930886251000986105 /* CreeveyWindow.nib */ = {
+		F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				F20DC2940886251000986105 /* English */,
-				F254E85D08917C5400DE9C38 /* zh_TW */,
-				F21AD0BA0892AC380054EA35 /* German */,
-				F221AAB10960A969002B38F5 /* Spanish */,
-				F2E2E16A0AB50DF7001242BE /* French */,
-				F2B13BF50BCEE5B000CF252E /* Italian */,
+				F202E2C219170DCD00EDDCEC /* English */,
+				F202E2C419170DE400EDDCEC /* zh-Hant */,
+				F202E2C519170DF300EDDCEC /* de */,
+				F202E2C619170E0400EDDCEC /* es */,
+				F202E2C719170E1700EDDCEC /* fr */,
+				F202E2C819170E2F00EDDCEC /* it */,
 			);
-			name = CreeveyWindow.nib;
+			name = CreeveyWindow.xib;
+			sourceTree = "<group>";
+		};
+		F202E2C919170E4900EDDCEC /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F202E2CA19170E4900EDDCEC /* English */,
+				F202E2CC19170E6800EDDCEC /* zh-Hant */,
+				F202E2CD19170E8000EDDCEC /* de */,
+				F202E2CE19170E9600EDDCEC /* es */,
+				F202E2CF19170EA100EDDCEC /* fr */,
+				F202E2D019170EB000EDDCEC /* it */,
+			);
+			name = MainMenu.xib;
 			sourceTree = "<group>";
 		};
 		F21AD0D30892B49F0054EA35 /* Phoenix Slides Help */ = {
@@ -687,19 +705,6 @@
 				F2B13C050BCEE73500CF252E /* Italian */,
 			);
 			name = "Phoenix Slides Help";
-			sourceTree = "<group>";
-		};
-		F254E82808917BA600DE9C38 /* DYJpegtranPanel.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				F20ACC0A088E010B004CFE14 /* English */,
-				F254E86008917C5E00DE9C38 /* zh_TW */,
-				F21AD0BB0892AC3E0054EA35 /* German */,
-				F221AAAF0960A969002B38F5 /* Spanish */,
-				F2E2E16D0AB50E00001242BE /* French */,
-				F2B13BFE0BCEE5B900CF252E /* Italian */,
-			);
-			name = DYJpegtranPanel.nib;
 			sourceTree = "<group>";
 		};
 		F254E9930891A7FB00DE9C38 /* EXIF.strings */ = {
