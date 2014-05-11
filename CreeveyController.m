@@ -783,9 +783,12 @@ enum {
 - (void)showExifThumbnail:(BOOL)b shrinkWindow:(BOOL)shrink {
 	NSWindow *w = [exifThumbnailDiscloseBtn window];
 	NSView *v = [w contentView];
+	NSImageView *imageView = [v viewWithTag:2];
+	NSTextView *placeholderTextView = [v viewWithTag:3];
+	NSPopUpButton *popdownMenu = [v viewWithTag:6];
 	[exifThumbnailDiscloseBtn setState:b];
 	b = !b;
-	if ([[v viewWithTag:2] isHidden] != b) {
+	if ([imageView isHidden] != b) {
 		NSRect r = [w frame];
 		NSRect q;
 		if (!shrink)
@@ -796,9 +799,13 @@ enum {
 				r.origin.y += 160;
 			} else
 				q.size.height += 160;
-			[[v viewWithTag:3] setHidden:b]; // text
-			[[v viewWithTag:2] setHidden:b]; // imgview
-			[[v viewWithTag:6] setHidden:b]; // popdown menu
+			[placeholderTextView setHidden:b];
+			[imageView setHidden:b];
+			for (NSLayoutConstraint *constraint in imageView.constraints) {
+				if (constraint.firstAttribute == NSLayoutAttributeHeight)
+					constraint.constant = 0;
+			}
+			[popdownMenu setHidden:b];
 		} else { // showing
 			if (shrink) {
 				r.size.height += 160;
@@ -816,9 +823,13 @@ enum {
 			[v2 setAutoresizingMask:oldMask];
 		}
 		if (!b) {
-			[[v viewWithTag:3] setHidden:b]; // text
-			[[v viewWithTag:2] setHidden:b]; // imgview
-			[[v viewWithTag:6] setHidden:b]; // popdown menu
+			[placeholderTextView setHidden:b];
+			[imageView setHidden:b];
+			for (NSLayoutConstraint *constraint in imageView.constraints) {
+				if (constraint.firstAttribute == NSLayoutAttributeHeight)
+					constraint.constant = 160;
+			}
+			[popdownMenu setHidden:b];
 		}
 	}
 }

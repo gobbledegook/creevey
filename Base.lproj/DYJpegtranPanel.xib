@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D61" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D61" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment version="1090" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -15,21 +15,21 @@
         <window title="Process JPEG Files" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="7" userLabel="JPEG Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="190" y="262" width="430" height="221"/>
+            <rect key="contentRect" x="190" y="262" width="508" height="221"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
-            <view key="contentView" id="8">
-                <rect key="frame" x="0.0" y="0.0" width="430" height="221"/>
+            <view key="contentView" horizontalCompressionResistancePriority="250" id="8">
+                <rect key="frame" x="0.0" y="0.0" width="508" height="221"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <popUpButton verticalHuggingPriority="750" id="15">
-                        <rect key="frame" x="133" y="177" width="230" height="26"/>
+                    <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="15">
+                        <rect key="frame" x="124" y="177" width="187" height="26"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <popUpButtonCell key="cell" type="push" title="No Transformation" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="20" id="56">
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" id="56">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="16">
                                 <items>
-                                    <menuItem title="No Transformation" state="on" id="20"/>
+                                    <menuItem title="No Transformation" id="20"/>
                                     <menuItem isSeparatorItem="YES" id="25">
                                         <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                                     </menuItem>
@@ -48,10 +48,11 @@
                         </popUpButtonCell>
                         <connections>
                             <action selector="transformChanged:" target="36" id="50"/>
+                            <outlet property="nextKeyView" destination="33" id="Fl6-IL-2GC"/>
                         </connections>
                     </popUpButton>
-                    <button id="35">
-                        <rect key="frame" x="134" y="106" width="204" height="18"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="35">
+                        <rect key="frame" x="124" y="106" width="203" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Optimize Huffman Table ⌘O" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="61">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -59,9 +60,12 @@
                             <string key="keyEquivalent">o</string>
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="14" id="ive-En-dzJ"/>
+                        </connections>
                     </button>
-                    <button id="14">
-                        <rect key="frame" x="134" y="86" width="204" height="18"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="14">
+                        <rect key="frame" x="124" y="86" width="175" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Reduce to Grayscale ⌘G" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="55">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -69,9 +73,12 @@
                             <string key="keyEquivalent">g</string>
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="28" id="U5M-Pl-LhA"/>
+                        </connections>
                     </button>
-                    <button id="33">
-                        <rect key="frame" x="134" y="157" width="278" height="18"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="33">
+                        <rect key="frame" x="124" y="157" width="277" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Drop Nontransformable Edge Blocks ⌘D" bezelStyle="regularSquare" imagePosition="left" alignment="left" enabled="NO" inset="2" id="59">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -79,9 +86,12 @@
                             <string key="keyEquivalent">d</string>
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="11" id="9Vp-8Q-Now"/>
+                        </connections>
                     </button>
-                    <button id="11">
-                        <rect key="frame" x="134" y="126" width="204" height="18"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="11">
+                        <rect key="frame" x="124" y="126" width="155" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Make Progressive ⌘P" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="52">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -89,9 +99,12 @@
                             <string key="keyEquivalent">p</string>
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="35" id="sde-bc-C6a"/>
+                        </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="34">
-                        <rect key="frame" x="17" y="183" width="114" height="17"/>
+                    <textField verticalHuggingPriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="34">
+                        <rect key="frame" x="17" y="183" width="105" height="17"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Transformation:" id="60">
                             <font key="font" metaFont="system"/>
@@ -99,8 +112,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="12">
-                        <rect key="frame" x="17" y="158" width="114" height="17"/>
+                    <textField verticalHuggingPriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="12">
+                        <rect key="frame" x="17" y="158" width="104" height="17"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Options:" id="53">
                             <font key="font" metaFont="system"/>
@@ -108,15 +121,15 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="9">
-                        <rect key="frame" x="136" y="148" width="274" height="5"/>
+                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="9">
+                        <rect key="frame" x="126" y="148" width="362" height="5"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
                     </box>
-                    <button verticalHuggingPriority="750" id="27">
-                        <rect key="frame" x="326" y="12" width="90" height="32"/>
+                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="27">
+                        <rect key="frame" x="404" y="12" width="90" height="32"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="push" title="Convert" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="57">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -127,10 +140,11 @@ DQ
                         </buttonCell>
                         <connections>
                             <action selector="convert:" target="36" id="46"/>
+                            <outlet property="nextKeyView" destination="15" id="ahf-H8-Yqp"/>
                         </connections>
                     </button>
-                    <popUpButton verticalHuggingPriority="750" id="28">
-                        <rect key="frame" x="133" y="56" width="230" height="26"/>
+                    <popUpButton verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="28">
+                        <rect key="frame" x="124" y="56" width="367" height="26"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <popUpButtonCell key="cell" type="push" title="Keep Markers" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="2" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="31" id="58">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -143,9 +157,12 @@ DQ
                                 </items>
                             </menu>
                         </popUpButtonCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="13" id="K0Y-CN-Axe"/>
+                        </connections>
                     </popUpButton>
-                    <button verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="244" y="12" width="82" height="32"/>
+                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="13">
+                        <rect key="frame" x="322" y="12" width="82" height="32"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="54">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -156,9 +173,39 @@ Gw
                         </buttonCell>
                         <connections>
                             <action selector="stopModal:" target="36" id="45"/>
+                            <outlet property="nextKeyView" destination="27" id="eZK-qK-VTR"/>
                         </connections>
                     </button>
                 </subviews>
+                <constraints>
+                    <constraint firstItem="34" firstAttribute="leading" secondItem="8" secondAttribute="leading" constant="19" id="7ZT-HH-8Uw"/>
+                    <constraint firstItem="15" firstAttribute="centerY" secondItem="34" secondAttribute="centerY" constant="1" id="9Cm-Mz-3jx"/>
+                    <constraint firstItem="33" firstAttribute="top" secondItem="15" secondAttribute="bottom" constant="7" id="AT4-ir-XKi"/>
+                    <constraint firstItem="35" firstAttribute="top" secondItem="11" secondAttribute="bottom" constant="6" id="BBF-bb-aea"/>
+                    <constraint firstItem="33" firstAttribute="centerY" secondItem="12" secondAttribute="centerY" constant="0.5" id="CdG-N6-CSc"/>
+                    <constraint firstItem="13" firstAttribute="top" secondItem="28" secondAttribute="bottom" constant="19" id="FXp-XI-5u5"/>
+                    <constraint firstAttribute="trailing" secondItem="9" secondAttribute="trailing" constant="20" id="IM3-Mn-9Uf"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="11" secondAttribute="leading" id="IPk-cF-bbx"/>
+                    <constraint firstItem="9" firstAttribute="top" secondItem="33" secondAttribute="bottom" constant="8" id="Jli-at-ScN"/>
+                    <constraint firstAttribute="bottom" secondItem="27" secondAttribute="bottom" constant="19" id="Mcf-q4-U63"/>
+                    <constraint firstItem="13" firstAttribute="centerY" secondItem="27" secondAttribute="centerY" id="NXF-0r-qHx"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="35" secondAttribute="leading" id="Nli-Jl-lE1"/>
+                    <constraint firstItem="27" firstAttribute="leading" secondItem="13" secondAttribute="trailing" constant="12" id="QAh-53-dJW"/>
+                    <constraint firstItem="34" firstAttribute="top" secondItem="8" secondAttribute="top" constant="21" id="RRO-s3-F6d"/>
+                    <constraint firstItem="14" firstAttribute="top" secondItem="35" secondAttribute="bottom" constant="6" id="YVf-tk-nwE"/>
+                    <constraint firstItem="11" firstAttribute="top" secondItem="9" secondAttribute="bottom" constant="8" id="Yfn-dM-lnX"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="15" secondAttribute="leading" id="bZ6-0O-jZ4"/>
+                    <constraint firstItem="15" firstAttribute="leading" secondItem="34" secondAttribute="trailing" constant="6" id="dAC-u9-IXI"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="9" secondAttribute="leading" id="dAi-bg-otn"/>
+                    <constraint firstItem="28" firstAttribute="top" secondItem="14" secondAttribute="bottom" constant="8" id="exW-TA-Vrz"/>
+                    <constraint firstAttribute="trailing" secondItem="27" secondAttribute="trailing" constant="20" id="gGv-oJ-X1V"/>
+                    <constraint firstItem="27" firstAttribute="trailing" secondItem="28" secondAttribute="trailing" id="hPB-xO-779"/>
+                    <constraint firstItem="12" firstAttribute="top" secondItem="34" secondAttribute="bottom" constant="8" id="hwJ-Tz-ZLe"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="12" secondAttribute="trailing" constant="7" id="kmj-uh-7Qq"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="28" secondAttribute="leading" id="onT-fP-52d"/>
+                    <constraint firstItem="33" firstAttribute="leading" secondItem="14" secondAttribute="leading" id="rbU-hx-rho"/>
+                    <constraint firstItem="12" firstAttribute="leading" secondItem="8" secondAttribute="leading" constant="19" id="w9U-N8-bpT"/>
+                </constraints>
             </view>
             <connections>
                 <outlet property="initialFirstResponder" destination="15" id="47"/>

@@ -315,8 +315,6 @@
 	
 	key = [NSString stringWithFormat: @"%@.prefspanel.recentpage", autosaveName];
 	[[NSUserDefaults standardUserDefaults] setInteger:[sender tag] forKey:key];
-	
-	[self doResize]; // DY
 }
 
 
