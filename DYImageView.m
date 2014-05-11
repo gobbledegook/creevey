@@ -125,7 +125,7 @@
 	
 	[transform invert];
 	[transform concat];
-	id rep = [[image representations] objectAtIndex:0];
+	id rep = [image representations][0];
 	if ([rep isKindOfClass:[NSBitmapImageRep class]]
 		&& [rep valueForProperty:NSImageFrameCount]) {
 		if (!gifTimer || [gifTimer userInfo] != image) gifTimer =
@@ -139,12 +139,11 @@
 	gifTimer = nil;
 	if (image != [t userInfo]) return; // stop if image is changed
 	
-	NSBitmapImageRep *rep = [[[t userInfo] representations] objectAtIndex:0];
+	NSBitmapImageRep *rep = [[t userInfo] representations][0];
 	NSNumber *frameCount = [rep valueForProperty:NSImageFrameCount];
 	int n = [[rep valueForProperty:NSImageCurrentFrame] intValue];
 	if (++n == [frameCount intValue]) n = 0;
-	[rep setProperty:NSImageCurrentFrame
-		   withValue:[NSNumber numberWithInt:n]];
+	[rep setProperty:NSImageCurrentFrame withValue:@(n)];
 	[self setNeedsDisplay:YES];
 }
 
@@ -165,7 +164,7 @@
 		[image release];
 		image = [anImage retain];
 		[image setScalesWhenResized:YES];
-		NSImageRep *rep = [[image representations] objectAtIndex:0]; // ** assume not corrupt
+		NSImageRep *rep = [image representations][0]; // ** assume not corrupt
 		if ([rep isKindOfClass:[NSBitmapImageRep class]]) {
 			[image setSize:NSMakeSize([rep pixelsWide], [rep pixelsHigh])];
 		} // ** cat on nsimage?

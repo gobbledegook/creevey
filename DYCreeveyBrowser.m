@@ -80,7 +80,7 @@
 		[self setPrefersAllColumnUserResizing:NO];
 		
 		typedString = [[NSMutableString alloc] init];
-		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
 		greyview = [[DYTransparentGreyView alloc] initWithFrame:NSZeroRect];
 	}
 	return self;

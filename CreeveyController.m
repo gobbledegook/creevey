@@ -35,7 +35,7 @@ BOOL FilesContainJPEG(NSArray *a) {
 	NSUInteger i, n = [a count];
 	if (n > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check
 	for (i=0; i<n; ++i) {
-		if (FileIsJPEG([a objectAtIndex:i]))
+		if (FileIsJPEG(a[i]))
 			return YES;
 	}
 	return NO;
@@ -80,11 +80,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		float x = 160;
 		NSMutableParagraphStyle *styl = [[[NSMutableParagraphStyle alloc] init] autorelease];
 		[styl setHeadIndent:x];
-		[styl setTabStops:[NSArray arrayWithObjects:TAB(NSRightTabStopType,x-5),
-			TAB(NSLeftTabStopType,x), nil]];
+		[styl setTabStops:@[TAB(NSRightTabStopType,x-5), TAB(NSLeftTabStopType,x)]];
 		[styl setDefaultTabInterval:5];
 		
-		[atts setObject:styl forKey:NSParagraphStyleAttributeName];
+		atts[NSParagraphStyleAttributeName] = styl;
 		[attStr setAttributes:atts range:NSMakeRange(r.location,[s length]-r.location)];
 	}
 	[s release];
@@ -113,26 +112,26 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	
     dict=[NSMutableDictionary dictionary];
 	NSString *s = CREEVEY_DEFAULT_PATH;
-    [dict setObject:s forKey:@"picturesFolderPath"];
-    [dict setObject:s forKey:@"lastFolderPath"];
-    [dict setObject:[NSNumber numberWithShort:0] forKey:@"startupOption"];
-	[dict setObject:[NSNumber numberWithFloat:120] forKey:@"thumbCellWidth"];
-	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"getInfoVisible"];
-	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoVersCheck"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"jpegPreserveModDate"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowAutoadvance"];
-	[dict setObject:[NSNumber numberWithFloat:5.25] forKey:@"slideshowAutoadvanceTime"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowLoop"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowRandom"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowScaleUp"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"slideshowActualSize"];
-	[dict setObject:[NSKeyedArchiver archivedDataWithRootObject:[NSColor blackColor]] forKey:@"slideshowBgColor"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"exifThumbnailShow"];
-	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"showFilenames"];
-	[dict setObject:[NSNumber numberWithInt:1] forKey:@"sortBy"]; // sort by filename, ascending
-	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"Slideshow:RerandomizeOnLoop"];
-	[dict setObject:[NSNumber numberWithInt:3000] forKey:@"maxThumbsToLoad"]; // note this is a 32-bit int
-	[dict setObject:[NSNumber numberWithBool:YES] forKey:@"autoRotateByOrientationTag"];
+    dict[@"picturesFolderPath"] = s;
+    dict[@"lastFolderPath"] = s;
+    dict[@"startupOption"] = @0;
+	dict[@"thumbCellWidth"] = @120.0f;
+	dict[@"getInfoVisible"] = @YES;
+	dict[@"autoVersCheck"] = @YES;
+	dict[@"jpegPreserveModDate"] = @NO;
+	dict[@"slideshowAutoadvance"] = @NO;
+	dict[@"slideshowAutoadvanceTime"] = @5.25f;
+	dict[@"slideshowLoop"] = @NO;
+	dict[@"slideshowRandom"] = @NO;
+	dict[@"slideshowScaleUp"] = @NO;
+	dict[@"slideshowActualSize"] = @NO;
+	dict[@"slideshowBgColor"] = [NSKeyedArchiver archivedDataWithRootObject:[NSColor blackColor]];
+	dict[@"exifThumbnailShow"] = @NO;
+	dict[@"showFilenames"] = @YES;
+	dict[@"sortBy"] = @1; // sort by filename, ascending
+	dict[@"Slideshow:RerandomizeOnLoop"] = @YES;
+	dict[@"maxThumbsToLoad"] = @3000;
+	dict[@"autoRotateByOrientationTag"] = @YES;
     [defaults registerDefaults:dict];
 
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
@@ -202,7 +201,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			// ** use smarter sorting here?
 		: [frontWindow displayedFilenames]];
 	[slidesWindow startSlideshowAtIndex: [files count] == 1
-		? [[frontWindow displayedFilenames] indexOfObject:[files objectAtIndex:0]]
+		? [[frontWindow displayedFilenames] indexOfObject:files[0]]
 			// here's a fun (and SLOW) linear search
 		: -1];
 }
@@ -259,7 +258,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)setDesktopPicture:(id)sender {
 	NSString *s = [slidesWindow isMainWindow]
 		? [slidesWindow currentFile]
-		: [[frontWindow currentSelection] objectAtIndex:0];
+		: [frontWindow currentSelection][0];
 	NSError *error = nil;
 	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s]
 											forScreen:[NSScreen mainScreen]
@@ -317,7 +316,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	BOOL autoRotate = YES; // set this to yes, if the browser is active and not autorotating we change it below. I.e., autorotate will be true if we're in a slideshow
 	if (slidesWasKey) {
 		NSString *slidesFile = [slidesWindow currentFile];
-		a = [NSArray arrayWithObject:slidesFile];
+		a = @[slidesFile];
 		// we need to get the current (viewing) orientation of the slide
 		// we *don't* need to save the current cached thumbnail info since it's going to get deleted
 		unsigned short orientation = [slidesWindow currentOrientation];
@@ -344,7 +343,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSString *s, *resolvedPath;
 	NSSize maxThumbSize = NSMakeSize(160,160);
 	for (n = 0; n < [a count]; ++n) {
-		s = [a objectAtIndex:n];
+		s = a[n];
 		resolvedPath = ResolveAliasToPath(s);
 		if (FileIsJPEG(resolvedPath)) {
 			if (jinfo.replaceThumb) {
@@ -356,10 +355,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 										 getOrientation:NULL];
 				if (i) {
 					// assuming EpegWrapper always gives us a bitmap imagerep
-					jinfo.newThumb = [(NSBitmapImageRep *)[[i representations] objectAtIndex:0]
+					jinfo.newThumb = [(NSBitmapImageRep *)[i representations][0]
 						representationUsingType:NSJPEGFileType
-									 properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:0.0]
-																			forKey:NSImageCompressionFactor]
+									 properties:@{NSImageCompressionFactor: @0.0f}
 						];
 					jinfo.newThumbSize = tmpSize;
 				} else {
@@ -409,7 +407,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 performFileOperation:NSWorkspaceRecycleOperation
 			  source:[fullpath stringByDeletingLastPathComponent]
 		 destination:@""
-			   files:[NSArray arrayWithObject:[fullpath lastPathComponent]]
+			   files:@[[fullpath lastPathComponent]]
 				 tag:&tag]) {
 		return 1;
 	}
@@ -438,7 +436,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 		// we have to go backwards b/c we're deleting from the imgMatrix
 		// wait... we don't, because we're not using indexes anymore
 		for (i=0; i < n; ++i) {
-			NSString *fullpath = [a objectAtIndex:i];
+			NSString *fullpath = a[i];
 			char result = (b ? [self trashFile:fullpath numLeft:n-i] : 1);
 			if (result == 1) {
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
@@ -508,7 +506,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 - (BOOL)application:(NSApplication *)sender
 		   openFile:(NSString *)filename {
 	if (![creeveyWindows count]) [self newWindow:nil];
-	[frontWindow openFiles:[NSArray arrayWithObject:filename] withSlideshow:YES];
+	[frontWindow openFiles:@[filename] withSlideshow:YES];
 	if (sender) {
 		[[frontWindow window] makeKeyAndOrderFront:nil];
 		//[sender activateIgnoringOtherApps:YES]; // for expose'
@@ -688,8 +686,7 @@ enum {
 	[op setDirectoryURL:[NSURL fileURLWithPath:[u stringForKey:@"picturesFolderPath"] isDirectory:YES]];
 	[op beginSheetModalForWindow:prefsWin completionHandler:^(NSInteger result) {
 		if (result == NSFileHandlingPanelOKButton) {
-			NSString *s = [[[op URLs] firstObject] path];
-			[u setObject:s forKey:@"picturesFolderPath"];
+			[u setObject:[[op URLs][0] path] forKey:@"picturesFolderPath"];
 			[u setInteger:1 forKey:@"startupOption"];
 		}
 	}];
@@ -702,9 +699,7 @@ enum {
 
 
 - (IBAction)openAboutPanel:(id)sender {
-	[NSApp orderFrontStandardAboutPanelWithOptions:
-		[NSDictionary dictionaryWithObject:[NSImage imageNamed:@"logo"]
-									forKey:@"ApplicationIcon"]];
+	[NSApp orderFrontStandardAboutPanelWithOptions:@{@"ApplicationIcon": [NSImage imageNamed:@"logo"]}];
 }
 
 - (IBAction)applySlideshowPrefs:(id)sender {
@@ -868,7 +863,7 @@ enum {
 	if ([creeveyWindows indexOfObjectIdenticalTo:wc] != NSNotFound) {
 		frontWindow = nil; // ** in case something funny happens between her and wChanged?
 		if ([creeveyWindows count] == 1) {
-			[[creeveyWindows objectAtIndex:0] updateDefaults];
+			[creeveyWindows[0] updateDefaults];
 			if ((exifWasVisible = [[exifTextView window] isVisible])) {
 				[[exifTextView window] orderOut:nil];
 			}
@@ -913,7 +908,7 @@ enum {
 		NSArray *a = [frontWindow displayedFilenames];
 		NSUInteger i = [slidesWindow currentIndex];
 		if (i < [a count]
-			&& [[a objectAtIndex:i] isEqualToString:[slidesWindow currentFile]])
+			&& [a[i] isEqualToString:[slidesWindow currentFile]])
 			[frontWindow selectIndex:i];
 	}
 }

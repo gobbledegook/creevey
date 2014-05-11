@@ -16,8 +16,8 @@
 @implementation NSArray (EmbeddedFinderCompare)
 - (NSComparisonResult)embeddedFinderCompare:(NSArray *)anArray
 {
-	NSString *aString = [anArray objectAtIndex:0];
-	NSString *myString = [self objectAtIndex:0];
+	NSString *aString = anArray[0];
+	NSString *myString = self[0];
 	SInt32 compareResult;
 	
 	CFIndex lhsLen = [myString length];;
@@ -151,60 +151,49 @@
 		[cols addObject:[NSMutableArray arrayWithCapacity:15]];
 		[colsInternal addObject:[NSMutableArray arrayWithCapacity:15]];
 	}
-	NSMutableArray *a,*a2,*tempArray;
-	a = [cols objectAtIndex:n];
-	a2 = [colsInternal objectAtIndex:n];
-	[a removeAllObjects];
-	[a2 removeAllObjects];
-	tempArray = [NSMutableArray arrayWithCapacity:15];
+	NSMutableArray *sortArray = [NSMutableArray arrayWithCapacity:15];
 	NSString *nextColumn = nil;
 	if ([currBrowserPathComponents count] > n+1)
-		nextColumn = [currBrowserPathComponents objectAtIndex:n+1];
+		nextColumn = currBrowserPathComponents[n+1];
 	
-	NSEnumerator *e = [[fm contentsOfDirectoryAtPath:path error:NULL] objectEnumerator];
-	BOOL isDir;
-	NSString *obj, *fullpath;
-	while (obj = [e nextObject]) {
-		fullpath = [path stringByAppendingPathComponent:obj];
+	for (NSString *filename in [fm contentsOfDirectoryAtPath:path error:NULL]) {
+		NSString *fullpath = [path stringByAppendingPathComponent:filename];
 		if (n==0 && [[fm destinationOfSymbolicLinkAtPath:fullpath error:NULL] isEqualToString:@"/"]) {
 			// initialize rootVolumeName here
 			// executes only on loadColumnZero, saves @"/Macintosh HD" or so
 			[rootVolumeName release];
-			rootVolumeName = [[@"/" stringByAppendingString:obj] retain];
+			rootVolumeName = [[@"/" stringByAppendingString:filename] retain];
 		}
 		if (!showInvisibles) {
-			if ([obj characterAtIndex:0] == '.') continue; // dot-files
+			if ([filename characterAtIndex:0] == '.') continue; // dot-files
 			if (n==1 && [fullpath isEqualToString:@"/Volumes"])
 				continue; // always skip /Volumes
 			if (FileIsInvisible(fullpath)) {
 				// if trying to browse to a specific directory, show it even if it's invisible
-				if (nextColumn && [obj isEqualToString:nextColumn]) {
+				if (nextColumn && [filename isEqualToString:nextColumn]) {
 					[revealedDirectories addObject:fullpath];
 				} else if (![revealedDirectories containsObject:fullpath]) {
 					continue;
 				}
 			}
 		}
+		BOOL isDir;
 		[fm fileExistsAtPath:fullpath isDirectory:&isDir];
 		if (isDir) {
-			[tempArray addObject:
-			 [NSArray arrayWithObjects:
-			  [fm displayNameAtPath:fullpath], obj, nil]];
-			//if (n==0) NSLog(@"%@", obj);
-			//obj = [fm displayNameAtPath:fullpath];
-			//[a addObject:obj];
-			//if (n==0) NSLog(@"%@", obj);
+			[sortArray addObject:@[[fm displayNameAtPath:fullpath], filename]];
 		}
 	}
 	// sort it so it makes sense! the OS doesn't always give directory contents in a convenient order
-	[tempArray sortUsingSelector:@selector(embeddedFinderCompare:)];
-	e = [tempArray objectEnumerator];
-	NSArray *obj2;
-	while ((obj2 = [e nextObject])) {
-		[a addObject:[obj2 objectAtIndex:0]]; // display names
-		[a2 addObject:[obj2 objectAtIndex:1]]; // actual (on disk) names
+	[sortArray sortUsingSelector:@selector(embeddedFinderCompare:)];
+	NSMutableArray *displayNames = cols[n];
+	NSMutableArray *filesystemNames = colsInternal[n];
+	[displayNames removeAllObjects];
+	[filesystemNames removeAllObjects];
+	for (NSArray *nameArray in sortArray) {
+		[displayNames addObject:nameArray[0]];
+		[filesystemNames addObject:nameArray[1]];
 	}
-	return [a count];
+	return [displayNames count];
 }
 
 #pragma mark NSBrowser delegate methods
@@ -216,16 +205,16 @@
 }
 
 - (void)browser:(NSBrowser *)b willDisplayCell:(id)cell atRow:(NSInteger)row column:(NSInteger)column {
-	[cell setStringValue:[[colsInternal objectAtIndex:column] objectAtIndex:row]];
-	[cell setTitle:[[cols objectAtIndex:column] objectAtIndex:row]];
+	[cell setStringValue:colsInternal[column][row]];
+	[cell setTitle:cols[column][row]];
 }
 
 #pragma mark DYCreeveyBrowserDelegate methods
 - (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(NSInteger)column {
-	NSMutableArray *a = [cols objectAtIndex:column]; // use cols, not colsInternal here, since we sort by display names
+	NSMutableArray *a = cols[column]; // use cols, not colsInternal here, since we sort by display names
 	NSUInteger i, n = [a count];
 	for (i=0; i<n; ++i) {
-		if ([[a objectAtIndex:i] caseInsensitiveCompare:s] >= 0)
+		if ([a[i] caseInsensitiveCompare:s] >= 0)
 			break;
 	}
 	if (i==n) --i;

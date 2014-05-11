@@ -166,7 +166,7 @@
 		NSUInteger i, n = [a count];
 		NSString *theFile;
 		for (i=0; i<n; ++i) {
-			theFile = [a objectAtIndex:i];
+			theFile = a[i];
 			if ([filetypes containsObject:[theFile pathExtension]] || [filetypes containsObject:NSHFSTypeOfFile(theFile)])
 				[filesBeingOpened addObject:theFile];
 		}
@@ -175,7 +175,7 @@
 		[filesBeingOpened addObjectsFromArray:a];
 	}
 
-	[self setPath:[a objectAtIndex:0]];
+	[self setPath:a[0]];
 }
 
 - (void)fileWasChanged:(NSString *)s {
@@ -339,7 +339,7 @@
 		} else {
 			numFiles = [filenames count];
 			for (i=0; i<numFiles; ++i) {
-				origPath = [filenames objectAtIndex:i];
+				origPath = filenames[i];
 				if ([[[NSApp delegate] cats][currCat-2] containsObject:origPath])
 					[displayedFilenames addObject:origPath];
 			}
@@ -384,7 +384,7 @@
 	if ([displayedFilenames count] > 0) {
 		loadingDone = NO;
 		[slidesBtn setEnabled:YES]; // ** not main thread?
-		currentFilesDeletable = [fm isDeletableFileAtPath:[displayedFilenames objectAtIndex:0]];
+		currentFilesDeletable = [fm isDeletableFileAtPath:displayedFilenames[0]];
 		
 		numFiles = [displayedFilenames count];
 		unsigned int maxThumbs = [[NSUserDefaults standardUserDefaults]
@@ -399,7 +399,7 @@
 				[NSThread sleepUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
 			}
 			
-			origPath = [displayedFilenames objectAtIndex:i];
+			origPath = displayedFilenames[i];
 			[imgMatrix addImage:nil withFilename:origPath];
 			if ([filesBeingOpened containsObject:origPath])
 				[imgMatrix addSelectedIndex:i];
@@ -409,8 +409,8 @@
 			if (i < maxThumbs) {
 				[imageCacheQueueLock lock];
 				NSMutableDictionary *d = [[NSMutableDictionary alloc] initWithCapacity:3];
-				[d setObject:origPath forKey:@"filename"];
-				[d setObject:[NSNumber numberWithUnsignedInteger:i] forKey:@"index"];
+				d[@"filename"] = origPath;
+				d[@"index"] = @(i);
 				[secondaryImageCacheQueue addObject:[d autorelease]];
 				[imageCacheQueueLock unlockWithCondition:1];
 			}
@@ -487,7 +487,7 @@
 			
 			NSMutableSet **cats = [[NSApp delegate] cats];
 			for (i=[a count]-1; i != -1; i--) {
-				id fname = [a objectAtIndex:i];
+				id fname = a[i];
 				if (c == 1) {
 					for (j=0; j<NUM_FNKEY_CATS; ++j)
 						[cats[j] removeObject:fname];
@@ -596,10 +596,9 @@
 #pragma mark wrapping matrix methods
  - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)selectedIndexes {
 	 NSString *s, *path, *basePath;
-	 DYImageInfo *i;
+	 DYImageInfo *info;
 	 DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
 	 unsigned long long totalSize = 0;
-	 id obj; NSEnumerator *e;
 	 switch ([selectedIndexes count]) {
 		 case 0:
 			 s = @"";
@@ -607,27 +606,26 @@
 		 case 1:
 			 basePath = [[[dirBrowser delegate] path] stringByAppendingString:@"/"];
 			 path = [imgMatrix firstSelectedFilename];
-			 i = [thumbsCache infoForKey:ResolveAliasToPath(path)];
+			 info = [thumbsCache infoForKey:ResolveAliasToPath(path)];
 			 // must resolve alias here b/c that's what we do in loadImages
 			 // see also modTime in DYImageCache
-			 if (!i) {
+			 if (!info) {
 				 // in case the thumbnail hasn't loaded into the cache yet, retrieve the file info ourselves.
-				 i = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
+				 info = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
 			 }
-			 s = i ? [[path stringByDeletingBasePath:basePath] stringByAppendingFormat:@" %dx%d (%@)",
-				 (int)i->pixelSize.width,
-				 (int)i->pixelSize.height,
-				 FileSize2String(i->fileSize)]
+			 s = info ? [[path stringByDeletingBasePath:basePath] stringByAppendingFormat:@" %dx%d (%@)",
+				 (int)info->pixelSize.width,
+				 (int)info->pixelSize.height,
+				 FileSize2String(info->fileSize)]
 				   : [[path stringByDeletingBasePath:basePath] stringByAppendingString:
 					   @" - bad image file!"];
 			 break;
 		 default:
-			 e = [[imgMatrix selectedFilenames] objectEnumerator];
-			 while (obj = [e nextObject]) {
-				 i = [thumbsCache infoForKey:ResolveAliasToPath(obj)];
-				 if (!i) i = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(obj)] autorelease];
-				 if (i)
-					 totalSize += i->fileSize;
+			 for (NSString *path in [imgMatrix selectedFilenames]) {
+				 info = [thumbsCache infoForKey:ResolveAliasToPath(path)];
+				 if (!info) info = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
+				 if (info)
+					 totalSize += info->fileSize;
 			 }
 			 s = [NSString stringWithFormat:@"%@ (%@)",
 					 [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
@@ -645,8 +643,8 @@
 	if (thumb) return thumb;
 	[imageCacheQueueLock lock];
 	NSMutableDictionary *d = [[NSMutableDictionary alloc] initWithCapacity:3];
-	[d setObject:filename forKey:@"filename"];
-	[d setObject:[NSNumber numberWithUnsignedInteger:i] forKey:@"index"];
+	d[@"filename"] = filename;
+	d[@"index"] = @(i);
 	[imageCacheQueue insertObject:[d autorelease] atIndex:0];
 	[imageCacheQueueLock unlockWithCondition:1];
 	return nil;
@@ -672,7 +670,7 @@
 		// use secondary queue if primary queue is empty
 		// note: the secondary queue may be empty if all items are in the visibleQueue
 		if ([imageCacheQueue count] == 0 && [secondaryImageCacheQueue count]) {
-			[imageCacheQueue addObject:[secondaryImageCacheQueue objectAtIndex:0]];
+			[imageCacheQueue addObject:secondaryImageCacheQueue[0]];
 			[secondaryImageCacheQueue removeObjectAtIndex:0];
 		}
 		NSMutableDictionary *d;
@@ -685,8 +683,8 @@
 		{
 			i = [imageCacheQueue count];
 			while (i--) {
-				d = [imageCacheQueue objectAtIndex:i];
-				origPath = [d objectForKey:@"filename"];
+				d = imageCacheQueue[i];
+				origPath = d[@"filename"];
 				//NSLog(@"considering %@ for priority queue", [d objectForKey:@"index"]);
 				if (![self pathIsVisible:origPath]) {
 					if ([imageCacheQueue count] > 1) // leave at least one item so it won't crash later (the next while loop assumes there's at least one item)
@@ -707,8 +705,8 @@
 		while (YES) {
 			if ([visibleQueue count]) {
 				// run through this "pre-approved" array before touching the main queue
-				d = [visibleQueue objectAtIndex:0];
-				origPath = [d objectForKey:@"filename"];
+				d = visibleQueue[0];
+				origPath = d[@"filename"];
 				if ([imgMatrix imageWithFileInfoNeedsDisplay:d] || [visibleQueue count] == 1) {
 					[d retain];
 					[visibleQueue removeObjectAtIndex:0];
@@ -724,8 +722,8 @@
 					continue;
 				}
 			}
-			d = [imageCacheQueue objectAtIndex:i];
-			origPath = [d objectForKey:@"filename"];
+			d = imageCacheQueue[i];
+			origPath = d[@"filename"];
 			//NSLog(@"considering %@ in main loop", [d objectForKey:@"index"]);
 			if ([imageCacheQueue count]-1 == i) { // if we've reached the last item of the array, we have to process it
 				[d retain];
@@ -777,7 +775,7 @@
 			}
 		}
 		if (!thumb) thumb = [NSImage imageNamed:@"brokendoc.tif"];
-		[d setObject:thumb forKey:@"image"];
+		d[@"image"] = thumb;
 		[imgMatrix performSelectorOnMainThread:@selector(setImageWithFileInfo:) withObject:d waitUntilDone:NO];
 		[d release];
 		[pool drain];

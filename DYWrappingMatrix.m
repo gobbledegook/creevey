@@ -126,16 +126,16 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	// prefs stuff
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[dict setObject:[NSArchiver archivedDataWithRootObject:[NSColor whiteColor]] forKey:@"DYWrappingMatrixBgColor"];
-	[dict setObject:[NSNumber numberWithBool:NO] forKey:@"DYWrappingMatrixAllowMove"];
-	[dict setObject:@"160" forKey:@"DYWrappingMatrixMaxCellWidth"];
+	dict[@"DYWrappingMatrixBgColor"] = [NSArchiver archivedDataWithRootObject:[NSColor whiteColor]];
+	dict[@"DYWrappingMatrixAllowMove"] = @NO;
+	dict[@"DYWrappingMatrixMaxCellWidth"] = @"160";
 	[defaults registerDefaults:dict];
 	
     static BOOL initialized = NO;
     /* Make sure code only gets executed once. */
     if (initialized) return;
     initialized = YES;
-    id sendTypes = [NSArray arrayWithObject:NSFilenamesPboardType];
+    id sendTypes = @[NSFilenamesPboardType];
     [NSApp registerServicesMenuSendTypes:sendTypes
 							 returnTypes:nil];
     return;
@@ -158,7 +158,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 							 types:(NSArray *)types {
     if (![types containsObject:NSFilenamesPboardType])
         return NO;
- 	[pboard declareTypes:[NSArray arrayWithObject:NSFilenamesPboardType]
+ 	[pboard declareTypes:@[NSFilenamesPboardType]
 				   owner:nil];
 	return [pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
 						   forType:NSFilenamesPboardType];
@@ -180,9 +180,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		autoRotate = YES;
 		loadingImage = [NSImage imageNamed:@"loading.png"];
 		
-		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
 		
-		[[[NSThread currentThread] threadDictionary] setObject:@"1" forKey:@"DYWrappingMatrixMainThread"];
+		[[NSThread currentThread] threadDictionary][@"DYWrappingMatrixMainThread"] = @"1";
 	}
 	return self;
 }
@@ -444,8 +444,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (doDrag == 2) {
 		//pboard
 		NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-		[pboard declareTypes:[NSArray arrayWithObject:NSFilenamesPboardType]
-					   owner:nil];
+		[pboard declareTypes:@[NSFilenamesPboardType] owner:nil];
 		[pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
 						forType:NSFilenamesPboardType];
 		//loc, img
@@ -537,14 +536,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			[NSBezierPath fillRect:areaRect];
 		}
 		// retrieve the image, or ask the delegate to load it and send it back if it hasn't been set yet
-		NSImage *img = [images objectAtIndex:i];
-		NSString *filename = [filenames objectAtIndex:i];
+		NSImage *img = images[i];
+		NSString *filename = filenames[i];
 		if (img == loadingImage) {
 			if ([delegate respondsToSelector:@selector(wrappingMatrix:loadImageForFile:atIndex:)]
 				&& ![requestedFilenames containsObject:filename]) {
 				NSImage *newImage = [delegate wrappingMatrix:self loadImageForFile:filename atIndex:i];
 				if (newImage) {
-					[images replaceObjectAtIndex:i withObject:newImage];
+					images[i] = newImage;
 					img = newImage;
 					++numThumbsLoaded;
 				} else {
@@ -606,7 +605,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		}
 		
 		if (textHeight) {
-			[myTextCell setStringValue:[[filenames objectAtIndex:i] lastPathComponent]];
+			[myTextCell setStringValue:[filenames[i] lastPathComponent]];
 			[myTextCell drawWithFrame:textCellRect inView:self];
 		}
 	}
@@ -715,14 +714,13 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 - (NSImage *)imageForIndex:(NSUInteger)n {
 	if (autoRotate) {
-		return [[images objectAtIndex:n] rotateByExifOrientation:
-				[self exifOrientationForIndex:n]];
+		return [images[n] rotateByExifOrientation:[self exifOrientationForIndex:n]];
 	} else {
-		return [images objectAtIndex:n];
+		return images[n];
 	}
 }
 - (NSSize)imageSizeForIndex:(NSUInteger)n {
-	NSSize s = [[images objectAtIndex:n] size];
+	NSSize s = [images[n] size];
 	if (autoRotate && [self exifOrientationForIndex:n] >= 5) {
 		float tmp;
 		tmp = s.width;
@@ -733,7 +731,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 - (unsigned short)exifOrientationForIndex:(NSUInteger)n {
 	DYImageInfo *i = [[(CreeveyController *)[NSApp delegate] thumbsCache]
-					  infoForKey:ResolveAliasToPath([filenames objectAtIndex:n])];
+					  infoForKey:ResolveAliasToPath(filenames[n])];
 	return i ? i->exifOrientation : 0;
 }
 
@@ -753,7 +751,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (NSString *)firstSelectedFilename {
-	return [filenames objectAtIndex:[selectedIndexes firstIndex]];
+	return filenames[[selectedIndexes firstIndex]];
 }
 
 - (IBAction)selectAll:(id)sender {
@@ -792,35 +790,35 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 // call this when an image changes (filename is already set)
 - (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i {
 	if (i >= numCells) return;
-	[images replaceObjectAtIndex:i withObject:theImage];
+	images[i] = theImage;
 	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
 }
 
 #pragma mark lazy loading stuff
 - (void)setImageWithFileInfo:(NSDictionary *)d {
-	NSString *s = [d objectForKey:@"filename"];
+	NSString *s = d[@"filename"];
 	[requestedFilenames removeObject:s];
-	NSUInteger i = [[d objectForKey:@"index"] unsignedIntegerValue];
-	NSImage *theImage = [d objectForKey:@"image"];
+	NSUInteger i = [d[@"index"] unsignedIntegerValue];
+	NSImage *theImage = d[@"image"];
 	if (i >= numCells) return;
-	if (![[filenames objectAtIndex:i] isEqualToString:s]) {
+	if (![filenames[i] isEqualToString:s]) {
 		i = [filenames indexOfObject:s];
 		if (i == NSNotFound) return;
 	}
-	if ([images objectAtIndex:i] != theImage) {
-		[images replaceObjectAtIndex:i withObject:theImage];
+	if (images[i] != theImage) {
+		images[i] = theImage;
 		++numThumbsLoaded;
 		[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
 	}
 }
 
 - (BOOL)imageWithFileInfoNeedsDisplay:(NSDictionary *)d {
-	NSString *s = [d objectForKey:@"filename"];
+	NSString *s = d[@"filename"];
 	if (![requestedFilenames containsObject:s]) return NO;
-	NSUInteger i = [[d objectForKey:@"index"] unsignedIntegerValue];
+	NSUInteger i = [d[@"index"] unsignedIntegerValue];
 	if (i >= numCells) return NO;
 	// simple check to see if nothing's changed and the rect is visible
-	if ([[filenames objectAtIndex:i] isEqualToString:s]) {
+	if ([filenames[i] isEqualToString:s]) {
 		NSRect visibleRect = [self visibleRect];
 		NSRect cellRect = [self cellnum2rect:i];
 		NSPoint p = cellRect.origin;
@@ -883,12 +881,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	// check if i is in range
 	if (i >= [images count]) return;
 	// adjust numLoaded if necessary
-	if ([images objectAtIndex:i] != loadingImage) {
+	if (images[i] != loadingImage) {
 		--numThumbsLoaded;
 	}
 	numCells--;
 	[images removeObjectAtIndex:i];
-	[requestedFilenames removeObject:[filenames objectAtIndex:i]];
+	[requestedFilenames removeObject:filenames[i]];
 	[filenames removeObjectAtIndex:i];
 	[selectedIndexes shiftIndexesStartingAtIndex:i+1 by:-1];
 	[self resize:nil];

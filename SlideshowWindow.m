@@ -47,9 +47,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 @implementation SlideshowWindow
 
 + (void)initialize {
-	[[NSUserDefaults standardUserDefaults] registerDefaults:
-	 [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0]
-								 forKey:@"DYSlideshowWindowVisibleFields"]];
+	[[NSUserDefaults standardUserDefaults] registerDefaults:@{@"DYSlideshowWindowVisibleFields": @0}];
 }
 
 #define MAX_CACHED 15
@@ -425,10 +423,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self displayCats];
 	if (img) {
 		//NSLog(@"displaying %d", currentIndex);
-		NSNumber *rot = [rotations objectForKey:theFile];
-		DYImageViewZoomInfo *zoomInfo = [zooms objectForKey:theFile];
+		NSNumber *rot = rotations[theFile];
+		DYImageViewZoomInfo *zoomInfo = zooms[theFile];
 		int r = rot ? [rot intValue] : 0;
-		BOOL imgFlipped = [[flips objectForKey:theFile] boolValue];
+		BOOL imgFlipped = [flips[theFile] boolValue];
 		
 		if (hideInfoFld) [infoFld setHidden:YES]; // this must happen before setImage, for redraw purposes
 		[imgView setImage:img];
@@ -441,8 +439,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (autoRotate && !rot && !imgFlipped && info->exifOrientation) {
 			// auto-rotate by exif orientation
 			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
-			[rotations setObject:[NSNumber numberWithInt:r] forKey:theFile];
-			[flips setObject:[NSNumber numberWithBool:imgFlipped] forKey:theFile];
+			rotations[theFile] = @(r);
+			flips[theFile] = @(imgFlipped);
 			[imgView setRotation:r];
 			[imgView setFlip:imgFlipped];
 		}
@@ -492,11 +490,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	[loopImageView setHidden:NO];
 
-	NSMutableDictionary *viewDict = [NSMutableDictionary dictionaryWithCapacity:2];
-	[viewDict setObject:loopImageView forKey:NSViewAnimationTargetKey];
-	[viewDict setObject:NSViewAnimationFadeOutEffect forKey:NSViewAnimationEffectKey];
-
-    NSViewAnimation *theAnim = [[NSViewAnimation alloc] initWithViewAnimations:[NSArray arrayWithObject:viewDict]];
+	NSDictionary *viewDict = @{ NSViewAnimationTargetKey: loopImageView, NSViewAnimationEffectKey: NSViewAnimationFadeOutEffect };
+    NSViewAnimation *theAnim = [[NSViewAnimation alloc] initWithViewAnimations:@[viewDict]];
 	[theAnim setDuration:0.9];
     [theAnim setAnimationCurve:NSAnimationEaseIn];
 
@@ -563,26 +558,24 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)saveZoomInfo {
 	if (currentIndex == [filenames count]) return;
 	if ([imgView zoomInfoNeedsSaving])
-		[zooms setObject:[imgView zoomInfo]
-				  forKey:[filenames objectAtIndex:currentIndex]];
+		zooms[[filenames objectAtIndex:currentIndex]] = [imgView zoomInfo];
 }
 
 - (void)setRotation:(int)n {
 	n = [imgView addRotation:n];
-	[rotations setObject:[NSNumber numberWithInt:n]
-				  forKey:[filenames objectAtIndex:currentIndex]];
+	rotations[[filenames objectAtIndex:currentIndex]] = @(n);
 	[self updateInfoFldWithRotation:n];
 }
 
 - (void)toggleFlip {
 	BOOL b = [imgView toggleFlip];
 	NSString *s = [filenames objectAtIndex:currentIndex];
-	[flips setObject:[NSNumber numberWithBool:b] forKey:s];
+	flips[s] = @(b);
 
 	// also update the rotation to match, since flipping will reverse it
-	int r = [[rotations objectForKey:s] intValue];
+	int r = [rotations[s] intValue];
 	if (r == 90 || r == -90)
-		[rotations setObject:[NSNumber numberWithInt:-r] forKey:s];
+		rotations[s] = @(-r);
 	
 	[self updateInfoFld];
 }
@@ -958,9 +951,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 - (unsigned short)currentOrientation {
 	NSString *theFile = [filenames objectAtIndex:[self currentIndex]];
-	NSNumber *rot = [rotations objectForKey:theFile];
-	return components_to_exiforientation(rot ? [rot intValue] : 0,
-										 [[flips objectForKey:theFile] boolValue]);
+	NSNumber *rot = rotations[theFile];
+	return components_to_exiforientation(rot ? [rot intValue] : 0, [flips[theFile] boolValue]);
 }
 - (unsigned short)currentFileExifOrientation {
 	return [imgCache infoForKey:[filenames objectAtIndex:[self currentIndex]]]->exifOrientation;

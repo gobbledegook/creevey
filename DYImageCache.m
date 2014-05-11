@@ -113,7 +113,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 
 	// now scale the img
 	if (orig && [[orig representations] count]) { // why doesn't it return nil for corrupt jpegs?
-		NSImageRep *oldRep = [[orig representations] objectAtIndex:0];
+		NSImageRep *oldRep = [orig representations][0];
 		NSSize oldSize, newSize;
 		oldSize = NSMakeSize([oldRep pixelsWide], [oldRep pixelsHigh]);
 		
@@ -262,11 +262,11 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	[pending removeObject:s];
 	if (!cachingShouldStop) {
 		[cacheOrder addObject:s];
-		[images setObject:imgInfo forKey:s];
+		images[s] = imgInfo;
 		
 		// remove stale images, if any
 		if ([cacheOrder count] > maxImages) {
-			[images removeObjectForKey:[cacheOrder objectAtIndex:0]];
+			[images removeObjectForKey:cacheOrder[0]];
 			[cacheOrder removeObjectAtIndex:0];
 		}
 	}
@@ -285,11 +285,11 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 
 - (DYImageInfo *)infoForKey:(NSString *)s {
 	// ** unlike imageforkey, this is nonmagical
-	return [images objectForKey:s];
+	return images[s];
 }
 
 - (NSImage *)imageForKey:(NSString *)s {
-	DYImageInfo *imgInfo = [images objectForKey:s];
+	DYImageInfo *imgInfo = images[s];
 	if (imgInfo) {
 		// must resolve alias before getting mod time
 		// b/c that's what we do in scaleImage
