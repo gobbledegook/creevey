@@ -37,6 +37,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	IBOutlet NSMatrix *startupOptionMatrix;
 	IBOutlet NSButton *slideshowApplyBtn;
 	NSColor *slideshowBgColor;
+	id localeChangeObserver;
 }
 
 @property (retain) IBOutlet DYJpegtranPanel *jpegController;

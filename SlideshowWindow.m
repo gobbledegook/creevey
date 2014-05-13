@@ -47,6 +47,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 @implementation SlideshowWindow
 
 + (void)initialize {
+	if (self != [SlideshowWindow class]) return;
 	[[NSUserDefaults standardUserDefaults] registerDefaults:@{@"DYSlideshowWindowVisibleFields": @0}];
 }
 
@@ -168,11 +169,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	if (currentIndex != -1)
 		[self saveZoomInfo]; // in case we're called without endSlideshow being called
 	
-	[basePath release];
-	if ([s characterAtIndex:[s length]-1] != '/')
-		basePath = [[s stringByAppendingString:@"/"] retain];
-	else
-		basePath = [s copy];
+	if (s != basePath) {
+		[basePath release];
+		if ([s characterAtIndex:[s length]-1] != '/')
+			basePath = [[s stringByAppendingString:@"/"] retain];
+		else
+			basePath = [s copy];
+	}
 }
 
 - (NSString *)currentShortFilename {

@@ -11,13 +11,4 @@
 
 #import <Cocoa/Cocoa.h>
 
-// this class releases itself when done
-
-@interface DYVersChecker : NSObject {
-	BOOL notify;
-	NSInteger responseCode;
-	NSMutableData *receivedData;
-}
-- initWithNotify:(BOOL)newNotify; // returns nil if can't open connection
-
-@end
+void DYVersCheckForUpdateAndNotify(BOOL notify);

@@ -30,12 +30,11 @@ BOOL FileIsJPEG(NSString *s) {
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
 
-BOOL FilesContainJPEG(NSArray *a) {
+BOOL FilesContainJPEG(NSArray *paths) {
 	// find out if at least one file is a JPEG
-	NSUInteger i, n = [a count];
-	if (n > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check
-	for (i=0; i<n; ++i) {
-		if (FileIsJPEG(a[i]))
+	if ([paths count] > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check
+	for (NSString *path in paths) {
+		if (FileIsJPEG(path))
 			return YES;
 	}
 	return NO;
@@ -64,6 +63,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	} else {
 		unsigned long long fsize;
 		fsize = [[[NSFileManager defaultManager] attributesOfItemAtPath:[path stringByResolvingSymlinksInPath] error:NULL] fileSize];
+		// fsize will be 0 on error
 		[s appendFormat:@"\n%@ (%qu bytes)\n%@",
 			FileSize2String(fsize), fsize,
 			NSLocalizedString(@"Unable to read file", @"")];
@@ -96,8 +96,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @implementation TimeIntervalPlusWeekToStringTransformer
 + (Class)transformedValueClass { return [NSString class]; }
 - (id)transformedValue:(id)v {
-	return [[NSDate dateWithTimeIntervalSinceReferenceDate:
-		[v floatValue]+DYVERSCHECKINTERVAL] description];
+	return [NSDateFormatter localizedStringFromDate:[NSDate dateWithTimeIntervalSinceReferenceDate:[v floatValue]+DYVERSCHECKINTERVAL]
+										  dateStyle:NSDateFormatterLongStyle timeStyle:NSDateFormatterMediumStyle];
 }
 @end
 
@@ -105,6 +105,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 +(void)initialize
 {
+	if (self != [CreeveyController class]) return;
+
     NSMutableDictionary *dict;
     NSUserDefaults *defaults;
 	
@@ -181,10 +183,15 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
 																 options:0
 																 context:NULL];
+	localeChangeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSCurrentLocaleDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+		NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+		[u setDouble:[u doubleForKey:@"lastVersCheckTime"] forKey:@"lastVersCheckTime"];
+	}];
 	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES]; // show color picker w/ opacity/transparency
 }
 
 - (void)dealloc {
+	[[NSNotificationCenter defaultCenter] removeObserver:localeChangeObserver];
 	[thumbsCache release];
 	[filetypes release];
 	[creeveyWindows release];
@@ -340,12 +347,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[NSApp runModalSession:session];
 	[jpegProgressBar startAnimation:self];
 
-	NSUInteger n;
-	NSString *s, *resolvedPath;
 	NSSize maxThumbSize = NSMakeSize(160,160);
-	for (n = 0; n < [a count]; ++n) {
-		s = a[n];
-		resolvedPath = ResolveAliasToPath(s);
+	for (NSString *s in a) {
+		NSString *resolvedPath = ResolveAliasToPath(s);
 		if (FileIsJPEG(resolvedPath)) {
 			if (jinfo.replaceThumb) {
 				NSSize tmpSize;
@@ -488,9 +492,8 @@ performFileOperation:NSWorkspaceRecycleOperation
 	
 	NSTimeInterval t = [NSDate timeIntervalSinceReferenceDate];
 	if ([u boolForKey:@"autoVersCheck"]
-		&& (t - [u floatForKey:@"lastVersCheckTime"] > DYVERSCHECKINTERVAL)) // one week
-		if ([[DYVersChecker alloc] initWithNotify:NO])
-			[u setFloat:t forKey:@"lastVersCheckTime"];
+		&& (t - [u doubleForKey:@"lastVersCheckTime"] > DYVERSCHECKINTERVAL)) // one week
+		DYVersCheckForUpdateAndNotify(NO);
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification
@@ -897,9 +900,7 @@ enum {
 }
 
 - (IBAction)versionCheck:(id)sender {
-	if ([[DYVersChecker alloc] initWithNotify:YES])
-		[[NSUserDefaults standardUserDefaults] setFloat:[NSDate timeIntervalSinceReferenceDate]
-												 forKey:@"lastVersCheckTime"];
+	DYVersCheckForUpdateAndNotify(YES);
 }
 - (IBAction)sendFeedback:(id)sender {
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://blyt.net/phxslides/feedback.html"]];

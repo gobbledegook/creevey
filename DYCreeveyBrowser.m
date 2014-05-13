@@ -17,6 +17,7 @@
 @implementation DYBrowserCell
 
 - (void)setTitle:(NSString *)s {
+	if (s == title) return;
 	[title release];
 	title = [s copy];
 }

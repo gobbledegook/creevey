@@ -148,8 +148,10 @@
 }
 
 - (void)setImage:(NSImage *)anImage {
-	[image release];
-	image = [anImage retain];
+	if (anImage != image) {
+		[image release];
+		image = [anImage retain];
+	}
 	zoomF = 0;
 	rotation = 0;
 	isImageFlipped = NO;

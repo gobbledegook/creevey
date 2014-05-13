@@ -123,6 +123,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 #pragma mark services stuff
 + (void)initialize
 {
+	if (self != [DYWrappingMatrix class]) return;
 	// prefs stuff
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -136,9 +137,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     if (initialized) return;
     initialized = YES;
     id sendTypes = @[NSFilenamesPboardType];
-    [NSApp registerServicesMenuSendTypes:sendTypes
-							 returnTypes:nil];
-    return;
+    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
 }
 + (NSSize)maxCellSize {
 	int w = [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];

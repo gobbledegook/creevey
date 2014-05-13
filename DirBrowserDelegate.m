@@ -78,7 +78,7 @@
 -(void)reload {
 	[_b loadColumnZero];
 	NSString *newPath = [[NSURL URLByResolvingBookmarkData:currAlias options:(NSURLBookmarkResolutionWithoutUI|NSURLBookmarkResolutionWithoutMounting) relativeToURL:nil bookmarkDataIsStale:NULL error:NULL] path];
-	// if no newPath (files deleted?) fall back to currPath
+	// newPath will be nil on error (files deleted?); fall back to currPath
 	browserInited = NO;
 	[self setPath:newPath ?: currPath]; // don't actually set currPath here, wait for browserWillSendAction to do it
 	[_b sendAction];
@@ -156,6 +156,7 @@
 	if ([currBrowserPathComponents count] > n+1)
 		nextColumn = currBrowserPathComponents[n+1];
 	
+	// ignore NSError here, forin can handle both nil and empty arrays
 	for (NSString *filename in [fm contentsOfDirectoryAtPath:path error:NULL]) {
 		NSString *fullpath = [path stringByAppendingPathComponent:filename];
 		if (n==0 && [[fm destinationOfSymbolicLinkAtPath:fullpath error:NULL] isEqualToString:@"/"]) {
@@ -260,9 +261,9 @@
 		newPathTmp = [newPathTmp stringByDeletingLastPathComponent];
 	}
 
-	[currPath autorelease];
+	[currPath release];
 	currPath = [newPath retain];
-	[currAlias autorelease];
+	[currAlias release];
 	currAlias = [[[NSURL fileURLWithPath:currPath isDirectory:YES] bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL] retain];
 }
 @end

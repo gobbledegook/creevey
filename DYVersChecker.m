@@ -11,96 +11,55 @@
 
 #import "DYVersChecker.h"
 
-@implementation DYVersChecker
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+static void GetSystemVersion(SInt32 *outVersMajor, SInt32 *outVersMinor, SInt32 *outVersBugFix) {
+	Gestalt(gestaltSystemVersionMajor, outVersMajor);
+	Gestalt(gestaltSystemVersionMinor, outVersMinor);
+	Gestalt(gestaltSystemVersionBugFix, outVersBugFix);
+}
+#pragma GCC diagnostic pop
 
-- initWithNotify:(BOOL)b {
-	if (self = [super init]) {
-		notify = b;
-		SInt32 v1, v2, v3;
-		Gestalt(gestaltSystemVersionMajor,&v1);
-		Gestalt(gestaltSystemVersionMinor,&v2);
-		Gestalt(gestaltSystemVersionBugFix,&v3);
-		NSURLRequest *theRequest
-			= [NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:
-				@"http://blyt.net/cgi-bin/vers.cgi?v=%@&s=%i&t=%i&u=%i",
-				[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"],
-				v1, v2, v3]]
-							   cachePolicy:NSURLRequestUseProtocolCachePolicy
-						   timeoutInterval:60.0];
-		NSURLConnection *theConnection
-			= [[NSURLConnection alloc] initWithRequest:theRequest delegate:self];
-		if (theConnection) {
-			receivedData = [[NSMutableData data] retain];
-		} else {
+void DYVersCheckForUpdateAndNotify(BOOL notify) {
+	SInt32 v1, v2, v3;
+	GetSystemVersion(&v1, &v2, &v3);
+	id bundleVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
+	NSString *url = [NSString stringWithFormat:@"http://blyt.net/cgi-bin/vers.cgi?v=%@&s=%i&t=%i&u=%i", bundleVersion, v1, v2, v3];
+	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration] delegate:nil delegateQueue:[NSOperationQueue mainQueue]];
+	[[session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+		if (error) {
 			if (notify)
 				NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - unable to connect to server.",@""),nil,nil,nil);
-			[self release];
-			return nil;
+		} else if ([(NSHTTPURLResponse *)response statusCode] != 200) {
+			if (notify)
+				NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
+		} else {
+			NSString *responseText = [[[NSString alloc] initWithData:data encoding:NSMacOSRomanStringEncoding] autorelease];
+			NSScanner *scanner = [NSScanner scannerWithString:responseText];
+			[scanner setCharactersToBeSkipped:nil]; // don't skip whitespace
+			NSInteger latestBuild = 0;
+			// the response should be a number followed by a single space
+			if (!([scanner scanInteger:&latestBuild] && [scanner scanString:@" " intoString:NULL] && [scanner isAtEnd]) || latestBuild == 0) {
+				if (notify)
+					NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
+			} else {
+				NSInteger currentBuild = [bundleVersion integerValue];
+				if (latestBuild > currentBuild) {
+					if (NSRunInformationalAlertPanel([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"],
+													 NSLocalizedString(@"A new version of Phoenix Slides is available.", @""),
+													 NSLocalizedString(@"More Info", @""),
+													 NSLocalizedString(@"Not Now", @""),nil)
+						== NSAlertDefaultReturn)
+						[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://blyt.net/phxslides/"]];
+				} else if (notify) {
+					NSRunInformationalAlertPanel([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"],
+												 NSLocalizedString(@"You have the latest version of Phoenix Slides.", @""),
+												 nil,nil,nil);
+				}
+				[[NSUserDefaults standardUserDefaults] setDouble:[NSDate timeIntervalSinceReferenceDate]
+														  forKey:@"lastVersCheckTime"];
+			}
 		}
-	}
-	return self;
+	}] resume];
 }
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-	if ([response isKindOfClass: [NSHTTPURLResponse class]]) {
-		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-		responseCode = [httpResponse statusCode];
-	}
-    [receivedData setLength:0];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-    [receivedData appendData:data];
-}
-
-
-- (void)connection:(NSURLConnection *)connection 
-  didFailWithError:(NSError *)error
-{
-    [connection release];
-    [receivedData release];
-    if (notify)
-		NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
-    [self release];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-	// check the HTTP status code and make sure it was successful
-	if (responseCode != 200) {
-		if (notify)
-			NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
-		return;
-	}
-
-	NSString *responseText = [[[NSString alloc] initWithData:receivedData encoding:NSMacOSRomanStringEncoding] autorelease];
-	NSScanner *scanner = [NSScanner scannerWithString:responseText];
-	[scanner setCharactersToBeSkipped:nil]; // don't skip whitespace
-	NSInteger latestBuild = 0;
-	// the response should be a number followed by a single space
-	if (!([scanner scanInteger:&latestBuild] && [scanner scanString:@" " intoString:NULL] && [scanner isAtEnd]) || latestBuild == 0) {
-		if (notify)
-			NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
-		return;
-	}
-	
-	NSInteger currentBuild = [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] integerValue];
-	if (latestBuild > currentBuild) {
-		if (NSRunInformationalAlertPanel([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"],
-										 NSLocalizedString(@"A new version of Phoenix Slides is available.", @""),
-										 NSLocalizedString(@"More Info", @""),
-										 NSLocalizedString(@"Not Now", @""),nil)
-			== NSAlertDefaultReturn)
-			[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://blyt.net/phxslides/"]];
-	} else if (notify) {
-		NSRunInformationalAlertPanel([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"],
-									 NSLocalizedString(@"You have the latest version of Phoenix Slides.", @""),
-									 nil,nil,nil);
-	}
-	[connection release];
-    [receivedData release];
-	[self release];
-}
-@end

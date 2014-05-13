@@ -23,9 +23,12 @@
 - (NSComparisonResult)dateModifiedCompare:(NSString *)other
 {
 	NSFileManager *fm = [NSFileManager defaultManager];
-	NSComparisonResult r;
-	r = [[[fm attributesOfItemAtPath:[self stringByResolvingSymlinksInPath] error:NULL] fileModificationDate]
-			compare:[[fm attributesOfItemAtPath:[other stringByResolvingSymlinksInPath] error:NULL] fileModificationDate]];
+	NSComparisonResult r = NSOrderedSame;
+	NSDate *aDate = [[fm attributesOfItemAtPath:[self stringByResolvingSymlinksInPath] error:NULL] fileModificationDate];
+	NSDate *bDate = [[fm attributesOfItemAtPath:[other stringByResolvingSymlinksInPath] error:NULL] fileModificationDate];
+	// dates will be nil on error
+	if (aDate != nil || bDate != nil)
+		r = [aDate compare:bDate];
 	if (r == NSOrderedSame) { // use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
 		return [self localizedStandardCompare:other];
 	}
@@ -163,10 +166,7 @@
 	if (doSlides) {
 		startSlideshowWhenReady = YES;
 		NSSet *filetypes = [[NSApp delegate] filetypes];
-		NSUInteger i, n = [a count];
-		NSString *theFile;
-		for (i=0; i<n; ++i) {
-			theFile = a[i];
+		for (NSString *theFile in a) {
 			if ([filetypes containsObject:[theFile pathExtension]] || [filetypes containsObject:NSHFSTypeOfFile(theFile)])
 				[filesBeingOpened addObject:theFile];
 		}
@@ -277,7 +277,7 @@
 	NSUInteger i = 0;
 	NSUInteger numFiles;
 	NSFileManager *fm = [NSFileManager defaultManager];
-	NSString *origPath, *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
+	NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
 		// pull this function call out of the loop
 	//NSTimeInterval imgloadstarttime = [NSDate timeIntervalSinceReferenceDate];
 	
@@ -338,10 +338,9 @@
 			[displayedFilenames addObjectsFromArray:filenames];
 		} else {
 			numFiles = [filenames count];
-			for (i=0; i<numFiles; ++i) {
-				origPath = filenames[i];
-				if ([[[NSApp delegate] cats][currCat-2] containsObject:origPath])
-					[displayedFilenames addObject:origPath];
+			for (NSString *path in filenames) {
+				if ([[[NSApp delegate] cats][currCat-2] containsObject:path])
+					[displayedFilenames addObject:path];
 			}
 		}
 	} else { // if we got here, that means the sort order changed and currCat == 0
@@ -396,10 +395,10 @@
 				//NSLog(@"aborted1 %@", origPath);
 				if (stopCaching == 1)
 					break;
-				[NSThread sleepUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+				[NSThread sleepForTimeInterval:0.1];
 			}
 			
-			origPath = displayedFilenames[i];
+			NSString *origPath = displayedFilenames[i];
 			[imgMatrix addImage:nil withFilename:origPath];
 			if ([filesBeingOpened containsObject:origPath])
 				[imgMatrix addSelectedIndex:i];
@@ -486,7 +485,7 @@
 			}
 			
 			NSMutableSet **cats = [[NSApp delegate] cats];
-			for (i=[a count]-1; i != -1; i--) {
+			for (i=[a count]-1; i != -1; i--) { // TODO: this code is suspect
 				id fname = a[i];
 				if (c == 1) {
 					for (j=0; j<NUM_FNKEY_CATS; ++j)
