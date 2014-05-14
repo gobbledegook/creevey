@@ -60,17 +60,17 @@
 		// adjust r2o
 		unsigned i, count = [array count];
 		for (i=0; i<count; ++i) {
-			unsigned n = [[randomToOrdered objectAtIndex:i] unsignedIntegerValue];
+			unsigned n = [[randomToOrdered objectAtIndex:i] unsignedIntValue];
 			if (n > orderedIndex)
-				[randomToOrdered replaceObjectAtIndex:i withObject:[NSNumber numberWithUnsignedInteger:n-1]];
+				[randomToOrdered replaceObjectAtIndex:i withObject:[NSNumber numberWithUnsignedInt:n-1]];
 		}
 		[randomToOrdered removeObjectAtIndex:index];
 
 		// adjust o2r
 		for (i=0; i<count; ++i) {
-			unsigned n = [[orderedToRandom objectAtIndex:i] unsignedIntegerValue];
+			unsigned n = [[orderedToRandom objectAtIndex:i] unsignedIntValue];
 			if (n > index)
-				[orderedToRandom replaceObjectAtIndex:i withObject:[NSNumber numberWithUnsignedInteger:n-1]];
+				[orderedToRandom replaceObjectAtIndex:i withObject:[NSNumber numberWithUnsignedInt:n-1]];
 		}
 		[orderedToRandom removeObjectAtIndex:orderedIndex];
 	}
@@ -105,7 +105,7 @@
 		// initialize r2o array
 		[randomToOrdered removeAllObjects];
 		for (i=0; i<count; ++i) {
-			[randomToOrdered addObject:[NSNumber numberWithUnsignedInteger:i]];
+			[randomToOrdered addObject:[NSNumber numberWithUnsignedInt:i]];
 		}
 
 		// and the o2r array
@@ -123,41 +123,41 @@
 		unsigned randomIndex = random()%(i+1);
 		[array exchangeObjectAtIndex:i withObjectAtIndex:randomIndex];
 		[randomToOrdered exchangeObjectAtIndex:i withObjectAtIndex:randomIndex]; // simultaneously save r2o array (it's parallel)
-		[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:i] unsignedIntegerValue]
-								   withObject:[NSNumber numberWithUnsignedInteger:i]]; // and save the inverse values to o2r array
+		[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:i] unsignedIntValue]
+								   withObject:[NSNumber numberWithUnsignedInt:i]]; // and save the inverse values to o2r array
 	}
 	if (startIndex != -1) {
 		// put selected object at the start
 		[array exchangeObjectAtIndex:0 withObjectAtIndex:count-1];
 		[randomToOrdered exchangeObjectAtIndex:0 withObjectAtIndex:count-1];
-		[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:count-1] unsignedIntegerValue]
-								   withObject:[NSNumber numberWithUnsignedInteger:count-1]];
+		[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:count-1] unsignedIntValue]
+								   withObject:[NSNumber numberWithUnsignedInt:count-1]];
 	}
 	// don't forget the item at index 0!
-	[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:0] unsignedIntegerValue]
-							   withObject:[NSNumber numberWithUnsignedInteger:0]];
+	[orderedToRandom replaceObjectAtIndex:[[randomToOrdered objectAtIndex:0] unsignedIntValue]
+							   withObject:[NSNumber numberWithUnsignedInt:0]];
 
 	// generate o2r array
 //	for (randomIndex=0; randomIndex<count; ++randomIndex) {
-//		i = [[randomToOrdered objectAtIndex:randomIndex] unsignedIntegerValue];
+//		i = [[randomToOrdered objectAtIndex:randomIndex] unsignedIntValue];
 //		[orderedToRandom replaceObjectAtIndex:i withObject:[NSNumber numberWithInt:randomIndex]];
 //	}
 }
 
 - (unsigned)orderedIndexOfObjectAtIndex:(unsigned)index {
-	return [[randomToOrdered objectAtIndex:index] unsignedIntegerValue];
+	return [[randomToOrdered objectAtIndex:index] unsignedIntValue];
 
 }
 
 - (unsigned)orderedIndexOfObjectAfterIndex:(unsigned)index {
-	unsigned i = [[randomToOrdered objectAtIndex:index] unsignedIntegerValue] + 1;
+	unsigned i = [[randomToOrdered objectAtIndex:index] unsignedIntValue] + 1;
 	if (i == [array count]) return NSNotFound;
-	return [[orderedToRandom objectAtIndex:i] unsignedIntegerValue];
+	return [[orderedToRandom objectAtIndex:i] unsignedIntValue];
 }
 
 - (unsigned)orderedIndexOfObjectBeforeIndex:(unsigned)index {
-	unsigned i = [[randomToOrdered objectAtIndex:index] unsignedIntegerValue];
+	unsigned i = [[randomToOrdered objectAtIndex:index] unsignedIntValue];
 	if (i == 0) return NSNotFound;
-	return [[orderedToRandom objectAtIndex:i-1] unsignedIntegerValue];
+	return [[orderedToRandom objectAtIndex:i-1] unsignedIntValue];
 }
 @end

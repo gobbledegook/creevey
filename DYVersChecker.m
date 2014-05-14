@@ -17,13 +17,15 @@
 - initWithNotify:(BOOL)b {
 	if (self = [super init]) {
 		notify = b;
-		long vers;
-		Gestalt(gestaltSystemVersion,&vers);
+		SInt32 v1, v2, v3;
+		Gestalt(gestaltSystemVersionMajor,&v1);
+		Gestalt(gestaltSystemVersionMinor,&v2);
+		Gestalt(gestaltSystemVersionBugFix,&v3);
 		NSURLRequest *theRequest
 			= [NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:
-				@"http://blyt.net/cgi-bin/vers.cgi?v=%@&s=%X",
+				@"http://blyt.net/cgi-bin/vers.cgi?v=%@&s=%i&t=%i&u=%i",
 				[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"],
-				vers]]
+				v1, v2, v3]]
 							   cachePolicy:NSURLRequestUseProtocolCachePolicy
 						   timeoutInterval:60.0];
 		NSURLConnection *theConnection
@@ -73,8 +75,26 @@
 			NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
 		return;
 	}
-	// if currVers > myVers
-	if (strtol([receivedData bytes],NULL,10) > [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] intValue]) {
+
+	NSString *responseText = [[[NSString alloc] initWithData:receivedData encoding:NSMacOSRomanStringEncoding] autorelease];
+	NSScanner *scanner = [NSScanner scannerWithString:responseText];
+	[scanner setCharactersToBeSkipped:nil]; // don't skip whitespace
+	int latestBuild = 0;
+	// the response should be a number followed by a single space
+	if ([scanner scanInt:&latestBuild] && [scanner scanString:@" " intoString:NULL] && [scanner isAtEnd]) {
+		if (latestBuild == INT_MAX || latestBuild == INT_MIN) latestBuild = 0;
+	} else {
+		latestBuild = 0;
+	}
+	
+	if (latestBuild == 0) {
+		if (notify)
+			NSRunAlertPanel(nil,NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@""),nil,nil,nil);
+		return;
+	}
+	
+	int currentBuild = [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] intValue];
+	if (latestBuild > currentBuild) {
 		if (NSRunInformationalAlertPanel([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"],
 										 NSLocalizedString(@"A new version of Phoenix Slides is available.", @""),
 										 NSLocalizedString(@"More Info", @""),

@@ -369,7 +369,7 @@
 	} else {
 		[displayedFilenames sortUsingSelector:@selector(dateModifiedCompare:)];
 	}
-	if (sortOrder < 0) {
+	if (sortOrder < 0 && [displayedFilenames count]) {
 		// reverse the array
 		unsigned int a, b;
 		a = 0;

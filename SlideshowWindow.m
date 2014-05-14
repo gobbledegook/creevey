@@ -17,6 +17,14 @@
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
 
+static BOOL UsingMagicMouse(NSEvent *e) {
+	if (NSAppKitVersionNumber >= 1138) { // phase/momentumPhase supported in 10.7+
+		return [e phase] != 0 || [e momentumPhase] != 0; // NSEventPhaseNone
+	}
+	// if user is on 10.6 and using a magic mouse... unfortunately i haven't found a good way to detect it, so they'll have to put up with overzealous scroll-to-navigate behavior. there shouldn't be very many users in that situation...
+	return NO;
+}
+
 @interface SlideshowWindow (Private)
 
 //- (void)displayImage;
@@ -67,11 +75,12 @@
 		
  		[self setBackgroundColor:[NSColor blackColor]];
 		[self setOpaque:NO];
+		if (floor(NSAppKitVersionNumber) > 1187) [self setCollectionBehavior:1 << 3]; // NSWindowCollectionBehaviorTransient, needed for new screen/spaces in 10.9.
+		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = -1;//blurr=8;
    }
     return self;
 }
-
 
 - (void)awakeFromNib {
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
@@ -383,7 +392,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[imgView isImageFlipped] ? NSLocalizedString(@" flipped", @"") : @"",
 		r ? [NSString stringWithFormat:
 			NSLocalizedString(@" rotated%@ %i%C", @""), dir, r, 0xb0] : @"", //degrees
-		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1g%@) %@",
+		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1f%@) %@",
 			NSLocalizedString(@"Auto-advance", @""),
 			timerIntvl,
 			NSLocalizedString(@"seconds", @""),
@@ -906,14 +915,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[super sendEvent:e];
 }
 
-// with the current wireless magic mouse, this is more annoying than useful
-//- (void)scrollWheel:(NSEvent *)e {
-//	float y = [e deltaY];
-//	int sign = y < 0 ? 1 : -1;
-//	[self jump:sign*(floor(fabs(y)/7.0)+1)];
-//}
+- (void)scrollWheel:(NSEvent *)e {
+	if (UsingMagicMouse(e)) return;
+	float y = [e deltaY];
+	int sign = y < 0 ? 1 : -1;
+	[self jump:sign*(floor(fabs(y)/7.0)+1)];
+}
 
-	
+
 #pragma mark cache stuff
 
 - (NSImage *)loadFromCache:(NSString *)s {

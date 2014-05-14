@@ -55,6 +55,7 @@
 		kq = [[UKKQueue alloc] init];
 		[kq addPathToQueue:BROWSER_ROOT notifyingAbout:NOTE_WRITE];
 		[kq setDelegate:self];
+		revealedDirectories = [[NSMutableSet alloc] initWithObjects:[@"~/Desktop/" stringByResolvingSymlinksInPath], nil];
     }
     return self;
 }
@@ -64,15 +65,17 @@
 	[cols release];
 	[colsInternal release];
 	[hidden release];
+	[rootVolumeName release];
+	[currPath release];
+	DisposeHandle((Handle)currAlias);
+	[revealedDirectories release];
 	[super dealloc];
 }
 
--(void) kqueue: (UKKQueue*)q receivedNotification: (NSString*)nm forFile: (NSString*)fpath
+- (void)watcher:(id<UKFileWatcher>)q receivedNotification:(NSString *)nm forPath:(NSString *)fpath
 {
-	//NSLog(@"got %@ for %@", nm, fpath);
 	if ([nm isEqualToString:UKFileWatcherRenameNotification]) {
 		[kq removePathFromQueue:fpath];
-		
 	}
 	// the display name doesn't update immediately, it seems
 	// so we wait a fraction of a second
@@ -85,8 +88,7 @@
 	NSString *newPath = AliasToPath(currAlias);
 	// if no newPath (files deleted?) fall back to currPath
 	browserInited = NO;
-	[self setPath:newPath ? newPath : currPath]; // don't actually set currPath here
-												 // wait for browserWillSendAction to do it
+	[self setPath:newPath ?: currPath]; // don't actually set currPath here, wait for browserWillSendAction to do it
 	[_b sendAction];
 }
 
@@ -116,7 +118,6 @@
 }
 
 -(BOOL)setPath:(NSString *)aPath {
-	//return [_b setPath:aPath];
 	NSString *s;
 	NSRange r = [aPath rangeOfString:@"/Volumes"];
 	if (r.location == 0) {
@@ -129,16 +130,24 @@
 		else
 			s = [rootVolumeName stringByAppendingString:aPath];
 	}
+	// save currPath here so browser can look ahead for invisible directories when loading
+	currBrowserPathComponents = [s pathComponents];
 	if (!browserInited) {
 		[_b selectRow:0 inColumn:0];
 		browserInited = YES;
 	}
-	if ([_b setPath:s]) return YES; // in 10.6, this will fail unexpectedly with no warning
-	// the first time this is run. Hence, the previous line.
+	if ([_b setPath:s]) {
+		// in 10.6, this will fail unexpectedly with no warning the first time this is run. Hence, the previous line.
+		// This will also fail if you try set the path to a non-existent path (e.g. if the directory was just deleted).
+		currBrowserPathComponents = nil;
+		return YES;
+	}
 	
 	[_b selectRow:0 inColumn:0]; // if it failed, try it again *sigh*
 	 // work around stupid bug, doesn't auto-select cell 0
-	return [_b setPath:s];
+	BOOL result = [_b setPath:s];
+	currBrowserPathComponents = nil;
+	return result;
 }
 
 #pragma mark private
@@ -156,6 +165,9 @@
 	[a removeAllObjects];
 	[a2 removeAllObjects];
 	tempArray = [NSMutableArray arrayWithCapacity:15];
+	NSString *nextColumn = nil;
+	if ([currBrowserPathComponents count] > n+1)
+		nextColumn = [currBrowserPathComponents objectAtIndex:n+1];
 	
 	NSEnumerator *e = [[fm directoryContentsAtPath:path] objectEnumerator];
 	BOOL isDir;
@@ -174,8 +186,14 @@
 				continue; // always skip /Volumes
 			if (n==1 && [hidden containsObject:obj])
 				continue;
-			if (FileIsInvisible(fullpath))
-				continue;
+			if (FileIsInvisible(fullpath)) {
+				// if trying to browse to a specific directory, show it even if it's invisible
+				if (nextColumn && [obj isEqualToString:nextColumn]) {
+					[revealedDirectories addObject:fullpath];
+				} else if (![revealedDirectories containsObject:fullpath]) {
+					continue;
+				}
+			}
 		}
 		[fm fileExistsAtPath:fullpath isDirectory:&isDir];
 		if (isDir) {
@@ -262,7 +280,7 @@
 		newPathTmp = [newPathTmp stringByDeletingLastPathComponent];
 	}
 
-	[currPath release];
+	[currPath autorelease];
 	currPath = [newPath retain];
 	
 	FSRef f;

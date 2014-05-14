@@ -19,6 +19,8 @@
 	BOOL browserInited; // work around NSBrowser bug
 	
 	NSString *currPath;
+	NSArray *currBrowserPathComponents;
+	NSMutableSet *revealedDirectories;
 	AliasHandle currAlias;
 	
 	UKKQueue *kq;
