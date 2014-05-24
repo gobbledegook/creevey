@@ -143,12 +143,24 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (id)init {
 	if (self = [super init]) {
-		filetypes = [[NSSet alloc] initWithArray:[NSImage imageUnfilteredFileTypes]];
-			//@"jpg", @"jpeg," @"gif",
-			//@"tif", @"tiff", @"pict", @"pdf", @"icns", nil];
+		filetypes = [[NSMutableSet alloc] init];
 		//hfstypes = [[NSSet alloc] initWithObjects:@"'PICT'", @"'JPEG'", @"'GIFf'",
-		//	@"'TIFF'", @"'PDF '", nil]; // need those single quotes
 		//NSLog(@"%@", [NSImage imageFileTypes]);
+		NSMutableSet *temp = [NSMutableSet set];
+		for (NSString *type in [NSImage imageUnfilteredFileTypes]) {
+			if ([type characterAtIndex:0] == '\'' && [type characterAtIndex:type.length-1] == '\'') {
+				[filetypes addObject:type];
+			} else {
+				NSString *lowercaseType = [type lowercaseString];
+				[filetypes addObject:lowercaseType];
+				[temp addObject:lowercaseType];
+			}
+		}
+		fileextensions = [[[temp allObjects] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)] retain];
+		fileextensions_enabled = [[NSMutableDictionary alloc] initWithCapacity:fileextensions.count];
+		for (NSString *extension in fileextensions) {
+			fileextensions_enabled[extension] = @YES;
+		}
 		creeveyWindows = [[NSMutableArray alloc] initWithCapacity:5];
 		
 		thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
@@ -174,6 +186,13 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[slidesWindow setCats:cats];
 	[slidesWindow setRerandomizeOnLoop:[[NSUserDefaults standardUserDefaults] boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	[slidesWindow setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
+	NSArray *ignoredFileTypes = [[NSUserDefaults standardUserDefaults] stringArrayForKey:@"ignoredFileTypes"];
+	for (NSString *type in fileextensions) {
+		if ([ignoredFileTypes containsObject:type]) {
+			[filetypes removeObject:type];
+			fileextensions_enabled[type] = @NO;
+		}
+	}
 
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
 															  forKeyPath:@"values.slideshowAutoadvanceTime"
@@ -194,6 +213,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[[NSNotificationCenter defaultCenter] removeObserver:localeChangeObserver];
 	[thumbsCache release];
 	[filetypes release];
+	[fileextensions release];
+	[fileextensions_enabled release];
 	[creeveyWindows release];
 	short int i;
 	for (i=0; i<NUM_FNKEY_CATS; ++i)
@@ -931,5 +952,29 @@ enum {
 - (NSTextView *)exifTextView { return exifTextView; }
 - (NSSet *)filetypes { return filetypes; }
 - (NSMutableSet **)cats { return cats; }
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
+	return [fileextensions count];
+}
+
+- (id)tableView:(NSTableView *)tableView objectValueForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+	if ([[tableColumn identifier] isEqualToString:@"enabled"]) return fileextensions_enabled[fileextensions[row]];
+	return fileextensions[row];
+}
+
+- (void)tableView:(NSTableView *)tableView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+	NSString *type = fileextensions[row];
+	fileextensions_enabled[type] = object;
+	NSMutableArray *ignoredFileTypes = [[[[NSUserDefaults standardUserDefaults] stringArrayForKey:@"ignoredFileTypes"] mutableCopy] autorelease];
+	if (ignoredFileTypes == nil) ignoredFileTypes = [NSMutableArray array];
+	if ([object boolValue]) {
+		[filetypes addObject:type];
+		[ignoredFileTypes removeObject:type];
+	} else {
+		[filetypes removeObject:type];
+		[ignoredFileTypes addObject:type];
+	}
+	[[NSUserDefaults standardUserDefaults] setObject:ignoredFileTypes forKey:@"ignoredFileTypes"];
+}
 
 @end
