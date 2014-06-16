@@ -11,34 +11,6 @@
 
 #define BROWSER_ROOT @"/Volumes"
 
-// our special comparator which takes instead of a string,
-// an array where we're interested in the first item.
-@implementation NSArray (EmbeddedFinderCompare)
-- (NSComparisonResult)embeddedFinderCompare:(NSArray *)anArray
-{
-	NSString *aString = anArray[0];
-	NSString *myString = self[0];
-	SInt32 compareResult;
-	
-	CFIndex lhsLen = [myString length];;
-    CFIndex rhsLen = [aString length];
-	
-	UniChar *lhsBuf = malloc(lhsLen * sizeof(UniChar));
-	UniChar *rhsBuf = malloc(rhsLen * sizeof(UniChar));
-	
-	[myString getCharacters:lhsBuf];
-	[aString getCharacters:rhsBuf];
-	
-	(void) UCCompareTextDefault(kUCCollateComposeInsensitiveMask | kUCCollateWidthInsensitiveMask | kUCCollateCaseInsensitiveMask | kUCCollateDigitsOverrideMask | kUCCollateDigitsAsNumberMask| kUCCollatePunctuationSignificantMask,lhsBuf,lhsLen,rhsBuf,rhsLen,NULL,&compareResult);
-	
-	free(lhsBuf);
-	free(rhsBuf);
-	
-	return (CFComparisonResult) compareResult;
-}
-@end
-
-
 @implementation DirBrowserDelegate
 - (id)init {
     if (self = [super init]) {
@@ -185,7 +157,9 @@
 		}
 	}
 	// sort it so it makes sense! the OS doesn't always give directory contents in a convenient order
-	[sortArray sortUsingSelector:@selector(embeddedFinderCompare:)];
+	[sortArray sortUsingComparator:^NSComparisonResult(NSArray *a, NSArray *b) {
+		return [a[0] localizedStandardCompare:b[0]];
+	}];
 	NSMutableArray *displayNames = cols[n];
 	NSMutableArray *filesystemNames = colsInternal[n];
 	[displayNames removeAllObjects];
