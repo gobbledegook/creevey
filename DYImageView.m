@@ -128,10 +128,13 @@
 	id rep = [image representations][0];
 	if ([rep isKindOfClass:[NSBitmapImageRep class]]
 		&& [rep valueForProperty:NSImageFrameCount]) {
-		if (!gifTimer || [gifTimer userInfo] != image) gifTimer =
-			[NSTimer scheduledTimerWithTimeInterval:[[rep valueForProperty:NSImageCurrentFrameDuration] floatValue]
-											 target:self selector:@selector(animateGIF:)
-										   userInfo:image repeats:NO];
+		if (!gifTimer || [gifTimer userInfo] != image) {
+			float frameDuration = [[rep valueForProperty:NSImageCurrentFrameDuration] floatValue];
+			gifTimer = [NSTimer scheduledTimerWithTimeInterval:frameDuration
+														target:self selector:@selector(animateGIF:)
+													  userInfo:image repeats:NO];
+			[gifTimer setTolerance:frameDuration*0.15];
+		}
 	}
 }
 

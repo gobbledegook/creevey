@@ -278,6 +278,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 						target:self
 					  selector:@selector(nextTimer:)
 					  userInfo:nil repeats:NO];
+		[autoTimer setTolerance:0.2];
 	}
 }
 
