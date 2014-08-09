@@ -122,8 +122,9 @@
 	[self setAutosaveName: [[tabView window] frameAutosaveName]]; // defined below -DY
 	
 	// Select the preferences page the user last had selected when this window was opened:
-	key = [NSString stringWithFormat: @"%@.prefspanel.recentpage", autosaveName];
+	key = [NSString stringWithFormat: @"%@.prefspanel.recenttab", autosaveName];
 	index = [[NSUserDefaults standardUserDefaults] integerForKey: key];
+	if (index >= [tabView numberOfTabViewItems]) index = 0; // prevent crash if number of items has changed
 	[tabView selectTabViewItemAtIndex: index];
 	
 	// Actually hook up our toolbar and the tabs:
@@ -313,7 +314,7 @@
 	[tabView selectTabViewItemAtIndex: [sender tag]];
 	[[tabView window] setTitle: [baseWindowName stringByAppendingString: [sender label]]];
 	
-	key = [NSString stringWithFormat: @"%@.prefspanel.recentpage", autosaveName];
+	key = [NSString stringWithFormat: @"%@.prefspanel.recenttab", autosaveName];
 	[[NSUserDefaults standardUserDefaults] setInteger:[sender tag] forKey:key];
 }
 
