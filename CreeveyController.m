@@ -24,12 +24,6 @@
 #define DYVERSCHECKINTERVAL 604800
 #define MAX_FILES_TO_CHECK_FOR_JPEG 100
 
-BOOL FileIsJPEG(NSString *s) {
-	return [[[s pathExtension] lowercaseString] isEqualToString:@"jpg"]
-	|| [[[s pathExtension] lowercaseString] isEqualToString:@"jpeg"]
-	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
-}
-
 BOOL FilesContainJPEG(NSArray *paths) {
 	// find out if at least one file is a JPEG
 	if ([paths count] > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check

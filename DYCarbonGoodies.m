@@ -32,3 +32,25 @@ BOOL FileIsInvisible(NSString *path) {
 	
 	return (info.flags & kLSItemInfoIsInvisible) != 0;
 }
+
+BOOL FileIsJPEG(NSString *s) {
+	return [[[s pathExtension] lowercaseString] isEqualToString:@"jpg"]
+	|| [[[s pathExtension] lowercaseString] isEqualToString:@"jpeg"]
+	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
+}
+
+@implementation NSImage (DYCarbonGoodies)
+
++ (instancetype)imageByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName
+{
+	return [[[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:fileName] autorelease];
+}
+
+- (instancetype)initByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName
+{
+	if (FileIsJPEG(fileName)) return [self initWithDataIgnoringOrientation:[NSData dataWithContentsOfFile:fileName]];
+	// initWithDataIgnoringOrientation: doesn't seem to create image representations for some (raw?) files
+	return [self initByReferencingFile:fileName];
+}
+
+@end

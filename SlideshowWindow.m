@@ -451,7 +451,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (zoomInfo || ([imgView showActualSize] &&
 						 !(info->pixelSize.width < [imgView bounds].size.width &&
 						   info->pixelSize.height < [imgView bounds].size.height))) {
-			[imgView setImage:[[[NSImage alloc] initByReferencingFile:ResolveAliasToPath(theFile)] autorelease]
+			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(theFile)]
 					   zoomIn:2];
 			if (zoomInfo) [imgView setZoomInfo:zoomInfo];
 		}
@@ -784,8 +784,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if ((obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]])) {
 				if (obj->image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) { // cached image smaller than orig
-					[imgView setImage:[[[NSImage alloc] initByReferencingFile:
-						ResolveAliasToPath([filenames objectAtIndex:currentIndex])] autorelease]
+					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
 							   zoomIn:c == '=' ? 2 : c == '+'];
 				} else {
 					if (c == '+') [imgView zoomIn];
@@ -829,8 +828,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if ((obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]])) {
 				if (obj->image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {  // cached image smaller than orig
-					[imgView setImage:[[[NSImage alloc] initByReferencingFile:
-						ResolveAliasToPath([filenames objectAtIndex:currentIndex])] autorelease]
+					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
 							   zoomIn:c == '=' ? 2 : c == '+'];
 				} else {
 					if (c == '+') [imgView zoomIn];

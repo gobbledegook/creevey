@@ -109,7 +109,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSSize maxSize = boundingSize;
 	NSImage *orig, *result = nil;
 
-	orig = [[NSImage alloc] initWithDataIgnoringOrientation:[NSData dataWithContentsOfFile:ResolveAliasToPath(imgInfo->path)]];
+	orig = [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(imgInfo->path)];
 
 	// now scale the img
 	if (orig && [[orig representations] count]) { // why doesn't it return nil for corrupt jpegs?

@@ -17,3 +17,10 @@ NSString *ResolveAliasToPath(NSString *path);
 
 // check if a files invisible flag is set
 BOOL FileIsInvisible(NSString *path);
+
+BOOL FileIsJPEG(NSString *s);
+
+@interface NSImage (DYCarbonGoodies)
++ (instancetype)imageByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName;
+- (instancetype)initByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName;
+@end

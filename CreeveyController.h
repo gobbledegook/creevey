@@ -12,7 +12,6 @@
 
 @class CreeveyMainWindowController, DYImageCache, SlideshowWindow, DYJpegtranPanel;
 
-BOOL FileIsJPEG(NSString *s);
 NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache, BOOL moreExif);
 
 #define NUM_FNKEY_CATS 11
