@@ -26,6 +26,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	IBOutlet NSButton *exifThumbnailDiscloseBtn;
 
 	NSMutableSet *filetypes;
+	NSMutableSet *disabledFiletypes;
 	NSArray *fileextensions;
 	NSMutableDictionary *fileextensions_enabled;
 	NSMutableArray *creeveyWindows;
@@ -48,7 +49,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (NSMutableSet **)cats;
 - (DYImageCache *)thumbsCache;
 - (NSTextView *)exifTextView;
-- (NSSet *)filetypes;
+- (BOOL)shouldShowFile:(NSString *)path;
 
 - (IBAction)slideshow:(id)sender;
 - (IBAction)openSelectedFiles:(id)sender;

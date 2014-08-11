@@ -165,9 +165,9 @@
 - (void)openFiles:(NSArray *)a withSlideshow:(BOOL)doSlides{
 	if (doSlides) {
 		startSlideshowWhenReady = YES;
-		NSSet *filetypes = [[NSApp delegate] filetypes];
+		CreeveyController *appDelegate = [NSApp delegate];
 		for (NSString *theFile in a) {
-			if ([filetypes containsObject:[theFile pathExtension]] || [filetypes containsObject:NSHFSTypeOfFile(theFile)])
+			if ([appDelegate shouldShowFile:theFile])
 				[filesBeingOpened addObject:theFile];
 		}
 	} else {
@@ -282,7 +282,7 @@
 	//NSTimeInterval imgloadstarttime = [NSDate timeIntervalSinceReferenceDate];
 	
 	if (thePath) {
-		NSSet *filetypes = [[NSApp delegate] filetypes];
+		CreeveyController *appDelegate = [NSApp delegate];
 		[imgMatrix removeAllImages];
 		[filenames removeAllObjects];
 		[displayedFilenames removeAllObjects];
@@ -308,9 +308,7 @@
 			}
 			if (!showInvisibles && isInvisible)
 				continue; // skip invisible files
-			if ([filetypes containsObject:[theFile pathExtension]]
-				 || [filetypes containsObject:NSHFSTypeOfFile(theFile)]
-				 || [filetypes containsObject:[[theFile pathExtension] lowercaseString]])
+			if ([appDelegate shouldShowFile:theFile])
 			{
 				[filenames addObject:aPath];
 				if (++i % 100 == 0)

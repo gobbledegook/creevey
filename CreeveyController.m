@@ -144,6 +144,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (id)init {
 	if (self = [super init]) {
 		filetypes = [[NSMutableSet alloc] init];
+		disabledFiletypes = [[NSMutableSet alloc] init];
 		//hfstypes = [[NSSet alloc] initWithObjects:@"'PICT'", @"'JPEG'", @"'GIFf'",
 		//NSLog(@"%@", [NSImage imageFileTypes]);
 		NSMutableSet *temp = [NSMutableSet set];
@@ -186,9 +187,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[slidesWindow setCats:cats];
 	[slidesWindow setRerandomizeOnLoop:[[NSUserDefaults standardUserDefaults] boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	[slidesWindow setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
-	NSArray *ignoredFileTypes = [[NSUserDefaults standardUserDefaults] stringArrayForKey:@"ignoredFileTypes"];
+	[disabledFiletypes addObjectsFromArray:[[NSUserDefaults standardUserDefaults] stringArrayForKey:@"ignoredFileTypes"]];
 	for (NSString *type in fileextensions) {
-		if ([ignoredFileTypes containsObject:type]) {
+		if ([disabledFiletypes containsObject:type]) {
 			[filetypes removeObject:type];
 			fileextensions_enabled[type] = @NO;
 		}
@@ -213,6 +214,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[[NSNotificationCenter defaultCenter] removeObserver:localeChangeObserver];
 	[thumbsCache release];
 	[filetypes release];
+	[disabledFiletypes release];
 	[fileextensions release];
 	[fileextensions_enabled release];
 	[creeveyWindows release];
@@ -950,8 +952,12 @@ enum {
 
 - (DYImageCache *)thumbsCache { return thumbsCache; }
 - (NSTextView *)exifTextView { return exifTextView; }
-- (NSSet *)filetypes { return filetypes; }
 - (NSMutableSet **)cats { return cats; }
+
+- (BOOL)shouldShowFile:(NSString *)path {
+	NSString *pathExtension = [path pathExtension];
+	return [filetypes containsObject:pathExtension] || [filetypes containsObject:[pathExtension lowercaseString]] || ([filetypes containsObject:NSHFSTypeOfFile(path)] && ![disabledFiletypes containsObject:pathExtension]);
+}
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
 	return [fileextensions count];
@@ -965,16 +971,14 @@ enum {
 - (void)tableView:(NSTableView *)tableView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
 	NSString *type = fileextensions[row];
 	fileextensions_enabled[type] = object;
-	NSMutableArray *ignoredFileTypes = [[[[NSUserDefaults standardUserDefaults] stringArrayForKey:@"ignoredFileTypes"] mutableCopy] autorelease];
-	if (ignoredFileTypes == nil) ignoredFileTypes = [NSMutableArray array];
 	if ([object boolValue]) {
 		[filetypes addObject:type];
-		[ignoredFileTypes removeObject:type];
+		[disabledFiletypes removeObject:type];
 	} else {
 		[filetypes removeObject:type];
-		[ignoredFileTypes addObject:type];
+		[disabledFiletypes addObject:type];
 	}
-	[[NSUserDefaults standardUserDefaults] setObject:ignoredFileTypes forKey:@"ignoredFileTypes"];
+	[[NSUserDefaults standardUserDefaults] setObject:[disabledFiletypes allObjects] forKey:@"ignoredFileTypes"];
 }
 
 @end
