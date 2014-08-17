@@ -64,8 +64,14 @@
 	[[self window] setFrameUsingName:@"MainWindowLoc"];
 	// otherwise it uses the frame in the nib
 	
+	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+	NSSplitView *splitView = [[[self window] contentView] subviews][0];
+	float height = [u floatForKey:@"MainWindowSplitViewTopHeight"];
+	if (height > 0.0) [splitView setPosition:height ofDividerAtIndex:0];
+	[splitView setDelegate:self]; // must set delegate after restoring position so the didResize notification doesn't save the height from the nib
+
 	[imgMatrix setFrameSize:[[imgMatrix superview] frame].size];
-	[imgMatrix setCellWidth:[[NSUserDefaults standardUserDefaults] floatForKey:@"thumbCellWidth"]];
+	[imgMatrix setCellWidth:[u floatForKey:@"thumbCellWidth"]];
 }
 
 - (void)dealloc {
@@ -588,6 +594,13 @@
 
 - (void)updateExifInfo {
 	[self updateExifInfo:nil];
+}
+
+#pragma mark splitview delegate
+
+- (void)splitViewDidResizeSubviews:(NSNotification *)notification
+{
+	[[NSUserDefaults standardUserDefaults] setFloat:statusFld.superview.frame.size.height forKey:@"MainWindowSplitViewTopHeight"];
 }
 
 #pragma mark wrapping matrix methods

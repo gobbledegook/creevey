@@ -11,7 +11,7 @@
 
 @class DYWrappingMatrix, DYCreeveyBrowser;
 
-@interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate>
+@interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate,NSSplitViewDelegate>
 {
     IBOutlet DYCreeveyBrowser *dirBrowser;
 	IBOutlet NSButton *slidesBtn;

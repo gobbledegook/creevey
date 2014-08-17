@@ -130,6 +130,20 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	dict[@"autoRotateByOrientationTag"] = @YES;
     [defaults registerDefaults:dict];
 
+	// migrate old RBSplitView pref
+	if (0.0 == [defaults floatForKey:@"MainWindowSplitViewTopHeight"]) {
+		NSString *rbsplitviewvalue = [defaults stringForKey:@"RBSplitView H DividerLoc"];
+		if (rbsplitviewvalue) {
+			NSScanner *scanner = [NSScanner scannerWithString:rbsplitviewvalue];
+			if ([scanner scanInt:NULL]) {
+				int rbsplitviewheight;
+				if ([scanner scanInt:&rbsplitviewheight])
+					[defaults setFloat:(float)rbsplitviewheight forKey:@"MainWindowSplitViewTopHeight"];
+			}
+		}
+		[defaults removeObjectForKey:@"com.ulikusterer.prefspanel.recentpage"];
+	}
+
 	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
 	[NSValueTransformer setValueTransformer:t
 									forName:@"TimeIntervalPlusWeekToStringTransformer"];
