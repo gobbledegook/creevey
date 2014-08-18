@@ -296,24 +296,25 @@
 		[imageCacheQueue removeAllObjects];
 		[secondaryImageCacheQueue removeAllObjects];
 		[imageCacheQueueLock unlockWithCondition:0];
-		NSDirectoryEnumerator *e = [fm enumeratorAtPath:thePath];
-		id obj;
+		NSDirectoryEnumerationOptions options = recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
+		if (!showInvisibles) options |= NSDirectoryEnumerationSkipsHiddenFiles;
+		NSDirectoryEnumerator *e = [fm enumeratorAtURL:[NSURL fileURLWithPath:thePath isDirectory:YES]
+							includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLNameKey]
+											   options:options errorHandler:nil];
 		//NSLog(@"getting filenames...");
-		while (obj = [e nextObject]) {
-			NSString *aPath = [thePath stringByAppendingPathComponent:obj];
-			NSString *theFile = ResolveAliasToPath(aPath);
-			BOOL isInvisible = [obj characterAtIndex:0] == '.' || FileIsInvisible(aPath);
-			// don't worry about top level .hidden here
-			
-			if ([[[e fileAttributes] fileType] isEqualToString:NSFileTypeDirectory]) {
-				if (!recurseSubfolders || (!showInvisibles && isInvisible))
-					[e skipDescendents];
-				else if ([[theFile lastPathComponent] isEqualToString:@"Thumbs"])
+		for (NSURL *url in e) {
+			NSNumber *isDirectory;
+			[url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:NULL];
+			if ([isDirectory boolValue]) {
+				NSString *filename;
+				[url getResourceValue:&filename forKey:NSURLNameKey error:NULL];
+				if ([filename isEqualToString:@"Thumbs"])
 					[e skipDescendents]; // special addition for mbatch
 				continue;
 			}
-			if (!showInvisibles && isInvisible)
-				continue; // skip invisible files
+
+			NSString *aPath = [url path];
+			NSString *theFile = ResolveAliasToPath(aPath);
 			if ([appDelegate shouldShowFile:theFile])
 			{
 				[filenames addObject:aPath];
@@ -321,7 +322,6 @@
 					[self setStatusString:[NSString stringWithFormat:@"%@ (%lu)",
 						loadingMsg, (unsigned long)i]];
 			}
-			// NSFileTypeForHFSTypeCode([[atts objectForKey:NSFileHFSCreatorCode] unsignedLongValue]),
 			if (stopCaching == 1) {
 				[filenames removeAllObjects]; // so it fails count > 0 test below
 				break;

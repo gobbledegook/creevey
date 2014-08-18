@@ -13,13 +13,30 @@
 
 #import "DYCarbonGoodies.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 NSString *ResolveAliasToPath(NSString *path) {
-	NSData *alias = [NSURL bookmarkDataWithContentsOfURL:[NSURL fileURLWithPath:path] error:NULL];
-	if (!alias) return path;
-	NSURL *result = [NSURL URLByResolvingBookmarkData:alias options:(NSURLBookmarkResolutionWithoutUI|NSURLBookmarkResolutionWithoutMounting) relativeToURL:nil bookmarkDataIsStale:NULL error:NULL];
-	if (!result) return path;
-	return [result path];
+	NSString *resolvedPath = nil;
+	CFURLRef url = CFURLCreateWithFileSystemPath(NULL /*allocator*/, (CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
+	if (url == NULL) return path;
+	FSRef fsRef;
+	if (CFURLGetFSRef(url, &fsRef)) {
+		Boolean targetIsFolder, wasAliased;
+		if (FSResolveAliasFileWithMountFlags(&fsRef, true /*resolveAliasChains*/, &targetIsFolder, &wasAliased, kResolveAliasFileNoUI) == noErr
+			&& wasAliased) {
+			CFURLRef resolvedUrl = CFURLCreateFromFSRef(NULL, &fsRef);
+			if (resolvedUrl != NULL) {
+				CFStringRef thePath = CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle);
+				resolvedPath = [(NSString*)thePath copy];
+				CFRelease(thePath);
+				CFRelease(resolvedUrl);
+			}
+		}
+	}
+	CFRelease(url);
+	return resolvedPath ?: path;
 }
+#pragma GCC diagnostic pop
 
 BOOL FileIsInvisible(NSString *path) {
 	CFURLRef url = CFURLCreateWithFileSystemPath(NULL /*allocator*/, (CFStringRef)path,
