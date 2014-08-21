@@ -89,6 +89,7 @@
 
 - (void)dealloc {
 	[typedString release];
+	[greyview release];
 	[super dealloc];
 }
 
