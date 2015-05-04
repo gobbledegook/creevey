@@ -351,7 +351,7 @@
 "855.title" = "Mostrar nombres de archivos";
 
 /* Class = "NSMenuItem"; title = "Save Rotation"; ObjectID = "785"; */
-"857.title" = "Save Rotation";
+"857.title" = "Guardar rotación";
 
 /* Class = "NSMenuItem"; title = "Rotar automáticamente según la orientación"; ObjectID = "783"; */
 "860.title" = "Rotar automáticamente según la orientación";

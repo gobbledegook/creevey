@@ -351,7 +351,7 @@
 "855.title" = "Dateinamen anzeigen";
 
 /* Class = "NSMenuItem"; title = "Save Rotation"; ObjectID = "786"; */
-"857.title" = "Save Rotation";
+"857.title" = "Drehung speichern";
 
 /* Class = "NSMenuItem"; title = "Automatisch ausrichten nach Bildausrichtungs-Markierung"; ObjectID = "783"; */
 "860.title" = "Automatisch ausrichten nach Bildausrichtungs-Markierung";

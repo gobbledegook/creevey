@@ -351,7 +351,7 @@
 "855.title" = "Afficher les titres";
 
 /* Class = "NSMenuItem"; title = "Save Rotation"; ObjectID = "785"; */
-"857.title" = "Save Rotation";
+"857.title" = "Enregistrer rotation";
 
 /* Class = "NSMenuItem"; title = "Rotation automatique en fonction d'orientation"; ObjectID = "783"; */
 "860.title" = "Rotation automatique en fonction d'orientation";
