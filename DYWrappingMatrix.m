@@ -504,9 +504,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)setNeedsDisplayInRectThreaded:(NSValue *)v {
 	[self setNeedsDisplayInRect:[v rectValue]];
 }
-- (void)setNeedsDisplayThreaded {
-	[self setNeedsDisplay:YES];
-}
 
 - (void)drawRect:(NSRect)rect {
 	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
@@ -848,10 +845,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[images addObject:theImage];
 	[filenames addObject:s];
 	numCells++;
-	//[self resize:nil];
-	[self performSelectorOnMainThread:@selector(resize:)
-						   withObject:nil waitUntilDone:NO];
-	[self setNeedsDisplayInRect2:[self cellnum2rect:numCells-1]];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self resize:nil];
+		[self setNeedsDisplayInRect:[self cellnum2rect:numCells-1]];
+	});
 }
 
 - (void)removeAllImages {
@@ -860,13 +857,15 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[filenames removeAllObjects];
 	[requestedFilenames removeAllObjects];
 	numThumbsLoaded = 0;
-	// ** [self resize:nil];
-	//[self setNeedsDisplay:YES]; // ** I suppose should call on main thread too
-	[self performSelectorOnMainThread:@selector(resize:)
-						   withObject:nil waitUntilDone:NO];
-	[self performSelectorOnMainThread:@selector(setNeedsDisplayThreaded)
-						   withObject:nil waitUntilDone:NO];
-	[self selectNone:nil]; // **
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self resize:nil];
+		[self setNeedsDisplay:YES];
+		[self selectNone:nil];
+		// manually set to 0 to avoid animation (which you get if you call [self scrollPoint:]
+		[[[self enclosingScrollView] contentView] scrollToPoint:NSZeroPoint];
+		[[[self enclosingScrollView] verticalScroller] setDoubleValue:0];
+		// this will do for now, but we should really rethink the entire threading code
+	});
 }
 /*
 - (void)removeSelectedImages {
