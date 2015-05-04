@@ -467,6 +467,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 			[slidesWindow removeImageForFile:s];
 		}
 	} else {
+		NSUInteger oldIndex = [[frontWindow selectedIndexes] firstIndex];
 		NSArray *a = [frontWindow currentSelection];
 		NSUInteger i, n = [a count];
 		// we have to go backwards b/c we're deleting from the imgMatrix
@@ -483,6 +484,10 @@ performFileOperation:NSWorkspaceRecycleOperation
 				break;
 		}
 		[frontWindow updateExifInfo];
+		// no selection means all files were successfully deleted; select the next image if possible
+		if ([[frontWindow selectedIndexes] firstIndex] == NSNotFound && oldIndex < [frontWindow displayedFilenames].count) {
+			[frontWindow selectIndex:oldIndex];
+		}
 	}
 }
 
