@@ -45,7 +45,9 @@
 	[(CreeveyMainWindowController *)[[self window] delegate] selectAll:sender]; // to pass it to image matrix
 }
 - (void)keyDown:(NSEvent *)e {
-	unichar c = [[e characters] characterAtIndex:0];
+	unichar c = 0;
+	if ([e characters].length == 1)
+		c = [[e characters] characterAtIndex:0];
 	if (c == NSPageUpFunctionKey || c == NSPageDownFunctionKey)
 		if ([self frame].size.height > [[self superview] frame].size.height)
 			[[self superview] keyDown:e]; // scroll ourselves
@@ -104,17 +106,22 @@
 		[super keyDown:e];
 		return;
 	}
-	NSString *s = [e characters];
-	if (![s length])
-		return; // dead keys return empty
-	unichar c = [s characterAtIndex:0];
-	if (![[NSCharacterSet alphanumericCharacterSet] characterIsMember:c]) {
+	unichar c = 0;
+	if ([e characters].length == 1)
+		c = [[e characters] characterAtIndex:0];
+	if ((c >= 0xF700 && c <= 0xF8FF) || [[NSCharacterSet controlCharacterSet] characterIsMember:c] || [[NSCharacterSet newlineCharacterSet] characterIsMember:c]) {
+		// NSPageUpFunctionKey, NSPageDownFunctionKey, arrow keys, etc.
 		[typedString setString:@""];
 		[super keyDown:e];
 		return;
 	}
-	
-	NSTimeInterval t = [e timestamp];
+	[self interpretKeyEvents:@[e]];
+	return;
+}
+
+- (void)insertText:(id)insertString {
+	NSString *s = insertString;
+	NSTimeInterval t = [NSDate timeIntervalSinceReferenceDate];
 	if (t - lastKeyTime < KEYPRESS_INTERVAL)
 		[typedString appendString:s];
 	else

@@ -188,8 +188,11 @@
 - (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(NSInteger)column {
 	NSMutableArray *a = cols[column]; // use cols, not colsInternal here, since we sort by display names
 	NSUInteger i, n = [a count];
+	NSUInteger inputLength = s.length;
 	for (i=0; i<n; ++i) {
-		if ([a[i] caseInsensitiveCompare:s] >= 0)
+		NSString *label = a[i];
+		NSString *labelSubstring = [label substringToIndex:MIN(label.length, inputLength)];
+		if ([labelSubstring localizedStandardCompare:s] >= 0)
 			break;
 	}
 	if (i==n) --i;
