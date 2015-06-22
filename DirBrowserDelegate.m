@@ -58,7 +58,11 @@
 
 #pragma mark public
 -(void)setShowInvisibles:(BOOL)b {
+	BOOL wasShowingInvisibles = showInvisibles;
 	showInvisibles = b;
+	if (showInvisibles && !wasShowingInvisibles) {
+		[_b loadColumnZero]; // reload Volumes to include invisible volumes
+	}
 }
 
 // use to convert result from path or pathToColumn
