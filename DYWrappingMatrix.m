@@ -487,7 +487,13 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (mySize.height != h) {
 		mySize.height = h;
 		[self setFrameSize:mySize];
+		[self invalidateIntrinsicContentSize];
 	}
+}
+
+- (NSSize)intrinsicContentSize
+{
+	return self.frame.size;
 }
 
 // always call this if called from another thread
