@@ -875,6 +875,19 @@ enum {
 
 
 #pragma mark new window stuff
++ (void)restoreWindowWithIdentifier:(NSString *)identifier
+							  state:(NSCoder *)state
+				  completionHandler:(void (^)(NSWindow *, NSError *))completionHandler
+{
+	CreeveyController* appDelegate = [NSApp delegate];
+	[appDelegate newWindow:nil];
+	CreeveyMainWindowController *wc = [appDelegate windowControllers].lastObject;
+	completionHandler([wc window], nil);
+	[appDelegate setFrontWindow:wc]; // prevent applicationDidFinishLaunching: from opening a new window
+}
+- (NSArray *)windowControllers { return creeveyWindows; }
+- (void)setFrontWindow:(CreeveyMainWindowController *)wc { frontWindow = wc; }
+
 - (IBAction)openGetInfoPanel:(id)sender {
 	NSWindow *w = [exifTextView window];
 	if ([w isVisible])

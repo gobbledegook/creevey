@@ -38,8 +38,9 @@
 @end
 
 
-@interface CreeveyMainWindowController (Private)
+@interface CreeveyMainWindowController ()
 - (void)updateStatusFld;
+@property (nonatomic, readonly) NSSplitView *splitView;
 @end
 
 @implementation CreeveyMainWindowController
@@ -65,13 +66,34 @@
 	// otherwise it uses the frame in the nib
 	
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
-	NSSplitView *splitView = [[[self window] contentView] subviews][0];
+	NSSplitView *splitView = self.splitView;
 	float height = [u floatForKey:@"MainWindowSplitViewTopHeight"];
 	if (height > 0.0) [splitView setPosition:height ofDividerAtIndex:0];
 	[splitView setDelegate:self]; // must set delegate after restoring position so the didResize notification doesn't save the height from the nib
 
 	[imgMatrix setFrameSize:[[imgMatrix superview] frame].size];
 	[imgMatrix setCellWidth:[u floatForKey:@"thumbCellWidth"]];
+	[[self window] setRestorationClass:[CreeveyController class]];
+}
+
+- (void)window:(NSWindow *)window willEncodeRestorableState:(NSCoder *)state
+{
+	NSDictionary *data = @{@"path":[self path], @"split1":@(statusFld.superview.frame.size.height)};
+	[state encodeObject:data forKey:@"creeveyWindowState"];
+}
+
+- (void)window:(NSWindow *)window didDecodeRestorableState:(NSCoder *)state
+{
+	NSDictionary *data = [state decodeObjectForKey:@"creeveyWindowState"];
+	[self setPath:data[@"path"]];
+	float height = [data[@"split1"] floatValue];
+	if (height > 0.0)
+		[self.splitView setPosition:height ofDividerAtIndex:0];
+}
+
+- (NSSplitView *)splitView
+{
+	return [[[self window] contentView] subviews][0];
 }
 
 - (void)dealloc {
@@ -121,6 +143,7 @@
 		[[dirBrowser delegate] setPath:s];
 	}
 	[dirBrowser sendAction];
+	[[self window] invalidateRestorableState];
 	return YES;
 }
 
