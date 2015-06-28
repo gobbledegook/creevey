@@ -42,6 +42,7 @@
 		F262D803089AE58200CD3701 /* DYVersChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = F262D801089AE58200CD3701 /* DYVersChecker.m */; };
 		F2711712182AADE6008F97E1 /* DYRandomizableArray.h in Headers */ = {isa = PBXBuildFile; fileRef = F2711710182AADE6008F97E1 /* DYRandomizableArray.h */; };
 		F2711713182AADE6008F97E1 /* DYRandomizableArray.m in Sources */ = {isa = PBXBuildFile; fileRef = F2711711182AADE6008F97E1 /* DYRandomizableArray.m */; };
+		F276A7461B4095F50045E67A /* ThumbnailContextMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F276A7481B4095F50045E67A /* ThumbnailContextMenu.xib */; };
 		F28C1E1D0A86723000682516 /* general.gif in Resources */ = {isa = PBXBuildFile; fileRef = F28C1E1C0A86723000682516 /* general.gif */; };
 		F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */; };
 		F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */; };
@@ -174,6 +175,7 @@
 		F26F29EF0AEF271D00F60799 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F2711710182AADE6008F97E1 /* DYRandomizableArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYRandomizableArray.h; sourceTree = "<group>"; };
 		F2711711182AADE6008F97E1 /* DYRandomizableArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYRandomizableArray.m; sourceTree = "<group>"; };
+		F276A7471B4095F50045E67A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ThumbnailContextMenu.xib; sourceTree = "<group>"; };
 		F277E1351917453600D2F574 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F28C1E1C0A86723000682516 /* general.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = general.gif; sourceTree = "<group>"; };
 		F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSIndexSetSymDiffExtension.h; sourceTree = "<group>"; };
@@ -200,6 +202,11 @@
 		F2B13C0A0BCEE75700CF252E /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2C940B508200F6F0019D0D3 /* multipledocs.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = multipledocs.gif; sourceTree = "<group>"; };
 		F2D2AC62080B82840075532A /* brokendoc.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = brokendoc.tif; sourceTree = "<group>"; };
+		F2D8407B1B40971B00A4F731 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/ThumbnailContextMenu.strings"; sourceTree = "<group>"; };
+		F2D8407D1B40971F00A4F731 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
+		F2D8407F1B40972000A4F731 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
+		F2D840811B40972100A4F731 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
+		F2D840831B40972300A4F731 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
 		F2E2E1710AB51122001242BE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2E2E17A0AB51279001242BE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F2E83B920BD09D8F0092E425 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -368,6 +375,7 @@
 				F254E9930891A7FB00DE9C38 /* EXIF.strings */,
 				F202E2C919170E4900EDDCEC /* MainMenu.xib */,
 				F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */,
+				F276A7481B4095F50045E67A /* ThumbnailContextMenu.xib */,
 				F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */,
 			);
 			name = Resources;
@@ -582,6 +590,7 @@
 				F28C1E1D0A86723000682516 /* general.gif in Resources */,
 				F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */,
 				F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */,
+				F276A7461B4095F50045E67A /* ThumbnailContextMenu.xib in Resources */,
 				F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -715,6 +724,19 @@
 				F254E11F0BD30DD80053F673 /* it */,
 			);
 			name = EXIF.strings;
+			sourceTree = "<group>";
+		};
+		F276A7481B4095F50045E67A /* ThumbnailContextMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F276A7471B4095F50045E67A /* Base */,
+				F2D8407B1B40971B00A4F731 /* zh-Hant */,
+				F2D8407D1B40971F00A4F731 /* de */,
+				F2D8407F1B40972000A4F731 /* es */,
+				F2D840811B40972100A4F731 /* fr */,
+				F2D840831B40972300A4F731 /* it */,
+			);
+			name = ThumbnailContextMenu.xib;
 			sourceTree = "<group>";
 		};
 		F2910A4908198D5300D3878C /* Localizable.strings */ = {

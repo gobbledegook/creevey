@@ -108,11 +108,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return destinationRect;
 }
 
-@interface DYWrappingMatrix (Private)
+@interface DYWrappingMatrix ()
 - (void)resize:(id)anObject; // called to recalc, set frame height
 - (NSImage *)imageForIndex:(NSUInteger)n;
 - (NSSize)imageSizeForIndex:(NSUInteger)n;
 - (unsigned short)exifOrientationForIndex:(NSUInteger)n;
+@property (nonatomic, retain) NSArray *openWithAppIdentifiers;
 @end
 
 @implementation DYWrappingMatrix
@@ -954,5 +955,106 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	delegate = d; // NOT retained
 }
 
+#pragma mark contextual menu stuff
+
+- (void)openWith:(NSMenuItem *)sender
+{
+	NSInteger index = [sender.menu indexOfItem:sender];
+	if (index < 0 || index >= self.openWithAppIdentifiers.count) return;
+	NSString *appIdentifier = self.openWithAppIdentifiers[index];
+	NSArray *paths = [self selectedFilenames];
+	NSMutableArray *urls = [NSMutableArray arrayWithCapacity:paths.count];
+	for (NSString *path in paths) {
+		[urls addObject:[NSURL fileURLWithPath:path]];
+	}
+	[[NSWorkspace sharedWorkspace] openURLs:urls withAppBundleIdentifier:appIdentifier options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
+	self.openWithAppIdentifiers = nil;
+}
+
+- (NSMenu *)menuForEvent:(NSEvent *)event
+{
+    id appDelegate = [NSApp delegate];
+    if (![appDelegate respondsToSelector:@selector(thumbnailContextMenu)]) return nil;
+    if ([appDelegate thumbnailContextMenu] == nil) {
+        if (![[NSBundle mainBundle] loadNibNamed:@"ThumbnailContextMenu" owner:appDelegate topLevelObjects:NULL]) return nil;
+    }
+	NSPoint mouseLoc = [self convertPoint:event.locationInWindow fromView:nil];
+	NSUInteger cellNum = [self point2cellnum:mouseLoc];
+	BOOL hasSelection = selectedIndexes.count != 0;
+	if (cellNum < numCells) {
+		if (![selectedIndexes containsIndex:cellNum]) {
+			// if user clicked on a non-selected item, select that item
+			if (hasSelection)
+				[self selectNone:nil];
+			[self selectIndex:cellNum];
+		}
+	} else {
+		// do nothing if there is no selection and user clicked outside of the thumbs
+		if (!hasSelection)
+			return nil;
+	}
+
+	NSString *firstFile = filenames[selectedIndexes.firstIndex];
+	NSArray *allApplications = [(NSArray *)LSCopyApplicationURLsForURL((CFURLRef)[NSURL fileURLWithPath:firstFile], kLSRolesViewer|kLSRolesEditor) autorelease];
+	NSMutableArray *filteredApplications = [NSMutableArray array];
+	NSString *selfIdentifier = [NSBundle mainBundle].bundleIdentifier;
+	NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+	NSURL *defaultAppURL = [ws URLForApplicationToOpenURL:[NSURL fileURLWithPath:firstFile]];
+	NSString *defaultIdentifier = [NSBundle bundleWithURL:defaultAppURL].bundleIdentifier;
+	NSMutableSet *appIdentifiers = [NSMutableSet setWithCapacity:allApplications.count]; // don't duplicate app identifiers
+	NSCountedSet *displayNames = [NSCountedSet setWithCapacity:allApplications.count]; // disambiguate identical display names if necessary
+	NSFileManager *fm = [NSFileManager defaultManager];
+	for (NSURL *app in allApplications) {
+		NSString *appIdentifier = [NSBundle bundleWithURL:app].bundleIdentifier;
+		if (appIdentifier.length == 0 || [appIdentifier isEqualToString:selfIdentifier] || [appIdentifier isEqualToString:defaultIdentifier])
+			continue;
+		if (![appIdentifiers containsObject:appIdentifier]) {
+			[appIdentifiers addObject:appIdentifier];
+			[displayNames addObject:[fm displayNameAtPath:app.path]];
+			[filteredApplications addObject:app];
+		}
+	}
+	NSArray *sortedApplications = [filteredApplications sortedArrayUsingComparator:^NSComparisonResult(NSURL *obj1, NSURL *obj2) {
+		NSString *path1 = obj1.path;
+		NSString *path2 = obj2.path;
+		NSString *a = [fm displayNameAtPath:path1];
+		NSString *b = [fm displayNameAtPath:path2];
+		NSComparisonResult result = [a localizedStandardCompare:b];
+		if (result == NSOrderedSame) {
+			// if display names are the same, fall back to path, which should sort things in order of /Applications, /Users, /Volumes
+			result = [path1 compare:path2];
+		}
+		return result;
+	}];
+	NSMutableArray *sortedAppIdentifiers = [NSMutableArray arrayWithCapacity:appIdentifiers.count];
+	NSMenu *openWithMenu = [[[NSMenu alloc] init] autorelease];
+	if (![selfIdentifier isEqualToString:defaultIdentifier]) {
+		[sortedAppIdentifiers addObject:defaultIdentifier];
+		NSString *path = defaultAppURL.path;
+		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:[fm displayNameAtPath:path] action:@selector(openWith:) keyEquivalent:@""] autorelease];
+		item.image = [ws iconForFile:path];
+		item.image.size = NSMakeSize(16, 16);
+		[openWithMenu addItem:item];
+		[sortedAppIdentifiers addObject:@""];
+		[openWithMenu addItem:[NSMenuItem separatorItem]];
+	}
+	for (NSURL *app in sortedApplications) {
+		NSString *path = app.path;
+		NSString *displayName = [fm displayNameAtPath:path];
+		NSString *appIdentifier = [NSBundle bundleWithURL:app].bundleIdentifier;
+		[sortedAppIdentifiers addObject:appIdentifier];
+		if ([displayNames countForObject:displayName] > 1) {
+			displayName = [displayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", appIdentifier]];
+		}
+		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:displayName action:@selector(openWith:) keyEquivalent:@""] autorelease];
+		item.image = [ws iconForFile:path];
+		item.image.size = NSMakeSize(16, 16);
+		[openWithMenu addItem:item];
+	}
+	self.openWithAppIdentifiers = [[sortedAppIdentifiers copy] autorelease];
+    NSMenu *menu = [appDelegate thumbnailContextMenu];
+	[menu itemAtIndex:0].submenu = openWithMenu;
+	return menu;
+}
 
 @end

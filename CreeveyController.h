@@ -43,6 +43,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 @property (retain) IBOutlet DYJpegtranPanel *jpegController;
+@property (retain) IBOutlet NSMenu *thumbnailContextMenu;
 
 // accessors
 - (NSMutableSet **)cats;

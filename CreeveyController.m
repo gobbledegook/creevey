@@ -226,6 +226,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[fileextensions release];
 	[fileextensions_enabled release];
 	[creeveyWindows release];
+    [_jpegController release];
+    [_thumbnailContextMenu release];
 	short int i;
 	for (i=0; i<NUM_FNKEY_CATS; ++i)
 		[cats[i] release];
