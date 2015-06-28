@@ -112,7 +112,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
     dict[@"lastFolderPath"] = s;
     dict[@"startupOption"] = @0;
 	dict[@"thumbCellWidth"] = @120.0f;
-	dict[@"getInfoVisible"] = @YES;
+	dict[@"getInfoVisible"] = @NO;
 	dict[@"autoVersCheck"] = @YES;
 	dict[@"jpegPreserveModDate"] = @NO;
 	dict[@"slideshowAutoadvance"] = @NO;
