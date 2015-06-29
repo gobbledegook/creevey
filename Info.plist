@@ -7,100 +7,44 @@
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>*</string>
-			</array>
 			<key>CFBundleTypeName</key>
 			<string>NSFilenamesPboardType</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>fold</string>
-			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.folder</string>
+			</array>
 		</dict>
 		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>pict</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>PICT file</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>PICT</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>jpg</string>
-				<string>jpeg</string>
-			</array>
 			<key>CFBundleTypeName</key>
 			<string>JPEG image</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>JPEG</string>
-			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.jpeg</string>
+			</array>
 		</dict>
 		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>gif</string>
-			</array>
 			<key>CFBundleTypeName</key>
-			<string>GIF image</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>GIFf</string>
-			</array>
+			<string>image</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.image</string>
+			</array>
 		</dict>
 		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>tif</string>
-				<string>tiff</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>TIFF image</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>TIFF</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>pdf</string>
-			</array>
 			<key>CFBundleTypeName</key>
 			<string>PDF file</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>PDF</string>
-			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
+			<key>LSItemContentTypes</key>
 			<array>
-				<string>icns</string>
+				<string>com.adobe.pdf</string>
 			</array>
-			<key>CFBundleTypeName</key>
-			<string>icns file</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
