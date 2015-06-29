@@ -243,7 +243,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[slidesWindow startSlideshowAtIndex: [files count] == 1
 		? [[frontWindow displayedFilenames] indexOfObject:files[0]]
 			// here's a fun (and SLOW) linear search
-		: -1];
+		: NSNotFound];
 }
 
 - (void)startSlideshow {
@@ -260,7 +260,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		: 0]; // see prefs section for more notes
 	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	[slidesWindow setAutoRotate:[[frontWindow imageMatrix] autoRotate]];
-	[slidesWindow startSlideshowAtIndex: [s count] == 1 ? [s firstIndex] : -1];
+	[slidesWindow startSlideshowAtIndex: [s count] == 1 ? [s firstIndex] : NSNotFound];
 }
 
 - (IBAction)slideshow:(id)sender

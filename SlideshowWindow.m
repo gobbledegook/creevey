@@ -70,7 +70,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[self setOpaque:NO];
 		[self setCollectionBehavior:NSWindowCollectionBehaviorTransient]; // needed for new screen/spaces in 10.9.
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
-		currentIndex = -1;//blurr=8;
+		currentIndex = NSNotFound;//blurr=8;
    }
     return self;
 }
@@ -143,7 +143,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	autoRotate = b;
 	[rotations removeAllObjects];
 	[flips removeAllObjects];
-	if (currentIndex != -1) {
+	if (currentIndex != NSNotFound) {
 		[self displayImage];
 	}
 }
@@ -166,7 +166,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)setBasePath:(NSString *)s {
-	if (currentIndex != -1)
+	if (currentIndex != NSNotFound)
 		[self saveZoomInfo]; // in case we're called without endSlideshow being called
 	
 	if (s != basePath) {
@@ -187,7 +187,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[self saveZoomInfo];
 
 	lastIndex = currentIndex;
-	currentIndex = -1;
+	currentIndex = NSNotFound;
 	[self killTimer];
 	[self orderOut:nil];
 	
@@ -195,7 +195,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)startSlideshow {
-	[self startSlideshowAtIndex:-1]; // to distinguish from 0, for random mode
+	[self startSlideshowAtIndex:NSNotFound]; // to distinguish from 0, for random mode
 }
 - (void)startSlideshowAtIndex:(NSUInteger)startIndex {
 	if ([filenames count] == 0) {
@@ -224,7 +224,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[filenames randomizeStartingWithObjectAtIndex:startIndex];
 		startIndex = 0;
 	} else {
-		if (startIndex == -1) startIndex = 0;
+		if (startIndex == NSNotFound) startIndex = 0;
 	}
 	currentIndex = startIndex;
 	[self setTimer:timerIntvl]; // reset the timer, in case running
@@ -262,7 +262,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 // a method for the public to call; added for the pref panel
 - (void)setAutoadvanceTime:(NSTimeInterval)s {
-	if (currentIndex == -1)
+	if (currentIndex == NSNotFound)
 		timerIntvl = s;
 	else
 		[self setTimer:s];
@@ -392,7 +392,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)redisplayImage {
-	if (currentIndex == -1) return;
+	if (currentIndex == NSNotFound) return;
 	id theFile = [filenames objectAtIndex:currentIndex];
 	[imgCache removeImageForKey:theFile];
 	[zooms removeObjectForKey:theFile]; // don't forget to reset the zoom/rotation!
@@ -406,12 +406,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[zooms removeObjectForKey:s];
 	[rotations removeObjectForKey:s];
 	[flips removeObjectForKey:s];
-	if ((currentIndex != -1 && currentIndex != [filenames count]) && [s isEqualToString:[filenames objectAtIndex:currentIndex]])
+	if ((currentIndex != NSNotFound && currentIndex != [filenames count]) && [s isEqualToString:[filenames objectAtIndex:currentIndex]])
 		[self displayImage];
 }
 
 - (void)displayImage {
-	if (currentIndex == -1) return; // in case called after slideshow ended
+	if (currentIndex == NSNotFound) return; // in case called after slideshow ended
 									// not necessary if s/isActive/isKeyWindow/
 	if (currentIndex == [filenames count]) { // if the last image was deleted, show a blank screen
 		[catsFld setHidden:YES];
@@ -916,10 +916,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)cacheAndDisplay:(NSString *)s { // ** roll this into imagecache?
-	if (currentIndex == -1) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
+	if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	[imgCache cacheFile:s]; // this operation takes time...
-	if (currentIndex != -1 && [[filenames objectAtIndex:currentIndex] isEqualToString:s]) {
+	if (currentIndex != NSNotFound && [[filenames objectAtIndex:currentIndex] isEqualToString:s]) {
 		//NSLog(@"cacheAndDisplay now displaying %@", idx);
 		[self performSelectorOnMainThread:@selector(displayImage) // requires 10.2
 							   withObject:nil waitUntilDone:NO];
@@ -936,13 +936,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 #pragma mark accessors
 
 - (BOOL)isActive {
-	return currentIndex != -1;
+	return currentIndex != NSNotFound;
 }
 - (NSUInteger)currentIndex {
-	return currentIndex == -1 ? lastIndex : currentIndex;
+	return currentIndex == NSNotFound ? lastIndex : currentIndex;
 }
 - (NSString *)currentFile {
-	//if (currentIndex == -1) return nil;
 	if (currentIndex == [filenames count]) { // if showing "last file was deleted" screen
 		return nil;
 	}
@@ -1053,18 +1052,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[sender setState:b];
 	[imgView setScalesUp:b];
 	if (currentIndex == [filenames count]) return;
-	if (currentIndex != -1)
+	if (currentIndex != NSNotFound)
 		[self updateInfoFld];
 }
 - (IBAction)toggleRandom:(id)sender {
 	BOOL b = ![sender state];
 	[sender setState:b];
 	randomMode = b;
-	if (currentIndex == -1)
+	if (currentIndex == NSNotFound)
 		return;
 	// slideshow is running, so we need to do some cleanup
 	if (randomMode) {
-		if (currentIndex == [filenames count]) currentIndex = -1;
+		if (currentIndex == [filenames count]) currentIndex = NSNotFound;
 		[filenames randomizeStartingWithObjectAtIndex:currentIndex];
 		currentIndex = 0;
 	} else {
@@ -1079,7 +1078,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (IBAction)toggleShowActualSize:(id)sender {
 	BOOL b = ![sender state];
 	// save zoomInfo, if any, BEFORE changing the vars
-	if (currentIndex != -1) {
+	if (currentIndex != NSNotFound) {
 		[self killTimer]; // ** why?
 		[self saveZoomInfo];
 	}
@@ -1087,7 +1086,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[sender setState:b];
 	[imgView setShowActualSize:b];
 	if (currentIndex == [filenames count]) return;
-	if (currentIndex != -1) [self displayImage];
+	if (currentIndex != NSNotFound) [self displayImage];
 }
 
 @end
