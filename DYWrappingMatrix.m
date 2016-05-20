@@ -138,7 +138,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     if (initialized) return;
     initialized = YES;
     id sendTypes = @[NSFilenamesPboardType];
-    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
+    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:@[]];
 }
 + (NSSize)maxCellSize {
 	int w = [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];
@@ -224,6 +224,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[selectedIndexes release];
 	[requestedFilenames release];
 	[bgColor release];
+	[_openWithAppIdentifiers release];
 	[super dealloc];
 }
 

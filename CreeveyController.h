@@ -16,7 +16,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 #define NUM_FNKEY_CATS 11
 
-@interface CreeveyController : NSObject <NSTableViewDataSource>
+@interface CreeveyController : NSObject <NSApplicationDelegate,NSTableViewDataSource>
 {
 	NSMutableSet *cats[NUM_FNKEY_CATS];
     IBOutlet SlideshowWindow *slidesWindow;

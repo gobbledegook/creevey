@@ -302,7 +302,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSError *error = nil;
 	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s]
 											forScreen:[NSScreen mainScreen]
-											  options:nil
+											  options:@{}
 												error:&error];
 	if (error)  {
 		NSRunAlertPanel(nil, //title
@@ -398,6 +398,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 									 properties:@{NSImageCompressionFactor: @0.0f}
 						];
 					jinfo.newThumbSize = tmpSize;
+					[i release];
 				} else {
 					jinfo.newThumb = NULL;
 				}
@@ -907,6 +908,7 @@ enum {
 	}
 	id wc = [[CreeveyMainWindowController alloc] initWithWindowNibName:@"CreeveyWindow"];
 	[creeveyWindows addObject:wc];
+	[wc release];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowClosed:) name:NSWindowWillCloseNotification object:[wc window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
 	[wc showWindow:nil]; // or override wdidload
@@ -936,7 +938,6 @@ enum {
 		}
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:[wc window]];
 		[creeveyWindows removeObject:wc];
-		[wc autorelease]; // retained from newWindow:
 	}
 }
 

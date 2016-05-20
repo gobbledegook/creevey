@@ -347,7 +347,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 //				   range:r];
 	[exifFld replaceCharactersInRange:NSMakeRange(0,[[exifFld string] length])
 							  withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
-										documentAttributes:nil]];
+										documentAttributes:@{}]];
 	[exifFld setTextColor:[NSColor whiteColor]];
 	//NSLog(@"%i",blurr);
 }

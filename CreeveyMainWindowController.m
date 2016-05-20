@@ -304,7 +304,6 @@
 	stopCaching = 0;
 	
 	NSUInteger i = 0;
-	NSUInteger numFiles;
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
 		// pull this function call out of the loop
@@ -364,7 +363,6 @@
 			currCat = 0;
 			[displayedFilenames addObjectsFromArray:filenames];
 		} else {
-			numFiles = [filenames count];
 			for (NSString *path in filenames) {
 				if ([[[NSApp delegate] cats][currCat-2] containsObject:path])
 					[displayedFilenames addObject:path];
@@ -412,7 +410,7 @@
 		[slidesBtn setEnabled:YES]; // ** not main thread?
 		currentFilesDeletable = [fm isDeletableFileAtPath:displayedFilenames[0]];
 		
-		numFiles = [displayedFilenames count];
+		NSUInteger numFiles = [displayedFilenames count];
 		unsigned int maxThumbs = [[NSUserDefaults standardUserDefaults]
 								  integerForKey:@"maxThumbsToLoad"];
 		
@@ -611,7 +609,7 @@
 		}
 		[exifTextView replaceCharactersInRange:NSMakeRange(0,[[exifTextView string] length])
 									   withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
-												 documentAttributes:nil]];
+												 documentAttributes:@{}]];
 	}
 }
 
