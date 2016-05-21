@@ -200,6 +200,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
 																 options:NSKeyValueObservingOptionNew
 																 context:NULL];
+	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
+															  forKeyPath:@"values.DYWrappingMatrixBgColor"
+																 options:NSKeyValueObservingOptionNew
+																 context:NULL];
 }
 
 - (void)setMaxCellWidth:(float)w {
@@ -212,7 +216,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 {
     if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
 		[self setMaxCellWidth:[[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"]];
-    }
+	} else if ([keyPath isEqualToString:@"values.DYWrappingMatrixBgColor"]) {
+		[bgColor release];
+		bgColor = [[NSUnarchiver unarchiveObjectWithData:[[NSUserDefaults standardUserDefaults] dataForKey:@"DYWrappingMatrixBgColor"]] retain];
+		[self setNeedsDisplay];
+	}
 }
 
 - (void)dealloc {
