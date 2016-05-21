@@ -1058,10 +1058,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (IBAction)toggleRandom:(id)sender {
 	BOOL b = ![sender state];
 	[sender setState:b];
+	BOOL oldRandomMode = randomMode;
 	randomMode = b;
 	if (currentIndex == NSNotFound)
 		return;
 	// slideshow is running, so we need to do some cleanup
+	if (randomMode == oldRandomMode)
+		return; // but if this is a "forced" toggle from hitting "Apply Settings", no action is required
 	if (randomMode) {
 		if (currentIndex == [filenames count]) currentIndex = NSNotFound;
 		[filenames randomizeStartingWithObjectAtIndex:currentIndex];
