@@ -95,6 +95,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 @end
 
+@interface CreeveyController ()
+@property (nonatomic, assign) BOOL appDidFinishLaunching;
+@property (nonatomic, assign) BOOL filesWereOpenedAtLaunch;
+@property (nonatomic, assign) BOOL windowsWereRestoredAtLaunch;
+@end
+
 @implementation CreeveyController
 
 +(void)initialize
@@ -524,7 +530,15 @@ performFileOperation:NSWorkspaceRecycleOperation
 			   shrinkWindow:NO];
 	
 	//NSLog(@"appdidfinlaunch called");
-	if (!frontWindow) // user didn't drop icons onto app when opening
+	_appDidFinishLaunching = YES;
+	if (_windowsWereRestoredAtLaunch && _filesWereOpenedAtLaunch) {
+		// ugly hack to force the slideshow window to be on top of the restored windows
+		BOOL wasVisible = slidesWindow.isVisible;
+		[slidesWindow orderFront:nil];
+		if (!wasVisible) [slidesWindow orderOut:nil];
+	}
+	// open a new window if there isn't one (either from dropping icons onto app at launch, or from restoring saved state)
+	if (!frontWindow && !_windowsWereRestoredAtLaunch)
 		[self newWindow:self];
 
 	[self applySlideshowPrefs:nil];
@@ -564,6 +578,9 @@ performFileOperation:NSWorkspaceRecycleOperation
 	if (sender) {
 		[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 		[[frontWindow window] makeKeyAndOrderFront:nil];
+	}
+	if (!_appDidFinishLaunching) {
+		_filesWereOpenedAtLaunch = YES;
 	}
 }
 
@@ -886,10 +903,9 @@ enum {
 	[appDelegate newWindow:nil];
 	CreeveyMainWindowController *wc = [appDelegate windowControllers].lastObject;
 	completionHandler([wc window], nil);
-	[appDelegate setFrontWindow:wc]; // prevent applicationDidFinishLaunching: from opening a new window
+	appDelegate.windowsWereRestoredAtLaunch = YES;
 }
 - (NSArray *)windowControllers { return creeveyWindows; }
-- (void)setFrontWindow:(CreeveyMainWindowController *)wc { frontWindow = wc; }
 
 - (IBAction)openGetInfoPanel:(id)sender {
 	NSWindow *w = [exifTextView window];

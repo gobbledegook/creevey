@@ -85,8 +85,19 @@
 - (void)window:(NSWindow *)window didDecodeRestorableState:(NSCoder *)state
 {
 	NSDictionary *data = [state decodeObjectForKey:@"creeveyWindowState"];
-	[self setPath:data[@"path"]];
-	float height = [data[@"split1"] floatValue];
+	if (![data isKindOfClass:[NSDictionary class]]) data = @{};
+	NSString *path = data[@"path"];
+	if (![path isKindOfClass:[NSString class]]) path = nil;
+	if (path == nil || ![self setPath:path])
+		if (![self setPath:[[NSUserDefaults standardUserDefaults] stringForKey:@"picturesFolderPath"]])
+			[self setPath:NSHomeDirectory()];
+	NSNumber *heightObj = data[@"split1"];
+	float height;
+	if ([heightObj isKindOfClass:[NSNumber class]]) {
+		height = [heightObj floatValue];
+	} else {
+		height = 0;
+	}
 	if (height > 0.0)
 		[self.splitView setPosition:height ofDividerAtIndex:0];
 }
