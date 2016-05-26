@@ -92,7 +92,7 @@
 }
 
 - (void)randomize {
-	[self randomizeStartingWithObjectAtIndex:-1];
+	[self randomizeStartingWithObjectAtIndex:NSNotFound];
 }
 
 - (void)randomizeStartingWithObjectAtIndex:(NSUInteger)startIndex {
@@ -114,7 +114,7 @@
 
 	// randomize
 	i = count;
-	if (startIndex != -1) {
+	if (startIndex != NSNotFound) {
 		// save selected object at the end
 		[array exchangeObjectAtIndex:startIndex withObjectAtIndex:--i];
 		[randomToOrdered exchangeObjectAtIndex:startIndex withObjectAtIndex:i];
@@ -125,7 +125,7 @@
 		[randomToOrdered exchangeObjectAtIndex:i withObjectAtIndex:randomIndex]; // simultaneously save r2o array (it's parallel)
 		orderedToRandom[[randomToOrdered[i] unsignedIntegerValue]] = @(i); // and save the inverse values to o2r array
 	}
-	if (startIndex != -1) {
+	if (startIndex != NSNotFound) {
 		// put selected object at the start
 		[array exchangeObjectAtIndex:0 withObjectAtIndex:count-1];
 		[randomToOrdered exchangeObjectAtIndex:0 withObjectAtIndex:count-1];
