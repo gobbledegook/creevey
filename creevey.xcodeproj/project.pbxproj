@@ -63,6 +63,7 @@
 		F2AE890F07EB9BB7008F2193 /* CreeveyController.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE890D07EB9BB7008F2193 /* CreeveyController.m */; };
 		F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */ = {isa = PBXBuildFile; fileRef = F2C940B508200F6F0019D0D3 /* multipledocs.gif */; };
 		F2D2AC63080B82840075532A /* brokendoc.tif in Resources */ = {isa = PBXBuildFile; fileRef = F2D2AC62080B82840075532A /* brokendoc.tif */; };
+		F2E6CAAF1CF6BCC3002C5CC4 /* loop_forward.tiff in Resources */ = {isa = PBXBuildFile; fileRef = F2E6CAAE1CF6BCC3002C5CC4 /* loop_forward.tiff */; };
 		F2EFCFC20963D99F0033F328 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F2EFCFC10963D99F0033F328 /* libjpeg.a */; };
 		F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = F2F2641307EEA114006164BF /* SlideshowWindow.h */; };
 		F2F3B72207F7B49400D9C639 /* SlideshowWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F2F3B72107F7B49400D9C639 /* SlideshowWindow.m */; };
@@ -209,6 +210,7 @@
 		F2D840831B40972300A4F731 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
 		F2E2E1710AB51122001242BE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2E2E17A0AB51279001242BE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
+		F2E6CAAE1CF6BCC3002C5CC4 /* loop_forward.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = loop_forward.tiff; sourceTree = "<group>"; };
 		F2E83B920BD09D8F0092E425 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F2EFCFC10963D99F0033F328 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = libjpeg/libjpeg.a; sourceTree = "<group>"; };
 		F2F2641307EEA114006164BF /* SlideshowWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowWindow.h; sourceTree = "<group>"; };
@@ -366,6 +368,7 @@
 				F2C940B508200F6F0019D0D3 /* multipledocs.gif */,
 				F261A048182B5ED4001D9336 /* loading.png */,
 				F29447A60820970100B932C1 /* logo.tiff */,
+				F2E6CAAE1CF6BCC3002C5CC4 /* loop_forward.tiff */,
 				F21AD0D30892B49F0054EA35 /* Phoenix Slides Help */,
 				F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */,
 				F2910A4908198D5300D3878C /* Localizable.strings */,
@@ -591,6 +594,7 @@
 				F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */,
 				F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */,
 				F276A7461B4095F50045E67A /* ThumbnailContextMenu.xib in Resources */,
+				F2E6CAAF1CF6BCC3002C5CC4 /* loop_forward.tiff in Resources */,
 				F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
