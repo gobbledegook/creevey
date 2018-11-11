@@ -809,7 +809,9 @@ enum {
 {
     if ([keyPath isEqual:@"values.slideshowAutoadvanceTime"]) {
 		[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"slideshowAutoadvance"];
-		[slideshowApplyBtn setEnabled:YES];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[slideshowApplyBtn setEnabled:YES];
+		});
     } else if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
 		if ([thumbsCache boundingWidth]
 			< [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"]) {

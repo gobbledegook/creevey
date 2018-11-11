@@ -418,7 +418,9 @@
 		
 	if ([displayedFilenames count] > 0) {
 		loadingDone = NO;
-		[slidesBtn setEnabled:YES]; // ** not main thread?
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[slidesBtn setEnabled:YES];
+		});
 		currentFilesDeletable = [fm isDeletableFileAtPath:displayedFilenames[0]];
 		
 		NSUInteger numFiles = [displayedFilenames count];
