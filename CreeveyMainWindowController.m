@@ -620,9 +620,8 @@
 													   attributes:atts] autorelease];
 			[thumbView setImage:nil];
 		}
-		[exifTextView replaceCharactersInRange:NSMakeRange(0,[[exifTextView string] length])
-									   withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
-												 documentAttributes:@{}]];
+		[attStr addAttribute:NSForegroundColorAttributeName value:[NSColor labelColor] range:NSMakeRange(0,[attStr length])];
+		[[exifTextView textStorage] setAttributedString:attStr];
 	}
 }
 

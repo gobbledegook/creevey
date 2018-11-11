@@ -128,7 +128,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	// prefs stuff
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	dict[@"DYWrappingMatrixBgColor"] = [NSArchiver archivedDataWithRootObject:[NSColor whiteColor]];
+	dict[@"DYWrappingMatrixBgColor"] = [NSArchiver archivedDataWithRootObject:[NSColor controlBackgroundColor]];
 	dict[@"DYWrappingMatrixAllowMove"] = @NO;
 	dict[@"DYWrappingMatrixMaxCellWidth"] = @"160";
 	[defaults registerDefaults:dict];
