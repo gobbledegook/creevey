@@ -143,6 +143,7 @@
 		F20ACC0D088E011A004CFE14 /* DYJpegtranPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYJpegtranPanel.m; sourceTree = "<group>"; };
 		F20DC28F0886240400986105 /* CreeveyMainWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreeveyMainWindowController.h; sourceTree = "<group>"; };
 		F20DC2900886240400986105 /* CreeveyMainWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyMainWindowController.m; sourceTree = "<group>"; };
+		F219AB5A2199531C00960A5A /* Phoenix Slides.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Phoenix Slides.entitlements"; sourceTree = "<group>"; };
 		F21AD0BC0892AC440054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F21AD0BD0892AC4C0054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F21AD0C00892AC700054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = de; path = de.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
@@ -320,6 +321,7 @@
 		29B97314FDCFA39411CA2CEA /* creevey */ = {
 			isa = PBXGroup;
 			children = (
+				F219AB5A2199531C00960A5A /* Phoenix Slides.entitlements */,
 				F2D40FEF21989C3F00E0CFFD /* Media.xcassets */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
@@ -550,6 +552,17 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0730;
+				TargetAttributes = {
+					8D1107260486CEB800E47090 = {
+						DevelopmentTeam = 9436CS8LQX;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.HardenedRuntime = {
+								enabled = 1;
+							};
+						};
+					};
+				};
 			};
 			buildConfigurationList = F25EA24008672CB4003728C2 /* Build configuration list for PBXProject "creevey" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -775,13 +788,19 @@
 		F25EA23D08672CB4003728C2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Phoenix Slides.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 9436CS8LQX;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = creevey_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libjpeg";
 				PRODUCT_BUNDLE_IDENTIFIER = net.blyt.phoenixslides;
 				PRODUCT_NAME = "Phoenix Slides";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
@@ -794,6 +813,11 @@
 		F25EA23E08672CB4003728C2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Phoenix Slides.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 9436CS8LQX;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = creevey_Prefix.pch;
@@ -801,6 +825,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libjpeg";
 				PRODUCT_BUNDLE_IDENTIFIER = net.blyt.phoenixslides;
 				PRODUCT_NAME = "Phoenix Slides";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
