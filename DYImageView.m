@@ -15,10 +15,6 @@
 @end
 
 
-@interface DYImageView (Private)
-- (void)setZoomAndCenter:(BOOL)center;
-@end
-
 @implementation DYImageView
 
 // helper method to calculate appropriate zoom factor
@@ -163,7 +159,7 @@
 	[self setNeedsDisplay:YES];
 }
 
-- (void)setImage:(NSImage *)anImage zoomIn:(BOOL)zoomIn {
+- (void)setImage:(NSImage *)anImage zooming:(DYImageViewZoomMode)zoomMode {
 	if (anImage != image) {
 		if (!anImage) return; 
 		[image release];
@@ -174,15 +170,28 @@
 			[image setSize:NSMakeSize([rep pixelsWide], [rep pixelsHigh])];
 		} // ** cat on nsimage?
 	}
-	zoomF = [self zoomForFit];
-	if (zoomIn == 2) { // **
+	if (zoomMode == DYImageViewZoomModeManual) {
+		return;
+	}
+	if (zoomMode == DYImageViewZoomModeActualSize) {
 		zoomF = 1;
 	} else {
-		float n = 2*log2f(zoomF);
-		n = zoomIn ? floorf(n)+1 : ceilf(n)-1; // find closest half-power of 2
-		zoomF = (int)n%2 ? ldexpf(1.5,(n-1)/2) : ldexpf(1,n/2);
+		float f = [self zoomForFit];
+		float p = 2*log2f(f);
+		if (zoomMode == DYImageViewZoomModeZoomIn) {
+			int n = floorf(p); // find closest half-power of 2
+			do { // in case we're off slightly, keep increasing until we find the right value
+				n++;
+				zoomF = n%2 ? ldexpf(1.5,(n-1)/2) : ldexpf(1,n/2);
+			} while (zoomF <= f);
+		} else {
+			int n = ceilf(p);
+			do {
+				n--;
+				zoomF = n%2 ? ldexpf(1.5,(n-1)/2) : ldexpf(1,n/2);
+			} while (zoomF >= f);
+		}
 	}
-	//rotation = 0;
 	[self setZoomAndCenter:YES];
 }
 
@@ -330,13 +339,25 @@
 
 - (void)zoomIn {
 	if (zoomF == 0) {
-		[self setImage:image zoomIn:YES];
+		[self setImage:image zooming:DYImageViewZoomModeZoomIn];
 		return;
 	}
 	if (zoomF >= 512) {
 		NSBeep();
 		return;
 	}
+	float oldF = zoomF;
+	float p = 2*log2f(zoomF);
+	int n = (int)floorf(p);
+	float f;
+	do {
+		n++;
+		f = n%2 ? ldexpf(1.5,(n-1)/2) : ldexpf(1,n/2);
+	} while (f <= oldF);
+	[self setZoomF:f];
+}
+
+- (void)setZoomF:(float)f {
 	if (!image) return; 
 	NSSize imgSize = [image size];
 
@@ -349,9 +370,8 @@
 	}
 	// new size
 	NSSize s = destSize = bSize;
-	//NSLog(@"zoom %f, modf %f", zoomF, modff(log2f(zoomF),&tmp));
-	zoomF = fabsf(modff(log2f(zoomF),&tmp)) < 0.000001 ? 1.5*zoomF : zoomF/.75;
-		// not precise enough to give 0 // *= M_SQRT2
+	zoomF = f < 0.002 ? 0.002 : f > 512 ? 512 : f;
+
 	s.width  = (int)(s.width/zoomF); // always make dims integral; not nec origins
 	s.height = (int)(s.height/zoomF);
 	if (s.width > imgSize.width) {
@@ -391,24 +411,26 @@
 
 	sourceRect.size = s;
 	
-	//[self addCursorRect:[self bounds] cursor:[NSCursor openHandCursor]];
-	//[[NSCursor openHandCursor] setOnMouseEntered:YES];
-
 	[self setCursor];
 	[self setNeedsDisplay:YES];
 }
 
 - (void)zoomOut {
 	if (zoomF == 0) {
-		[self setImage:image zoomIn:NO];
+		[self setImage:image zooming:DYImageViewZoomModeZoomOut];
 		return;
 	}
 	if (zoomF < 0.002) {
 		NSBeep();
 		return;
 	}
-	float tmp;
-	zoomF = fabsf(modff(log2f(zoomF),&tmp)) < 0.000001 ? zoomF*.75 : zoomF/1.5;
+	float oldF = zoomF;
+	float p = 2*log2f(zoomF);
+	int n = (int)ceilf(p);
+	do {
+		n--;
+		zoomF = n%2 ? ldexpf(1.5,(n-1)/2) : ldexpf(1,n/2);
+	} while (zoomF >= oldF);
 	[self setZoomAndCenter:NO];
 }
 
@@ -515,7 +537,9 @@
 - (NSImage *)image {return image;}
 
 - (BOOL)dragMode {
-	return (zoomF != 0) && !NSEqualSizes(sourceRect.size,[image size]);
+	if (zoomF == 0) return NO;
+	NSSize imgSize = [image size];
+	return sourceRect.size.width < imgSize.width || sourceRect.size.height < imgSize.height;
 }
 - (void)setCursor {
 	// sets hand or arrow, depending

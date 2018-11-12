@@ -57,7 +57,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // when key is held down, max to cache before skipping over
 
 // this is the designated initializer
-- (id)initWithContentRect:(NSRect)r styleMask:(NSUInteger)m backing:(NSBackingStoreType)b defer:(BOOL)d {
+- (id)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
 	// full screen window, force it to be NSBorderlessWindowMask
 	if (self = [super initWithContentRect:r styleMask:NSBorderlessWindowMask backing:b defer:d]) {
 		filenames = [[DYRandomizableArray alloc] init];
@@ -452,7 +452,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 						 !(info->pixelSize.width < [imgView bounds].size.width &&
 						   info->pixelSize.height < [imgView bounds].size.height))) {
 			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(theFile)]
-					   zoomIn:2];
+					  zooming:DYImageViewZoomModeManual];
 			if (zoomInfo) [imgView setZoomInfo:zoomInfo];
 		}
 		[self updateInfoFldWithRotation:r];
@@ -785,7 +785,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				if (obj->image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) { // cached image smaller than orig
 					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
-							   zoomIn:c == '=' ? 2 : c == '+'];
+							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
 					if (c == '+') [imgView zoomIn];
 					else if (c == '-') [imgView zoomOut];
@@ -829,7 +829,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				if (obj->image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {  // cached image smaller than orig
 					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
-							   zoomIn:c == '=' ? 2 : c == '+'];
+							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
 					if (c == '+') [imgView zoomIn];
 					else if (c == '-') [imgView zoomOut];
@@ -899,6 +899,23 @@ scheduledTimerWithTimeInterval:timerIntvl
 	float y = [e deltaY];
 	int sign = y < 0 ? 1 : -1;
 	[self jump:sign*(floor(fabs(y)/7.0)+1)];
+}
+
+- (void)magnifyWithEvent:(NSEvent *)event
+{
+	if (currentIndex == [filenames count]) { return; }
+	NSString *filename = [filenames objectAtIndex:currentIndex];
+	DYImageInfo *info = [imgCache infoForKey:filename];
+	if (info) {
+		float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
+		if (info->image == [imgView image]
+			&& !NSEqualSizes(info->pixelSize,[info->image size])) { // cached image smaller than orig
+			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filename)]
+					  zooming:DYImageViewZoomModeManual];
+		}
+		[imgView setZoomF:zoom * (1.0 + [event magnification])];
+		[self updateInfoFld];
+	}
 }
 
 

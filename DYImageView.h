@@ -20,6 +20,13 @@
 }
 @end
 
+typedef NS_ENUM(char, DYImageViewZoomMode) {
+	DYImageViewZoomModeZoomOut,
+	DYImageViewZoomModeZoomIn,
+	DYImageViewZoomModeActualSize,
+	DYImageViewZoomModeManual,
+};
+
 @interface DYImageView : NSView {
 	NSImage *image;
 	NSTimer *gifTimer;
@@ -32,7 +39,7 @@
 
 - (NSImage *)image;
 - (void)setImage:(NSImage *)anImage;
-- (void)setImage:(NSImage *)anImage zoomIn:(BOOL)zoomIn;
+- (void)setImage:(NSImage *)anImage zooming:(DYImageViewZoomMode)zoomMode;
 - (int)rotation;
 - (int)addRotation:(int)r;
 - (void)setRotation:(int)n;
@@ -50,6 +57,7 @@
 - (void)zoomActualSize;
 - (void)zoomIn;
 - (void)zoomOut;
+- (void)setZoomF:(float)f;
 - (void)fakeDragX:(float)x y:(float)y;
 
 - (BOOL)zoomMode;
