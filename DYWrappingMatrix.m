@@ -609,16 +609,16 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				cellRect2.origin.x += offset;
 				cellRect2.origin.y -= offset;
 			}
-			[myCell drawWithFrame:cellRect2 inView:self];
+			[myCell drawInteriorWithFrame:cellRect2 inView:self];
 			[transform invert];
 			[transform concat];
 		} else {
-			[myCell drawWithFrame:cellRect inView:self];
+			[myCell drawInteriorWithFrame:cellRect inView:self];
 		}
 		
 		if (textHeight) {
 			[myTextCell setStringValue:[filenames[i] lastPathComponent]];
-			[myTextCell drawWithFrame:textCellRect inView:self];
+			[myTextCell drawInteriorWithFrame:textCellRect inView:self];
 		}
 	}
 	if (dragEntered) {
