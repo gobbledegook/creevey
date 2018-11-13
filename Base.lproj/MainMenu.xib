@@ -453,10 +453,9 @@ Gw
                                             </textFieldCell>
                                         </textField>
                                         <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="401">
-                                            <rect key="frame" x="20" y="215" width="233" height="38"/>
-                                            <autoresizingMask key="autoresizingMask"/>
+                                            <rect key="frame" x="20" y="215" width="360" height="38"/>
                                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="cellSize" width="233" height="18"/>
+                                            <size key="cellSize" width="360" height="18"/>
                                             <size key="intercellSpacing" width="4" height="2"/>
                                             <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="843">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
