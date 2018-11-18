@@ -267,7 +267,7 @@
 "735.title" = "512";
 
 /* Class = "NSTextFieldCell"; title = "啟動時："; ObjectID = "810"; */
-"815.title" = "啟動時：";
+"815.title" = "開啟新視窗時：";
 
 /* Class = "NSTextFieldCell"; placeholderString = "~/Pictures"; ObjectID = "811"; */
 "816.placeholderString" = "~/Pictures";

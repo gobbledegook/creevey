@@ -267,7 +267,7 @@
 "735.title" = "512";
 
 /* Class = "NSTextFieldCell"; title = "All'Avvio:"; ObjectID = "742"; */
-"815.title" = "All'Avvio:";
+"815.title" = "All’apertura di una nuova finestra:";
 
 /* Class = "NSTextFieldCell"; placeholderString = "~/Pictures"; ObjectID = "743"; */
 "816.placeholderString" = "~/Pictures";
