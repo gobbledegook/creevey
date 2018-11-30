@@ -205,7 +205,7 @@
 - (void)openFiles:(NSArray *)a withSlideshow:(BOOL)doSlides{
 	if (doSlides) {
 		startSlideshowWhenReady = YES;
-		CreeveyController *appDelegate = [NSApp delegate];
+		CreeveyController *appDelegate = (CreeveyController *)[NSApp delegate];
 		for (NSString *theFile in a) {
 			if ([appDelegate shouldShowFile:theFile])
 				[filesBeingOpened addObject:theFile];
@@ -221,7 +221,7 @@
 - (void)fileWasChanged:(NSString *)s {
 	if (![self pathIsVisible:s]) return;
 	// update thumb
-	DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
+	DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
 	NSString *theFile = ResolveAliasToPath(s);
 	NSImage *thumb = [thumbsCache imageForKey:theFile];
 	if (!thumb) { // ** dup
@@ -321,7 +321,7 @@
 	//NSTimeInterval imgloadstarttime = [NSDate timeIntervalSinceReferenceDate];
 	
 	if (thePath) {
-		CreeveyController *appDelegate = [NSApp delegate];
+		CreeveyController *appDelegate = (CreeveyController *)[NSApp delegate];
 		[imgMatrix removeAllImages];
 		[filenames removeAllObjects];
 		[displayedFilenames removeAllObjects];
@@ -375,7 +375,7 @@
 			[displayedFilenames addObjectsFromArray:filenames];
 		} else {
 			for (NSString *path in filenames) {
-				if ([[[NSApp delegate] cats][currCat-2] containsObject:path])
+				if ([[(CreeveyController *)[NSApp delegate] cats][currCat-2] containsObject:path])
 					[displayedFilenames addObject:path];
 			}
 		}
@@ -390,7 +390,7 @@
 		startSlideshowWhenReady = NO;
 		// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
 		if ([filesBeingOpened count]) {
-			[[NSApp delegate] performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
+			[(CreeveyController *)[NSApp delegate] performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
 											   withObject:[filesBeingOpened allObjects] // make a copy
 											waitUntilDone:NO];
 		}
@@ -522,7 +522,7 @@
 				return;
 			}
 			
-			NSMutableSet **cats = [[NSApp delegate] cats];
+			NSMutableSet **cats = [(CreeveyController *)[NSApp delegate] cats];
 			for (i=[a count]-1; i != -1; i--) { // TODO: this code is suspect
 				id fname = a[i];
 				if (c == 1) {
@@ -594,7 +594,7 @@
 }
 
 - (void)updateExifInfo:(id)sender {
-	NSTextView *exifTextView = [[NSApp delegate] exifTextView];
+	NSTextView *exifTextView = [(CreeveyController *)[NSApp delegate] exifTextView];
 	NSView *mainView = [[exifTextView window] contentView];
 	NSButton *moreBtn = [mainView viewWithTag:1];
 	NSImageView *thumbView = [mainView viewWithTag:2];
@@ -603,7 +603,7 @@
 	if ([[exifTextView window] isVisible]) {
 		if ([selectedIndexes count] == 1) {
 			attStr = Fileinfo2EXIFString([imgMatrix firstSelectedFilename],
-										 [[NSApp delegate] thumbsCache],
+										 [(CreeveyController *)[NSApp delegate] thumbsCache],
 										 [moreBtn state]);
 			// exif thumbnail
 			[thumbView setImage:
@@ -640,7 +640,7 @@
  - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)selectedIndexes {
 	 NSString *s, *path, *basePath;
 	 DYImageInfo *info;
-	 DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
+	 DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
 	 unsigned long long totalSize = 0;
 	 switch ([selectedIndexes count]) {
 		 case 0:
@@ -681,7 +681,7 @@
 }
 
 - (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i {
-	DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
+	DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
 	NSImage *thumb = [thumbsCache imageForKey:filename];
 	if (thumb) return thumb;
 	[imageCacheQueueLock lock];
@@ -694,7 +694,7 @@
 }
 
 - (void)thumbLoader:(id)arg {
-	DYImageCache *thumbsCache = [[NSApp delegate] thumbsCache];
+	DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
 	// only use exif thumbs if we're at the smallest thumbnail  setting
 	BOOL useExifThumbs = [[NSUserDefaults standardUserDefaults]
 						  integerForKey:@"DYWrappingMatrixMaxCellWidth"] == 160;

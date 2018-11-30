@@ -901,7 +901,7 @@ enum {
 							  state:(NSCoder *)state
 				  completionHandler:(void (^)(NSWindow *, NSError *))completionHandler
 {
-	CreeveyController* appDelegate = [NSApp delegate];
+	CreeveyController *appDelegate = (CreeveyController *)[NSApp delegate];
 	[appDelegate newWindow:nil];
 	CreeveyMainWindowController *wc = [appDelegate windowControllers].lastObject;
 	completionHandler([wc window], nil);

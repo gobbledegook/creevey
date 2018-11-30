@@ -325,11 +325,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation {
 	// ** hm, how to best talk to the right object?
 	if (operation == NSDragOperationDelete) {
-		if ([[NSApp delegate] respondsToSelector:@selector(moveToTrash:)])
-			[[NSApp delegate] moveToTrash:nil];		
+		if ([(CreeveyController *)[NSApp delegate] respondsToSelector:@selector(moveToTrash:)])
+			[(CreeveyController *)[NSApp delegate] moveToTrash:nil];
 	} else if (operation == NSDragOperationMove) {
-		if ([[NSApp delegate] respondsToSelector:@selector(moveElsewhere:)])
-			[[NSApp delegate] moveElsewhere:nil];		
+		if ([(CreeveyController *)[NSApp delegate] respondsToSelector:@selector(moveElsewhere:)])
+			[(CreeveyController *)[NSApp delegate] moveElsewhere:nil];
 	}
 }
 
