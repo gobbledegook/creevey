@@ -452,7 +452,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 						 !(info->pixelSize.width < [imgView bounds].size.width &&
 						   info->pixelSize.height < [imgView bounds].size.height))) {
 			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(theFile)]
-					  zooming:DYImageViewZoomModeManual];
+					  zooming:zoomInfo ? DYImageViewZoomModeManual : DYImageViewZoomModeActualSize];
 			if (zoomInfo) [imgView setZoomInfo:zoomInfo];
 		}
 		[self updateInfoFldWithRotation:r];
