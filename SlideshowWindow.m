@@ -248,6 +248,14 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[super resignMainWindow];
 }
 
+- (void)setFrame:(NSRect)frameRect display:(BOOL)flag
+{
+	// As of 10.15.1(?) when the menubar hides, the window will get moved up by the height of the menubar.
+	// This workaround prevents that.
+	frameRect.origin = screenRect.origin;
+	[super setFrame:frameRect display:flag];
+}
+
 #pragma mark timer stuff
 // setTimer
 // sets the interval between slide show advancing.
