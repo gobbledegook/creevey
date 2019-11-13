@@ -183,6 +183,30 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	return [s stringByDeletingBasePath:basePath];
 }
 
+- (void)configureScreen
+{
+	screenRect = [[NSScreen mainScreen] frame];
+	[oldScreen release];
+	oldScreen = [[NSScreen mainScreen] retain];
+	NSSize oldSize = [imgCache boundingSize];
+	if (oldSize.width < screenRect.size.width
+		|| oldSize.height < screenRect.size.height) {
+		[imgCache removeAllImages];
+	}
+	[imgCache setBoundingSize:screenRect.size]; // boundingSize for the cache is actually in pixels
+	[self setFrame:screenRect display:NO];
+	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
+	// ** OR set springiness on awake
+}
+
+- (void)resetScreen
+{
+	if ([[oldScreen deviceDescription][@"NSScreenNumber"] isNotEqualTo:[[self screen] deviceDescription][@"NSScreenNumber"]]) {
+		[self configureScreen];
+		[self displayImage];
+	}
+}
+
 - (void)endSlideshow {
 	[self saveZoomInfo];
 
@@ -204,20 +228,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 	
 	if (![self isVisible]) {
-		screenRect = [[NSScreen mainScreen] frame];
-		[imgCache setBoundingSize:screenRect.size]; // boundingSize for the cache is actually in pixels
-		// ** caching issues?
-		// if oldBoundingSize != or < newSize, delete cache
-		
-		// this may need to change as screen res changes
-		// we assume user won't change screen resolution during a show
-		// ** but they might!
-		
-		//[self setContentSize:screenRect.size];
-		//[self setFrameOrigin:screenRect.origin];
-		[self setFrame:screenRect display:NO];
-		[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
-		// ** OR set springiness on awake
+		[self configureScreen];
 	}
 	
 	if (randomMode) {

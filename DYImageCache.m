@@ -88,6 +88,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	boundingSize = aSize;
 }
 - (float)boundingWidth {	return boundingSize.width; }
+- (NSSize)boundingSize { return boundingSize; }
 
 - (void)setInterpolationType:(NSImageInterpolation)t {
 	interpolationType = t;

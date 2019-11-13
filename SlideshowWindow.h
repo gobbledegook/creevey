@@ -34,6 +34,7 @@
 	
 	NSString *basePath;
 	NSRect screenRect;
+	NSScreen *oldScreen;
 	volatile NSUInteger currentIndex;
 	NSUInteger lastIndex; // for outside access to last slide shown
 	
@@ -53,6 +54,7 @@
 - (void)startSlideshow;
 - (void)startSlideshowAtIndex:(NSUInteger)n;
 - (void)endSlideshow;
+- (void)resetScreen;
 
 - (void)setAutoadvanceTime:(NSTimeInterval)s; // 0 to turn off
 

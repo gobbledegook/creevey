@@ -48,6 +48,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 - (id)initWithCapacity:(NSUInteger)n;
 
 - (float)boundingWidth;
+- (NSSize)boundingSize;
 - (void)setBoundingSize:(NSSize)aSize;
 - (void)setInterpolationType:(NSImageInterpolation)t;
 

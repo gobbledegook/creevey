@@ -40,6 +40,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	IBOutlet NSButton *slideshowApplyBtn;
 	NSColor *slideshowBgColor;
 	id localeChangeObserver;
+	id screenChangeObserver;
 }
 
 @property (retain) IBOutlet DYJpegtranPanel *jpegController;

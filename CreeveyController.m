@@ -221,11 +221,18 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 		[u setDouble:[u doubleForKey:@"lastVersCheckTime"] forKey:@"lastVersCheckTime"];
 	}];
+	screenChangeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSApplicationDidChangeScreenParametersNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+		if ([slidesWindow isVisible]) {
+			[slidesWindow resetScreen];
+		}
+	}];
+
 	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES]; // show color picker w/ opacity/transparency
 }
 
 - (void)dealloc {
 	[[NSNotificationCenter defaultCenter] removeObserver:localeChangeObserver];
+	[[NSNotificationCenter defaultCenter] removeObserver:screenChangeObserver];
 	[thumbsCache release];
 	[filetypes release];
 	[disabledFiletypes release];
