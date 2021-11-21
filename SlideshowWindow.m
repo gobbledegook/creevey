@@ -259,12 +259,11 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[super resignMainWindow];
 }
 
-- (void)setFrame:(NSRect)frameRect display:(BOOL)flag
+- (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen
 {
 	// As of 10.15.1(?) when the menubar hides, the window will get moved up by the height of the menubar.
-	// This workaround prevents that.
-	frameRect.origin = screenRect.origin;
-	[super setFrame:frameRect display:flag];
+	// This should be the correct fix for that.
+	return [super constrainFrameRect:[[self screen] frame] toScreen:screen];
 }
 
 #pragma mark timer stuff
