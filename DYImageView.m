@@ -115,7 +115,7 @@
 	}
 	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
 	NSImageInterpolation oldInterp = [cg imageInterpolation];
-	[cg setImageInterpolation:zoom > 1 ? NSImageInterpolationNone : NSImageInterpolationLow];
+	[cg setImageInterpolation:zoom > 1 ? NSImageInterpolationNone : NSImageInterpolationHigh];
 	[image drawInRect:destinationRect fromRect:srcRect operation:NSCompositeSourceOver fraction:1.0];
 	[cg setImageInterpolation:oldInterp];
 	
