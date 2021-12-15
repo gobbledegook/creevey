@@ -479,7 +479,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	} else {
 		if (hideInfoFld) [infoFld setHidden:NO];
 		[infoFld setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Loading [%i/%i] %@...", @""),
-			currentIndex+1, [filenames count], [self currentShortFilename]]];
+			(unsigned int)currentIndex+1, (unsigned int)[filenames count], [self currentShortFilename]]];
 		[infoFld sizeToFit];
 		return;
 	}

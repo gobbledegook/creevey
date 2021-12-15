@@ -538,7 +538,7 @@
 			if (!currCat || (c && c != currCat)) {
 				[statusFld setStringValue:[NSString stringWithFormat:
 					NSLocalizedString(@"%u image(s) updated for Group %i", @""),
-					[a count], c]];
+					(unsigned int)[a count], c]];
 				[self performSelector:@selector(updateStatusFld)
 						   withObject:nil
 						   afterDelay:2];
@@ -611,7 +611,7 @@
 		} else {
 			id s = [selectedIndexes count]
 			? [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
-				[selectedIndexes count]]
+				(unsigned int)[selectedIndexes count]]
 			: NSLocalizedString(@"No images selected.", @"");
 			NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
 												[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
@@ -672,7 +672,7 @@
 			 }
 			 s = [NSString stringWithFormat:@"%@ (%@)",
 					 [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
-					 [selectedIndexes count]],
+					 (unsigned int)[selectedIndexes count]],
 				 FileSize2String(totalSize)];
 			 break;
 	 }

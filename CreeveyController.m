@@ -468,7 +468,7 @@ performFileOperation:NSWorkspaceRecycleOperation
 						NSLocalizedString(@"Cancel", @""),
 						(numFiles > 1 ? NSLocalizedString(@"Continue", @"") : nil),
 						nil,
-						[fullpath lastPathComponent], tag) == NSAlertDefaultReturn)
+						[fullpath lastPathComponent], (int)tag) == NSAlertDefaultReturn)
 		return 2;
 	return 0;
 }

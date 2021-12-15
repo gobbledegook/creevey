@@ -138,7 +138,7 @@
 	gifTimer = nil;
 	if (image != [t userInfo]) return; // stop if image is changed
 	
-	NSBitmapImageRep *rep = [[t userInfo] representations][0];
+	NSBitmapImageRep *rep = (NSBitmapImageRep *)[[t userInfo] representations][0];
 	NSNumber *frameCount = [rep valueForProperty:NSImageFrameCount];
 	int n = [[rep valueForProperty:NSImageCurrentFrame] intValue];
 	if (++n == [frameCount intValue]) n = 0;
@@ -164,7 +164,6 @@
 		if (!anImage) return; 
 		[image release];
 		image = [anImage retain];
-		[image setScalesWhenResized:YES];
 		NSImageRep *rep = [image representations][0]; // ** assume not corrupt
 		if ([rep isKindOfClass:[NSBitmapImageRep class]]) {
 			[image setSize:NSMakeSize([rep pixelsWide], [rep pixelsHigh])];
