@@ -33,7 +33,6 @@
 	NSMutableDictionary *rotations, *zooms, *flips;
 	
 	NSString *basePath;
-	NSRect screenRect;
 	NSScreen *oldScreen;
 	volatile NSUInteger currentIndex;
 	NSUInteger lastIndex; // for outside access to last slide shown

@@ -77,8 +77,9 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (void)awakeFromNib {
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
-	[self setContentView:imgView]; // image now fills entire window
+	[[self contentView] addSubview:imgView];
 	[imgView release]; // the prev line retained it
+	[imgView setFrame:[self contentView].frame];
 	
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld]; [infoFld release];
@@ -185,16 +186,26 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (void)configureScreen
 {
-	screenRect = [[NSScreen mainScreen] frame];
+	NSScreen *mainScreen = [NSScreen mainScreen];
+	NSRect screenRect = [mainScreen frame];
+	NSRect boundingRect = screenRect;
+	if (@available(macOS 12.0, *)) {
+		CGFloat inset = [mainScreen safeAreaInsets].top;
+		if (inset) {
+			boundingRect.size.height -= inset;
+		}
+	}
 	[oldScreen release];
-	oldScreen = [[NSScreen mainScreen] retain];
+	oldScreen = [mainScreen retain];
 	NSSize oldSize = [imgCache boundingSize];
-	if (oldSize.width < screenRect.size.width
-		|| oldSize.height < screenRect.size.height) {
+	if (oldSize.width < boundingRect.size.width
+		|| oldSize.height < boundingRect.size.height) {
 		[imgCache removeAllImages];
 	}
-	[imgCache setBoundingSize:screenRect.size]; // boundingSize for the cache is actually in pixels
+	[imgCache setBoundingSize:boundingRect.size]; // boundingSize for the cache is actually in pixels
 	[self setFrame:screenRect display:NO];
+	boundingRect.origin = [imgView frame].origin;
+	[imgView setFrame:boundingRect];
 	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
 	// ** OR set springiness on awake
 }
