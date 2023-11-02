@@ -29,7 +29,7 @@
 @interface DYWrappingMatrix : NSControl
 {
 	IBOutlet id delegate;
-
+	
 	NSColor *bgColor;
 	BOOL autoRotate;
 	NSImageCell *myCell;           // one cell, reused for efficiency
@@ -49,6 +49,7 @@
 	int numCols;
 	float cellHeight, columnSpacing, area_w, area_h;
 	unsigned int textHeight;
+	volatile NSRect savedVisibleRect;
 }
 
 + (NSSize)maxCellSize;

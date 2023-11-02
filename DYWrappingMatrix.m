@@ -193,6 +193,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 											 selector:@selector(resize:)
 												 name:NSViewFrameDidChangeNotification
 											   object:[self enclosingScrollView]];
+	[[[self enclosingScrollView] contentView] setPostsBoundsChangedNotifications:YES];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(scrolled:)
+												 name:NSViewBoundsDidChangeNotification
+											   object:[[self enclosingScrollView] contentView]];
 	bgColor = [[NSUnarchiver unarchiveObjectWithData:
 		[[NSUserDefaults standardUserDefaults] dataForKey:@"DYWrappingMatrixBgColor"]]
 		retain];
@@ -499,6 +504,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self setFrameSize:mySize];
 		[self invalidateIntrinsicContentSize];
 	}
+	savedVisibleRect = [self visibleRect];
+}
+
+- (void)scrolled:(id)obj {
+	savedVisibleRect = [self visibleRect];
 }
 
 - (NSSize)intrinsicContentSize
@@ -831,13 +841,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (i >= numCells) return NO;
 	// simple check to see if nothing's changed and the rect is visible
 	if ([filenames[i] isEqualToString:s]) {
-		NSRect visibleRect = [self visibleRect];
 		NSRect cellRect = [self cellnum2rect:i];
 		NSPoint p = cellRect.origin;
-		if (NSPointInRect(p, visibleRect)) return YES;
+		if (NSPointInRect(p, savedVisibleRect)) return YES;
 		p.x += cellRect.size.width - 1; // adjust these values by one point to make sure NSPointInRect handles the bottom right corner correctly
 		p.y += cellRect.size.height - 1;
-		return NSPointInRect(p, visibleRect);
+		return NSPointInRect(p, savedVisibleRect);
 	}
 	return NO;
 }

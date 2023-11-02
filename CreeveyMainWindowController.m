@@ -56,6 +56,7 @@
 		imageCacheQueue = [[NSMutableArray alloc] init];
 		secondaryImageCacheQueue = [[NSMutableArray alloc] init];
 		imageCacheQueueRunning = YES;
+		appDelegate = (CreeveyController *)[NSApp delegate];
 		[NSThread detachNewThreadSelector:@selector(thumbLoader:) toTarget:self withObject:nil];
 	}
     return self;
@@ -74,6 +75,8 @@
 	[imgMatrix setFrameSize:[[imgMatrix superview] frame].size];
 	[imgMatrix setCellWidth:[u floatForKey:@"thumbCellWidth"]];
 	[[self window] setRestorationClass:[CreeveyController class]];
+	
+	dirBrowserDelegate = [dirBrowser delegate];
 }
 
 - (void)window:(NSWindow *)window willEncodeRestorableState:(NSCoder *)state
@@ -138,7 +141,7 @@
 						   withObject:nil];
 }
 
-- (NSString *)path { return [[dirBrowser delegate] path]; }
+- (NSString *)path { return [dirBrowserDelegate path]; }
 
 // returns NO if doesn't exist, useful for applicationDidFinishLaunching
 - (BOOL)setPath:(NSString *)s {
@@ -148,10 +151,10 @@
 		return NO;
 	if (!isDir)
 		s = [s stringByDeletingLastPathComponent];
-	if (![[dirBrowser delegate] setPath:s]) {
+	if (![dirBrowserDelegate setPath:s]) {
 		//NSLog(@"retrying as invisible");
-		[[dirBrowser delegate] setShowInvisibles:showInvisibles = YES];
-		[[dirBrowser delegate] setPath:s];
+		[dirBrowserDelegate setShowInvisibles:showInvisibles = YES];
+		[dirBrowserDelegate setPath:s];
 	}
 	[dirBrowser sendAction];
 	[[self window] invalidateRestorableState];
@@ -171,7 +174,13 @@
 }
 
 - (BOOL)pathIsVisible:(NSString *)filename {
-	NSString *browserPath = [[dirBrowser delegate] path];
+	NSString *browserPath = [dirBrowserDelegate path];
+	if (recurseSubfolders) return [filename hasPrefix:browserPath];
+	return [[filename stringByDeletingLastPathComponent] isEqualToString:browserPath];
+}
+
+- (BOOL)pathIsVisibleThreaded:(NSString *)filename {
+	NSString *browserPath = dirBrowserDelegate.savedPath;
 	if (recurseSubfolders) return [filename hasPrefix:browserPath];
 	return [[filename stringByDeletingLastPathComponent] isEqualToString:browserPath];
 }
@@ -179,7 +188,7 @@
 - (void)updateDefaults {
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	if ([u integerForKey:@"startupOption"] == 0)
-		[u setObject:[[dirBrowser delegate] path] forKey:@"lastFolderPath"];
+		[u setObject:[dirBrowserDelegate path] forKey:@"lastFolderPath"];
 	[u setFloat:[imgMatrix cellWidth] forKey:@"thumbCellWidth"];
 	[[self window] saveFrameUsingName:@"MainWindowLoc"];
 }
@@ -205,7 +214,6 @@
 - (void)openFiles:(NSArray *)a withSlideshow:(BOOL)doSlides{
 	if (doSlides) {
 		startSlideshowWhenReady = YES;
-		CreeveyController *appDelegate = (CreeveyController *)[NSApp delegate];
 		for (NSString *theFile in a) {
 			if ([appDelegate shouldShowFile:theFile])
 				[filesBeingOpened addObject:theFile];
@@ -221,7 +229,7 @@
 - (void)fileWasChanged:(NSString *)s {
 	if (![self pathIsVisible:s]) return;
 	// update thumb
-	DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
+	DYImageCache *thumbsCache = [appDelegate thumbsCache];
 	NSString *theFile = ResolveAliasToPath(s);
 	NSImage *thumb = [thumbsCache imageForKey:theFile];
 	if (!thumb) { // ** dup
@@ -266,7 +274,7 @@
 		if (!filenamesDone || !loadingDone) //[imgMatrix numCells] < [filenames count])
 			[NSThread detachNewThreadSelector:@selector(loadImages:)
 									 toTarget:self
-								   withObject:filenamesDone ? [[dirBrowser delegate] path] : nil];
+								   withObject:filenamesDone ? [dirBrowserDelegate path] : nil];
 		// must check filenamesDone in case interrupted
 		[self updateStatusFld];
 		if ([imgMatrix numCells] == 0)
@@ -321,7 +329,6 @@
 	//NSTimeInterval imgloadstarttime = [NSDate timeIntervalSinceReferenceDate];
 	
 	if (thePath) {
-		CreeveyController *appDelegate = (CreeveyController *)[NSApp delegate];
 		[imgMatrix removeAllImages];
 		[filenames removeAllObjects];
 		[displayedFilenames removeAllObjects];
@@ -375,7 +382,7 @@
 			[displayedFilenames addObjectsFromArray:filenames];
 		} else {
 			for (NSString *path in filenames) {
-				if ([[(CreeveyController *)[NSApp delegate] cats][currCat-2] containsObject:path])
+				if ([[appDelegate cats][currCat-2] containsObject:path])
 					[displayedFilenames addObject:path];
 			}
 		}
@@ -390,7 +397,7 @@
 		startSlideshowWhenReady = NO;
 		// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
 		if ([filesBeingOpened count]) {
-			[(CreeveyController *)[NSApp delegate] performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
+			[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
 											   withObject:[filesBeingOpened allObjects] // make a copy
 											waitUntilDone:NO];
 		}
@@ -477,7 +484,7 @@
 	filenamesDone = NO;
 	currCat = 0;
 	[slidesBtn setEnabled:NO];
-	NSString *currentPath = [[dirBrowser delegate] path];
+	NSString *currentPath = [dirBrowserDelegate path];
 	[statusFld setStringValue:NSLocalizedString(@"Getting filenames...", @"")];
 	[[self window] setTitleWithRepresentedFilename:currentPath];
 	[NSThread detachNewThreadSelector:@selector(loadImages:)
@@ -522,7 +529,7 @@
 				return;
 			}
 			
-			NSMutableSet **cats = [(CreeveyController *)[NSApp delegate] cats];
+			NSMutableSet **cats = [appDelegate cats];
 			for (i=[a count]-1; i != -1; i--) { // TODO: this code is suspect
 				id fname = a[i];
 				if (c == 1) {
@@ -594,7 +601,7 @@
 }
 
 - (void)updateExifInfo:(id)sender {
-	NSTextView *exifTextView = [(CreeveyController *)[NSApp delegate] exifTextView];
+	NSTextView *exifTextView = [appDelegate exifTextView];
 	NSView *mainView = [[exifTextView window] contentView];
 	NSButton *moreBtn = [mainView viewWithTag:1];
 	NSImageView *thumbView = [mainView viewWithTag:2];
@@ -603,7 +610,7 @@
 	if ([[exifTextView window] isVisible]) {
 		if ([selectedIndexes count] == 1) {
 			attStr = Fileinfo2EXIFString([imgMatrix firstSelectedFilename],
-										 [(CreeveyController *)[NSApp delegate] thumbsCache],
+										 [appDelegate thumbsCache],
 										 [moreBtn state]);
 			// exif thumbnail
 			[thumbView setImage:
@@ -640,14 +647,14 @@
  - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)selectedIndexes {
 	 NSString *s, *path, *basePath;
 	 DYImageInfo *info;
-	 DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
+	 DYImageCache *thumbsCache = [appDelegate thumbsCache];
 	 unsigned long long totalSize = 0;
 	 switch ([selectedIndexes count]) {
 		 case 0:
 			 s = @"";
 			 break;
 		 case 1:
-			 basePath = [[[dirBrowser delegate] path] stringByAppendingString:@"/"];
+			 basePath = [[dirBrowserDelegate path] stringByAppendingString:@"/"];
 			 path = [imgMatrix firstSelectedFilename];
 			 info = [thumbsCache infoForKey:ResolveAliasToPath(path)];
 			 // must resolve alias here b/c that's what we do in loadImages
@@ -681,7 +688,7 @@
 }
 
 - (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i {
-	DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
+	DYImageCache *thumbsCache = [appDelegate thumbsCache];
 	NSImage *thumb = [thumbsCache imageForKey:filename];
 	if (thumb) return thumb;
 	[imageCacheQueueLock lock];
@@ -694,7 +701,7 @@
 }
 
 - (void)thumbLoader:(id)arg {
-	DYImageCache *thumbsCache = [(CreeveyController *)[NSApp delegate] thumbsCache];
+	DYImageCache *thumbsCache = [appDelegate thumbsCache];
 	// only use exif thumbs if we're at the smallest thumbnail  setting
 	BOOL useExifThumbs = [[NSUserDefaults standardUserDefaults]
 						  integerForKey:@"DYWrappingMatrixMaxCellWidth"] == 160;
@@ -729,7 +736,7 @@
 				d = imageCacheQueue[i];
 				origPath = d[@"filename"];
 				//NSLog(@"considering %@ for priority queue", [d objectForKey:@"index"]);
-				if (![self pathIsVisible:origPath]) {
+				if (![self pathIsVisibleThreaded:origPath]) {
 					if ([imageCacheQueue count] > 1) // leave at least one item so it won't crash later (the next while loop assumes there's at least one item)
 						//NSLog(@"skipping %@ because path has changed", [d objectForKey:@"index"]),
 						[imageCacheQueue removeObjectAtIndex:i];
@@ -789,7 +796,10 @@
 		NSSize cellSize = [DYWrappingMatrix maxCellSize];
 		NSImage *thumb = [thumbsCache imageForKey:theFile];
 		if (!thumb) {
-			[self setStatusString:[NSString stringWithFormat:loadingMsg, [imgMatrix numThumbsLoaded]+1, [imgMatrix numCells]]];
+			if ([imgMatrix numCells]) {
+				// don't set status string if there are no thumbs (could happen if a file is in the queue when the path changes)
+				[self setStatusString:[NSString stringWithFormat:loadingMsg, [imgMatrix numThumbsLoaded]+1, [imgMatrix numCells]]];
+			}
 			if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
 				DYImageInfo *result;
 				result = [[DYImageInfo alloc] initWithPath:theFile];

@@ -85,6 +85,11 @@
 	return [self browserpath2syspath:s];
 }
 
+-(NSString *)savedPath {
+	// safe to call from outside main thread
+	return currPath;
+}
+
 -(BOOL)setPath:(NSString *)aPath {
 	NSString *s;
 	NSRange r = [aPath rangeOfString:@"/Volumes"];

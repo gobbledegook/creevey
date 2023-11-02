@@ -9,7 +9,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class DYWrappingMatrix, DYCreeveyBrowser;
+@class DYWrappingMatrix, DYCreeveyBrowser, CreeveyController, DirBrowserDelegate;
 
 @interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate,NSSplitViewDelegate>
 {
@@ -20,6 +20,8 @@
 
 	NSMutableArray *filenames, *displayedFilenames;
 	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
+	CreeveyController *appDelegate;
+	DirBrowserDelegate *dirBrowserDelegate;
 	volatile char stopCaching;
 	
 	NSConditionLock *imageCacheQueueLock;

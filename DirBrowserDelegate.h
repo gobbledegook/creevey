@@ -26,4 +26,5 @@
 	UKKQueue *kq;
 	IBOutlet NSBrowser *_b;
 }
+@property (atomic, readonly) NSString *savedPath;
 @end
