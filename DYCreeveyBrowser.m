@@ -139,21 +139,26 @@
 
 #pragma mark dragging stuff
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
-    NSPasteboard *pboard;
-    NSDragOperation sourceDragMask;
-	
-    sourceDragMask = [sender draggingSourceOperationMask];
-	pboard = [sender draggingPasteboard];
-	//NSLog(@"%g", NSAppKitVersionNumber);
-    if ( [[pboard types] containsObject:NSFilenamesPboardType] ) {
-        if ((sourceDragMask & NSDragOperationGeneric)
-			&& floor(NSAppKitVersionNumber) <= 949) { // disable the grey box for 10.6, since dragging doesn't work in the nsbrowser anyway
+    if ([sender.draggingPasteboard.types containsObject:NSFilenamesPboardType]) {
+        if (sender.draggingSourceOperationMask & NSDragOperationGeneric) {
 			[greyview setFrame:[self bounds]];
 			[self addSubview:greyview];
             return NSDragOperationGeneric;
         }
     }
     return NSDragOperationNone;
+}
+
+- (BOOL)wantsPeriodicDraggingUpdates {
+	return NO;
+}
+
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender
+{
+	if (sender.draggingSourceOperationMask & NSDragOperationGeneric) {
+		return NSDragOperationGeneric;
+	}
+	return NSDragOperationNone;
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender {
