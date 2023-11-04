@@ -158,24 +158,27 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (id)init {
 	if (self = [super init]) {
 		filetypes = [[NSMutableSet alloc] init];
+		fileostypes = [[NSMutableSet alloc] init];
 		disabledFiletypes = [[NSMutableSet alloc] init];
-		//hfstypes = [[NSSet alloc] initWithObjects:@"'PICT'", @"'JPEG'", @"'GIFf'",
-		//NSLog(@"%@", [NSImage imageFileTypes]);
-		NSMutableSet *temp = [NSMutableSet set];
-		for (NSString *type in [NSImage imageUnfilteredFileTypes]) {
-			if ([type characterAtIndex:0] == '\'' && [type characterAtIndex:type.length-1] == '\'') {
-				[filetypes addObject:type];
-			} else {
-				NSString *lowercaseType = [type lowercaseString];
-				[filetypes addObject:lowercaseType];
-				[temp addObject:lowercaseType];
+		for (NSString *identifier in NSImage.imageUnfilteredTypes) {
+			// easier to use UTType class from UniformTypeIdentifiers, but that's only available in macOS 11
+			CFDictionaryRef t = UTTypeCopyDeclaration((CFStringRef)identifier);
+			if (t == NULL) continue;
+			CFDictionaryRef tags = CFDictionaryGetValue(t, kUTTypeTagSpecificationKey);
+			if (tags) {
+				CFArrayRef exts = CFDictionaryGetValue(tags, kUTTagClassFilenameExtension);
+				if (exts) {
+					[filetypes addObjectsFromArray:(NSArray *)exts];
+				}
+				CFArrayRef ostypes = CFDictionaryGetValue(tags, kUTTagClassOSType);
+				if (ostypes) for (NSString *s in (NSArray *)ostypes) {
+					// enclose HFS file types in single quotes, e.g. "'PICT'"
+					[fileostypes addObject:[NSString stringWithFormat:@"'%@'", s]];
+				}
 			}
+			CFRelease(t);
 		}
-		fileextensions = [[[temp allObjects] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)] retain];
-		fileextensions_enabled = [[NSMutableDictionary alloc] initWithCapacity:fileextensions.count];
-		for (NSString *extension in fileextensions) {
-			fileextensions_enabled[extension] = @YES;
-		}
+		fileextensions = [[filetypes.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)] retain];
 		creeveyWindows = [[NSMutableArray alloc] initWithCapacity:5];
 		
 		thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
@@ -202,11 +205,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[slidesWindow setRerandomizeOnLoop:[[NSUserDefaults standardUserDefaults] boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	[slidesWindow setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
 	[disabledFiletypes addObjectsFromArray:[[NSUserDefaults standardUserDefaults] stringArrayForKey:@"ignoredFileTypes"]];
-	for (NSString *type in fileextensions) {
-		if ([disabledFiletypes containsObject:type]) {
-			[filetypes removeObject:type];
-			fileextensions_enabled[type] = @NO;
-		}
+	for (NSString *type in disabledFiletypes) {
+		[filetypes removeObject:type];
 	}
 
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
@@ -235,9 +235,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[[NSNotificationCenter defaultCenter] removeObserver:screenChangeObserver];
 	[thumbsCache release];
 	[filetypes release];
+	[fileostypes release];
 	[disabledFiletypes release];
 	[fileextensions release];
-	[fileextensions_enabled release];
 	[creeveyWindows release];
     [_jpegController release];
     [_thumbnailContextMenu release];
@@ -318,10 +318,11 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 											  options:@{}
 												error:&error];
 	if (error)  {
-		NSRunAlertPanel(nil, //title
-						NSLocalizedString(@"Could not set the desktop because an error occurred. %@", @""),
-						NSLocalizedString(@"Cancel", @""), nil, nil,
-						[error localizedDescription]);
+		NSAlert *alert = [[NSAlert alloc] init];
+		alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"Could not set the desktop because an error occurred. %@", @""), error.localizedDescription];
+		[alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"")];
+		[alert runModal];
+		[alert release];
 	};
 }
 
@@ -337,7 +338,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	} else {
 		jinfo.thumbOnly = t > 30;
 		if (jinfo.thumbOnly) t -= 30;
-		jinfo.tinfo.transform = t < DYJPEGTRAN_XFORM_PROGRESSIVE ? t : JXFORM_NONE;
+		jinfo.tinfo.transform = t < DYJPEGTRAN_XFORM_PROGRESSIVE ? (JXFORM_CODE)t : JXFORM_NONE;
 		jinfo.tinfo.trim = FALSE;
 		jinfo.tinfo.force_grayscale = t == DYJPEGTRAN_XFORM_GRAYSCALE;
 		jinfo.cp = JCOPYOPT_ALL;
@@ -351,10 +352,14 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	// throw up warning if necessary
 	if (jinfo.tinfo.force_grayscale || jinfo.cp != JCOPYOPT_ALL || jinfo.tinfo.trim
 		|| jinfo.resetOrientation || jinfo.replaceThumb || jinfo.delThumb) {
-		if (NSRunCriticalAlertPanel(NSLocalizedString(@"Warning", @""),
-								NSLocalizedString(@"This operation cannot be undone! Are you sure you want to continue?", @""),
-								NSLocalizedString(@"Continue", @""), NSLocalizedString(@"Cancel", @""), nil)
-			!= NSAlertDefaultReturn)
+		NSAlert *alert = [[NSAlert alloc] init];
+		alert.messageText = NSLocalizedString(@"Warning", @"");
+		alert.informativeText = NSLocalizedString(@"This operation cannot be undone! Are you sure you want to continue?", @"");
+		[alert addButtonWithTitle:NSLocalizedString(@"Continue", @"")];
+		[alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"")];
+		NSModalResponse response = [alert runModal];
+		[alert release];
+		if (response != NSAlertFirstButtonReturn)
 			return; // user cancelled
 		jinfo.preserveModificationDate = jinfo.resetOrientation ? [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"]
 																: NO;
@@ -438,7 +443,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			[jpegProgressBar setIndeterminate:NO];
 		}
 		[jpegProgressBar incrementBy:1];
-		if ([NSApp runModalSession:session] != NSRunContinuesResponse) break;
+		if ([NSApp runModalSession:session] != NSModalResponseContinue) break;
 	}
 	[frontWindow updateExifInfo];
 
@@ -454,21 +459,19 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
 - (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles {
-	NSInteger tag;
-	if ([[NSWorkspace sharedWorkspace]
-performFileOperation:NSWorkspaceRecycleOperation
-			  source:[fullpath stringByDeletingLastPathComponent]
-		 destination:@""
-			   files:@[[fullpath lastPathComponent]]
-				 tag:&tag]) {
+	NSURL *url = [NSURL fileURLWithPath:fullpath];
+	NSError * _Nullable error = nil;
+	[[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error];
+	if (!error)
 		return 1;
-	}
-	if (NSRunAlertPanel(nil, //title
-						NSLocalizedString(@"The file %@ could not be moved to the trash because an error of %i occurred.", @""),
-						NSLocalizedString(@"Cancel", @""),
-						(numFiles > 1 ? NSLocalizedString(@"Continue", @"") : nil),
-						nil,
-						[fullpath lastPathComponent], (int)tag) == NSAlertDefaultReturn)
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file %@ could not be moved to the trash because an error of %i occurred.", @""), fullpath.lastPathComponent, (int)error.code];
+	[alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"")];
+	if (numFiles > 1)
+		[alert addButtonWithTitle:NSLocalizedString(@"Continue", @"")];
+	NSModalResponse response = [alert runModal];
+	[alert release];
+	if (response == NSAlertFirstButtonReturn)
 		return 2;
 	return 0;
 }
@@ -752,7 +755,7 @@ enum {
     [op setCanChooseFiles:NO];
 	[op setDirectoryURL:[NSURL fileURLWithPath:[u stringForKey:@"picturesFolderPath"] isDirectory:YES]];
 	[op beginSheetModalForWindow:prefsWin completionHandler:^(NSInteger result) {
-		if (result == NSFileHandlingPanelOKButton) {
+		if (result == NSModalResponseOK) {
 			[u setObject:[[op URLs][0] path] forKey:@"picturesFolderPath"];
 			[u setInteger:1 forKey:@"startupOption"];
 		}
@@ -1010,7 +1013,8 @@ enum {
 
 - (BOOL)shouldShowFile:(NSString *)path {
 	NSString *pathExtension = [path pathExtension];
-	return [filetypes containsObject:pathExtension] || [filetypes containsObject:[pathExtension lowercaseString]] || ([filetypes containsObject:NSHFSTypeOfFile(path)] && ![disabledFiletypes containsObject:pathExtension]);
+	if (pathExtension.length == 0) return [fileostypes containsObject:NSHFSTypeOfFile(path)];
+	return [filetypes containsObject:pathExtension] || [filetypes containsObject:[pathExtension lowercaseString]] || ([fileostypes containsObject:NSHFSTypeOfFile(path)] && ![disabledFiletypes containsObject:pathExtension]);
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
@@ -1018,13 +1022,12 @@ enum {
 }
 
 - (id)tableView:(NSTableView *)tableView objectValueForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
-	if ([[tableColumn identifier] isEqualToString:@"enabled"]) return fileextensions_enabled[fileextensions[row]];
+	if ([[tableColumn identifier] isEqualToString:@"enabled"]) return @([filetypes containsObject:fileextensions[row]]);
 	return fileextensions[row];
 }
 
 - (void)tableView:(NSTableView *)tableView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
 	NSString *type = fileextensions[row];
-	fileextensions_enabled[type] = object;
 	if ([object boolValue]) {
 		[filetypes addObject:type];
 		[disabledFiletypes removeObject:type];

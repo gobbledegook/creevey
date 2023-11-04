@@ -71,7 +71,7 @@
 	
 	[self drawAtPoint:NSMakePoint(x0, y0)
 			 fromRect:NSZeroRect
-			operation:NSCompositeSourceOver  
+			operation:NSCompositingOperationSourceOver  
 			 fraction:1.0];
 	[rotImg unlockFocus];
 	return rotImg;
@@ -141,7 +141,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:@[]];
 }
 + (NSSize)maxCellSize {
-	int w = [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];
+	NSInteger w = [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];
 	return NSMakeSize(w, w*3/4);
 }
 
@@ -170,7 +170,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if ((self = [super initWithFrame:frameRect]) != nil) {
 		myCell = [[NSImageCell alloc] initImageCell:nil];
 		myTextCell = [[NSCell alloc] init];
-		[myTextCell setAlignment:NSCenterTextAlignment];
+		[myTextCell setAlignment:NSTextAlignmentCenter];
 		images = [[NSMutableArray alloc] initWithCapacity:100];
 		filenames = [[NSMutableArray alloc] initWithCapacity:100];
 		selectedIndexes = [[NSMutableIndexSet alloc] init];
@@ -276,7 +276,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return n; // n might be > numCells-1
 }
 - (NSRect)cellnum2rect:(NSUInteger)n {
-	int row, col;
+	NSUInteger row, col;
 	row = n/numCols;
 	col = n%numCols;
 	return NSMakeRect(area_w*col,area_h*row,area_w, area_h);
@@ -371,8 +371,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSRange draggedRange;
 	NSMutableIndexSet *oldSelection = [selectedIndexes mutableCopy];
 	NSMutableIndexSet *lastIterationSelection = [oldSelection mutableCopy];
-	BOOL shiftKeyDown = ([theEvent modifierFlags] & NSShiftKeyMask) != 0;
-	BOOL cmdKeyDown = ([theEvent modifierFlags] & NSCommandKeyMask) != 0;
+	BOOL shiftKeyDown = ([theEvent modifierFlags] & NSEventModifierFlagShift) != 0;
+	BOOL cmdKeyDown = ([theEvent modifierFlags] & NSEventModifierFlagCommand) != 0;
 
 	NSPoint mouseLoc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	NSPoint mouseDownLoc = mouseLoc;
@@ -396,12 +396,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     while (1) {
 		mouseLoc = [theEvent locationInWindow];
         switch ([theEvent type]) {
-			case NSPeriodic: // NOT nsperiodicmask, duh
+			case NSEventTypePeriodic:
 				mouseLoc = [[self window] mouseLocationOutsideOfEventStream];
-			case NSLeftMouseDown: // for the first iteration only
-            case NSLeftMouseDragged:
+			case NSEventTypeLeftMouseDown: // for the first iteration only
+			case NSEventTypeLeftMouseDragged:
 				mouseLoc = [self convertPoint:mouseLoc fromView:nil];
-				if (doDrag && [theEvent type] == NSLeftMouseDragged) {
+				if (doDrag && [theEvent type] == NSEventTypeLeftMouseDragged) {
 					doDrag = 2;
 					keepOn = NO;
 					break;
@@ -440,7 +440,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				[lastIterationSelection removeAllIndexes];
 				[lastIterationSelection addIndexes:selectedIndexes];
 				break;
-            case NSLeftMouseUp:
+			case NSEventTypeLeftMouseUp:
 				if ([theEvent clickCount] == 2
 					&& mouseDownCellNum < numCells
 					&& !shiftKeyDown && !cmdKeyDown)
@@ -452,12 +452,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
         }
 		if (!keepOn) break;
         theEvent = [[self window] nextEventMatchingMask:
-			NSLeftMouseUpMask | NSLeftMouseDraggedMask | NSPeriodicMask];
+					NSEventMaskLeftMouseUp | NSEventMaskLeftMouseDragged | NSEventMaskPeriodic];
     }
 	[NSEvent stopPeriodicEvents];
 	if (doDrag == 2) {
 		//pboard
-		NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
+		NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSPasteboardNameDrag];
 		[pboard declareTypes:@[NSFilenamesPboardType] owner:nil];
 		[pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
 						forType:NSFilenamesPboardType];
@@ -481,7 +481,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[transparentImg lockFocus];
 		[dragImg drawInRect:NSMakeRect(0,0,imgSize.width,imgSize.height)
 				   fromRect:NSMakeRect(0,0,[dragImg size].width,[dragImg size].height)
-				  operation:NSCompositeCopy fraction:0.3];
+				  operation:NSCompositingOperationCopy fraction:0.3];
 		[transparentImg unlockFocus];
 		[self dragImage:transparentImg
 					 at:imgLoc

@@ -153,7 +153,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 				[orig setSize:newSize];
 				result = [[NSImage alloc] initWithSize:newSize];
 				[result lockFocus];
-				[orig drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositeSourceOver fraction:1.0];
+				[orig drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositingOperationSourceOver fraction:1.0];
 				[result unlockFocus];
 			}
 			//oldSize = [oldRep size];

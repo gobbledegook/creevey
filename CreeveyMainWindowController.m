@@ -431,7 +431,7 @@
 		currentFilesDeletable = [fm isDeletableFileAtPath:displayedFilenames[0]];
 		
 		NSUInteger numFiles = [displayedFilenames count];
-		unsigned int maxThumbs = [[NSUserDefaults standardUserDefaults]
+		NSUInteger maxThumbs = [[NSUserDefaults standardUserDefaults]
 								  integerForKey:@"maxThumbsToLoad"];
 		
 		[NSThread setThreadPriority:0.2];
@@ -520,7 +520,7 @@
 	unichar c = [[e characters] characterAtIndex:0];
 	if (filenamesDone && c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
 		c = c - NSF1FunctionKey + 1;
-		if (([e modifierFlags] & NSCommandKeyMask) != 0) {
+		if (([e modifierFlags] & NSEventModifierFlagCommand) != 0) {
 			NSUInteger i;
 			short j;
 			NSArray *a = [imgMatrix selectedFilenames];

@@ -34,15 +34,15 @@
 	[self.optimizeBtn setState:NSOffState];
 	
 	// run dialog
-	int n = [NSApp runModalForWindow:[self.transformMenu window]];
+	NSModalResponse n = [NSApp runModalForWindow:[self.transformMenu window]];
 	[[self.transformMenu window] orderOut:nil];
 	if (n != 100) return NO;
 	
 	// fill in the blanks
-	i->tinfo.transform = [[self.transformMenu selectedItem] tag];
+	i->tinfo.transform = (JXFORM_CODE)[[self.transformMenu selectedItem] tag];
 	i->tinfo.trim = [self.trimBtn isEnabled] && [self.trimBtn state];
-	i->tinfo.force_grayscale = [self.grayscaleBtn state];
-	i->cp = [[self.markersMenu selectedItem] tag];
+	i->tinfo.force_grayscale = (boolean)[self.grayscaleBtn state];
+	i->cp = (JCOPY_OPTION)[[self.markersMenu selectedItem] tag];
 	i->progressive = [self.progressiveBtn state];
 	i->optimize = [self.optimizeBtn state];
 	i->thumbOnly = 0;

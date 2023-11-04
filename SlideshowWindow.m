@@ -23,7 +23,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 @interface SlideshowWindow (Private)
 
 //- (void)displayImage;
-- (void)jump:(int)n;
+- (void)jump:(NSInteger)n;
 - (void)jumpTo:(NSUInteger)n;
 - (void)setTimer:(NSTimeInterval)s;
 - (void)runTimer;
@@ -59,7 +59,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // this is the designated initializer
 - (id)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
 	// full screen window, force it to be NSBorderlessWindowMask
-	if (self = [super initWithContentRect:r styleMask:NSBorderlessWindowMask backing:b defer:d]) {
+	if (self = [super initWithContentRect:r styleMask:NSWindowStyleMaskBorderless backing:b defer:d]) {
 		filenames = [[DYRandomizableArray alloc] init];
 		rotations = [[NSMutableDictionary alloc] init];
 		flips = [[NSMutableDictionary alloc] init];
@@ -106,7 +106,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[sv setDrawsBackground:NO];
 	[sv setHasVerticalScroller:YES];
 	[sv setVerticalScroller:[[[NSScroller alloc] init] autorelease]];
-	[[sv verticalScroller] setControlSize:NSSmallControlSize];
+	[[sv verticalScroller] setControlSize:NSControlSizeSmall];
 	[sv setAutohidesScrollers:YES];
 	//[exifFld setEditable:NO];
 	[exifFld setDrawsBackground:NO];
@@ -532,7 +532,7 @@ scheduledTimerWithTimeInterval:timerIntvl
     [theAnim release];
 }
 
-- (void)jump:(int)n { // go forward n pics (negative numbers go backwards)
+- (void)jump:(NSInteger)n { // go forward n pics (negative numbers go backwards)
 	if (n < 0)
 		[self setTimer:0]; // going backwards stops auto-advance
 	else // could get rid of 'else' b/c going backwards makes timerPaused irrelevant
@@ -549,7 +549,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSBeep();
 		}
 	} else {
-		if (n < 0 && abs(n) > currentIndex) {
+		if (n < 0 && labs(n) > currentIndex) {
 			n = -currentIndex;
 		} else if (n > 0 && n >= [filenames count] - currentIndex) {
 			n = [filenames count] - 1 - currentIndex;
@@ -675,7 +675,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if ([[e characters] length] == 0) return; // avoid exception on deadkeys
 	unichar c = [[e characters] characterAtIndex:0];
 	if (c >= '1' && c <= '9') {
-		if (([e modifierFlags] & NSNumericPadKeyMask) != 0 && [imgView zoomMode]) {
+		if (([e modifierFlags] & NSEventModifierFlagNumericPad) != 0 && [imgView zoomMode]) {
 			if (c == '5') {
 				NSBeep();
 			} else {
@@ -700,14 +700,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
 		if (currentIndex == [filenames count]) { NSBeep(); return; }
 		[self assignCat:c - NSF1FunctionKey + 1
-				 toggle:([e modifierFlags] & NSCommandKeyMask) != 0];
+				 toggle:([e modifierFlags] & NSEventModifierFlagCommand) != 0];
 		//NSLog(@"got cat %i", c - NSF1FunctionKey + 1);
 		return;
 	}
 	if ([e isARepeat] && keyIsRepeating < MAX_REPEATING_CACHED) {
 		keyIsRepeating++;
 	}
-	if (c == ' ' && (([e modifierFlags] & NSShiftKeyMask) != 0)) {
+	if (c == ' ' && (([e modifierFlags] & NSEventModifierFlagShift) != 0)) {
 		c = NSLeftArrowFunctionKey;
 	}
 	DYImageInfo *obj;
@@ -728,11 +728,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case NSRightArrowFunctionKey:
 		case NSDownArrowFunctionKey:
 			// hold down option to go to the next non-randomized slide
-			[self jump:1 ordered:([e modifierFlags] & NSAlternateKeyMask) != 0];
+			[self jump:1 ordered:([e modifierFlags] & NSEventModifierFlagOption) != 0];
 			break;
 		case NSLeftArrowFunctionKey:
 		case NSUpArrowFunctionKey:
-			[self jump:-1 ordered:([e modifierFlags] & NSAlternateKeyMask) != 0];
+			[self jump:-1 ordered:([e modifierFlags] & NSEventModifierFlagOption) != 0];
 			break;
 		case NSHomeFunctionKey:
 			[self jump:-currentIndex]; // <0 stops auto-advance
@@ -847,7 +847,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	DYImageInfo *obj;
 	switch (c) {
 		case '=':
-			if (!([e modifierFlags] & NSNumericPadKeyMask))
+			if (!([e modifierFlags] & NSEventModifierFlagNumericPad))
 				c = '+';
 			// intentional fall-through
 		case '+':
@@ -908,15 +908,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSEventType t = [e type];
 
 	// override to send right clicks to self
-	if (t == NSRightMouseDown)	{
+	if (t == NSEventTypeRightMouseDown)	{
 		[self rightMouseDown:e];
 		return;
 	}
 	// but trapping help key here doesn't work
 
-	if (t == NSLeftMouseDragged) {
+	if (t == NSEventTypeLeftMouseDragged) {
 		mouseDragged = YES;
-	} else if (t == NSLeftMouseDown) {
+	} else if (t == NSEventTypeLeftMouseDown) {
 		mouseDragged = NO; // reset this on mouseDown, not mouseUp (too early)
 		// or wait til after call to super
 	}

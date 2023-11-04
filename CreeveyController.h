@@ -26,8 +26,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 	NSMutableSet *filetypes;
 	NSMutableSet *disabledFiletypes;
+	NSMutableSet *fileostypes;
 	NSArray *fileextensions;
-	NSMutableDictionary *fileextensions_enabled;
 	NSMutableArray *creeveyWindows;
 	CreeveyMainWindowController *frontWindow;
 	
@@ -62,6 +62,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)sortThumbnails:(id)sender;
 - (IBAction)doShowFilenames:(id)sender;
 - (IBAction)doAutoRotateDisplayedImage:(id)sender;
+
+- (void)slideshowFromAppOpen:(NSArray *)files;
 
 // prefs stuff
 - (IBAction)openPrefWin:(id)sender;

@@ -13,41 +13,48 @@
 
 #import "DYCarbonGoodies.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 NSString *ResolveAliasToPath(NSString *path) {
 	NSString *resolvedPath = nil;
 	CFURLRef url = CFURLCreateWithFileSystemPath(NULL /*allocator*/, (CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
 	if (url == NULL) return path;
-	FSRef fsRef;
-	if (CFURLGetFSRef(url, &fsRef)) {
-		Boolean targetIsFolder, wasAliased;
-		if (FSResolveAliasFileWithMountFlags(&fsRef, true /*resolveAliasChains*/, &targetIsFolder, &wasAliased, kResolveAliasFileNoUI) == noErr
-			&& wasAliased) {
-			CFURLRef resolvedUrl = CFURLCreateFromFSRef(NULL, &fsRef);
-			if (resolvedUrl != NULL) {
+	// unlike FSResolveAliasFile, CFURLCreateBookMarkDataFromFile and its NSURL counterpart do not check
+	// the kIsAlias flag. Apparently not all aliases/bookmarks have this bit set. But for our
+	// purposes we can check it and skip the extra steps if the flag is set.
+	Boolean isAlias = NO;
+	CFBooleanRef b;
+	if (CFURLCopyResourcePropertyForKey(url, kCFURLIsAliasFileKey, &b, NULL)) {
+		isAlias = CFBooleanGetValue(b);
+		CFRelease(b);
+	}
+	if (isAlias) {
+		CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, url, NULL);
+		if (dataRef) {
+			CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
+			if (resolvedUrl) {
 				CFStringRef thePath = CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle);
 				resolvedPath = [(NSString*)thePath copy];
 				CFRelease(thePath);
 				CFRelease(resolvedUrl);
 			}
+			CFRelease(dataRef);
 		}
 	}
 	CFRelease(url);
 	return resolvedPath ?: path;
 }
-#pragma GCC diagnostic pop
 
 BOOL FileIsInvisible(NSString *path) {
 	CFURLRef url = CFURLCreateWithFileSystemPath(NULL /*allocator*/, (CFStringRef)path,
 												 kCFURLPOSIXPathStyle, NO /*isDirectory*/);
 	if (url == NULL) return NO;
-	LSItemInfoRecord info;
-	OSStatus err = LSCopyItemInfoForURL (url, kLSRequestBasicFlagsOnly, &info);
+	Boolean result = NO;
+	CFBooleanRef isInvisible;
+	if (CFURLCopyResourcePropertyForKey(url, kCFURLIsHiddenKey, &isInvisible, NULL)) {
+		result = CFBooleanGetValue(isInvisible);
+		CFRelease(isInvisible);
+	}
 	CFRelease(url);
-	if (err) return NO;
-	
-	return (info.flags & kLSItemInfoIsInvisible) != 0;
+	return result;
 }
 
 BOOL FileIsJPEG(NSString *s) {
