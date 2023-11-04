@@ -72,8 +72,8 @@
 - (NSString *)firstSelectedFilename;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
-- (void)addSelectedIndex:(NSUInteger)i;
 - (void)selectIndex:(NSUInteger)i;
+- (void)scrollToFirstSelected:(NSIndexSet *)x;
 
 - (NSUInteger)numCells;
 - (NSSize)cellSize;

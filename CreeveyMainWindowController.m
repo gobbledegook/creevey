@@ -215,7 +215,7 @@
 	if (doSlides) {
 		startSlideshowWhenReady = YES;
 		for (NSString *theFile in a) {
-			if ([appDelegate shouldShowFile:theFile])
+			if ([appDelegate shouldShowFile:ResolveAliasToPath(theFile)])
 				[filesBeingOpened addObject:theFile];
 		}
 	} else {
@@ -423,6 +423,7 @@
 	[pool release];
 	pool = [[NSAutoreleasePool alloc] init];
 		
+	NSMutableIndexSet *selectedIndexes = [NSMutableIndexSet indexSet];
 	if ([displayedFilenames count] > 0) {
 		loadingDone = NO;
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -446,7 +447,7 @@
 			NSString *origPath = displayedFilenames[i];
 			[imgMatrix addImage:nil withFilename:origPath];
 			if ([filesBeingOpened containsObject:origPath])
-				[imgMatrix addSelectedIndex:i];
+				[selectedIndexes addIndex:i];
 
 			// now, to simulate the original behavior, add a certain number of
 			// images to the queue automatically
@@ -470,7 +471,13 @@
 		[self performSelectorOnMainThread:@selector(updateStatusFld)
 							   withObject:nil
 							waitUntilDone:NO];
-	if (loadingDone) [filesBeingOpened removeAllObjects];
+	if (loadingDone && filesBeingOpened.count) {
+		[filesBeingOpened removeAllObjects];
+		if (myThreadTime == lastThreadTime && selectedIndexes.count)
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[imgMatrix scrollToFirstSelected:selectedIndexes];
+			});
+	}
 	[loadImageLock unlock];
 	[pool release];
 	[thePath release];

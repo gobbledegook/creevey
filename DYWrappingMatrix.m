@@ -23,7 +23,6 @@
 #define DEFAULT_TEXTHEIGHT 12
 
 /* there are some methods called in a separate thread:
-   addSelectedIndex
    removeAllImages
    addImage:withFilename:
    imageWithFileInfoNeedsDisplay:
@@ -646,6 +645,22 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (![self mouse:r.origin inRect:[self visibleRect]])
 		[self scrollRectToVisible:r];
 }
+- (void)scrollToFirstSelected:(NSIndexSet *)x {
+	[selectedIndexes addIndexes:x];
+	[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger i, BOOL * _Nonnull stop) {
+		[self selectionNeedsDisplay:i];
+	}];
+	NSRect r = [self cellnum2rect:x.firstIndex];
+	if (selectedIndexes.count > 1) {
+		// scroll such that the first selected thumb is a little bit below the top of the view
+		CGFloat scrollHeight = self.visibleRect.size.height - 30;
+		r.size.height = r.size.height > scrollHeight ? r.size.height : scrollHeight;
+	}
+	r.size.height = (int)r.size.height;
+	[self scrollRectToVisible:r];
+	[self updateStatusString];
+}
+
 - (void)keyDown:(NSEvent *)e {
 	if ([[e characters] length] == 0) return;
 	unichar c = [[e characters] characterAtIndex:0];
@@ -796,17 +811,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (NSUInteger)numCells {
 	return numCells;
-}
-
-- (void)addSelectedIndex:(NSUInteger)i {
-	[selectedIndexes addIndex:i];
-	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
-	[NSObject cancelPreviousPerformRequestsWithTarget:self
-											 selector:@selector(updateStatusString)
-											   object:nil];
-	[self performSelectorOnMainThread:@selector(updateStatusString)
-						   withObject:nil waitUntilDone:NO];
-	//[self updateStatusString];
 }
 
 // call this when an image changes (filename is already set)
