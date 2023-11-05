@@ -28,6 +28,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSMutableSet *disabledFiletypes;
 	NSMutableSet *fileostypes;
 	NSArray *fileextensions;
+	NSMutableDictionary *filetypeDescriptions;
 	NSMutableArray *creeveyWindows;
 	CreeveyMainWindowController *frontWindow;
 	

@@ -160,15 +160,21 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		filetypes = [[NSMutableSet alloc] init];
 		fileostypes = [[NSMutableSet alloc] init];
 		disabledFiletypes = [[NSMutableSet alloc] init];
+		filetypeDescriptions = [[NSMutableDictionary alloc] init];
 		for (NSString *identifier in NSImage.imageUnfilteredTypes) {
 			// easier to use UTType class from UniformTypeIdentifiers, but that's only available in macOS 11
 			CFDictionaryRef t = UTTypeCopyDeclaration((CFStringRef)identifier);
 			if (t == NULL) continue;
 			CFDictionaryRef tags = CFDictionaryGetValue(t, kUTTypeTagSpecificationKey);
 			if (tags) {
-				CFArrayRef exts = CFDictionaryGetValue(tags, kUTTagClassFilenameExtension);
+				NSArray *exts = CFDictionaryGetValue(tags, kUTTagClassFilenameExtension);
 				if (exts) {
-					[filetypes addObjectsFromArray:(NSArray *)exts];
+					[filetypes addObjectsFromArray:exts];
+					NSString *description = CFDictionaryGetValue(t, kUTTypeDescriptionKey);
+					if (description) for (NSString *ext in exts) {
+						NSString *s = filetypeDescriptions[ext];
+						filetypeDescriptions[ext] = s ? [s stringByAppendingFormat:@" / %@", description] : description;
+					}
 				}
 				CFArrayRef ostypes = CFDictionaryGetValue(tags, kUTTagClassOSType);
 				if (ostypes) for (NSString *s in (NSArray *)ostypes) {
@@ -238,6 +244,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[fileostypes release];
 	[disabledFiletypes release];
 	[fileextensions release];
+	[filetypeDescriptions release];
 	[creeveyWindows release];
     [_jpegController release];
     [_thumbnailContextMenu release];
@@ -1023,6 +1030,7 @@ enum {
 
 - (id)tableView:(NSTableView *)tableView objectValueForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
 	if ([[tableColumn identifier] isEqualToString:@"enabled"]) return @([filetypes containsObject:fileextensions[row]]);
+	if ([[tableColumn identifier] isEqualToString:@"description"]) return filetypeDescriptions[fileextensions[row]];
 	return fileextensions[row];
 }
 
