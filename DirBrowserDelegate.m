@@ -7,9 +7,12 @@
 
 #import "DirBrowserDelegate.h"
 #import "DYCarbonGoodies.h"
-#import "UKKQueue.h"
+#import "VDKQueue.h"
 
 #define BROWSER_ROOT @"/Volumes"
+
+@interface DirBrowserDelegate () <VDKQueueDelegate>
+@end
 
 @implementation DirBrowserDelegate
 - (id)init {
@@ -17,9 +20,9 @@
 		cols = [[NSMutableArray alloc] init];
 		colsInternal = [[NSMutableArray alloc] init];
 		
-		kq = [[UKKQueue alloc] init];
-		[kq addPathToQueue:BROWSER_ROOT notifyingAbout:NOTE_WRITE];
-		[kq setDelegate:self];
+		kq = [[VDKQueue alloc] init];
+		kq.delegate = self;
+		[kq addPath:BROWSER_ROOT notifyingAbout:NOTE_WRITE];
 		revealedDirectories = [[NSMutableSet alloc] initWithObjects:[@"~/Desktop/" stringByResolvingSymlinksInPath], nil];
     }
     return self;
@@ -36,10 +39,10 @@
 	[super dealloc];
 }
 
-- (void)watcher:(id<UKFileWatcher>)q receivedNotification:(NSString *)nm forPath:(NSString *)fpath
+- (void)VDKQueue:(VDKQueue *)q receivedNotification:(NSString *)nm forPath:(NSString *)fpath
 {
-	if ([nm isEqualToString:UKFileWatcherRenameNotification]) {
-		[kq removePathFromQueue:fpath];
+	if ([nm isEqualToString:VDKQueueRenameNotification]) {
+		[kq removePath:fpath];
 	}
 	// the display name doesn't update immediately, it seems
 	// so we wait a fraction of a second
@@ -50,7 +53,6 @@
 -(void)reload {
 	[_b loadColumnZero];
 	NSString *newPath = [[NSURL URLByResolvingBookmarkData:currAlias options:(NSURLBookmarkResolutionWithoutUI|NSURLBookmarkResolutionWithoutMounting) relativeToURL:nil bookmarkDataIsStale:NULL error:NULL] path];
-	// newPath will be nil on error (files deleted?); fall back to currPath
 	browserInited = NO;
 	[self setPath:newPath ?: currPath]; // don't actually set currPath here, wait for browserWillSendAction to do it
 	[_b sendAction];
@@ -223,7 +225,7 @@
 				  || [newPath length] == [s length]
 				  || [newPath characterAtIndex:[s length]] == '/'))) {
 			if (![s isEqualToString:@"/Volumes"]) {
-				[kq removePathFromQueue:s];
+				[kq removePath:s];
 				//NSLog(@"ditched %@", s);
 			}
 			s = [s stringByDeletingLastPathComponent];
@@ -240,7 +242,7 @@
 	}
 	NSString *newPathTmp = newPath;
 	while (!([newPathTmp isEqualToString:s])) {
-		[kq addPathToQueue:newPathTmp notifyingAbout:NOTE_RENAME|NOTE_DELETE];
+		[kq addPath:newPathTmp notifyingAbout:NOTE_RENAME|NOTE_DELETE];
 		//NSLog(@"watching %@", newPathTmp);
 		if ([newPathTmp isEqualToString:@"/"])
 			break;

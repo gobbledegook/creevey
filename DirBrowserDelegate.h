@@ -9,7 +9,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "DYCreeveyBrowser.h"
-@class UKKQueue;
+@class VDKQueue;
 
 @interface DirBrowserDelegate : NSObject <DYCreeveyBrowserDelegate>
 {
@@ -23,7 +23,7 @@
 	NSMutableSet *revealedDirectories;
 	NSData *currAlias;
 	
-	UKKQueue *kq;
+	VDKQueue *kq;
 	IBOutlet NSBrowser *_b;
 }
 @property (atomic, readonly) NSString *savedPath;
