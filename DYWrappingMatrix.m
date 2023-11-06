@@ -987,7 +987,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSArray *paths = [self selectedFilenames];
 	NSMutableArray *urls = [NSMutableArray arrayWithCapacity:paths.count];
 	for (NSString *path in paths) {
-		[urls addObject:[NSURL fileURLWithPath:path]];
+		[urls addObject:[NSURL fileURLWithPath:path isDirectory:NO]];
 	}
 	[[NSWorkspace sharedWorkspace] openURLs:urls withAppBundleIdentifier:appIdentifier options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
 	self.openWithAppIdentifiers = nil;
@@ -1016,12 +1016,21 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			return nil;
 	}
 
-	NSString *firstFile = filenames[selectedIndexes.firstIndex];
-	NSArray *allApplications = [(NSArray *)LSCopyApplicationURLsForURL((CFURLRef)[NSURL fileURLWithPath:firstFile], kLSRolesViewer|kLSRolesEditor) autorelease];
+	NSURL *firstFile = [NSURL fileURLWithPath:filenames[selectedIndexes.firstIndex] isDirectory:NO];
+	NSArray *allApplications = [(NSArray *)LSCopyApplicationURLsForURL((CFURLRef)firstFile, kLSRolesViewer|kLSRolesEditor) autorelease];
 	NSMutableArray *filteredApplications = [NSMutableArray array];
 	NSString *selfIdentifier = [NSBundle mainBundle].bundleIdentifier;
 	NSWorkspace *ws = [NSWorkspace sharedWorkspace];
-	NSURL *defaultAppURL = [ws URLForApplicationToOpenURL:[NSURL fileURLWithPath:firstFile]];
+	NSURL *defaultAppURL = [ws URLForApplicationToOpenURL:firstFile];
+	if (allApplications == nil || defaultAppURL == nil) {
+		// fail gracefully if the file is not openable
+		NSMenu *menu = [appDelegate thumbnailContextMenu];
+		NSMenu *openWithMenu = [[[NSMenu alloc] init] autorelease];
+		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:@"n/a" action:NULL keyEquivalent:@""] autorelease];
+		[openWithMenu addItem:item];
+		[menu itemAtIndex:0].submenu = openWithMenu;
+		return menu;
+	}
 	NSString *defaultIdentifier = [NSBundle bundleWithURL:defaultAppURL].bundleIdentifier;
 	NSMutableSet *appIdentifiers = [NSMutableSet setWithCapacity:allApplications.count]; // don't duplicate app identifiers
 	NSCountedSet *displayNames = [NSCountedSet setWithCapacity:allApplications.count]; // disambiguate identical display names if necessary
@@ -1036,6 +1045,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			[filteredApplications addObject:app];
 		}
 	}
+	// In macOS 10.15 and later, the returned array is sorted with the first element containing the best available apps for opening the specified URL.
+	// So we should be able to get rid of the above loop when we drop support for <10.15
 	NSArray *sortedApplications = [filteredApplications sortedArrayUsingComparator:^NSComparisonResult(NSURL *obj1, NSURL *obj2) {
 		NSString *path1 = obj1.path;
 		NSString *path2 = obj2.path;

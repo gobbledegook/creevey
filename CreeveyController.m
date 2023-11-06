@@ -305,7 +305,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		if ([a count]) {
 			NSMutableArray *b = [NSMutableArray arrayWithCapacity:[a count]];
 			for (NSString *s in a) {
-				[b addObject:[NSURL fileURLWithPath:s]];
+				[b addObject:[NSURL fileURLWithPath:s isDirectory:NO]];
 			}
 			[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:b];
 		} else {
@@ -320,7 +320,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		? [slidesWindow currentFile]
 		: [frontWindow currentSelection][0];
 	NSError *error = nil;
-	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s]
+	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s isDirectory:NO]
 											forScreen:[NSScreen mainScreen]
 											  options:@{}
 												error:&error];
@@ -466,7 +466,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
 - (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles {
-	NSURL *url = [NSURL fileURLWithPath:fullpath];
+	NSURL *url = [NSURL fileURLWithPath:fullpath isDirectory:NO];
 	NSError * _Nullable error = nil;
 	[[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error];
 	if (!error)
