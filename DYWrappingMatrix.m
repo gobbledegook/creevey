@@ -127,7 +127,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	// prefs stuff
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	dict[@"DYWrappingMatrixBgColor"] = [NSArchiver archivedDataWithRootObject:[NSColor controlBackgroundColor]];
+	dict[@"DYWrappingMatrixBgColor"] = [NSKeyedArchiver archivedDataWithRootObject:NSColor.controlBackgroundColor requiringSecureCoding:YES error:NULL];
 	dict[@"DYWrappingMatrixAllowMove"] = @NO;
 	dict[@"DYWrappingMatrixMaxCellWidth"] = @"160";
 	[defaults registerDefaults:dict];
@@ -197,9 +197,17 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 											 selector:@selector(scrolled:)
 												 name:NSViewBoundsDidChangeNotification
 											   object:[[self enclosingScrollView] contentView]];
-	bgColor = [[NSUnarchiver unarchiveObjectWithData:
-		[[NSUserDefaults standardUserDefaults] dataForKey:@"DYWrappingMatrixBgColor"]]
-		retain];
+	NSData *colorData = [NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"];
+	NSColor *aColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
+	if (aColor == nil) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+		aColor = [NSUnarchiver unarchiveObjectWithData:colorData];
+#pragma GCC diagnostic pop
+		NSData *migratedData = [NSKeyedArchiver archivedDataWithRootObject:aColor requiringSecureCoding:YES error:NULL];
+		[NSUserDefaults.standardUserDefaults setObject:migratedData forKey:@"DYWrappingMatrixBgColor"];
+	}
+	bgColor = [aColor retain];
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
 															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
 																 options:NSKeyValueObservingOptionNew
@@ -222,7 +230,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self setMaxCellWidth:[[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"]];
 	} else if ([keyPath isEqualToString:@"values.DYWrappingMatrixBgColor"]) {
 		[bgColor release];
-		bgColor = [[NSUnarchiver unarchiveObjectWithData:[[NSUserDefaults standardUserDefaults] dataForKey:@"DYWrappingMatrixBgColor"]] retain];
+		bgColor = [[NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"] error:NULL] retain];
 		[self setNeedsDisplay];
 	}
 }

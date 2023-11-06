@@ -582,7 +582,7 @@ Gw
                                             <connections>
                                                 <binding destination="551" name="value" keyPath="values.DYWrappingMatrixBgColor" id="699">
                                                     <dictionary key="options">
-                                                        <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                        <string key="NSValueTransformerName">NSKeyedUnarchiveFromData</string>
                                                     </dictionary>
                                                 </binding>
                                             </connections>
