@@ -107,7 +107,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return destinationRect;
 }
 
-@interface DYWrappingMatrix ()
+@interface DYWrappingMatrix () <NSDraggingSource>
 - (void)resize:(id)anObject; // called to recalc, set frame height
 - (NSImage *)imageForIndex:(NSUInteger)n;
 - (NSSize)imageSizeForIndex:(NSUInteger)n;
@@ -316,26 +316,21 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 										   x+area_w-x2,r.size.height)]; // right
 }
 
-- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal {
-	if (isLocal) return NSDragOperationNone;
+#pragma mark NSDraggingSource stuff
+- (NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
+	if (context == NSDraggingContextWithinApplication) return NSDragOperationNone;
 	unsigned int o = NSDragOperationGeneric | NSDragOperationDelete | NSDragOperationCopy;
 	if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYWrappingMatrixAllowMove"])
 		o |= NSDragOperationLink | NSDragOperationMove;
 	// NSDragOperationLink creates aliases in the finder
 	return o;
-	
-	// Note: You CANNOT check the currentEvent for modifier flags here to
-	// change the kind of dragging operation to the Finder. This is because
-	// the Finder seems to only remember the first return value from this
-	// function, even though it happens to get called over and over again.
-	// i.e., later invocations of this function return the value that you tell
-	// it to, but the Finder just ignores it. This means you only get the
-	// desired behavior when the user holds down the option key _before_
-	// the dragging starts, which is not good user interface.
 }
 
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation {
-	// ** hm, how to best talk to the right object?
+- (void)draggingSession:(NSDraggingSession *)session movedToPoint:(NSPoint)screenPoint {
+	session.draggingFormation = NSDraggingFormationPile;
+}
+
+- (void)draggingSession:(NSDraggingSession *)session endedAtPoint:(NSPoint)aPoint operation:(NSDragOperation)operation {
 	if (operation == NSDragOperationDelete) {
 		if ([(CreeveyController *)[NSApp delegate] respondsToSelector:@selector(moveToTrash:)])
 			[(CreeveyController *)[NSApp delegate] moveToTrash:nil];
@@ -374,7 +369,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[[self window] makeFirstResponder:self];
 	BOOL keepOn = YES;
 	char doDrag = 0;
-	NSUInteger cellNum, a, b, i;
+	NSUInteger cellNum, a, b;
 	NSRange draggedRange;
 	NSMutableIndexSet *oldSelection = [selectedIndexes mutableCopy];
 	NSMutableIndexSet *lastIterationSelection = [oldSelection mutableCopy];
@@ -382,7 +377,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	BOOL cmdKeyDown = ([theEvent modifierFlags] & NSEventModifierFlagCommand) != 0;
 
 	NSPoint mouseLoc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	NSPoint mouseDownLoc = mouseLoc;
 	NSUInteger mouseDownCellNum = [self point2cellnum:mouseLoc];
 	if (![selectedIndexes containsIndex:mouseDownCellNum] && !shiftKeyDown && !cmdKeyDown) {
 		[oldSelection removeAllIndexes];
@@ -429,7 +423,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				if (shiftKeyDown || !cmdKeyDown) // shift or no modifiers
 					[selectedIndexes addIndexesInRange:draggedRange];
 				else
-					for (i=0; i<draggedRange.length; ++i)
+					for (NSUInteger i=0; i<draggedRange.length; ++i)
 						if ([selectedIndexes containsIndex:draggedRange.location+i])
 							[selectedIndexes removeIndex:draggedRange.location+i];
 						else
@@ -440,7 +434,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				if ([lastIterationSelection count]) {
 					// if selection changed...
 					[self updateStatusString];
-					for (i=[lastIterationSelection firstIndex]; i != NSNotFound; i = [lastIterationSelection indexGreaterThanIndex:i]) {
+					for (NSUInteger i=[lastIterationSelection firstIndex]; i != NSNotFound; i = [lastIterationSelection indexGreaterThanIndex:i]) {
 						[self selectionNeedsDisplay:i];
 					}
 				}
@@ -463,39 +457,31 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     }
 	[NSEvent stopPeriodicEvents];
 	if (doDrag == 2) {
-		//pboard
-		NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSPasteboardNameDrag];
-		[pboard declareTypes:@[NSFilenamesPboardType] owner:nil];
-		[pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
-						forType:NSFilenamesPboardType];
-		//loc, img
-		NSImage *dragImg, *transparentImg;
-		NSPoint imgLoc = mouseDownLoc;
-		NSSize imgSize;
-		if ([selectedIndexes count] == 1) {
-			dragImg = [self imageForIndex:[selectedIndexes firstIndex]];
-			NSRect imgRect = [self imageRectForIndex:mouseDownCellNum];
-			imgSize = imgRect.size;
-			imgLoc = imgRect.origin;
-			imgLoc.y += imgRect.size.height;
-		} else {
-			dragImg = [NSImage imageNamed:@"multipledocs"];
-			imgSize = [dragImg size];
-			imgLoc.x -= [dragImg size].width/2;
-			imgLoc.y += [dragImg size].height/2; // we're using flipped coords, calc bottom left
-		}
-		transparentImg = [[[NSImage alloc] initWithSize:imgSize] autorelease];
-		[transparentImg lockFocus];
-		[dragImg drawInRect:NSMakeRect(0,0,imgSize.width,imgSize.height)
-				   fromRect:NSMakeRect(0,0,[dragImg size].width,[dragImg size].height)
-				  operation:NSCompositingOperationCopy fraction:0.3];
-		[transparentImg unlockFocus];
-		[self dragImage:transparentImg
-					 at:imgLoc
-				 offset:NSMakeSize(mouseLoc.x - mouseDownLoc.x,
-								   -(mouseLoc.y - mouseDownLoc.y))
-				  event:theEvent
-			 pasteboard:pboard source:self slideBack:YES];
+		NSMutableArray *draggingItems = [NSMutableArray arrayWithCapacity:selectedIndexes.count];
+		[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+			NSString *path = filenames[idx];
+			NSURL *url = [NSURL fileURLWithPath:path isDirectory:NO];
+			// each pasteboard item has both a string and URL representation
+			NSPasteboardItem *pbi = [[[NSPasteboardItem alloc] init] autorelease];
+			[pbi setString:path forType:NSPasteboardTypeString];
+			[pbi setData:[url dataRepresentation] forType:NSPasteboardTypeFileURL];
+			NSDraggingItem *item = [[[NSDraggingItem alloc] initWithPasteboardWriter:pbi] autorelease];
+			// set an image to be dragged
+			// for performance reasons we use a block as an imagecomponentprovider rather than actual nsimages
+			// contrary to the documentation, the imageComponentsProvider is a block that returns an array, not an array of blocks
+			NSRect imageRect = [self imageRectForIndex:idx];
+			NSImage *image = images[idx]; // the block should capture a ref to the image, not to our images array
+			item.draggingFrame = imageRect;
+			imageRect.origin = NSZeroPoint; // origin must be zero for the block to work correctly
+			item.imageComponentsProvider = ^NSArray<NSDraggingImageComponent *> * _Nonnull {
+				NSDraggingImageComponent *c = [NSDraggingImageComponent draggingImageComponentWithKey:NSDraggingImageComponentIconKey];
+				c.frame = imageRect;
+				c.contents = image;
+				return @[c];
+			};
+			[draggingItems addObject:item];
+		}];
+		[self beginDraggingSessionWithItems:draggingItems event:theEvent source:self];
 	}
 	[oldSelection release];
 	[lastIterationSelection release];
