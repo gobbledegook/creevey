@@ -29,6 +29,7 @@
 }
 
 - (void)dealloc {
+	[kq stopWatching];
 	[kq release];
 	[cols release];
 	[colsInternal release];

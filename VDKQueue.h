@@ -1,6 +1,7 @@
 //	VDKQueue.h
 //	Created by Bryan D K Jones on 28 March 2012
 //	Copyright 2013 Bryan D K Jones
+//  Modified 2023 Dominic Yu
 //
 //  Based heavily on UKKQueue, which was created and copyrighted by Uli Kusterer on 21 Dec 2003.
 //
@@ -28,7 +29,8 @@
 //      of Uli's "threadProxy" objects. The memory footprint is roughly halved, as I don't create the overhead that UKKQueue does.
 //
 //      VDKQueue is also simplified. The option to use it as a singleton is removed. You simply alloc/init an instance and add paths you want to
-//      watch. Your objects can be alerted to changes either by notifications or by a delegate method (or both). See below. 
+//      watch. Your objects can be alerted to changes either by notifications or by a delegate method (or both). See below.
+//      When you're done with the object, call stopWatching (to release the background thread), then release.
 //
 //      It also fixes several bugs. For one, it won't crash if it can't create a file descriptor to a file you ask it to watch. (By default, an OS X process can only
 //      have about 3,000 file descriptors open at once. If you hit that limit, UKKQueue will crash. VDKQueue will not.)
@@ -123,6 +125,7 @@ extern NSString * VDKQueueAccessRevocationNotification;
 @private
     int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
 	NSMutableDictionary    *_watchedPathEntries;                    // List of VDKQueuePathEntries. Keys are NSStrings of the path that each VDKQueuePathEntry is for.
+	NSMutableDictionary    *_pathMap;                               // unique id -> path entry (for thread safety)
     BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
 }
 
@@ -139,6 +142,7 @@ extern NSString * VDKQueueAccessRevocationNotification;
 - (void) removePath:(NSString *)aPath;
 - (void) removeAllPaths;
 
+- (void) stopWatching;                                              // You must call this when you release the VDKQueue object
 
 - (NSUInteger) numberOfWatchedPaths;                                //  Returns the number of paths that this VDKQueue instance is actively watching.
 
