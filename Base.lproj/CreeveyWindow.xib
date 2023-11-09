@@ -13,6 +13,7 @@
                 <outlet property="imgMatrix" destination="372" id="496"/>
                 <outlet property="slidesBtn" destination="368" id="497"/>
                 <outlet property="statusFld" destination="367" id="511"/>
+                <outlet property="subfoldersButton" destination="370" id="eiX-vT-wMP"/>
                 <outlet property="window" destination="21" id="501"/>
             </connections>
         </customObject>

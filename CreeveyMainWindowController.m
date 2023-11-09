@@ -41,6 +41,7 @@
 @interface CreeveyMainWindowController ()
 - (void)updateStatusFld;
 @property (nonatomic, readonly) NSSplitView *splitView;
+@property (nonatomic, retain) NSString *recurseRoot;
 @end
 
 @implementation CreeveyMainWindowController
@@ -111,6 +112,7 @@
 }
 
 - (void)dealloc {
+	[_recurseRoot release];
 	[filenames release];
 	[displayedFilenames release];
 	[loadImageLock release];
@@ -480,14 +482,18 @@
 }
 
 - (IBAction)displayDir:(id)sender {
-	// appkit drawing issues
-	// nsbrowser animation hangs the app!
 	stopCaching = 1;
 	currentFilesDeletable = NO;
 	filenamesDone = NO;
 	currCat = 0;
 	[slidesBtn setEnabled:NO];
 	NSString *currentPath = [dirBrowserDelegate path];
+	if (recurseSubfolders && sender) { // sender is dirBrowserDelegate when non-nil
+		if (![currentPath hasPrefix:_recurseRoot]) {
+			recurseSubfolders = NO;
+			[_subfoldersButton setState:NSControlStateValueOff];
+		}
+	}
 	[statusFld setStringValue:NSLocalizedString(@"Getting filenames...", @"")];
 	[[self window] setTitleWithRepresentedFilename:currentPath];
 	[NSThread detachNewThreadSelector:@selector(loadImages:)
@@ -496,6 +502,18 @@
 
 - (IBAction)setRecurseSubfolders:(id)sender {
 	recurseSubfolders = [sender state] == NSOnState;
+	// remember where we started recursing subfolders
+	if (recurseSubfolders) {
+		NSString *path = [dirBrowserDelegate path];
+		// but don't reset if we're still in a subfolder from the last time this was set
+		if (_recurseRoot == nil || ![path hasPrefix:_recurseRoot])
+			// add a slash so we continue recursing for any sibling folders, but not the parent folder
+			self.recurseRoot = [[[dirBrowserDelegate path] stringByDeletingLastPathComponent] stringByAppendingString:@"/"];
+	} else {
+		// if user aborted, assume that's not a good place to recurse
+		if (!filenamesDone)
+			self.recurseRoot = nil;
+	}
 	[self displayDir:nil];
 }
 

@@ -37,6 +37,8 @@
 	
 	short int currCat;
 }
+@property (assign) IBOutlet NSButton *subfoldersButton;
+
 //actions
 - (IBAction)setRecurseSubfolders:(id)sender;
 
