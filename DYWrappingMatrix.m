@@ -16,8 +16,6 @@
 
 #define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
-#define DEFAULT_CELL_WIDTH 120
-// height is 3/4 * width
 #define PADDING 16
 #define VERTPADDING 16
 #define DEFAULT_TEXTHEIGHT 12
@@ -29,56 +27,6 @@
 
    i've tried to make them thread-safe
  */
-
-@interface NSImage (ImageRotationAddition)
-// helper method to generate a new NSImage and make it draw that instead.
-- (NSImage *)rotateByExifOrientation:(unsigned short)n;
-@end
-
-@implementation NSImage (ImageRotationAddition)
-- (NSImage *)rotateByExifOrientation:(unsigned short)n; {
-	NSSize newSize = [self size];
-	if (n >= 5) {
-		// if rotating, swap the width/height
-		float tmp;
-		tmp = newSize.width;
-		newSize.width = newSize.height;
-		newSize.height = tmp;
-	}
-	NSImage *rotImg = [[[NSImage alloc] initWithSize:newSize] autorelease];
-	[rotImg lockFocus];
-	int r = 0, x0 = 0, y0 = 0; BOOL imgFlipped = NO;
-	switch (n) {
-		case 4: r = 180; case 2: imgFlipped = YES; break;
-		case 5: imgFlipped = YES; case 8: r = 90; break;
-		case 7: imgFlipped = YES; case 6: r = -90; break;
-		case 3: r = 180; break;
-	}
-	switch (n) {
-		case 2: x0 = -newSize.width; break;
-		case 3: x0 = -newSize.width; y0 = -newSize.height; break;
-		case 4: y0 = -newSize.height; break;
-		case 5: x0 = -newSize.height; y0 = -newSize.width; break;
-		case 6: x0 = -newSize.height; break;
-		case 8: y0 = -newSize.width; break;
-	}
-	NSAffineTransform *transform = [NSAffineTransform transform];
-	[transform rotateByDegrees:r];
-	if (imgFlipped)
-		[transform scaleXBy:-1 yBy:1];
-	[transform concat];
-	
-	[self drawAtPoint:NSMakePoint(x0, y0)
-			 fromRect:NSZeroRect
-			operation:NSCompositingOperationSourceOver  
-			 fraction:1.0];
-	[rotImg unlockFocus];
-	return rotImg;
-}
-@end
-
-
-
 
 static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSRect destinationRect;
@@ -108,11 +56,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 @interface DYWrappingMatrix () <NSDraggingSource>
+{
+	float _maxCellWidth;
+	BOOL _respondsToLoadImageForFile, _respondsToSelectionDidChange;
+}
 - (void)resize:(id)anObject; // called to recalc, set frame height
-- (NSImage *)imageForIndex:(NSUInteger)n;
-- (NSSize)imageSizeForIndex:(NSUInteger)n;
-- (unsigned short)exifOrientationForIndex:(NSUInteger)n;
-@property (nonatomic, retain) NSArray *openWithAppIdentifiers;
+@property (nonatomic, retain) NSArray *openWithAppIdentifiers; // saved in mouseDown for subsequent use by the context menu
 @end
 
 @implementation DYWrappingMatrix
@@ -174,7 +123,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		filenames = [[NSMutableArray alloc] initWithCapacity:100];
 		selectedIndexes = [[NSMutableIndexSet alloc] init];
 		requestedFilenames = [[NSMutableSet alloc] init];
-		[self setCellWidth:DEFAULT_CELL_WIDTH];
+		// cellWidth should be initialized by an external controll during awakeFromNib
+		_maxCellWidth = FLT_MAX;
 		textHeight = DEFAULT_TEXTHEIGHT;
 		autoRotate = YES;
 		loadingImage = [NSImage imageNamed:@"loading.png"];
@@ -216,10 +166,26 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 															  forKeyPath:@"values.DYWrappingMatrixBgColor"
 																 options:NSKeyValueObservingOptionNew
 																 context:NULL];
+	_respondsToLoadImageForFile = [delegate respondsToSelector:@selector(wrappingMatrix:loadImageForFile:atIndex:)];
+	_respondsToSelectionDidChange = [delegate respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)];
 }
 
 - (void)setMaxCellWidth:(float)w {
-	//do nothing
+	if (w < _maxCellWidth) {
+		_maxCellWidth = w; // this has to be set before we do the resizing
+		[self setCellWidth:cellWidth < w ? cellWidth : w];
+	} else {
+		_maxCellWidth = w;
+		// tell delegate to reload anything we've loaded already
+		// the delay is to wait for all the other windows to have emptied the thumbs cache before we start repopulating it
+		if (_respondsToLoadImageForFile) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			NSUInteger n = filenames.count;
+			for (NSUInteger i = 0; i < n; ++i) {
+				if (images[i] != loadingImage)
+					[delegate wrappingMatrix:self loadImageForFile:filenames[i] atIndex:i];
+			}
+		});
+	}
 }
 - (void)observeValueForKeyPath:(NSString *)keyPath
 					  ofObject:(id)object 
@@ -236,6 +202,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)dealloc {
+	NSUserDefaultsController *u = NSUserDefaultsController.sharedUserDefaultsController;
+	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
+	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixBgColor"];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[myCell release];
 	[myTextCell release];
@@ -255,14 +224,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 #pragma mark display/drag stuff
 - (NSSize)cellSize { return NSMakeSize(cellWidth,cellWidth*3/4); }
 - (float)maxCellWidth {
-	return [[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"];
+	return _maxCellWidth;
 }
 - (float)minCellWidth { return MIN_CELL_WIDTH; }
 - (float)cellWidth { return cellWidth; }
 - (void)setCellWidth:(float)w {
-	cellWidth = w;
+	cellWidth = w < _maxCellWidth ? w : _maxCellWidth;
 	[self resize:nil];
-	[self setNeedsDisplay:YES]; // ** I suppose should call on main thread too
+	[self setNeedsDisplay:YES];
 }
 
 
@@ -509,21 +478,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return self.frame.size;
 }
 
-// always call this if called from another thread
-// calling from main seems to make drawing weird
-- (void)setNeedsDisplayInRect2:(NSRect)invalidRect {
-//	if ([[[NSThread currentThread] threadDictionary] objectForKey:@"DYWrappingMatrixMainThread"])
-//		[super setNeedsDisplayInRect:(NSRect)invalidRect];
-//	else
-		[self performSelectorOnMainThread:@selector(setNeedsDisplayInRectThreaded:)
-							   withObject:[NSValue valueWithRect:invalidRect]
-							waitUntilDone:NO];
-}
-
-- (void)setNeedsDisplayInRectThreaded:(NSValue *)v {
-	[self setNeedsDisplayInRect:[v rectValue]];
-}
-
 - (void)drawRect:(NSRect)rect {
 	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
 	NSImageInterpolation oldInterp = [cg imageInterpolation];
@@ -554,8 +508,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		NSImage *img = images[i];
 		NSString *filename = filenames[i];
 		if (img == loadingImage) {
-			if ([delegate respondsToSelector:@selector(wrappingMatrix:loadImageForFile:atIndex:)]
-				&& ![requestedFilenames containsObject:filename]) {
+			if (_respondsToLoadImageForFile && ![requestedFilenames containsObject:filename]) {
 				NSImage *newImage = [delegate wrappingMatrix:self loadImageForFile:filename atIndex:i];
 				if (newImage) {
 					images[i] = newImage;
@@ -566,7 +519,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				}
 			}
 		}
-		[myCell setImage:img];//[self imageForIndex:i]];//
+		[myCell setImage:img];
 		// calculate drawing area for thumb and filename area
 		if (textHeight) {
 			textCellRect.origin.x = areaRect.origin.x;
@@ -582,9 +535,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[[NSColor whiteColor] set]; // white bg for transparent imgs
 		NSRectFill(cellRect);
 		if (autoRotate) {
-			// this code is awfully similar to the NSImage category above,
-			// but I figure it's more time and memory efficient to draw directly to the view
-			// rather than generating a new NSImage every time you want to draw
 			unsigned short orientation = [self exifOrientationForIndex:i];
 			int r = 0; BOOL imgFlipped = NO;
 			switch (orientation) {
@@ -743,13 +693,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self setNeedsDisplayInRect:[self imageRectForIndex:i]];
 	}
 }
-- (NSImage *)imageForIndex:(NSUInteger)n {
-	if (autoRotate) {
-		return [images[n] rotateByExifOrientation:[self exifOrientationForIndex:n]];
-	} else {
-		return images[n];
-	}
-}
 - (NSSize)imageSizeForIndex:(NSUInteger)n {
 	NSSize s = [images[n] size];
 	if (autoRotate && [self exifOrientationForIndex:n] >= 5) {
@@ -811,7 +754,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i {
 	if (i >= numCells) return;
 	images[i] = theImage;
-	[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
+	});
 }
 
 #pragma mark lazy loading stuff
@@ -828,7 +773,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (images[i] != theImage) {
 		images[i] = theImage;
 		++numThumbsLoaded;
-		[self setNeedsDisplayInRect2:[self cellnum2rect:i]];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self setNeedsDisplayInRect:[self cellnum2rect:i]];
+		});
 	}
 }
 
@@ -850,9 +797,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)updateStatusString {
-	if ([delegate respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)]) {
+	if (_respondsToSelectionDidChange)
 		[delegate wrappingMatrix:self selectionDidChange:selectedIndexes];
-	}
 }
 
 - (NSUInteger)numThumbsLoaded {

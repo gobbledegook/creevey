@@ -77,10 +77,16 @@
 
 - (NSUInteger)numCells;
 - (NSSize)cellSize;
+
+// minCellWidth, cellWidth, and maxCellWidth are bound to the slider via a generic NSObjectController
+// minCellWidth is hard-coded
+// cellWidth may change dynamically
+// maxCellWidth should be bound to the corresponding controller's value, and must also be initialized separately
 - (float)maxCellWidth;
 - (float)minCellWidth;
 - (float)cellWidth;
 - (void)setCellWidth:(float)w;
+- (void)setMaxCellWidth:(float)w;
 
 - (BOOL)showFilenames;
 - (void)setShowFilenames:(BOOL)b;

@@ -74,6 +74,7 @@
 	[splitView setDelegate:self]; // must set delegate after restoring position so the didResize notification doesn't save the height from the nib
 
 	[imgMatrix setFrameSize:[[imgMatrix superview] frame].size];
+	[imgMatrix setMaxCellWidth:[u integerForKey:@"DYWrappingMatrixMaxCellWidth"]];
 	[imgMatrix setCellWidth:[u floatForKey:@"thumbCellWidth"]];
 	[[self window] setRestorationClass:[CreeveyController class]];
 	

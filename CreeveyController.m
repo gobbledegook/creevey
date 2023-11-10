@@ -237,6 +237,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 - (void)dealloc {
+	NSUserDefaultsController *u = NSUserDefaultsController.sharedUserDefaultsController;
+	[u removeObserver:self forKeyPath:@"values.slideshowAutoadvanceTime"];
+	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
 	[[NSNotificationCenter defaultCenter] removeObserver:localeChangeObserver];
 	[[NSNotificationCenter defaultCenter] removeObserver:screenChangeObserver];
 	[thumbsCache release];
