@@ -336,6 +336,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 #pragma mark event stuff
 - (void)mouseDown:(NSEvent *)theEvent {
 	[[self window] makeFirstResponder:self];
+	if (numCells == 0) return;
 	BOOL keepOn = YES;
 	char doDrag = 0;
 	NSUInteger cellNum, a, b;
@@ -647,7 +648,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			default: break;
 		}
 		[selectedIndexes removeAllIndexes];
-	} else if ([selectedIndexes count] == 0) {
+	} else if ([selectedIndexes count] == 0 && numCells > 0) {
 		switch (c) {
 			case NSRightArrowFunctionKey:
 			case NSDownArrowFunctionKey:
