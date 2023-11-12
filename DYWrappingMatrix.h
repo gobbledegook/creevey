@@ -56,10 +56,9 @@
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
 - (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i;
-- (void)setImageWithFileInfo:(NSDictionary *)d; // to be called on main thread from other thread
-- (BOOL)imageWithFileInfoNeedsDisplay:(NSDictionary *)d;
+- (BOOL)setImage:(NSImage *)theImage atIndex:(NSUInteger)i forFilename:(NSString *)s; // to be called on main thread from other thread
+- (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d;
 - (void)removeAllImages;
-//- (void)removeSelectedImages;
 - (void)removeImageAtIndex:(NSUInteger)i;
 
 // call when no images, preparing to add (for two-pass adding)

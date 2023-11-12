@@ -132,7 +132,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	dict[@"showFilenames"] = @YES;
 	dict[@"sortBy"] = @1; // sort by filename, ascending
 	dict[@"Slideshow:RerandomizeOnLoop"] = @YES;
-	dict[@"maxThumbsToLoad"] = @3000;
+	dict[@"maxThumbsToLoad"] = @100;
 	dict[@"autoRotateByOrientationTag"] = @YES;
     [defaults registerDefaults:dict];
 
@@ -426,7 +426,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 									 properties:@{NSImageCompressionFactor: @0.0f}
 						];
 					jinfo.newThumbSize = tmpSize;
-					[i release];
 				} else {
 					jinfo.newThumb = NULL;
 				}

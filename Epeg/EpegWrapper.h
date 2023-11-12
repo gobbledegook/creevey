@@ -15,7 +15,6 @@
 			   boundingBox:(NSSize)boundingBox 
 				   getSize:(NSSize *)pixSize
 				 exifThumb:(BOOL)wantExifThumb
-				//autorotate:(BOOL)autorotate
 			getOrientation:(unsigned short *)orientationOut; // pass NULL if you don't need it
 
 //+ (NSString *)jpegErrorMessage;

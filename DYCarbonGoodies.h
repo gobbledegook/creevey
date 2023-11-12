@@ -14,9 +14,7 @@
 
 // returns path if it's not an alias, or if not resolvable
 NSString *ResolveAliasToPath(NSString *path);
-
-// check if a files invisible flag is set
-BOOL FileIsInvisible(NSString *path);
+NSString *ResolveAliasURLToPath(NSURL *url);
 
 BOOL FileIsJPEG(NSString *s);
 

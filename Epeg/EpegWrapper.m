@@ -9,18 +9,6 @@
 #import "EpegWrapper.h"
 #import "DYExiftags.h"
 
-
-/*@interface EpegBitmapImageRep : NSBitmapImageRep
-@end
-@implementation EpegBitmapImageRep
-- (void)dealloc {
-	free([self bitmapData]);
-	[super dealloc];
-}
-@end
-// */
-
-
 @implementation EpegWrapper
 
 //+ (NSString *)jpegErrorMessage {
@@ -31,7 +19,6 @@
 			   boundingBox:(NSSize)boundingBox
 				   getSize:(NSSize *)pixSize
 				 exifThumb:(BOOL)wantExifThumb
-				//autorotate:(BOOL)autorotate
 			getOrientation:(unsigned short *)orientationOut {
 
 	Epeg_Image *im = NULL;
@@ -49,10 +36,8 @@
 		epeg_close(im);
 		return nil;
 	}
-	//if (pixSize) {
 	pixSize->width = width_in;
 	pixSize->height = height_in;
-	//}
 	
 	unsigned short orientation = [DYExiftags orientationForFile:path];
 	if (orientationOut) *orientationOut = orientation;
@@ -102,27 +87,6 @@
 		epeg_decode_size_set(im, width_out, height_out);
 		epeg_decode_colorspace_set(im, EPEG_RGB8);
 
-	/*	//option1
-		unsigned char *outbuffer;
-		int outsize;
-		epeg_memory_output_set(im, &outbuffer, &outsize);
-		//epeg_quality_set(im, 75);
-		if (epeg_encode(im) != 0) {
-			// ALWAYS check the return code!
-			NSLog(@"unable to encode epeg thumbnail for path '%@'", path);
-			epeg_close(im);
-			return nil;
-		}
-		//NSLog(@"%d compressed, from %d", outsize, (width_out * height_out * 3));
-		epeg_close(im);
-		NSData *data = [[NSData alloc] initWithBytesNoCopy:outbuffer length:outsize]; //outbuffer will be freed by NSData
-		NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithData:data];
-		[data release]; // */
-		
-		//option2
-		//possibly faster since we skip compression
-		//but it seems about the same (b/c of memcpying more memory?)
-		//const void *pixels;
 		if (epeg_scale_only(im) != 0)
 			return nil;
 		// sep call to epeg_scale_only, if error, the epeg handle will _probably_
@@ -133,7 +97,6 @@
 			epeg_close(im); // ... we _should_ need to close here, though
 			return nil;
 		}
-		//NSBitmapImageRep *
 		imageRep =
 			[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
 													pixelsWide:width_out
@@ -153,52 +116,9 @@
 	image = [[NSImage alloc] initWithSize:NSZeroSize];
 	[image addRepresentation:imageRep];
 	[imageRep release];
-	
-//	if (autorotate && orientation != 1) {
-//		if (orientation >= 5) {
-//			// if rotating, swap the width/height
-//			int tmp;
-//			tmp = width_out;
-//			width_out = height_out;
-//			height_out = tmp;
-//		}
-//		NSSize newSize = NSMakeSize(width_out, height_out);
-//		NSImage *rotImg = [[NSImage alloc] initWithSize:newSize];
-//		[rotImg lockFocus];
-//		int r = 0, x0 = 0, y0 = 0; BOOL imgFlipped = NO;
-//		switch (orientation) {
-//			case 4: r = 180; case 2: imgFlipped = YES; break;
-//			case 5: imgFlipped = YES; case 8: r = 90; break;
-//			case 7: imgFlipped = YES; case 6: r = -90; break;
-//			case 3: r = 180; break; default: r = 0;
-//		}
-//		switch (orientation) {
-//			case 2: x0 = -newSize.width; break;
-//			case 3: x0 = -newSize.width; y0 = -newSize.height; break;
-//			case 4: y0 = -newSize.height; break;
-//			case 5: x0 = -newSize.height; y0 = -newSize.width; break;
-//			case 6: x0 = -newSize.height; break;
-//			case 8: y0 = -newSize.width; break;
-//		}
-//		NSAffineTransform *transform = [NSAffineTransform transform];
-//		[transform rotateByDegrees:r];
-//		if (imgFlipped)
-//			[transform scaleXBy:-1 yBy:1];
-//		[transform concat];
-//
-//		[image drawAtPoint:NSMakePoint(x0, y0)
-//				  fromRect:NSZeroRect //NSMakeRect(0, 0, oldSize.width, oldSize.height)
-//				 operation:NSCompositeSourceOver  
-//				  fraction:1.0];
-//		[rotImg unlockFocus];
-//		
-//		[image release];
-//		image = rotImg;
-//	}
-	
 	//NSLog(@"%@", NSStringFromSize([image size]));
 	
-	return image; // N.B.: retained, NOT autoreleased!!!
+	return [image autorelease];
 }
 
 + (NSImage *)exifThumbForPath:(NSString *)path {
@@ -225,7 +145,7 @@
 	[image addRepresentation:imageRep];
 	[imageRep release];
 	
-	return image; // N.B.: retained, NOT autoreleased!!!
+	return [image autorelease];
 }
 
 

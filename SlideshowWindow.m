@@ -20,9 +20,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	return [e phase] != NSEventPhaseNone || [e momentumPhase] != NSEventPhaseNone;
 }
 
-@interface SlideshowWindow (Private)
-
-//- (void)displayImage;
+@interface SlideshowWindow ()
 - (void)jump:(NSInteger)n;
 - (void)jumpTo:(NSUInteger)n;
 - (void)setTimer:(NSTimeInterval)s;
@@ -40,11 +38,12 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // cache methods
 - (NSImage *)loadFromCache:(NSString *)s;
 - (void)cacheAndDisplay:(NSString *)s;
-
-
 @end
 
 @implementation SlideshowWindow
+{
+	NSOperationQueue *_upcomingQueue;
+}
 
 + (void)initialize {
 	if (self != [SlideshowWindow class]) return;
@@ -65,6 +64,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		flips = [[NSMutableDictionary alloc] init];
 		zooms = [[NSMutableDictionary alloc] init];
 		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
+		imgCache.rotatable = YES;
+		_upcomingQueue = [[NSOperationQueue alloc] init];
 		
  		[self setBackgroundColor:[NSColor blackColor]];
 		[self setOpaque:NO];
@@ -133,6 +134,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[zooms release];
 	[imgCache release];
 	[helpFld release];
+	[_upcomingQueue release];
 	[super dealloc];
 }
 
@@ -227,6 +229,12 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[self orderOut:nil];
 	
 	[imgCache abortCaching];
+
+	// this is a half-hearted attempt to clean up. Really we just rely on the countLimit on the cache
+	NSUInteger n = MIN(filenames.count, MAX_CACHED);
+	for (NSUInteger i=0; i<n; ++i) {
+		[imgCache endAccess:[filenames objectAtIndex:i]];
+	}
 }
 
 - (void)startSlideshow {
@@ -503,7 +511,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	for (i=1; i<=2; i++) {
 		if (currentIndex+i >= [filenames count])
 			break;
-		[imgCache cacheFileInNewThread:[filenames objectAtIndex:currentIndex+i]];
+		[_upcomingQueue addOperationWithBlock:^{
+			[imgCache cacheFile:[filenames objectAtIndex:currentIndex+i]];
+		}];
 	}
 }
 
@@ -811,8 +821,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case '-':
 			if (currentIndex == [filenames count]) { NSBeep(); return; }
 			if ((obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]])) {
-				if (obj->image == [imgView image]
-					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) { // cached image smaller than orig
+				if (obj.image == [imgView image]
+					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) { // cached image smaller than orig
 					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
@@ -855,8 +865,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if (currentIndex == [filenames count]) { NSBeep(); return YES; }
 			// ** code copied from keyDown
 			if ((obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]])) {
-				if (obj->image == [imgView image]
-					&& !NSEqualSizes(obj->pixelSize,[obj->image size])) {  // cached image smaller than orig
+				if (obj.image == [imgView image]
+					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) {  // cached image smaller than orig
 					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
@@ -937,8 +947,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 	DYImageInfo *info = [imgCache infoForKey:filename];
 	if (info) {
 		float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
-		if (info->image == [imgView image]
-			&& !NSEqualSizes(info->pixelSize,[info->image size])) { // cached image smaller than orig
+		if (info.image == [imgView image]
+			&& !NSEqualSizes(info->pixelSize, info.image.size)) { // cached image smaller than orig
 			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filename)]
 					  zooming:DYImageViewZoomModeManual];
 		}
@@ -951,7 +961,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 #pragma mark cache stuff
 
 - (NSImage *)loadFromCache:(NSString *)s {
-	NSImage *img = [imgCache imageForKey:s];
+	NSImage *img = [imgCache imageForKeyInvalidatingCacheIfNecessary:s];
 	if (img)
 		return img;
 	//NSLog(@"%d not cached yet, now loading", n);
@@ -961,7 +971,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	return nil;
 }
 
-- (void)cacheAndDisplay:(NSString *)s { // ** roll this into imagecache?
+- (void)cacheAndDisplay:(NSString *)s {
 	if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	[imgCache cacheFile:s]; // this operation takes time...
@@ -969,9 +979,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 		//NSLog(@"cacheAndDisplay now displaying %@", idx);
 		[self performSelectorOnMainThread:@selector(displayImage) // requires 10.2
 							   withObject:nil waitUntilDone:NO];
-		//[self displayImage];
-		//if (autoTimer) [[NSRunLoop currentRunLoop] run];
-		// we must run the runLoop for the timer b/c we're in a separate thread
 	} /*else {
 		NSLog(@"cacheAndDisplay aborted %@", idx);
 		// the user hit next or something, we don't need this anymore		

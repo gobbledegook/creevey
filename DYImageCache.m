@@ -32,9 +32,14 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	return [NSString stringWithFormat:@"%.1f %s", n, units[i]];
 }
 
-@implementation DYImageInfo
+@interface DYImageInfo () <NSDiscardableContent>
+@end
+@implementation DYImageInfo {
+	NSUInteger _counter;
+}
+@synthesize image, path, modTime;
+
 - (void)dealloc {
-	//[orig release];
 	[image release];
 	[modTime release];
 	[super dealloc];
@@ -44,6 +49,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 - initWithPath:(NSString *)s {
 	if (self = [super init]) {
 		path = [s copy];
+		_counter = 1; // NSCache may try to evict us immediately!
 		
 		// get modTime
 		NSDictionary *fattrs = [[NSFileManager defaultManager] attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL];
@@ -57,31 +63,67 @@ NSString *FileSize2String(unsigned long long fileSize) {
 - (NSString *)pixelSizeAsString {
 	return [NSString stringWithFormat:@"%dx%d", (int)pixelSize.width, (int)pixelSize.height];
 }
+
+#pragma mark NSDiscardableContent
+- (BOOL)beginContentAccess {
+	_counter++;
+	return YES;
+}
+- (void)endContentAccess {
+	_counter--;
+}
+- (void)discardContentIfPossible {
+	if (_counter == 0) {
+		[image release];
+		image = nil;
+		// we expect to be immediately evicted
+	}
+}
+- (BOOL)isContentDiscarded {
+	return image == nil;
+}
 @end
 
 
-/* cache of NSImage objects in a hash where the filename is the key.
-* we also use an array to know which indexes were cached in which order
-* so we know when to get rid of them.
-*/
-
+@interface DYImageCache ()
+{
+	NSLock *cacheLock;
+	NSConditionLock *pendingLock;
+	
+	NSCache<NSString *, DYImageInfo *> *images;
+	NSMutableSet<NSString *> *pending;
+	
+	NSSize boundingSize;
+	NSUInteger maxImages;
+	volatile BOOL cachingShouldStop;
+	
+	NSFileManager *fm;
+	NSImageInterpolation interpolationType;
+}
+@end
 
 @implementation DYImageCache
 // this is the designated initializer
 - (id)initWithCapacity:(NSUInteger)n {
 	if (self = [super init]) {
-		cacheOrder = [[NSMutableArray alloc] init];
-		images = [[NSMutableDictionary alloc] init];
+		images = [[NSCache alloc] init];
+		images.countLimit = n;
+		images.evictsObjectsWithDiscardedContent = YES;
 		pending = [[NSMutableSet alloc] init];
 		
 		cacheLock = [[NSLock alloc] init];
 		pendingLock = [[NSConditionLock alloc] initWithCondition:0];
 		
-		maxImages = n;
-		
 		fm = [NSFileManager defaultManager];
 	}
     return self;
+}
+
+- (void)beginAccess:(NSString *)key {
+	[[images objectForKey:key] beginContentAccess];
+}
+- (void)endAccess:(NSString *)key {
+	[[images objectForKey:key] endContentAccess];
 }
 
 - (void)setBoundingSize:(NSSize)aSize {
@@ -96,7 +138,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 
 - (void)dealloc {
 	[images release];
-	[cacheOrder release];
 	[pending release];
 	[cacheLock release];
 	[pendingLock release];
@@ -110,7 +151,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSSize maxSize = boundingSize;
 	NSImage *orig, *result = nil;
 
-	orig = [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(imgInfo->path)];
+	orig = [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(imgInfo.path)];
 
 	// now scale the img
 	if (orig && [[orig representations] count]) { // why doesn't it return nil for corrupt jpegs?
@@ -123,8 +164,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		
 		if (oldSize.width != 0 && oldSize.height != 0) { // but if it's still 0, skip it, BAD IMAGE
 			imgInfo->pixelSize = oldSize;
-			if ((maxSize.height > maxSize.width) != (oldSize.height > oldSize.width)) {
-				// ** do this only for the slideshow
+			if (_rotatable && (maxSize.height > maxSize.width) != (oldSize.height > oldSize.width)) {
 				maxSize.height = boundingSize.width;
 				maxSize.width = boundingSize.height;
 			}
@@ -156,54 +196,12 @@ NSString *FileSize2String(unsigned long long fileSize) {
 				[orig drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositingOperationSourceOver fraction:1.0];
 				[result unlockFocus];
 			}
-			//oldSize = [oldRep size];
-//			oldSize =  newSize;
-//			[result lockFocus];
-//			NSGraphicsContext *cg;
-//			NSImageInterpolation oldInterp;
-//			if (interpolationType) { // NSImageInterpolationDefault is 0
-//				cg = [NSGraphicsContext currentContext];
-//				oldInterp = [cg imageInterpolation];
-//				[cg setImageInterpolation:interpolationType];
-//			}
-//			[orig drawInRect:NSMakeRect(0,0,newSize.width,newSize.height)
-//					fromRect:NSMakeRect(0,0,oldSize.width,oldSize.height)
-//				   operation:NSCompositeSourceOver fraction:1.0];
-//			if (interpolationType)
-//				[cg setImageInterpolation:oldInterp];
-//			[result unlockFocus];
 		}
 	}
 	[orig release];
-	imgInfo->image = result;
+	imgInfo.image = result;
+	[result release];
 }
-
-/*//a failed experiment
-if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.height) {
-	NSCachedImageRep *scaledRep =
-	[[NSCachedImageRep alloc] initWithSize:screenRect.size depth:[self depthLimit]
-								  separate:NO alpha:NO];
-	[orig addRepresentation:scaledRep]; [scaledRep release];
-	NSSize newSize; NSPoint newOrigin = NSZeroPoint;
-	
-	float w_ratio, h_ratio;
-	w_ratio = screenRect.size.width/oldSize.width;
-	h_ratio = screenRect.size.height/oldSize.height;
-	if (w_ratio < h_ratio) { // the side w/ bigger ratio needs to be shrunk
-		newSize.height = oldSize.height*w_ratio;
-		newSize.width = screenRect.size.width;
-		newOrigin.y = (screenRect.size.height - newSize.height)/2;
-	} else {
-		newSize.width = oldSize.width*h_ratio;
-		newSize.height = screenRect.size.height;
-		newOrigin.x = (screenRect.size.width - newSize.width)/2;
-	}
-	[orig lockFocusOnRepresentation:scaledRep];
-	[oldRep drawInRect:NSMakeRect(newOrigin.x,newOrigin.y,newSize.width,newSize.height)];
-	[orig unlockFocus];
-	[orig removeRepresentation:oldRep];
-}
-*/
 
 // see usage note in the .h file.
 #define CacheContains(x)	([images objectForKey:x] != nil)
@@ -215,8 +213,8 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	//NSLog(@"caching %@", idx);
 	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
 	[self createScaledImage:result];
-	if (result->image == nil)
-		result->image = [[NSImage imageNamed:@"brokendoc.tif"] retain]; // ** don't hardcode!
+	if (result.image == nil)
+		result.image = [NSImage imageNamed:@"brokendoc.tif"];
 	else
 		result->exifOrientation = [DYExiftags orientationForFile:ResolveAliasToPath(s)];
 
@@ -224,17 +222,6 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	[self addImage:result forFile:s];
 	[result release];
 	//NSLog(@"caching %@ done!", idx);
-}
-
-- (void)cacheFileThreaded:(NSString *)s {
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	[self cacheFile:s];
-	[pool release];
-}
-
-- (void)cacheFileInNewThread:(NSString *)s {
-	[NSThread detachNewThreadSelector:@selector(cacheFileThreaded:) toTarget:self
-						   withObject:s];
 }
 
 - (BOOL)attemptLockOnFile:(NSString *)s { // add s to the "pending" array
@@ -262,14 +249,7 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 	[cacheLock lock];
 	[pending removeObject:s];
 	if (!cachingShouldStop) {
-		[cacheOrder addObject:s];
-		images[s] = imgInfo;
-		
-		// remove stale images, if any
-		if ([cacheOrder count] > maxImages) {
-			[images removeObjectForKey:cacheOrder[0]];
-			[cacheOrder removeObjectAtIndex:0];
-		}
+		[images setObject:imgInfo forKey:s];
 	}
 	[cacheLock unlock];
 	[pendingLock lock];
@@ -286,22 +266,25 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 
 - (DYImageInfo *)infoForKey:(NSString *)s {
 	// ** unlike imageforkey, this is nonmagical
-	return images[s];
+	return [images objectForKey:s];
 }
 
 - (NSImage *)imageForKey:(NSString *)s {
-	DYImageInfo *imgInfo = images[s];
+	return [images objectForKey:s].image;
+}
+
+- (NSImage *)imageForKeyInvalidatingCacheIfNecessary:(NSString *)s {
+	DYImageInfo *imgInfo = [images objectForKey:s];
 	if (imgInfo) {
 		// must resolve alias before getting mod time
 		// b/c that's what we do in scaleImage
 		NSDate *modTime = [[fm attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL] fileModificationDate];
 
 		// == nil if file doesn't exist
-		if ((modTime == nil && imgInfo->modTime == nil)
-			|| (modTime && imgInfo->modTime && [modTime isEqualToDate:imgInfo->modTime]))
-			return imgInfo->image;
+		if ((modTime == nil && imgInfo.modTime == nil)
+			|| (modTime && imgInfo.modTime && [modTime isEqualToDate:imgInfo.modTime]))
+			return imgInfo.image;
 		[self removeImageForKey:s];
-		return nil;
 	}
 	return nil;
 }
@@ -317,7 +300,6 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 			[pendingLock unlockWithCondition:[s hash]];
 			[cacheLock lock];
 		}
-		[cacheOrder removeObject:s];
 		[images removeObjectForKey:s];
 	}
 	[cacheLock unlock];
@@ -326,22 +308,12 @@ if (oldSize.width > screenRect.size.width || oldSize.height > screenRect.size.he
 - (void)removeAllImages {
 	[cacheLock lock];
 	[images removeAllObjects];
-	[cacheOrder removeAllObjects];
 	[pending removeAllObjects];
 	[cacheLock unlock];
 }
 
-
-
 - (void)abortCaching {
 	cachingShouldStop = YES;
-//	[cacheLock lock];
-//	currentIndex = -1; // in case any threads (cacheAndDisplay) still running, they'll know to stop
-//	
-//	[images removeAllObjects];
-//	[cachedIndexes removeAllObjects];
-//	[pending removeAllObjects];
-//	[cacheLock unlock];
 }
 - (void)beginCaching {
 	cachingShouldStop = NO;

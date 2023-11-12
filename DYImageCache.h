@@ -15,36 +15,22 @@
 
 NSString *FileSize2String(unsigned long long fileSize);
 
-@interface DYImageInfo : NSObject { // use like a struct
-	@public
-	NSString *path;
-	NSImage /*orig,*/ *image;
-	NSDate *modTime;
+@interface DYImageInfo : NSObject {
+	@public // access these instance variables like a struct
 	unsigned long long fileSize;
 	NSSize pixelSize;
 	unsigned short exifOrientation;
 }
+@property (retain, nonatomic) NSImage *image;
+@property (readonly, nonatomic) NSString *path;
+@property (readonly, nonatomic) NSDate *modTime;
 - initWithPath:(NSString *)s;
 - (NSString *)pixelSizeAsString;
 @end
 
 
-@interface DYImageCache : NSObject {
-	NSLock *cacheLock;
-	NSConditionLock *pendingLock;
-	
-	NSMutableArray *cacheOrder;
-	NSMutableDictionary *images;
-	NSMutableSet *pending;
-	
-	NSSize boundingSize;
-	NSUInteger maxImages;
-	volatile BOOL cachingShouldStop;
-	
-	NSFileManager *fm;
-	NSImageInterpolation interpolationType;
-}
-
+@interface DYImageCache : NSObject
+@property (assign, nonatomic) BOOL rotatable; // default is NO
 - (id)initWithCapacity:(NSUInteger)n;
 
 - (float)boundingWidth;
@@ -53,7 +39,6 @@ NSString *FileSize2String(unsigned long long fileSize);
 - (void)setInterpolationType:(NSImageInterpolation)t;
 
 - (void)cacheFile:(NSString *)s;
-- (void)cacheFileInNewThread:(NSString *)s;
 
 // cacheFile consists of the following three steps
 // exposed here for doing your own caching (e.g., Epeg)
@@ -64,10 +49,15 @@ NSString *FileSize2String(unsigned long long fileSize);
 - (void)dontAddFile:(NSString *)s; // simply remove from pending
 
 - (NSImage *)imageForKey:(NSString *)s;
+- (NSImage *)imageForKeyInvalidatingCacheIfNecessary:(NSString *)s;
 - (void)removeImageForKey:(NSString *)s;
 - (void)removeAllImages;
 
 - (DYImageInfo *)infoForKey:(NSString *)s;
+
+// NSDiscardableContent accessors
+- (void)beginAccess:(NSString *)key; // you should call beginAcess if you retain the image (e.g., after calling imageForKey:)
+- (void)endAccess:(NSString *)key; // you should eventually call endAccess if you call (1) cacheFile: (2) addImage:forFile: or (3) beginAcess:
 
 - (void)abortCaching; // when set, ignore calls to cacheFile; pending files dropped when done
 - (void)beginCaching;

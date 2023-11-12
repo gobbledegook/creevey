@@ -20,14 +20,6 @@
 #define VERTPADDING 16
 #define DEFAULT_TEXTHEIGHT 12
 
-/* there are some methods called in a separate thread:
-   removeAllImages
-   addImage:withFilename:
-   imageWithFileInfoNeedsDisplay:
-
-   i've tried to make them thread-safe
- */
-
 static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSRect destinationRect;
 	
@@ -178,8 +170,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		_maxCellWidth = w;
 		// tell delegate to reload anything we've loaded already
 		// the delay is to wait for all the other windows to have emptied the thumbs cache before we start repopulating it
-		if (_respondsToLoadImageForFile) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-			NSUInteger n = filenames.count;
+		NSUInteger n = filenames.count;
+		if (n && _respondsToLoadImageForFile) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			for (NSUInteger i = 0; i < n; ++i) {
 				if (images[i] != loadingImage)
 					[delegate wrappingMatrix:self loadImageForFile:filenames[i] atIndex:i];
@@ -761,29 +753,27 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 #pragma mark lazy loading stuff
-- (void)setImageWithFileInfo:(NSDictionary *)d {
-	NSString *s = d[@"filename"];
+// called in main thread. returns YES if theImage has been retained
+- (BOOL)setImage:(NSImage *)theImage atIndex:(NSUInteger)i forFilename:(NSString *)s {
 	[requestedFilenames removeObject:s];
-	NSUInteger i = [d[@"index"] unsignedIntegerValue];
-	NSImage *theImage = d[@"image"];
-	if (i >= numCells) return;
+	if (i >= numCells) return NO;
 	if (![filenames[i] isEqualToString:s]) {
 		i = [filenames indexOfObject:s];
-		if (i == NSNotFound) return;
+		if (i == NSNotFound) return NO;
 	}
 	if (images[i] != theImage) {
 		images[i] = theImage;
 		++numThumbsLoaded;
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[self setNeedsDisplayInRect:[self cellnum2rect:i]];
-		});
+		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
 	}
+	return YES;
 }
 
-- (BOOL)imageWithFileInfoNeedsDisplay:(NSDictionary *)d {
-	NSString *s = d[@"filename"];
+// called from non-main thread
+- (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d {
+	NSString *s = d[0];
 	if (![requestedFilenames containsObject:s]) return NO;
-	NSUInteger i = [d[@"index"] unsignedIntegerValue];
+	NSUInteger i = [d[1] unsignedIntegerValue];
 	if (i >= numCells) return NO;
 	// simple check to see if nothing's changed and the rect is visible
 	if ([filenames[i] isEqualToString:s]) {
@@ -807,6 +797,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 #pragma mark add/delete images stuff
+// called from non-main thread
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
 	if (!theImage)
 		theImage = loadingImage;
@@ -821,6 +812,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	});
 }
 
+// called from non-main thread
 - (void)removeAllImages {
 	numCells = 0;
 	[images removeAllObjects];
@@ -834,17 +826,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		// manually set to 0 to avoid animation (which you get if you call [self scrollPoint:]
 		[[[self enclosingScrollView] contentView] scrollToPoint:NSZeroPoint];
 		[[[self enclosingScrollView] verticalScroller] setDoubleValue:0];
-		// this will do for now, but we should really rethink the entire threading code
 	});
 }
-/*
-- (void)removeSelectedImages {
-	numCells -= [selectedIndexes count];
-	[images removeObjectsFromIndices:selectedIndexes];
-	[selectedIndexes removeAllIndexes];
-	[self setNeedsDisplay:YES];
-}
-*/
 - (void)removeImageAtIndex:(NSUInteger)i {
 	// check if i is in range
 	if (i >= [images count]) return;

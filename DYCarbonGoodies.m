@@ -26,35 +26,24 @@ NSString *ResolveAliasToPath(NSString *path) {
 		isAlias = CFBooleanGetValue(b);
 		CFRelease(b);
 	}
-	if (isAlias) {
-		CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, url, NULL);
-		if (dataRef) {
-			CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
-			if (resolvedUrl) {
-				CFStringRef thePath = CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle);
-				resolvedPath = [(NSString*)thePath copy];
-				CFRelease(thePath);
-				CFRelease(resolvedUrl);
-			}
-			CFRelease(dataRef);
-		}
-	}
+	if (isAlias)
+		resolvedPath = ResolveAliasURLToPath((NSURL *)url);
 	CFRelease(url);
 	return resolvedPath ?: path;
 }
 
-BOOL FileIsInvisible(NSString *path) {
-	CFURLRef url = CFURLCreateWithFileSystemPath(NULL /*allocator*/, (CFStringRef)path,
-												 kCFURLPOSIXPathStyle, NO /*isDirectory*/);
-	if (url == NULL) return NO;
-	Boolean result = NO;
-	CFBooleanRef isInvisible;
-	if (CFURLCopyResourcePropertyForKey(url, kCFURLIsHiddenKey, &isInvisible, NULL)) {
-		result = CFBooleanGetValue(isInvisible);
-		CFRelease(isInvisible);
+NSString *ResolveAliasURLToPath(NSURL *url) {
+	NSString *path = nil;
+	CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, (CFURLRef)url, NULL);
+	if (dataRef) {
+		CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
+		if (resolvedUrl) {
+			path = [(NSString *)CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle) autorelease];
+			CFRelease(resolvedUrl);
+		}
+		CFRelease(dataRef);
 	}
-	CFRelease(url);
-	return result;
+	return path;
 }
 
 BOOL FileIsJPEG(NSString *s) {
