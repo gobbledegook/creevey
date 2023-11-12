@@ -321,6 +321,16 @@
 	}
 }
 
+- (void)filesWereUndeleted:(NSArray *)a {
+	NSString *currentPath = [self path];
+	BOOL __block needsRefresh = NO;
+	for (NSString *s in a) {
+		if ([s hasPrefix:currentPath])
+			needsRefresh = YES;
+	}
+	if (needsRefresh)
+		[self setPath:currentPath];
+}
 
 - (void)setStatusString:(NSString *)s {
 	[NSObject cancelPreviousPerformRequestsWithTarget:statusFld];

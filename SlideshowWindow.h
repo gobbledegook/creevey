@@ -66,6 +66,8 @@
 - (void)redisplayImage; // to force reload of current file, regardless of mod date
 - (BOOL)currentImageLoaded;
 - (void)removeImageForFile:(NSString *)s; // use this if something's been deleted
+- (void)insertFile:(NSString *)s atIndex:(NSUInteger)idx atOrderedIndex:(NSUInteger)oIdx; // use this to undo a deletion
+- (NSUInteger)currentOrderedIndex;
 - (void)uncacheImage:(NSString *)s; // when an image is modified, remove it from cache
 
 - (void)setRerandomizeOnLoop:(BOOL)b;

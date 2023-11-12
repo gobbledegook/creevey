@@ -467,10 +467,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
-- (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles {
+- (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles resultingURL:(NSURL **)newURL {
 	NSURL *url = [NSURL fileURLWithPath:fullpath isDirectory:NO];
 	NSError * _Nullable error = nil;
-	[[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error];
+	[[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:newURL error:&error];
 	if (!error)
 		return 1;
 	NSAlert *alert = [[NSAlert alloc] init];
@@ -485,31 +485,93 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	return 0;
 }
 
-- (void)removePicsAndTrash:(BOOL)b {
+// pass YES to move to trash; pass NO if this was a drag-to-Finder operation
+- (void)removePicsAndTrash:(BOOL)doTrash {
 	// *** to be more efficient, we should change the path in the cache instead of deleting it
 	if ([slidesWindow isMainWindow]) {
+		// doTrash should always be YES in this case
 		NSString *s = [slidesWindow currentFile];
-		if (!b || [self trashFile:s numLeft:1]) {
+		NSURL *u;
+		if ([self trashFile:s numLeft:1 resultingURL:&u]) {
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:s];
 			[thumbsCache removeImageForKey:s];
 			[slidesWindow removeImageForFile:s];
+			NSUInteger idx = [slidesWindow currentIndex], oIdx = [slidesWindow currentOrderedIndex];
+			NSUndoManager *um = slidesWindow.undoManager;
+			[um registerUndoWithTarget:self handler:^(id target) {
+				if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:NULL]) {
+					if ([slidesWindow isMainWindow])
+						[slidesWindow insertFile:s atIndex:idx atOrderedIndex:oIdx];
+					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:@[s]];
+				} else {
+					NSAlert *alert = [[NSAlert alloc] init];
+					alert.informativeText = [NSString stringWithFormat:@"The file \"%@\" could not be restored from the trash because of an error.", [s lastPathComponent]];
+					[alert runModal];
+					[alert release];
+				}
+			}];
+			[um setActionName:[NSString stringWithFormat:@"Move to Trash"]];
 		}
 	} else {
 		NSUInteger oldIndex = [[frontWindow selectedIndexes] firstIndex];
 		NSArray *a = [frontWindow currentSelection];
 		NSUInteger i, n = [a count];
-		// we have to go backwards b/c we're deleting from the imgMatrix
-		// wait... we don't, because we're not using indexes anymore
+		NSMutableArray<NSArray *> *trashedFiles = [NSMutableArray arrayWithCapacity:n];
 		for (i=0; i < n; ++i) {
 			NSString *fullpath = a[i];
-			char result = (b ? [self trashFile:fullpath numLeft:n-i] : 1);
+			NSURL *newURL;
+			char result = (doTrash ? [self trashFile:fullpath numLeft:n-i resultingURL:&newURL] : 1);
 			if (result == 1) {
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fullpath];
 				if ([slidesWindow isVisible])
 					[slidesWindow removeImageForFile:fullpath];
+				if (doTrash)
+					[trashedFiles addObject:@[fullpath, newURL]];
 			} else if (result == 2)
 				break;
+		}
+		// TODO: localize the strings below
+		NSUndoManager *um = frontWindow.window.undoManager;
+		n = trashedFiles.count;
+		if (n) {
+			[um registerUndoWithTarget:self handler:^(id target) {
+				NSMutableArray *moved = [NSMutableArray arrayWithCapacity:n];
+				for (NSArray *a in trashedFiles) {
+					if ([NSFileManager.defaultManager moveItemAtPath:[a[1] path] toPath:a[0] error:NULL])
+						[moved addObject:a[0]];
+				}
+				[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
+				if (moved.count < n) {
+					NSAlert *alert = [[NSAlert alloc] init];
+					alert.informativeText = [NSString stringWithFormat:@"%lu file(s) could not be restored from the trash because of an error. You should probably check your Trash.", n-moved.count];
+					[alert runModal];
+					[alert release];
+				}
+			}];
+			[um setActionName:[NSString stringWithFormat:@"Move to Trash (%lu File%@)", n, n == 1 ? @"" : @"s"]];
+		} else if (!doTrash) {
+			NSArray<NSURL *> *urls = [[frontWindow imageMatrix] movedUrls]; // nonmutable copy, suitable to be captured by block below
+			// these are file reference URLs so we will be able to resolve the new paths
+			n = urls.count;
+			if (n) {
+				NSArray *paths = [[frontWindow imageMatrix] originPaths];
+				[um registerUndoWithTarget:self handler:^(id target) {
+					NSMutableArray *moved = [NSMutableArray arrayWithCapacity:n];
+					for (NSUInteger i=0; i<n; ++i) {
+						if ([NSFileManager.defaultManager moveItemAtPath:urls[i].path toPath:paths[i] error:NULL])
+							[moved addObject:paths[i]];
+					}
+					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
+					if (moved.count < n) {
+						NSAlert *alert = [[NSAlert alloc] init];
+						alert.informativeText = [NSString stringWithFormat:@"%lu file(s) could not be moved back because of an error.", n-moved.count];
+						[alert runModal];
+						[alert release];
+					}
+				}];
+				[um setActionName:[NSString stringWithFormat:@"Move Files (%lu File%@)", n, n == 1 ? @"" : @"s"]];
+			}
 		}
 		[frontWindow updateExifInfo];
 		// no selection means all files were successfully deleted; select the next image if possible
@@ -523,8 +585,15 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[self removePicsAndTrash:YES];
 }
 
-- (IBAction)moveElsewhere:(id)sender {
+#pragma mark matrix view methods
+
+- (void)moveElsewhere {
 	[self removePicsAndTrash:NO];
+}
+
+- (unsigned short)exifOrientationForFile:(NSString *)s {
+	DYImageInfo *i = [thumbsCache infoForKey:ResolveAliasToPath(s)];
+	return i ? i->exifOrientation : 0;
 }
 
 #pragma mark app delegate methods

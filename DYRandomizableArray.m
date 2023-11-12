@@ -83,6 +83,31 @@
 	[self removeObjectAtIndex:i];
 }
 
+- (void)insertObject:(id)anObject withOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index {
+	NSUInteger count = array.count;
+	if (index > count) index = count;
+	if (oIdx > count) oIdx = count;
+	if ([orderedArray count]) {
+		[orderedArray insertObject:anObject atIndex:oIdx];
+		NSUInteger i;
+		for (i=0; i<count; ++i) {
+			NSUInteger n = [randomToOrdered[i] unsignedIntegerValue];
+			if (n > oIdx)
+				randomToOrdered[i] = @(n+1);
+		}
+		[randomToOrdered insertObject:@(oIdx) atIndex:index];
+		for (i=0; i<count; ++i) {
+			NSUInteger n = [orderedToRandom[i] unsignedIntegerValue];
+			if (n > index)
+				orderedToRandom[i] = @(n+1);
+		}
+		[orderedToRandom insertObject:@(index) atIndex:oIdx];
+	} else {
+		index = oIdx;
+	}
+	[array insertObject:anObject atIndex:index];
+}
+
 // randomizable stuff
 - (void)derandomize {
 	[array setArray:orderedArray];

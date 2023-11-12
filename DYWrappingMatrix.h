@@ -96,12 +96,17 @@
 - (NSUInteger)numThumbsLoaded;
 - (void)setDelegate:(id)d;
 
+// these return nonmutable copies of arrays and should each be called once when moveElsewhere is called
+- (NSArray<NSURL *> *)movedUrls;
+- (NSArray<NSString *> *)originPaths;
 @end
 
 @interface NSObject(DYWrappingMatrixTarget)
-- (IBAction)moveToTrash:(id)sender; // dragging to trashcan will call this
-- (IBAction)moveElsewhere:(id)sender; // moving a file to the Finder will call this
+- (void)moveToTrash:(id)sender; // dragging to trashcan will call this
+- (void)moveElsewhere; // moving a file to the Finder will call this
 - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)s;
 - (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i;
+- (unsigned short)exifOrientationForFile:(NSString *)s;
+- (NSMenu *)thumbnailContextMenu;
 @end
 

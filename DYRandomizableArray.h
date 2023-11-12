@@ -21,6 +21,7 @@
 - (void)removeAllObjects;
 - (void)removeObjectAtIndex:(NSUInteger)index;
 - (void)removeObject:(id)anObject;
+- (void)insertObject:(id)anObject withOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index;
 
 // randomizable stuff
 - (void)randomize;

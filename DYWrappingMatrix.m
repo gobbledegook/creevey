@@ -10,10 +10,6 @@
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
 
-#import "DYImageCache.h" // kludge to access the thumbsCache
-#import "CreeveyController.h"
-
-
 #define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
 #define PADDING 16
@@ -51,6 +47,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 {
 	float _maxCellWidth;
 	BOOL _respondsToLoadImageForFile, _respondsToSelectionDidChange;
+	NSMutableArray *_movedUrls, *_originPaths;
+	id _appDelegate;
 }
 - (void)resize:(id)anObject; // called to recalc, set frame height
 @property (nonatomic, retain) NSArray *openWithAppIdentifiers; // saved in mouseDown for subsequent use by the context menu
@@ -115,6 +113,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		filenames = [[NSMutableArray alloc] initWithCapacity:100];
 		selectedIndexes = [[NSMutableIndexSet alloc] init];
 		requestedFilenames = [[NSMutableSet alloc] init];
+		_movedUrls = [[NSMutableArray alloc] init];
+		_originPaths = [[NSMutableArray alloc] init];
 		// cellWidth should be initialized by an external controll during awakeFromNib
 		_maxCellWidth = FLT_MAX;
 		textHeight = DEFAULT_TEXTHEIGHT;
@@ -160,6 +160,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 																 context:NULL];
 	_respondsToLoadImageForFile = [delegate respondsToSelector:@selector(wrappingMatrix:loadImageForFile:atIndex:)];
 	_respondsToSelectionDidChange = [delegate respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)];
+	_appDelegate = NSApp.delegate;
 }
 
 - (void)setMaxCellWidth:(float)w {
@@ -206,6 +207,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[requestedFilenames release];
 	[bgColor release];
 	[_openWithAppIdentifiers release];
+	[_movedUrls release];
+	[_originPaths release];
 	[super dealloc];
 }
 
@@ -293,12 +296,23 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (void)draggingSession:(NSDraggingSession *)session endedAtPoint:(NSPoint)aPoint operation:(NSDragOperation)operation {
 	if (operation == NSDragOperationDelete) {
-		if ([(CreeveyController *)[NSApp delegate] respondsToSelector:@selector(moveToTrash:)])
-			[(CreeveyController *)[NSApp delegate] moveToTrash:nil];
+		if ([_appDelegate respondsToSelector:@selector(moveToTrash:)])
+			[_appDelegate moveToTrash:nil];
 	} else if (operation == NSDragOperationMove) {
-		if ([(CreeveyController *)[NSApp delegate] respondsToSelector:@selector(moveElsewhere:)])
-			[(CreeveyController *)[NSApp delegate] moveElsewhere:nil];
+		if ([_appDelegate respondsToSelector:@selector(moveElsewhere)])
+			[_appDelegate moveElsewhere];
 	}
+	// moveElsewhere should have retained copies of these, so OK to reset them now
+	[_movedUrls removeAllObjects];
+	[_originPaths removeAllObjects];
+}
+
+- (NSArray<NSURL *> *)movedUrls {
+	return [[_movedUrls copy] autorelease];
+}
+
+- (NSArray<NSString *> *)originPaths {
+	return [[_originPaths copy] autorelease];
 }
 
 #pragma mark filename stuff
@@ -423,6 +437,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
 			NSString *path = filenames[idx];
 			NSURL *url = [NSURL fileURLWithPath:path isDirectory:NO];
+			[_originPaths addObject:path];
+			[_movedUrls addObject:url.fileReferenceURL];
 			// each pasteboard item has both a string and URL representation
 			NSPasteboardItem *pbi = [[[NSPasteboardItem alloc] init] autorelease];
 			[pbi setString:path forType:NSPasteboardTypeString];
@@ -697,9 +713,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return s;
 }
 - (unsigned short)exifOrientationForIndex:(NSUInteger)n {
-	DYImageInfo *i = [[(CreeveyController *)[NSApp delegate] thumbsCache]
-					  infoForKey:ResolveAliasToPath(filenames[n])];
-	return i ? i->exifOrientation : 0;
+	return [_appDelegate exifOrientationForFile:filenames[n]];
 }
 
 

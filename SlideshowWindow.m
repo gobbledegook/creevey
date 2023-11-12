@@ -229,6 +229,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[self orderOut:nil];
 	
 	[imgCache abortCaching];
+	[self.undoManager removeAllActions];
 
 	// this is a half-hearted attempt to clean up. Really we just rely on the countLimit on the cache
 	NSUInteger n = MIN(filenames.count, MAX_CACHED);
@@ -1035,6 +1036,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self displayImage]; // reload at the current index
 }
 
+- (void)insertFile:(NSString *)s atIndex:(NSUInteger)idx atOrderedIndex:(NSUInteger)oIdx {
+	[filenames insertObject:s withOrderedIndex:oIdx atIndex:idx];
+	[self jumpTo:randomMode ? idx : oIdx];
+}
+
+- (NSUInteger)currentOrderedIndex {
+	return randomMode ? [filenames orderedIndexOfObjectAtIndex:currentIndex] : currentIndex;
+}
 
 #pragma mark cat methods
 - (void)displayCats {
