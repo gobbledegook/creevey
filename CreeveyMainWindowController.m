@@ -99,7 +99,9 @@
 
 - (void)window:(NSWindow *)window didDecodeRestorableState:(NSCoder *)state
 {
-	NSDictionary *data = [state decodeObjectForKey:@"creeveyWindowState"];
+	// as of macOS 12, apps must support secure restorable state (apparently malicious attacks could happen if there was bad data masquerading as your saved state)
+	// the fix is apparently to give a list of secure classes when you ask to decode the data. See the AppKit release notes for macOS 12.
+	NSDictionary *data = [state decodeObjectOfClasses:[NSSet setWithArray:@[[NSDictionary class],[NSString class],[NSNumber class]]] forKey:@"creeveyWindowState"];
 	if (![data isKindOfClass:[NSDictionary class]]) data = @{};
 	NSString *path = data[@"path"];
 	if (![path isKindOfClass:[NSString class]]) path = nil;

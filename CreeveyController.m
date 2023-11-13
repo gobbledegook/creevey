@@ -985,6 +985,10 @@ enum {
 
 
 #pragma mark new window stuff
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
+	// opt in to secure behavior in macOS 12 and later. See the AppKit release notes for macOS 14.
+	return YES;
+}
 + (void)restoreWindowWithIdentifier:(NSString *)identifier
 							  state:(NSCoder *)state
 				  completionHandler:(void (^)(NSWindow *, NSError *))completionHandler
