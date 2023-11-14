@@ -151,11 +151,7 @@
 		return NO;
 	if (!isDir)
 		s = [s stringByDeletingLastPathComponent];
-	if (![dirBrowserDelegate setPath:s]) {
-		//NSLog(@"retrying as invisible");
-		[dirBrowserDelegate setShowInvisibles:showInvisibles = YES];
-		[dirBrowserDelegate setPath:s];
-	}
+	[dirBrowserDelegate setPath:s];
 	[dirBrowser sendAction];
 	[[self window] invalidateRestorableState];
 	return YES;
@@ -337,7 +333,7 @@
 		[secondaryImageCacheQueue removeAllObjects];
 		[imageCacheQueueLock unlockWithCondition:0];
 		NSDirectoryEnumerationOptions options = recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
-		if (!showInvisibles) options |= NSDirectoryEnumerationSkipsHiddenFiles;
+		options |= NSDirectoryEnumerationSkipsHiddenFiles;
 		NSDirectoryEnumerator *e = [fm enumeratorAtURL:[NSURL fileURLWithPath:thePath isDirectory:YES]
 							includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLNameKey]
 											   options:options errorHandler:nil];

@@ -9,22 +9,8 @@
 
 #import <Cocoa/Cocoa.h>
 #import "DYCreeveyBrowser.h"
-@class VDKQueue;
 
 @interface DirBrowserDelegate : NSObject <DYCreeveyBrowserDelegate>
-{
-	NSMutableArray *cols, *colsInternal;
-	NSString *rootVolumeName;
-	BOOL showInvisibles;
-	BOOL browserInited; // work around NSBrowser bug
-	
-	NSString *currPath;
-	NSArray *currBrowserPathComponents;
-	NSMutableSet *revealedDirectories;
-	NSData *currAlias;
-	
-	VDKQueue *kq;
-	IBOutlet NSBrowser *_b;
-}
+@property (assign) IBOutlet NSBrowser *_b;
 @property (atomic, readonly) NSString *savedPath;
 @end

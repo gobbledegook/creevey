@@ -33,7 +33,6 @@
 		startSlideshowWhenReady;
 	NSMutableSet *filesBeingOpened; // to be selected
 	BOOL recurseSubfolders;
-	BOOL showInvisibles;
 	short int sortOrder;
 	
 	short int currCat;
@@ -43,7 +42,6 @@
 
 // accessors
 - (NSString *)path;
-- (BOOL)setPath:(NSString *)s;
 - (NSArray *)currentSelection;
 - (NSIndexSet *)selectedIndexes;
 - (void)selectIndex:(NSUInteger)i;

@@ -25,8 +25,7 @@
 
 @protocol DYCreeveyBrowserDelegate <NSObject>
 - (NSString*)path;
-- (BOOL)setPath:(NSString *)s;
-- (void)setShowInvisibles:(BOOL)b;
+- (void)setPath:(NSString *)s;
 - (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(NSInteger)column;
 - (void)browserWillSendAction:(NSBrowser *)sender;
 @end
