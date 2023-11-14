@@ -11,6 +11,9 @@
 #import "DYCreeveyBrowser.h"
 
 @interface DirBrowserDelegate : NSObject <DYCreeveyBrowserDelegate>
-@property (assign) IBOutlet NSBrowser *_b;
-@property (atomic, readonly) NSString *savedPath;
+- (NSString*)path;
+- (void)setPath:(NSString *)s;
+@property (assign) IBOutlet NSBrowser *b;
+@property (assign) NSMutableSet *revealedDirectories;
+@property (atomic, readonly) NSString *currPath;
 @end

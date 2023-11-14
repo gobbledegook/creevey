@@ -69,6 +69,11 @@
 @end
 
 @implementation DYCreeveyBrowser
+{
+	NSMutableString *typedString;
+	NSTimeInterval lastKeyTime;
+	DYTransparentGreyView *greyview; // for drag-and-drop
+}
 //why doesn't IB let me set this as a custom class of an NSBrowser???
 //it calls a different init method
 - (id)initWithFrame:(NSRect)frameRect {

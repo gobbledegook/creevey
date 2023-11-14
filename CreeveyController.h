@@ -46,6 +46,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 @property (retain) IBOutlet DYJpegtranPanel *jpegController;
 @property (retain) IBOutlet NSMenu *thumbnailContextMenu;
+@property (readonly) NSMutableSet *revealedDirectories; // set of invisible directories that should be shown in the browser
 
 // accessors
 - (NSMutableSet **)cats;

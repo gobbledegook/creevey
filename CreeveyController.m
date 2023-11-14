@@ -184,6 +184,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			}
 			CFRelease(t);
 		}
+		_revealedDirectories = [[NSMutableSet alloc] initWithObjects:[NSURL fileURLWithPath:[@"~/Desktop/" stringByResolvingSymlinksInPath] isDirectory:YES], nil];
 		fileextensions = [[filetypes.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)] retain];
 		creeveyWindows = [[NSMutableArray alloc] initWithCapacity:5];
 		
@@ -246,6 +247,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[filetypes release];
 	[fileostypes release];
 	[disabledFiletypes release];
+	[_revealedDirectories release];
 	[fileextensions release];
 	[filetypeDescriptions release];
 	[creeveyWindows release];

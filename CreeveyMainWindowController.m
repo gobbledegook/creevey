@@ -86,6 +86,7 @@
 	[[self window] setRestorationClass:[CreeveyController class]];
 	
 	dirBrowserDelegate = [dirBrowser delegate];
+	dirBrowserDelegate.revealedDirectories = appDelegate.revealedDirectories;
 
 	_brokenDoc = [[NSImage imageNamed:@"brokendoc.tif"] retain];
 	[NSThread detachNewThreadSelector:@selector(thumbLoader:) toTarget:self withObject:nil];
@@ -194,7 +195,7 @@
 }
 
 - (BOOL)pathIsVisibleThreaded:(NSString *)filename {
-	NSString *browserPath = dirBrowserDelegate.savedPath;
+	NSString *browserPath = dirBrowserDelegate.currPath;
 	if (recurseSubfolders) return [filename hasPrefix:browserPath];
 	return [[filename stringByDeletingLastPathComponent] isEqualToString:browserPath];
 }

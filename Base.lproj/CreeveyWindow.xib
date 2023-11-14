@@ -193,7 +193,7 @@ DQ
         </window>
         <customObject id="205" userLabel="DirBrowserDelegate" customClass="DirBrowserDelegate">
             <connections>
-                <outlet property="_b" destination="369" id="445"/>
+                <outlet property="b" destination="369" id="oCV-W4-dHJ"/>
             </connections>
         </customObject>
         <objectController id="431" userLabel="DYMatrixController">
