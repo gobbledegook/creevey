@@ -8,6 +8,11 @@
 #import "DYJpegtranPanel.h"
 
 @implementation DYJpegtranPanel
+- (void)dealloc
+{
+	[_topLevel release];
+	[super dealloc];
+}
 - (IBAction)transformChanged:(id)sender
 {
 	[self.trimBtn setEnabled:[[sender selectedItem] tag]==JXFORM_NONE || [[sender selectedItem] tag]==JXFORM_TRANSPOSE

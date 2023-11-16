@@ -42,8 +42,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[s appendString:[origPath lastPathComponent]];
 	if (path != origPath)
 		[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
-	DYImageInfo *i = [cache infoForKey:origPath];
-	if (!i) i = [cache infoForKey:path]; // if no info from the given path, try resolving the alias.
+	DYImageInfo *i = [cache infoForKey:path];
+	if (!i) {
+		i = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
+	}
 	if (i) {
 		id exifStr = [DYExiftags tagsForFile:path moreTags:moreExif];
 		[s appendFormat:@"\n%@ (%qu bytes)\n%@: %d %@: %d",
