@@ -48,7 +48,6 @@
 		F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */; };
 		F28F0C0B07F5E642009BF709 /* DYWrappingMatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = F28F0C0907F5E642009BF709 /* DYWrappingMatrix.h */; };
 		F28F0C0C07F5E642009BF709 /* DYWrappingMatrix.m in Sources */ = {isa = PBXBuildFile; fileRef = F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */; };
-		F2910A4A08198D5300D3878C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F2910A4908198D5300D3878C /* Localizable.strings */; };
 		F29447980820946000B932C1 /* Credits.html in Resources */ = {isa = PBXBuildFile; fileRef = F29447970820946000B932C1 /* Credits.html */; };
 		F299B06207FDF5F7006028C1 /* DYImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = F299B06007FDF5F7006028C1 /* DYImageView.h */; };
 		F299B06307FDF5F7006028C1 /* DYImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F299B06107FDF5F7006028C1 /* DYImageView.m */; };
@@ -59,6 +58,7 @@
 		F2AE88EA07EB877D008F2193 /* DirBrowserDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */; };
 		F2AE890E07EB9BB7008F2193 /* CreeveyController.h in Headers */ = {isa = PBXBuildFile; fileRef = F2AE890C07EB9BB7008F2193 /* CreeveyController.h */; };
 		F2AE890F07EB9BB7008F2193 /* CreeveyController.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE890D07EB9BB7008F2193 /* CreeveyController.m */; };
+		F2BE50162B05AB080024FD34 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F2BE50152B05AB080024FD34 /* Localizable.xcstrings */; };
 		F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */ = {isa = PBXBuildFile; fileRef = F2C940B508200F6F0019D0D3 /* multipledocs.gif */; };
 		F2D2AC63080B82840075532A /* brokendoc.tif in Resources */ = {isa = PBXBuildFile; fileRef = F2D2AC62080B82840075532A /* brokendoc.tif */; };
 		F2D40FF021989C3F00E0CFFD /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2D40FEF21989C3F00E0CFFD /* Media.xcassets */; };
@@ -141,14 +141,12 @@
 		F20DC2900886240400986105 /* CreeveyMainWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyMainWindowController.m; sourceTree = "<group>"; };
 		F219AB5A2199531C00960A5A /* Phoenix Slides.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Phoenix Slides.entitlements"; sourceTree = "<group>"; };
 		F21AD0BC0892AC440054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/EXIF.strings; sourceTree = "<group>"; };
-		F21AD0BD0892AC4C0054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F21AD0C00892AC700054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = de; path = de.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F21AD0D90892B4AB0054EA35 /* de */ = {isa = PBXFileReference; lastKnownFileType = folder; name = de; path = "de.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
 		F21E90930892BA9F007B65EF /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F221AA51096089D5002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = es; path = es.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F221AA6109608C31002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = folder; name = es; path = "es.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
 		F221AA6409608C70002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/EXIF.strings; sourceTree = "<group>"; };
-		F221AA6509608C70002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F221AAAB0960A924002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
@@ -180,8 +178,6 @@
 		F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSIndexSetSymDiffExtension.m; sourceTree = "<group>"; };
 		F28F0C0907F5E642009BF709 /* DYWrappingMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYWrappingMatrix.h; sourceTree = "<group>"; };
 		F28F0C0A07F5E642009BF709 /* DYWrappingMatrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYWrappingMatrix.m; sourceTree = "<group>"; };
-		F2910A4108198D2900D3878C /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		F2910A4B08198D6100D3878C /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		F29447970820946000B932C1 /* Credits.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = Credits.html; sourceTree = "<group>"; };
 		F299B06007FDF5F7006028C1 /* DYImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageView.h; sourceTree = "<group>"; };
 		F299B06107FDF5F7006028C1 /* DYImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageView.m; sourceTree = "<group>"; };
@@ -195,7 +191,7 @@
 		F2AE890D07EB9BB7008F2193 /* CreeveyController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeveyController.m; sourceTree = "<group>"; };
 		F2B13C000BCEE6F100CF252E /* it */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = it; path = it.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F2B13C050BCEE73500CF252E /* it */ = {isa = PBXFileReference; lastKnownFileType = folder; name = it; path = "it.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
-		F2B13C0A0BCEE75700CF252E /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F2BE50152B05AB080024FD34 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F2C940B508200F6F0019D0D3 /* multipledocs.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = multipledocs.gif; sourceTree = "<group>"; };
 		F2D2AC62080B82840075532A /* brokendoc.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = brokendoc.tif; sourceTree = "<group>"; };
 		F2D40FEF21989C3F00E0CFFD /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
@@ -204,7 +200,6 @@
 		F2D8407F1B40972000A4F731 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
 		F2D840811B40972100A4F731 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
 		F2D840831B40972300A4F731 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/ThumbnailContextMenu.strings; sourceTree = "<group>"; };
-		F2E2E1710AB51122001242BE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F2E2E17A0AB51279001242BE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F2E6CAAE1CF6BCC3002C5CC4 /* loop_forward.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = loop_forward.tiff; sourceTree = "<group>"; };
 		F2E83B920BD09D8F0092E425 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -365,7 +360,7 @@
 				F2E6CAAE1CF6BCC3002C5CC4 /* loop_forward.tiff */,
 				F21AD0D30892B49F0054EA35 /* Phoenix Slides Help */,
 				F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */,
-				F2910A4908198D5300D3878C /* Localizable.strings */,
+				F2BE50152B05AB080024FD34 /* Localizable.xcstrings */,
 				F2D2AC62080B82840075532A /* brokendoc.tif */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
@@ -581,7 +576,6 @@
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				F2D2AC63080B82840075532A /* brokendoc.tif in Resources */,
 				F202E2CB19170E4900EDDCEC /* MainMenu.xib in Resources */,
-				F2910A4A08198D5300D3878C /* Localizable.strings in Resources */,
 				F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */,
 				F21AD0D40892B49F0054EA35 /* Phoenix Slides Help in Resources */,
 				F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */,
@@ -593,6 +587,7 @@
 				F28C1E1D0A86723000682516 /* general.gif in Resources */,
 				F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */,
 				F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */,
+				F2BE50162B05AB080024FD34 /* Localizable.xcstrings in Resources */,
 				F276A7461B4095F50045E67A /* ThumbnailContextMenu.xib in Resources */,
 				F2E6CAAF1CF6BCC3002C5CC4 /* loop_forward.tiff in Resources */,
 				F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */,
@@ -741,19 +736,6 @@
 			name = ThumbnailContextMenu.xib;
 			sourceTree = "<group>";
 		};
-		F2910A4908198D5300D3878C /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				F2910A4108198D2900D3878C /* en */,
-				F2910A4B08198D6100D3878C /* zh-Hant */,
-				F21AD0BD0892AC4C0054EA35 /* de */,
-				F221AA6509608C70002B38F5 /* es */,
-				F2E2E1710AB51122001242BE /* fr */,
-				F2B13C0A0BCEE75700CF252E /* it */,
-			);
-			name = Localizable.strings;
-			sourceTree = "<group>";
-		};
 		F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -789,6 +771,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = net.blyt.phoenixslides;
 				PRODUCT_NAME = "Phoenix Slides";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
@@ -817,6 +800,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = net.blyt.phoenixslides;
 				PRODUCT_NAME = "Phoenix Slides";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",

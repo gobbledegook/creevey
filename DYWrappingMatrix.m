@@ -964,7 +964,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		// fail gracefully if the file is not openable
 		NSMenu *menu = [appDelegate thumbnailContextMenu];
 		NSMenu *openWithMenu = [[[NSMenu alloc] init] autorelease];
-		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:@"n/a" action:NULL keyEquivalent:@""] autorelease];
+		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"None Available", @"") action:NULL keyEquivalent:@""] autorelease];
 		[openWithMenu addItem:item];
 		[menu itemAtIndex:0].submenu = openWithMenu;
 		return menu;

@@ -503,18 +503,19 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			NSUInteger idx = [slidesWindow currentIndex], oIdx = [slidesWindow currentOrderedIndex];
 			NSUndoManager *um = slidesWindow.undoManager;
 			[um registerUndoWithTarget:self handler:^(id target) {
-				if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:NULL]) {
+				NSError *err;
+				if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:&err]) {
 					if ([slidesWindow isMainWindow])
 						[slidesWindow insertFile:s atIndex:idx atOrderedIndex:oIdx];
 					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:@[s]];
 				} else {
 					NSAlert *alert = [[NSAlert alloc] init];
-					alert.informativeText = [NSString stringWithFormat:@"The file \"%@\" could not be restored from the trash because of an error.", [s lastPathComponent]];
+					alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file \"%@\" could not be restored from the trash because of an error: %@", @""), [s lastPathComponent], err.localizedDescription];
 					[alert runModal];
 					[alert release];
 				}
 			}];
-			[um setActionName:[NSString stringWithFormat:@"Move to Trash"]];
+			[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move to Trash",@"")]];
 		}
 	} else {
 		NSUInteger oldIndex = [[frontWindow selectedIndexes] firstIndex];
@@ -548,12 +549,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 				[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
 				if (moved.count < n) {
 					NSAlert *alert = [[NSAlert alloc] init];
-					alert.informativeText = [NSString stringWithFormat:@"%lu file(s) could not be restored from the trash because of an error. You should probably check your Trash.", n-moved.count];
+					alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu file(s) could not be restored from the trash because of an error. You should probably check your Trash.",@""), n-moved.count];
 					[alert runModal];
 					[alert release];
 				}
 			}];
-			[um setActionName:[NSString stringWithFormat:@"Move to Trash (%lu File%@)", n, n == 1 ? @"" : @"s"]];
+			[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move to Trash (%lu File(s))",@"for undo"), n]];
 		} else if (!doTrash) {
 			NSArray<NSURL *> *urls = [[frontWindow imageMatrix] movedUrls]; // nonmutable copy, suitable to be captured by block below
 			// these are file reference URLs so we will be able to resolve the new paths
@@ -569,12 +570,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
 					if (moved.count < n) {
 						NSAlert *alert = [[NSAlert alloc] init];
-						alert.informativeText = [NSString stringWithFormat:@"%lu file(s) could not be moved back because of an error.", n-moved.count];
+						alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu file(s) could not be moved back because of an error.",@""), n-moved.count];
 						[alert runModal];
 						[alert release];
 					}
 				}];
-				[um setActionName:[NSString stringWithFormat:@"Move Files (%lu File%@)", n, n == 1 ? @"" : @"s"]];
+				[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move Files (%lu File(s))",@"for undo"), n]];
 			}
 		}
 		[frontWindow updateExifInfo];
