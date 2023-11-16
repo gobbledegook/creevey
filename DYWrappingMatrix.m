@@ -46,6 +46,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 @interface DYWrappingMatrix () <NSDraggingSource>
 {
 	float _maxCellWidth;
+	NSSize _contentSize;
 	BOOL _respondsToLoadImageForFile, _respondsToSelectionDidChange;
 	NSMutableArray *_movedUrls, *_originPaths;
 	id _appDelegate;
@@ -469,10 +470,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self calculateCellSizes];
 	NSSize mySize = [self frame].size;
 	NSUInteger numRows = numCells == 0 ? 0 : (numCells-1)/numCols + 1;
-	float h = MAX(numRows*area_h, [[self superview] frame].size.height);
+	float h = MAX(floorf(numRows*area_h), [[self superview] frame].size.height);
 	if (mySize.height != h) {
 		mySize.height = h;
-		[self setFrameSize:mySize];
+		_contentSize = mySize;
 		[self invalidateIntrinsicContentSize];
 	}
 	savedVisibleRect = [self visibleRect];
@@ -484,7 +485,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (NSSize)intrinsicContentSize
 {
-	return self.frame.size;
+	return _contentSize;
 }
 
 - (void)drawRect:(NSRect)rect {
