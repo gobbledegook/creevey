@@ -9,6 +9,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+@interface DYMatrixState : NSObject
+- (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d;
+@end
+
 // displays thumbnails of image files
 // for fastest results, make thumbnails yourself to avoid scaling
 // supports selection, drag/drop, keyboard navigation
@@ -34,11 +38,9 @@
 	BOOL autoRotate;
 	NSImageCell *myCell;           // one cell, reused for efficiency
 	NSCell *myTextCell; // for drawing the file name
-	NSImage *loadingImage; // loads up "loading.png" on init
 	NSMutableArray *images;
 	NSMutableArray *filenames;
 	NSMutableSet *requestedFilenames; // keep track of which files we've requested images for
-	volatile NSUInteger numThumbsLoaded;
 	float cellWidth;
 	NSUInteger numCells;
 	NSMutableIndexSet *selectedIndexes;
@@ -49,21 +51,17 @@
 	int numCols;
 	float cellHeight, columnSpacing, area_w, area_h;
 	unsigned int textHeight;
-	volatile NSRect savedVisibleRect;
 }
+@property (assign, nonatomic) NSImage *loadingImage;
 
 + (NSSize)maxCellSize;
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
-- (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i;
+- (void)updateImage:(NSImage *)theImage atIndex:(NSUInteger)i;
 - (BOOL)setImage:(NSImage *)theImage atIndex:(NSUInteger)i forFilename:(NSString *)s; // to be called on main thread from other thread
-- (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d;
+- (DYMatrixState *)currentState;
 - (void)removeAllImages;
 - (void)removeImageAtIndex:(NSUInteger)i;
-
-// call when no images, preparing to add (for two-pass adding)
-//- (void)setFilenames:(NSArray *)a;
-
 
 - (NSArray *)filenames;
 - (NSMutableIndexSet *)selectedIndexes;
@@ -92,8 +90,6 @@
 - (BOOL)autoRotate;
 - (void)setAutoRotate:(BOOL)b;
 
-- (void)updateStatusString; // ** rename me
-- (NSUInteger)numThumbsLoaded;
 - (void)setDelegate:(id)d;
 
 // these return nonmutable copies of arrays and should each be called once when moveElsewhere is called

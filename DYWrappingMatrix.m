@@ -43,6 +43,37 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return destinationRect;
 }
 
+@interface DYMatrixState () {
+	@public
+	NSUInteger numCells;
+	int numCols;
+	float area_w, area_h;
+	NSRect visibleRect;
+}
+@property (nonatomic, copy) NSArray *filenames;
+@end
+
+@implementation DYMatrixState
+- (void)dealloc {
+	[_filenames release];
+	[super dealloc];
+}
+
+- (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d {
+	NSUInteger i = [d[1] unsignedIntegerValue];
+	if (i < numCells && [_filenames[i] isEqualToString:d[0]]) {
+		NSUInteger row = i/numCols, col = i%numCols;
+		NSPoint p = NSMakePoint(area_w*col,area_h*row);
+		if (NSPointInRect(p, visibleRect)) return YES;
+		// adjust these values by one point to make sure NSPointInRect handles the bottom right corner correctly
+		p.x += area_w - 1;
+		p.y += area_h - 1;
+		return NSPointInRect(p, visibleRect);
+	}
+	return NO;
+}
+@end
+
 @interface DYWrappingMatrix () <NSDraggingSource>
 {
 	float _maxCellWidth;
@@ -56,6 +87,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 @end
 
 @implementation DYWrappingMatrix
+@synthesize loadingImage;
 
 + (Class)cellClass { return [NSActionCell class]; }
 	// NSActionCell or subclass required for target/action
@@ -120,7 +152,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		_maxCellWidth = FLT_MAX;
 		textHeight = DEFAULT_TEXTHEIGHT;
 		autoRotate = YES;
-		loadingImage = [NSImage imageNamed:@"loading.png"];
 		
 		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
 		
@@ -136,10 +167,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 												 name:NSViewFrameDidChangeNotification
 											   object:[self enclosingScrollView]];
 	[[[self enclosingScrollView] contentView] setPostsBoundsChangedNotifications:YES];
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(scrolled:)
-												 name:NSViewBoundsDidChangeNotification
-											   object:[[self enclosingScrollView] contentView]];
 	NSData *colorData = [NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"];
 	NSColor *aColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
 	if (aColor == nil) {
@@ -476,11 +503,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		_contentSize = mySize;
 		[self invalidateIntrinsicContentSize];
 	}
-	savedVisibleRect = [self visibleRect];
-}
-
-- (void)scrolled:(id)obj {
-	savedVisibleRect = [self visibleRect];
 }
 
 - (NSSize)intrinsicContentSize
@@ -523,7 +545,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				if (newImage) {
 					images[i] = newImage;
 					img = newImage;
-					++numThumbsLoaded;
 				} else {
 					[requestedFilenames addObject:filename];
 				}
@@ -580,7 +601,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		}
 		
 		if (textHeight) {
-			[myTextCell setStringValue:[filenames[i] lastPathComponent]];
+			[myTextCell setStringValue:[filename lastPathComponent]];
 			[myTextCell drawInteriorWithFrame:textCellRect inView:self];
 		}
 	}
@@ -759,12 +780,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 // call this when an image changes (filename is already set)
-- (void)setImage:(NSImage *)theImage forIndex:(NSUInteger)i {
+- (void)updateImage:(NSImage *)theImage atIndex:(NSUInteger)i {
 	if (i >= numCells) return;
 	images[i] = theImage;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
-	});
+	[self setNeedsDisplayInRect:[self cellnum2rect:i]];
 }
 
 #pragma mark lazy loading stuff
@@ -778,78 +797,55 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	if (images[i] != theImage) {
 		images[i] = theImage;
-		++numThumbsLoaded;
 		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
-	}
-	return YES;
-}
-
-// called from non-main thread
-- (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d {
-	NSString *s = d[0];
-	if (![requestedFilenames containsObject:s]) return NO;
-	NSUInteger i = [d[1] unsignedIntegerValue];
-	if (i >= numCells) return NO;
-	// simple check to see if nothing's changed and the rect is visible
-	if ([filenames[i] isEqualToString:s]) {
-		NSRect cellRect = [self cellnum2rect:i];
-		NSPoint p = cellRect.origin;
-		if (NSPointInRect(p, savedVisibleRect)) return YES;
-		p.x += cellRect.size.width - 1; // adjust these values by one point to make sure NSPointInRect handles the bottom right corner correctly
-		p.y += cellRect.size.height - 1;
-		return NSPointInRect(p, savedVisibleRect);
+		return YES;
 	}
 	return NO;
 }
 
+- (DYMatrixState *)currentState {
+	DYMatrixState *o = [[[DYMatrixState alloc] init] autorelease];
+	o->numCells = numCells;
+	o->numCols = numCols;
+	o->area_w = area_w;
+	o->area_h = area_h;
+	o->visibleRect = [self visibleRect];
+	o.filenames = filenames;
+	return o;
+}
+
+// ** should probably be called something like updateSelectionWithDelegate
 - (void)updateStatusString {
 	if (_respondsToSelectionDidChange)
 		[delegate wrappingMatrix:self selectionDidChange:selectedIndexes];
 }
 
-- (NSUInteger)numThumbsLoaded {
-	return numThumbsLoaded;
-}
-
 #pragma mark add/delete images stuff
-// called from non-main thread
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
 	if (!theImage)
 		theImage = loadingImage;
-	else
-		++numThumbsLoaded;
 	[images addObject:theImage];
 	[filenames addObject:s];
 	numCells++;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self resize:nil];
-		[self setNeedsDisplayInRect:[self cellnum2rect:numCells-1]];
-	});
+	[self resize:nil];
+	[self setNeedsDisplayInRect:[self cellnum2rect:numCells-1]];
 }
 
-// called from non-main thread
 - (void)removeAllImages {
 	numCells = 0;
 	[images removeAllObjects];
 	[filenames removeAllObjects];
 	[requestedFilenames removeAllObjects];
-	numThumbsLoaded = 0;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self resize:nil];
-		[self setNeedsDisplay:YES];
-		[self selectNone:nil];
-		// manually set to 0 to avoid animation (which you get if you call [self scrollPoint:]
-		[[[self enclosingScrollView] contentView] scrollToPoint:NSZeroPoint];
-		[[[self enclosingScrollView] verticalScroller] setDoubleValue:0];
-	});
+	[self resize:nil];
+	[self setNeedsDisplay:YES];
+	[self selectNone:nil];
+	// manually set to 0 to avoid animation (which you get if you call [self scrollPoint:]
+	[[[self enclosingScrollView] contentView] scrollToPoint:NSZeroPoint];
+	[[[self enclosingScrollView] verticalScroller] setDoubleValue:0];
 }
 - (void)removeImageAtIndex:(NSUInteger)i {
 	// check if i is in range
 	if (i >= [images count]) return;
-	// adjust numLoaded if necessary
-	if (images[i] != loadingImage) {
-		--numThumbsLoaded;
-	}
 	numCells--;
 	[images removeObjectAtIndex:i];
 	[requestedFilenames removeObject:filenames[i]];

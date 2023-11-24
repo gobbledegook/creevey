@@ -982,12 +982,6 @@
             "value" : "Lese Verzeichnis..."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Getting filenames…"
-          }
-        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1190,42 +1184,36 @@
         }
       }
     },
-    "Loading %i of %u..." : {
+    "Loading %lu of %lu..." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lade %i von %u..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading %i of %u…"
+            "value" : "Lade %lu von %lu..."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cargando %i de %u…"
+            "value" : "Cargando %lu de %lu…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargement %i de %u..."
+            "value" : "Chargement %lu de %lu..."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sto caricando il %i di %u..."
+            "value" : "Sto caricando il %lu di %lu..."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在讀取 %2$u 之 %1$i⋯⋯"
+            "value" : "正在讀取 %2$lu 之 %1$lu⋯⋯"
           }
         }
       }
@@ -1359,12 +1347,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In den Papierkorb verschieben"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move To Trash"
           }
         },
         "es" : {

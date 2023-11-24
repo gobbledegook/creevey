@@ -32,7 +32,6 @@
 	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
 		startSlideshowWhenReady;
 	NSMutableSet *filesBeingOpened; // to be selected
-	BOOL recurseSubfolders;
 	short int sortOrder;
 	
 	short int currCat;

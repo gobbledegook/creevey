@@ -33,10 +33,9 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 
 @interface DYImageInfo () <NSDiscardableContent>
+@property NSUInteger counter;
 @end
-@implementation DYImageInfo {
-	NSUInteger _counter;
-}
+@implementation DYImageInfo
 @synthesize image, path, modTime;
 
 - (void)dealloc {
@@ -66,14 +65,14 @@ NSString *FileSize2String(unsigned long long fileSize) {
 
 #pragma mark NSDiscardableContent
 - (BOOL)beginContentAccess {
-	_counter++;
+	self.counter = self.counter + 1;
 	return YES;
 }
 - (void)endContentAccess {
-	_counter--;
+	self.counter = self.counter - 1;
 }
 - (void)discardContentIfPossible {
-	if (_counter == 0) {
+	if (self.counter == 0) {
 		[image release];
 		image = nil;
 		// we expect to be immediately evicted
