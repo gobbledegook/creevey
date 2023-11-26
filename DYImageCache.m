@@ -33,6 +33,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 
 @interface DYImageInfo () <NSDiscardableContent>
+- (instancetype)init NS_UNAVAILABLE;
 @property NSUInteger counter;
 @end
 @implementation DYImageInfo
@@ -44,8 +45,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	[super dealloc];
 }
 
-// designated initializer
-- initWithPath:(NSString *)s {
+- (instancetype)initWithPath:(NSString *)s {
 	if (self = [super init]) {
 		path = [s copy];
 		_counter = 1; // NSCache may try to evict us immediately!
@@ -99,11 +99,11 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSFileManager *fm;
 	NSImageInterpolation interpolationType;
 }
+- (instancetype)init NS_UNAVAILABLE;
 @end
 
 @implementation DYImageCache
-// this is the designated initializer
-- (id)initWithCapacity:(NSUInteger)n {
+- (instancetype)initWithCapacity:(NSUInteger)n {
 	if (self = [super init]) {
 		images = [[NSCache alloc] init];
 		images.countLimit = n;

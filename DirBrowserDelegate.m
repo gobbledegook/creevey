@@ -9,7 +9,7 @@
 #import "DYCarbonGoodies.h"
 #import "VDKQueue.h"
 
-NSString *_Volumes = @"/Volumes";
+static NSString * const _Volumes = @"/Volumes";
 
 NSString *defaultPath(void) {
 	NSFileManager *fm = NSFileManager.defaultManager;
@@ -38,7 +38,7 @@ NSString *defaultPath(void) {
 }
 @synthesize rootVolumeName, currPath, currFileRef, revealedDirectories;
 
-- (id)init {
+- (instancetype)init {
     if (self = [super init]) {
 		cols = [[NSMutableArray alloc] init];
 		colsInternal = [[NSMutableArray alloc] init];
@@ -98,10 +98,10 @@ NSString *defaultPath(void) {
 	}];
 }
 
-- (void)VDKQueue:(VDKQueue *)q receivedNotification:(NSString *)nm forPath:(NSString *)fpath
+- (void)VDKQueue:(VDKQueue *)q receivedNotification:(u_int)flags forPath:(NSString *)fpath
 {
 	// we get delete/rename notifications for anything that is not in /Volumes
-	BOOL isRenamed = nm == VDKQueueRenameNotification;
+	BOOL isRenamed = flags & VDKQueueNotifyAboutRename;
 	BOOL isTrashed = NO;
 	if (isRenamed) {
 		// check if the "rename" is actually a move-to-trash

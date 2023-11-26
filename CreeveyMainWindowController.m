@@ -46,7 +46,6 @@
 	NSLock *_accessedLock, *_statusLock;
 	volatile NSTimeInterval _statusTime;
 }
-- (void)updateStatusFld;
 @property (nonatomic, readonly) NSSplitView *splitView;
 @property BOOL wantsSubfolders;
 @property (nonatomic, retain) NSString *recurseRoot;
@@ -54,7 +53,7 @@
 
 @implementation CreeveyMainWindowController
 
-- (id)initWithWindowNibName:(NSString *)windowNibName {
+- (instancetype)initWithWindowNibName:(NSString *)windowNibName {
 	if (self = [super initWithWindowNibName:windowNibName]) {
 		filenames = [[NSMutableArray alloc] init];
 		displayedFilenames = [[NSMutableArray alloc] init];
@@ -343,15 +342,34 @@
 }
 
 - (void)updateStatusFld {
-	[_statusLock lock];
-	_statusTime = NSDate.timeIntervalSinceReferenceDate;
-	[_statusLock unlock];
 	id s = NSLocalizedString(@"%u images", @"");
-	[statusFld setStringValue:currCat
+	NSString *status = currCat
 		? [NSString stringWithFormat:@"%@: %@",
 			[NSString stringWithFormat:NSLocalizedString(@"Group %i", @""), currCat],
 			[NSString stringWithFormat:s, [displayedFilenames count]]]
-		: [NSString stringWithFormat:s, [filenames count]]];
+		: [NSString stringWithFormat:s, filenames.count];
+	[self updateStatusString:status];
+}
+
+- (void)updateStatusString:(NSString *)s {
+	[_statusLock lock];
+	_statusTime = NSDate.timeIntervalSinceReferenceDate;
+	[_statusLock unlock];
+	[statusFld setStringValue:s];
+}
+
+- (void)updateStatusOnMainThread:(NSString * _Nullable (^)(void))f {
+	[_statusLock lock];
+	NSTimeInterval timeStamp = _statusTime = NSDate.timeIntervalSinceReferenceDate;
+	[_statusLock unlock];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[_statusLock lock];
+		NSTimeInterval latestStatusTime = _statusTime;
+		[_statusLock unlock];
+		if (latestStatusTime > timeStamp) return;
+		NSString *s = f();
+		if (s) [statusFld setStringValue:s];
+	});
 }
 
 #pragma mark load thread
@@ -375,7 +393,8 @@
 		return;
 	}
 	stopCaching = 0;
-	
+	NSThread.currentThread.name = [NSString stringWithFormat:@"loadImages:%@", thePath.lastPathComponent];
+
 	NSUInteger i = 0;
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
@@ -417,18 +436,9 @@
 			{
 				[filenames addObject:aPath];
 				if (++i % 100 == 0)
-				{
-					[_statusLock lock];
-					NSTimeInterval timeStamp = _statusTime = NSDate.timeIntervalSinceReferenceDate;
-					[_statusLock unlock];
-					dispatch_async(dispatch_get_main_queue(), ^{
-						[_statusLock lock];
-						NSTimeInterval latestStatusTime = _statusTime;
-						[_statusLock unlock];
-						if (latestStatusTime > timeStamp) return;
-						[statusFld setStringValue:[NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i]];
-					});
-				}
+					[self updateStatusOnMainThread:^NSString *{
+						return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i];
+					}];
 			}
 			if (stopCaching) {
 				[filenames removeAllObjects]; // so it fails count > 0 test below
@@ -555,7 +565,7 @@
 		if (myThreadTime == lastThreadTime && selectedIndexes.count)
 			dispatch_async(dispatch_get_main_queue(), ^{
 				if ([thePath isEqualToString:dirBrowserDelegate.currPath])
-				[imgMatrix scrollToFirstSelected:selectedIndexes];
+					[imgMatrix scrollToFirstSelected:selectedIndexes];
 			});
 	}
 	[loadImageLock unlock];
@@ -576,10 +586,7 @@
 			[_subfoldersButton setState:NSControlStateValueOff];
 		}
 	}
-	[_statusLock lock];
-	_statusTime = NSDate.timeIntervalSinceReferenceDate;
-	[_statusLock unlock];
-	[statusFld setStringValue:NSLocalizedString(@"Getting filenames...", @"")];
+	[self updateStatusString:NSLocalizedString(@"Getting filenames...", @"")];
 	[[self window] setTitleWithRepresentedFilename:currentPath];
 	[NSThread detachNewThreadSelector:@selector(loadImages:)
 							 toTarget:self withObject:currentPath];
@@ -649,7 +656,7 @@
 				}
 			}
 			if (!currCat || (c && c != currCat)) {
-				[statusFld setStringValue:[NSString stringWithFormat:
+				[self updateStatusString:[NSString stringWithFormat:
 					NSLocalizedString(@"%u image(s) updated for Group %i", @""),
 					(unsigned int)[a count], c]];
 				[self performSelector:@selector(updateStatusFld)
@@ -798,6 +805,7 @@
 
 // this thread runs forever, waiting for objects to be added to its queue
 - (void)thumbLoader:(id)arg {
+	NSThread.currentThread.name = @"thumbLoader:";
 	DYImageCache *thumbsCache = [appDelegate thumbsCache];
 	// only use exif thumbs if we're at the smallest thumbnail  setting
 	BOOL useExifThumbs = [[NSUserDefaults standardUserDefaults]
@@ -908,21 +916,13 @@
 		} else {
 			// we're rolling our own cancelPreviousPerformRequestsWithTarget here
 			// before updating the status field in the main thread, we check if anyone else has modified it (or dispatched a block to modify it) after the timeStamp
-			[_statusLock lock];
-			NSTimeInterval timeStamp = _statusTime = NSDate.timeIntervalSinceReferenceDate;
-			[_statusLock unlock];
-			dispatch_async(dispatch_get_main_queue(), ^{
-				if ([imgMatrix numCells] == 0) return; // don't set status string if there are no thumbs (could happen if a file is in the queue when the path changes)
-				[_statusLock lock];
-				NSTimeInterval latestStatusTime = _statusTime;
-				[_statusLock unlock];
+			[self updateStatusOnMainThread:^NSString *{
+				if ([imgMatrix numCells] == 0) return nil; // don't set status string if there are no thumbs (could happen if a file is in the queue when the path changes)
 				[_accessedLock lock];
 				NSUInteger i = _accessedFiles.count;
 				[_accessedLock unlock];
-				if (latestStatusTime > timeStamp)
-					return; // skip if another status field update has superseded this one
-				[statusFld setStringValue:[NSString stringWithFormat:loadingMsg, i+1, [imgMatrix numCells]]];
-			});
+				return [NSString stringWithFormat:loadingMsg, i+1, [imgMatrix numCells]];
+			}];
 			if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
 				DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
 				if (FileIsJPEG(theFile)) {

@@ -29,7 +29,7 @@
 //      of Uli's "threadProxy" objects. The memory footprint is roughly halved, as I don't create the overhead that UKKQueue does.
 //
 //      VDKQueue is also simplified. The option to use it as a singleton is removed. You simply alloc/init an instance and add paths you want to
-//      watch. Your objects can be alerted to changes either by notifications or by a delegate method (or both). See below.
+//      watch. Your objects can be alerted to changes either by a delegate method. See below.
 //      When you're done with the object, call stopWatching (to release the background thread), then release.
 //
 //      It also fixes several bugs. For one, it won't crash if it can't create a file descriptor to a file you ask it to watch. (By default, an OS X process can only
@@ -87,29 +87,14 @@
                                                     | VDKQueueNotifyAboutAccessRevocation)
 
 //
-//  Notifications that this class sends to the NSWORKSPACE notification center.
-//      Object          =   the instance of VDKQueue that was watching for changes
-//      userInfo.path   =   the file path where the change was observed
-//
-extern NSString * VDKQueueRenameNotification;
-extern NSString * VDKQueueWriteNotification;
-extern NSString * VDKQueueDeleteNotification;
-extern NSString * VDKQueueAttributeChangeNotification;
-extern NSString * VDKQueueSizeIncreaseNotification;
-extern NSString * VDKQueueLinkCountChangeNotification;
-extern NSString * VDKQueueAccessRevocationNotification;
-
-
-
-//
-//  Or, instead of subscribing to notifications, you can specify a delegate and implement this method to respond to kQueue events.
+//  specify a delegate and implement this method to respond to kQueue events.
 //  Note the required statement! For speed, this class does not check to make sure the delegate implements this method. (When I say "required" I mean it!)
 //
 @class VDKQueue;
 @protocol VDKQueueDelegate <NSObject>
 @required
 
--(void) VDKQueue:(VDKQueue *)queue receivedNotification:(NSString*)noteName forPath:(NSString*)fpath;
+-(void) VDKQueue:(VDKQueue *)queue receivedNotification:(u_int)flags forPath:(NSString*)fpath;
 
 @end
 
@@ -118,18 +103,6 @@ extern NSString * VDKQueueAccessRevocationNotification;
 
 
 @interface VDKQueue : NSObject
-{
-    id<VDKQueueDelegate>    _delegate;
-    BOOL                    _alwaysPostNotifications;               // By default, notifications are posted only if there is no delegate set. Set this value to YES to have notes posted even when there is a delegate.
-    
-@private
-    int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
-	NSMutableDictionary    *_watchedPathEntries;                    // List of VDKQueuePathEntries. Keys are NSStrings of the path that each VDKQueuePathEntry is for.
-	NSMutableDictionary    *_pathMap;                               // unique id -> path entry (for thread safety)
-    BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
-}
-
-
 //
 //  Note: there is no need to ask whether a path is already being watched. Just add it or remove it and this class
 //        will take action only if appropriate. (Add only if we're not already watching it, remove only if we are.)
@@ -149,6 +122,5 @@ extern NSString * VDKQueueAccessRevocationNotification;
 
 
 @property (assign) id<VDKQueueDelegate> delegate;
-@property (assign) BOOL alwaysPostNotifications;
 
 @end

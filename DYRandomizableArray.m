@@ -1,8 +1,14 @@
 #import "DYRandomizableArray.h"
 
 @implementation DYRandomizableArray
+{
+   NSMutableArray *array, // working array
+	   *orderedArray,     // saved copy, only populated when array is randomized
+	   *randomToOrdered,  // parallel array to the working array
+	   *orderedToRandom;  // inversion of randomToOrdered
+}
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     if (self) {
@@ -29,6 +35,10 @@
 }
 
 - (id)objectAtIndex:(NSUInteger)index {
+	return array[index];
+}
+
+- (id)objectAtIndexedSubscript:(NSUInteger)index {
 	return array[index];
 }
 

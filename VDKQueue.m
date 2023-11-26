@@ -25,32 +25,13 @@
 #import <fcntl.h>
 #include <sys/stat.h>
 
-
-
-NSString * VDKQueueRenameNotification = @"VDKQueueFileRenamedNotification";
-NSString * VDKQueueWriteNotification = @"VDKQueueFileWrittenToNotification";
-NSString * VDKQueueDeleteNotification = @"VDKQueueFileDeletedNotification";
-NSString * VDKQueueAttributeChangeNotification = @"VDKQueueFileAttributesChangedNotification";
-NSString * VDKQueueSizeIncreaseNotification = @"VDKQueueFileSizeIncreasedNotification";
-NSString * VDKQueueLinkCountChangeNotification = @"VDKQueueLinkCountChangedNotification";
-NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNotification";
-
-
-
-#pragma mark -
 #pragma mark VDKQueuePathEntry
 #pragma mark -
-#pragma ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //  This is a simple model class used to hold info about each path we watch.
 @interface VDKQueuePathEntry : NSObject
-{
-	NSString*		_path;
-	int				_watchedFD;
-	u_int			_subscriptionFlags;
-}
 
-- (id) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
+- (instancetype) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
 
 @property (atomic, copy) NSString *path;
 @property (atomic, assign) int watchedFD;
@@ -60,10 +41,8 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
 @end
 
 @implementation VDKQueuePathEntry
-@synthesize path = _path, watchedFD = _watchedFD, subscriptionFlags = _subscriptionFlags;
 
-
-- (id) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
+- (instancetype) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
 {
     self = [super init];
 	if (self)
@@ -106,23 +85,20 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
 #pragma mark -
 #pragma mark VDKQueue
 #pragma mark -
-#pragma ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-@interface VDKQueue ()
-- (void) watcherThread:(id)sender;
-@end
-
-
 
 @implementation VDKQueue
-@synthesize delegate = _delegate, alwaysPostNotifications = _alwaysPostNotifications;
-
-
+{
+@private
+	int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
+	NSMutableDictionary    *_watchedPathEntries;                    // List of VDKQueuePathEntries. Keys are NSStrings of the path that each VDKQueuePathEntry is for.
+	NSMutableDictionary    *_pathMap;                               // unique id -> path entry (for thread safety)
+	BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
+}
 
 #pragma mark -
 #pragma mark INIT/DEALLOC
 
-- (id) init
+- (instancetype) init
 {
 	self = [super init];
 	if (self)
@@ -134,7 +110,6 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
 			return nil;
 		}
 		
-        _alwaysPostNotifications = NO;
 		_watchedPathEntries = [[NSMutableDictionary alloc] init];
 		_pathMap = [[NSMutableDictionary alloc] init];
 	}
@@ -148,6 +123,10 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
     [_watchedPathEntries release];
     _watchedPathEntries = nil;
     
+	if(close(_coreQueueFD) == -1) {
+	   NSLog(@"VDKQueue: Couldn't close main kqueue (%d)", errno);
+	}
+
     [super dealloc];
 }
 
@@ -169,24 +148,22 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
         if (pathEntry)
 		{
             // All flags already set?
-			if(([pathEntry subscriptionFlags] & flags) == flags) 
+			if(([pathEntry subscriptionFlags] | flags) == flags)
             {
 				return [[pathEntry retain] autorelease]; 
             }
 			
 			flags |= [pathEntry subscriptionFlags];
 		}
-		
-		struct timespec		nullts = { 0, 0 };
-		struct kevent		ev;
-		
-		if (!pathEntry)
+		else
         {
             pathEntry = [[[VDKQueuePathEntry alloc] initWithPath:path andSubscriptionFlags:flags] autorelease];
         }
         
 		if (pathEntry)
 		{
+			struct timespec		nullts = { 0, 0 };
+			struct kevent		ev;
 			EV_SET(&ev, [pathEntry watchedFD], EVFILT_VNODE, EV_ADD | EV_ENABLE | EV_CLEAR, flags, 0, (void *)gUniqueID);
 			
 			[pathEntry setSubscriptionFlags:flags];
@@ -206,24 +183,16 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
         
         return [[pathEntry retain] autorelease];
     }
-    
-    return nil;
 }
 
 
-//
-//  WARNING: This thread has no active autorelease pool, so if you make changes, you must manually manage 
-//           memory without relying on autorelease. Otherwise, you will leak!
-//
 - (void) watcherThread:(id)sender
 {
     int					n;
     struct kevent		ev;
     struct timespec     timeout = { 1, 0 };     // 1 second timeout. Should be longer, but we need this thread to exit when a kqueue is dealloced, so 1 second timeout is quite a while to wait.
 	int					theFD = _coreQueueFD;	// So we don't have to risk accessing iVars when the thread is terminated.
-    
-    NSMutableArray      *notesToPost = [[NSMutableArray alloc] initWithCapacity:5];
-    
+	NSThread.currentThread.name = @"VDKQueue";
 #if DEBUG_LOG_THREAD_LIFETIME
 	NSLog(@"watcherThread started.");
 #endif
@@ -255,63 +224,12 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
                             NSString *fpath = [pe.path retain];         // Need to retain so it does not disappear while the block at the bottom is waiting to run on the main thread. Released in that block.
                             if (!fpath) continue;
                             
-                            [[NSWorkspace sharedWorkspace] noteFileSystemChanged:fpath];
-                            
-                            // Clear any old notifications
-                            [notesToPost removeAllObjects];
-                            
-                            // Figure out which notifications we need to issue
-                            if ((ev.fflags & NOTE_RENAME) == NOTE_RENAME)
-                            {
-                                [notesToPost addObject:VDKQueueRenameNotification];
-                            }
-                            if ((ev.fflags & NOTE_WRITE) == NOTE_WRITE)
-                            {
-                                [notesToPost addObject:VDKQueueWriteNotification];
-                            }
-                            if ((ev.fflags & NOTE_DELETE) == NOTE_DELETE)
-                            {
-                                [notesToPost addObject:VDKQueueDeleteNotification];
-                            }
-                            if ((ev.fflags & NOTE_ATTRIB) == NOTE_ATTRIB)
-                            {
-                                [notesToPost addObject:VDKQueueAttributeChangeNotification];
-                            }
-                            if ((ev.fflags & NOTE_EXTEND) == NOTE_EXTEND)
-                            {
-                                [notesToPost addObject:VDKQueueSizeIncreaseNotification];
-                            }
-                            if ((ev.fflags & NOTE_LINK) == NOTE_LINK)
-                            {
-                                [notesToPost addObject:VDKQueueLinkCountChangeNotification];
-                            }
-                            if ((ev.fflags & NOTE_REVOKE) == NOTE_REVOKE)
-                            {
-                                [notesToPost addObject:VDKQueueAccessRevocationNotification];
-                            }
-                            
-                            
-                            NSArray *notes = [[NSArray alloc] initWithArray:notesToPost];   // notesToPost will be changed in the next loop iteration, which will likely occur before the block below runs.
-                            
-                            
-                            // Post the notifications (or call the delegate method) on the main thread.
-                            dispatch_async(dispatch_get_main_queue(),
-                                           ^{
-                                               for (NSString *note in notes)
-                                               {
-                                                   [_delegate VDKQueue:self receivedNotification:note forPath:fpath];
-                                                   
-                                                   if (!_delegate || _alwaysPostNotifications)
-                                                   {
-                                                       NSDictionary *userInfoDict = [[NSDictionary alloc] initWithObjectsAndKeys:fpath, @"path", nil];
-                                                       [[[NSWorkspace sharedWorkspace] notificationCenter] postNotificationName:note object:self userInfo:userInfoDict];
-                                                       [userInfoDict release];
-                                                   }
-                                               }
-                                               
-                                               [fpath release];
-                                               [notes release];
-                                           });
+                            // call the delegate method on the main thread.
+							u_int flags = ev.fflags;
+                            dispatch_async(dispatch_get_main_queue(), ^{
+								[_delegate VDKQueue:self receivedNotification:flags forPath:fpath];
+								[fpath release];
+							});
                         }
                     }
                 }
@@ -324,13 +242,6 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
         }
 		[pool release];
     }
-    
-	// Close our kqueue's file descriptor
-	if(close(theFD) == -1) {
-       NSLog(@"VDKQueue watcherThread: Couldn't close main kqueue (%d)", errno); 
-    }
-    
-    [notesToPost release];
     
 #if DEBUG_LOG_THREAD_LIFETIME
 	NSLog(@"watcherThread finished.");
@@ -345,7 +256,6 @@ NSString * VDKQueueAccessRevocationNotification = @"VDKQueueAccessWasRevokedNoti
 
 #pragma mark -
 #pragma mark PUBLIC METHODS
-#pragma -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 - (void) addPath:(NSString *)aPath

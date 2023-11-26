@@ -24,7 +24,7 @@
 #define DYVERSCHECKINTERVAL 604800
 #define MAX_FILES_TO_CHECK_FOR_JPEG 100
 
-BOOL FilesContainJPEG(NSArray *paths) {
+static BOOL FilesContainJPEG(NSArray *paths) {
 	// find out if at least one file is a JPEG
 	if ([paths count] > MAX_FILES_TO_CHECK_FOR_JPEG) return YES; // but give up there's too many to check
 	for (NSString *path in paths) {
@@ -157,7 +157,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 									forName:@"TimeIntervalPlusWeekToStringTransformer"];
 }
 
-- (id)init {
+- (instancetype)init {
 	if (self = [super init]) {
 		filetypes = [[NSMutableSet alloc] init];
 		fileostypes = [[NSMutableSet alloc] init];

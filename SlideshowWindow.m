@@ -42,6 +42,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 @implementation SlideshowWindow
 {
+	DYRandomizableArray<NSString *> *filenames;
 	NSOperationQueue *_upcomingQueue;
 }
 
@@ -55,8 +56,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 #define MAX_REPEATING_CACHED 6
 // when key is held down, max to cache before skipping over
 
-// this is the designated initializer
-- (id)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
+- (instancetype)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
 	// full screen window, force it to be NSBorderlessWindowMask
 	if (self = [super initWithContentRect:r styleMask:NSWindowStyleMaskBorderless backing:b defer:d]) {
 		filenames = [[DYRandomizableArray alloc] init];
@@ -182,7 +182,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (NSString *)currentShortFilename {
-	NSString *s = [filenames objectAtIndex:currentIndex];
+	NSString *s = filenames[currentIndex];
 	return [s stringByDeletingBasePath:basePath];
 }
 
@@ -234,7 +234,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	// this is a half-hearted attempt to clean up. Really we just rely on the countLimit on the cache
 	NSUInteger n = MIN(filenames.count, MAX_CACHED);
 	for (NSUInteger i=0; i<n; ++i) {
-		[imgCache endAccess:[filenames objectAtIndex:i]];
+		[imgCache endAccess:filenames[i]];
 	}
 }
 
@@ -242,7 +242,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[self startSlideshowAtIndex:NSNotFound]; // to distinguish from 0, for random mode
 }
 - (void)startSlideshowAtIndex:(NSUInteger)startIndex {
-	if ([filenames count] == 0) {
+	if (filenames.count == 0) {
 		NSBeep();
 		return;
 	}
@@ -309,7 +309,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (void)runTimer {
 	[self killTimer]; // always remove the old timer
-	if (loopMode || currentIndex+1 < [filenames count]) {
+	if (loopMode || currentIndex+1 < filenames.count) {
 		//NSLog(@"scheduling timer from %d", currentIndex);
 		autoTimer = [NSTimer
 scheduledTimerWithTimeInterval:timerIntvl
@@ -363,9 +363,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)updateExifFld {
-	if (currentIndex == [filenames count]) return;
+	if (currentIndex == filenames.count) return;
 	NSMutableAttributedString *attStr;
-	attStr = Fileinfo2EXIFString([filenames objectAtIndex:currentIndex],
+	attStr = Fileinfo2EXIFString(filenames[currentIndex],
 								 imgCache,moreExif);
 	NSRange r = NSMakeRange(0,[attStr length]);
 	NSShadow *shdw = [[[NSShadow alloc] init] autorelease];
@@ -394,7 +394,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 // display image number "currentIndex"
 // if it's not cached, say "Loading" and spin off a thread to cache it
 - (void)updateInfoFldWithRotation:(int)r {
-	DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
+	DYImageInfo *info = [imgCache infoForKey:filenames[currentIndex]];
 	id dir;
 	switch (r) {
 		case 90: dir = NSLocalizedString(@" left", @""); break;
@@ -404,7 +404,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (r < 0) r = -r;
 	float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
 	[infoFld setStringValue:[NSString stringWithFormat:@"[%lu/%lu] %@ - %@ - %@%@%@%@ %@",
-		currentIndex+1, (unsigned long)[filenames count],
+		currentIndex+1, (unsigned long)filenames.count,
 		[self currentShortFilename],
 		FileSize2String(info->fileSize),
 		[info pixelSizeAsString],
@@ -431,7 +431,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)redisplayImage {
 	if (currentIndex == NSNotFound) return;
-	id theFile = [filenames objectAtIndex:currentIndex];
+	NSString *theFile = filenames[currentIndex];
 	[imgCache removeImageForKey:theFile];
 	[zooms removeObjectForKey:theFile]; // don't forget to reset the zoom/rotation!
 	[rotations removeObjectForKey:theFile];
@@ -444,14 +444,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[zooms removeObjectForKey:s];
 	[rotations removeObjectForKey:s];
 	[flips removeObjectForKey:s];
-	if ((currentIndex != NSNotFound && currentIndex != [filenames count]) && [s isEqualToString:[filenames objectAtIndex:currentIndex]])
+	if ((currentIndex != NSNotFound && currentIndex != filenames.count) && [s isEqualToString:filenames[currentIndex]])
 		[self displayImage];
 }
 
 - (void)displayImage {
 	if (currentIndex == NSNotFound) return; // in case called after slideshow ended
 									// not necessary if s/isActive/isKeyWindow/
-	if (currentIndex == [filenames count]) { // if the last image was deleted, show a blank screen
+	if (currentIndex == filenames.count) { // if the last image was deleted, show a blank screen
 		[catsFld setHidden:YES];
 		[infoFld setHidden:NO];
 		[infoFld setStringValue:NSLocalizedString(@"End of slideshow (last file was deleted)", @"")];
@@ -460,7 +460,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[imgView setImage:nil];
 		return;
 	}
-	NSString *theFile = [filenames objectAtIndex:currentIndex];
+	NSString *theFile = filenames[currentIndex];
 	NSImage *img = [self loadFromCache:theFile];
 	[self displayCats];
 	if (img) {
@@ -477,7 +477,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		// ** see keyDown for specifics
 		// if zoomed in, we need to set a different image
 		// here, copy-pasted from keyDown
-		DYImageInfo *info = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]];
+		DYImageInfo *info = [imgCache infoForKey:filenames[currentIndex]];
 		if (autoRotate && !rot && !imgFlipped && info->exifOrientation) {
 			// auto-rotate by exif orientation
 			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
@@ -499,7 +499,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	} else {
 		if (hideInfoFld) [infoFld setHidden:NO];
 		[infoFld setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Loading [%i/%i] %@...", @""),
-			(unsigned int)currentIndex+1, (unsigned int)[filenames count], [self currentShortFilename]]];
+			(unsigned int)currentIndex+1, (unsigned int)filenames.count, [self currentShortFilename]]];
 		[infoFld sizeToFit];
 		return;
 	}
@@ -510,10 +510,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 	short int i;
 	for (i=1; i<=2; i++) {
-		if (currentIndex+i >= [filenames count])
+		if (currentIndex+i >= filenames.count)
 			break;
 		[_upcomingQueue addOperationWithBlock:^{
-			[imgCache cacheFile:[filenames objectAtIndex:currentIndex+i]];
+			[imgCache cacheFile:filenames[currentIndex+i]];
 		}];
 	}
 }
@@ -548,13 +548,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[self setTimer:0]; // going backwards stops auto-advance
 	else // could get rid of 'else' b/c going backwards makes timerPaused irrelevant
 		timerPaused = NO; // going forward unpauses auto-advance
-	if ((n > 0 && currentIndex+1 >= [filenames count]) || (n < 0 && currentIndex == 0)){
+	if ((n > 0 && currentIndex+1 >= filenames.count) || (n < 0 && currentIndex == 0)){
 		if (loopMode) {
 			if (randomMode && n > 0 && rerandomizeOnLoop) {
 				// reshuffle whenever you loop through to the beginning
 				[filenames randomize];
 			}
-			[self jumpTo:n<0 ? [filenames count]-1 : 0];
+			[self jumpTo:n<0 ? filenames.count-1 : 0];
 			[self showLoopAnimation];
 		} else {
 			NSBeep();
@@ -562,8 +562,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 	} else {
 		if (n < 0 && labs(n) > currentIndex) {
 			n = -currentIndex;
-		} else if (n > 0 && n >= [filenames count] - currentIndex) {
-			n = [filenames count] - 1 - currentIndex;
+		} else if (n > 0 && n >= filenames.count - currentIndex) {
+			n = filenames.count - 1 - currentIndex;
 		}
 		[self jumpTo:currentIndex+n];
 	}
@@ -572,7 +572,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)jump:(int)n ordered:(BOOL)ordered { // if ordered is YES, jump to the next/previous slide in the ordered sequence
 	if (ordered && randomMode) {
 		[self setTimer:0]; // always stop auto-advance here
-		if (currentIndex == [filenames count]) {
+		if (currentIndex == filenames.count) {
 			// stop if we just deleted the last file
 			NSBeep();
 			return;
@@ -595,25 +595,25 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self saveZoomInfo];
 	// above code is repeated in endSlideshow, setBasePath
 	
-	currentIndex = n >= [filenames count] ? [filenames count] - 1 : n;
+	currentIndex = n >= filenames.count ? filenames.count - 1 : n;
 	[self displayImage];
 }
 
 - (void)saveZoomInfo {
-	if (currentIndex == [filenames count]) return;
+	if (currentIndex == filenames.count) return;
 	if ([imgView zoomInfoNeedsSaving])
-		zooms[[filenames objectAtIndex:currentIndex]] = [imgView zoomInfo];
+		zooms[filenames[currentIndex]] = [imgView zoomInfo];
 }
 
 - (void)setRotation:(int)n {
 	n = [imgView addRotation:n];
-	rotations[[filenames objectAtIndex:currentIndex]] = @(n);
+	rotations[filenames[currentIndex]] = @(n);
 	[self updateInfoFldWithRotation:n];
 }
 
 - (void)toggleFlip {
 	BOOL b = [imgView toggleFlip];
-	NSString *s = [filenames objectAtIndex:currentIndex];
+	NSString *s = filenames[currentIndex];
 	flips[s] = @(b);
 
 	// also update the rotation to match, since flipping will reverse it
@@ -709,7 +709,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		return;
 	}
 	if (c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
-		if (currentIndex == [filenames count]) { NSBeep(); return; }
+		if (currentIndex == filenames.count) { NSBeep(); return; }
 		[self assignCat:c - NSF1FunctionKey + 1
 				 toggle:([e modifierFlags] & NSEventModifierFlagCommand) != 0];
 		//NSLog(@"got cat %i", c - NSF1FunctionKey + 1);
@@ -749,7 +749,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[self jump:-currentIndex]; // <0 stops auto-advance
 			break;
 		case NSEndFunctionKey:
-			[self jumpTo:[filenames count]-1];
+			[self jumpTo:filenames.count-1];
 			break;
 		case NSPageUpFunctionKey:
 			[self jump:-10];
@@ -801,15 +801,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 //		case 'j': blurr--; [self updateExifFld]; break;
 //		case 'k': blurr++; [self updateExifFld]; break;
 		case 'l':
-			if (currentIndex == [filenames count]) { NSBeep(); return; }
+			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self setRotation:90];
 			break;
 		case 'r':
-			if (currentIndex == [filenames count]) { NSBeep(); return; }
+			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self setRotation:-90];
 			break;
 		case 'f':
-			if (currentIndex == [filenames count]) { NSBeep(); return; }
+			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self toggleFlip];
 			break;
 		case '=':
@@ -820,11 +820,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// intentional fall-through to next cases
 		case '+':
 		case '-':
-			if (currentIndex == [filenames count]) { NSBeep(); return; }
-			if ((obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]])) {
+			if (currentIndex == filenames.count) { NSBeep(); return; }
+			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
 				if (obj.image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) { // cached image smaller than orig
-					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
+					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filenames[currentIndex])]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
 					if (c == '+') [imgView zoomIn];
@@ -837,7 +837,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// for important comments
 			break;
 		case '*':
-			if (currentIndex == [filenames count]) { NSBeep(); return; }
+			if (currentIndex == filenames.count) { NSBeep(); return; }
 			//[imgView zoomOff];
 			//if (![imgView showActualSize])
 			//	[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
@@ -863,12 +863,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// intentional fall-through
 		case '+':
 		case '-':
-			if (currentIndex == [filenames count]) { NSBeep(); return YES; }
+			if (currentIndex == filenames.count) { NSBeep(); return YES; }
 			// ** code copied from keyDown
-			if ((obj = [imgCache infoForKey:[filenames objectAtIndex:currentIndex]])) {
+			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
 				if (obj.image == [imgView image]
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) {  // cached image smaller than orig
-					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath([filenames objectAtIndex:currentIndex])]
+					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filenames[currentIndex])]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
 					if (c == '+') [imgView zoomIn];
@@ -943,8 +943,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)magnifyWithEvent:(NSEvent *)event
 {
-	if (currentIndex == [filenames count]) { return; }
-	NSString *filename = [filenames objectAtIndex:currentIndex];
+	if (currentIndex == filenames.count) { return; }
+	NSString *filename = filenames[currentIndex];
 	DYImageInfo *info = [imgCache infoForKey:filename];
 	if (info) {
 		float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
@@ -966,7 +966,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (img)
 		return img;
 	//NSLog(@"%d not cached yet, now loading", n);
-	if (keyIsRepeating < MAX_REPEATING_CACHED || currentIndex == 0 || currentIndex == [filenames count]-1)
+	if (keyIsRepeating < MAX_REPEATING_CACHED || currentIndex == 0 || currentIndex == filenames.count-1)
 		[NSThread detachNewThreadSelector:@selector(cacheAndDisplay:)
 								 toTarget:self withObject:s];
 	return nil;
@@ -976,7 +976,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	[imgCache cacheFile:s]; // this operation takes time...
-	if (currentIndex != NSNotFound && [[filenames objectAtIndex:currentIndex] isEqualToString:s]) {
+	if (currentIndex != NSNotFound && [filenames[currentIndex] isEqualToString:s]) {
 		//NSLog(@"cacheAndDisplay now displaying %@", idx);
 		[self performSelectorOnMainThread:@selector(displayImage) // requires 10.2
 							   withObject:nil waitUntilDone:NO];
@@ -996,21 +996,21 @@ scheduledTimerWithTimeInterval:timerIntvl
 	return currentIndex == NSNotFound ? lastIndex : currentIndex;
 }
 - (NSString *)currentFile {
-	if (currentIndex == [filenames count]) { // if showing "last file was deleted" screen
+	if (currentIndex == filenames.count) { // if showing "last file was deleted" screen
 		return nil;
 	}
-	return [filenames objectAtIndex:[self currentIndex]];
+	return filenames[[self currentIndex]];
 }
 - (NSString *)basePath {
 	return basePath;
 }
 - (unsigned short)currentOrientation {
-	NSString *theFile = [filenames objectAtIndex:[self currentIndex]];
+	NSString *theFile = filenames[[self currentIndex]];
 	NSNumber *rot = rotations[theFile];
 	return components_to_exiforientation(rot ? [rot intValue] : 0, [flips[theFile] boolValue]);
 }
 - (unsigned short)currentFileExifOrientation {
-	return [imgCache infoForKey:[filenames objectAtIndex:[self currentIndex]]]->exifOrientation;
+	return [imgCache infoForKey:filenames[[self currentIndex]]]->exifOrientation;
 }
 
 - (BOOL)currentImageLoaded {
@@ -1028,7 +1028,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	// now if currentIndex == [filenames count], that means the last file in the list
 	// was deleted, and displayImage will show a blank screen.
 
-	if ([filenames count] == 0) {
+	if (filenames.count == 0) {
 		// no more images to display!
 		[self endSlideshow];
 		return;
@@ -1048,7 +1048,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 #pragma mark cat methods
 - (void)displayCats {
 	NSMutableArray *labels = [NSMutableArray arrayWithCapacity:1];
-	NSString *s = [filenames objectAtIndex:currentIndex];
+	NSString *s = filenames[currentIndex];
 	short int i;
 	for (i=0; i<NUM_FNKEY_CATS; ++i) {
 		if ([cats[i] containsObject:s])
@@ -1067,9 +1067,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (n==1) {
 		short int i;
 		for (i=0; i<NUM_FNKEY_CATS; ++i)
-			[cats[i] removeObject:[filenames objectAtIndex:currentIndex]];
+			[cats[i] removeObject:filenames[currentIndex]];
 	} else {
-		id s = [filenames objectAtIndex:currentIndex];
+		id s = filenames[currentIndex];
 		if (toggle && [cats[n-2] containsObject:s])
 			[cats[n-2] removeObject:s];
 		else
@@ -1113,7 +1113,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	BOOL b = ![sender state];
 	[sender setState:b];
 	[imgView setScalesUp:b];
-	if (currentIndex == [filenames count]) return;
+	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound)
 		[self updateInfoFld];
 }
@@ -1128,11 +1128,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (randomMode == oldRandomMode)
 		return; // but if this is a "forced" toggle from hitting "Apply Settings", no action is required
 	if (randomMode) {
-		if (currentIndex == [filenames count]) currentIndex = NSNotFound;
+		if (currentIndex == filenames.count) currentIndex = NSNotFound;
 		[filenames randomizeStartingWithObjectAtIndex:currentIndex];
 		currentIndex = 0;
 	} else {
-		if (currentIndex == [filenames count])
+		if (currentIndex == filenames.count)
 			currentIndex = 0;
 		else
 			currentIndex = [filenames orderedIndexOfObjectAtIndex:currentIndex];
@@ -1150,7 +1150,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	// then change vars and re-display
 	[sender setState:b];
 	[imgView setShowActualSize:b];
-	if (currentIndex == [filenames count]) return;
+	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound) [self displayImage];
 }
 

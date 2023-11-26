@@ -27,7 +27,7 @@
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
 	id myStringValue = [self stringValue];
-	[self setStringValue:title];
+	[self setStringValue:title ?: @""];
 	[super drawInteriorWithFrame:cellFrame inView:controlView];
 	[self setStringValue:myStringValue];
 }
@@ -74,9 +74,8 @@
 	NSTimeInterval lastKeyTime;
 	DYTransparentGreyView *greyview; // for drag-and-drop
 }
-//why doesn't IB let me set this as a custom class of an NSBrowser???
-//it calls a different init method
-- (id)initWithFrame:(NSRect)frameRect {
+
+- (instancetype)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
 		[self setMatrixClass:[DYCreeveyBrowserMatrix class]];
 		[self setTitled:NO];

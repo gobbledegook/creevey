@@ -24,14 +24,14 @@ NSString *FileSize2String(unsigned long long fileSize);
 @property (retain, nonatomic) NSImage *image;
 @property (readonly, nonatomic) NSString *path;
 @property (readonly, nonatomic) NSDate *modTime;
-- initWithPath:(NSString *)s;
+- (instancetype)initWithPath:(NSString *)s NS_DESIGNATED_INITIALIZER;
 - (NSString *)pixelSizeAsString;
 @end
 
 
 @interface DYImageCache : NSObject
 @property (assign, nonatomic) BOOL rotatable; // default is NO
-- (id)initWithCapacity:(NSUInteger)n;
+- (instancetype)initWithCapacity:(NSUInteger)n NS_DESIGNATED_INITIALIZER;
 
 - (float)boundingWidth;
 - (NSSize)boundingSize;

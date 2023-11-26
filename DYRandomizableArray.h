@@ -4,24 +4,20 @@
 
 #import <Foundation/Foundation.h>
 
-@interface DYRandomizableArray : NSObject {
-	NSMutableArray *array, // working array
-		*orderedArray,     // saved copy, only populated when array is randomized
-		*randomToOrdered,  // parallel array to the working array
-		*orderedToRandom;  // inversion of randomToOrdered
-}
+@interface DYRandomizableArray<T> : NSObject
 
 // array stuff
-- (NSUInteger)count;
-- (id)objectAtIndex:(NSUInteger)index;
-- (NSUInteger)indexOfObject:(id)anObject;
+@property (readonly) NSUInteger count;
+- (T)objectAtIndex:(NSUInteger)index;
+- (T)objectAtIndexedSubscript:(NSUInteger)index; // support custom subscript, e.g. array[index]
+- (NSUInteger)indexOfObject:(T)anObject;
 
 // mutable array stuff
-- (void)setArray:(NSArray *)otherArray;
+- (void)setArray:(NSArray<T> *)otherArray;
 - (void)removeAllObjects;
 - (void)removeObjectAtIndex:(NSUInteger)index;
-- (void)removeObject:(id)anObject;
-- (void)insertObject:(id)anObject withOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index;
+- (void)removeObject:(T)anObject;
+- (void)insertObject:(T)anObject withOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index;
 
 // randomizable stuff
 - (void)randomize;
