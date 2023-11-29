@@ -76,6 +76,11 @@
                                     <action selector="newWindow:" target="207" id="496"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="New Tab" tag="10" keyEquivalent="t" id="k8u-wZ-vhF">
+                                <connections>
+                                    <action selector="newTab:" target="207" id="dzm-5C-yPs"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Close Window" keyEquivalent="w" id="499">
                                 <connections>
                                     <action selector="performClose:" target="-1" id="500"/>

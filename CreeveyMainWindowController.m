@@ -706,6 +706,11 @@
 	}
 }
 
+// the existence of this method enables the '+' button in the tab bar
+- (void)newWindowForTab:(id)sender {
+	[appDelegate newTab:self];
+}
+
 - (void)updateExifInfo:(id)sender {
 	NSTextView *exifTextView = [appDelegate exifTextView];
 	NSView *mainView = [[exifTextView window] contentView];

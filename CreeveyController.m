@@ -695,6 +695,7 @@ enum {
 	RANDOM_MODE,
 	SLIDESHOW_SCALE_UP,
 	SLIDESHOW_ACTUAL_SIZE,
+	NEW_TAB,
 	JPEG_OP = 100,
 	ROTATE_L = 107,
 	ROTATE_R = 105,
@@ -731,6 +732,8 @@ enum {
 	BOOL writable, isjpeg;
 	
 	switch (test_t) {
+		case NEW_TAB:
+			return [frontWindow.window isMainWindow];
 		case MOVE_TO_TRASH:
 		case JPEG_OP:
 			// only when slides isn't loading cache!
@@ -1016,22 +1019,24 @@ enum {
 	}
 }
 
-- (IBAction)newWindow:(id)sender {
+- (void)newWindow:(BOOL)asTab init:(BOOL)needsPath {
 	if (![creeveyWindows count]) {
 		if (exifWasVisible)
 			[[exifTextView window] orderFront:self]; // only check for first window
 	}
-	id wc = [[CreeveyMainWindowController alloc] initWithWindowNibName:@"CreeveyWindow"];
+	CreeveyMainWindowController *wc = [[CreeveyMainWindowController alloc] initWithWindowNibName:@"CreeveyWindow"];
 	[creeveyWindows addObject:wc];
 	[wc release];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowClosed:) name:NSWindowWillCloseNotification object:[wc window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
+	if (asTab)
+		[frontWindow.window addTabbedWindow:wc.window ordered:NSWindowAbove];
 	[wc showWindow:nil]; // or override wdidload
 	short int sortOrder = [[NSUserDefaults standardUserDefaults] integerForKey:@"sortBy"];
 	[wc setSortOrder:sortOrder];
 	[[wc imageMatrix] setShowFilenames:[[NSUserDefaults standardUserDefaults] boolForKey:@"showFilenames"]];
 	[[wc imageMatrix] setAutoRotate:[[NSUserDefaults standardUserDefaults] boolForKey:@"autoRotateByOrientationTag"]];
-	if (sender)
+	if (needsPath)
 		[wc setDefaultPath];
 
 	// make sure menu items are checked properly (code copied from windowChanged:)
@@ -1041,10 +1046,21 @@ enum {
 	[[m itemWithTag:AUTO_ROTATE] setState:[[wc imageMatrix] autoRotate] ? NSOnState : NSOffState];
 }
 
+- (IBAction)newWindow:(id)sender {
+	[self newWindow:NO init:(sender != nil)];
+}
+
+- (IBAction)newTab:(id)sender {
+	[self newWindow:YES init:YES];
+}
+
 - (void)windowClosed:(NSNotification *)n {
-	id wc = [[n object] windowController];
+	NSWindowController *wc = [[n object] windowController];
 	if ([creeveyWindows indexOfObjectIdenticalTo:wc] != NSNotFound) {
-		frontWindow = nil; // ** in case something funny happens between her and wChanged?
+		if (wc.window == frontWindow.window) {
+			// for some reason closing a tab will call windowChanged: (with the new window) before windowClosed: (with the old window)
+			frontWindow = nil;
+		}
 		if ([creeveyWindows count] == 1) {
 			[creeveyWindows[0] updateDefaults];
 			if ((exifWasVisible = [[exifTextView window] isVisible])) {

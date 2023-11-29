@@ -82,6 +82,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)stopModal:(id)sender;
 - (IBAction)openGetInfoPanel:(id)sender;
 - (IBAction)newWindow:(id)sender;
+- (IBAction)newTab:(id)sender;
 - (IBAction)versionCheck:(id)sender;
 - (IBAction)sendFeedback:(id)sender;
 @end
