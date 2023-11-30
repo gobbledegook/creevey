@@ -252,7 +252,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (float)minCellWidth { return MIN_CELL_WIDTH; }
 - (float)cellWidth { return cellWidth; }
 - (void)setCellWidth:(float)w {
-	cellWidth = w < _maxCellWidth ? w : _maxCellWidth;
+	if (w < MIN_CELL_WIDTH) w = MIN_CELL_WIDTH;
+	else if (w > _maxCellWidth) w = _maxCellWidth;
+	if (cellWidth == w) return;
+	cellWidth = w;
 	[self resize:nil];
 	[self setNeedsDisplay:YES];
 }
@@ -704,6 +707,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[selectedIndexes removeAllIndexes];
 	[selectedIndexes addIndex:i];
 	[self scrollSelectionToVisible:i];
+}
+
+- (void)magnifyWithEvent:(NSEvent *)event
+{
+	[self setCellWidth:cellWidth * (1.0 + [event magnification])];
 }
 
 #pragma mark auto-rotate stuff
