@@ -320,7 +320,8 @@ Gw
                                     <action selector="toggleLoopMode:" target="210" id="349"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Random" tag="7" id="540">
+                            <menuItem title="Random" tag="7" keyEquivalent="r" id="540">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="toggleRandom:" target="210" id="541"/>
                                 </connections>
