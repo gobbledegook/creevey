@@ -55,6 +55,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (BOOL)shouldShowFile:(NSString *)path;
 
 - (IBAction)slideshow:(id)sender;
+- (IBAction)slideshowInWindow:(id)sender;
 - (IBAction)openSelectedFiles:(id)sender;
 - (IBAction)revealSelectedFilesInFinder:(id)sender;
 - (IBAction)setDesktopPicture:(id)sender;

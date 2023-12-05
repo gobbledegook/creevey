@@ -57,6 +57,7 @@
 + (NSSize)maxCellSize;
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
+- (void)addImage:(NSImage *)theImage withFilename:(NSString *)s atIndex:(NSUInteger)i;
 - (void)updateImage:(NSImage *)theImage atIndex:(NSUInteger)i;
 - (BOOL)setImage:(NSImage *)theImage atIndex:(NSUInteger)i forFilename:(NSString *)s; // to be called on main thread from other thread
 - (DYMatrixState *)currentState;

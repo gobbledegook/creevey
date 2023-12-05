@@ -43,6 +43,7 @@
 	
 	BOOL mouseDragged;
 }
+@property (nonatomic) BOOL fullscreenMode;
 
 - (void)setCats:(NSMutableSet **)newCats;
 

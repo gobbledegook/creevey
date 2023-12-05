@@ -830,10 +830,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 #pragma mark add/delete images stuff
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s{
+	[self addImage:theImage withFilename:s atIndex:filenames.count];
+}
+
+- (void)addImage:(NSImage *)theImage withFilename:(NSString *)s atIndex:(NSUInteger)i {
 	if (!theImage)
 		theImage = loadingImage;
-	[images addObject:theImage];
-	[filenames addObject:s];
+	[images insertObject:theImage atIndex:i];
+	[filenames insertObject:s atIndex:i];
 	numCells++;
 	[self resize:nil];
 	[self setNeedsDisplayInRect:[self cellnum2rect:numCells-1]];

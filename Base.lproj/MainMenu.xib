@@ -303,6 +303,15 @@ CA
                                     <action selector="slideshow:" target="207" id="332"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Begin Slideshow In Window" tag="11" id="FZ5-3D-1VQ">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                <connections>
+                                    <action selector="slideshowInWindow:" target="207" id="pLp-k2-hup"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="End Slideshow" id="329">
                                 <string key="keyEquivalent" base64-UTF8="YES">
 Gw

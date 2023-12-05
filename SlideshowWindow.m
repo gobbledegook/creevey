@@ -69,7 +69,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		
  		[self setBackgroundColor:[NSColor blackColor]];
 		[self setOpaque:NO];
-		[self setCollectionBehavior:NSWindowCollectionBehaviorTransient]; // needed for new screen/spaces in 10.9.
+		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
+		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = NSNotFound;//blurr=8;
    }
@@ -81,15 +82,18 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[[self contentView] addSubview:imgView];
 	[imgView release]; // the prev line retained it
 	[imgView setFrame:[self contentView].frame];
+	imgView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 	
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld]; [infoFld release];
+	infoFld.autoresizingMask = NSViewMaxXMargin|NSViewMaxYMargin;
 	[infoFld setBackgroundColor:[NSColor grayColor]];
 	[infoFld setBezeled:NO];
 	[infoFld setEditable:NO];
 	
-	catsFld = [[NSTextField alloc] initWithFrame:NSZeroRect];
+	catsFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,imgView.bounds.size.height-20,300,20)];
 	[imgView addSubview:catsFld]; [catsFld release];
+	catsFld.autoresizingMask = NSViewMaxXMargin|NSViewMinYMargin;
 	[catsFld setBackgroundColor:[NSColor grayColor]];
 	[catsFld setBezeled:NO];
 	[catsFld setEditable:NO]; // **
@@ -102,7 +106,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	
 	exifFld = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,[sv contentSize].width,20)];
 	[sv setDocumentView:exifFld]; [exifFld release];
-	[exifFld setAutoresizingMask:NSViewHeightSizable | NSViewWidthSizable];
+	exifFld.autoresizingMask = NSViewHeightSizable | NSViewWidthSizable | NSViewMinXMargin;
 
 	[sv setDrawsBackground:NO];
 	[sv setHasVerticalScroller:YES];
@@ -136,6 +140,17 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[helpFld release];
 	[_upcomingQueue release];
 	[super dealloc];
+}
+
+- (void)setFullscreenMode:(BOOL)b {
+	_fullscreenMode = b;
+	if (b) {
+		self.styleMask = NSWindowStyleMaskBorderless;
+		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+	} else {
+		self.styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+	}
 }
 
 - (void)setRerandomizeOnLoop:(BOOL)b {
@@ -204,12 +219,25 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		|| oldSize.height < boundingRect.size.height) {
 		[imgCache removeAllImages];
 	}
-	[imgCache setBoundingSize:boundingRect.size]; // boundingSize for the cache is actually in pixels
-	[self setFrame:screenRect display:NO];
-	boundingRect.origin = [imgView frame].origin;
-	[imgView setFrame:boundingRect];
-	[catsFld setFrame:NSMakeRect(0,[imgView bounds].size.height-20,300,20)];
-	// ** OR set springiness on awake
+	[imgCache setBoundingSize:boundingRect.size];
+	if (_fullscreenMode) {
+		[self setFrame:screenRect display:NO];
+		boundingRect.origin = [imgView frame].origin;
+		[imgView setFrame:boundingRect];
+	} else {
+		NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:@"DYSlideshowWindowFrame"];
+		NSRect r;
+		if (v) {
+			r = NSRectFromString(v);
+		} else {
+			r = screenRect;
+			r.size.width = r.size.width/2;
+			r.size.height = r.size.height/2;
+			r.origin.y = screenRect.size.height;
+		}
+		[self setFrame:r display:NO];
+		[imgView setFrame:self.contentLayoutRect];
+	}
 }
 
 - (void)resetScreen
@@ -221,12 +249,19 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)endSlideshow {
+	[self orderOut:nil];
+}
+
+- (void)orderOut:(id)sender {
 	[self saveZoomInfo];
 
 	lastIndex = currentIndex;
 	currentIndex = NSNotFound;
 	[self killTimer];
-	[self orderOut:nil];
+	if (!_fullscreenMode) {
+		[NSUserDefaults.standardUserDefaults setObject:NSStringFromRect(self.frame) forKey:@"DYSlideshowWindowFrame"];
+	}
+	[super orderOut:sender];
 	
 	[imgCache abortCaching];
 	[self.undoManager removeAllActions];
@@ -270,12 +305,14 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)becomeMainWindow { // need this when switching apps
-	[NSApp setPresentationOptions:NSApplicationPresentationHideDock|NSApplicationPresentationAutoHideMenuBar];
+	if (_fullscreenMode)
+		[NSApp setPresentationOptions:NSApplicationPresentationHideDock|NSApplicationPresentationAutoHideMenuBar];
 	[super becomeMainWindow];
 }
 
 - (void)resignMainWindow {
-	[NSApp setPresentationOptions:NSApplicationPresentationDefault];
+	if (_fullscreenMode)
+		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
 	[super resignMainWindow];
 }
 
@@ -283,7 +320,9 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 {
 	// As of 10.15.1(?) when the menubar hides, the window will get moved up by the height of the menubar.
 	// This should be the correct fix for that.
-	return [super constrainFrameRect:[[self screen] frame] toScreen:screen];
+	if (_fullscreenMode)
+		return [super constrainFrameRect:[[self screen] frame] toScreen:screen];
+	return [super constrainFrameRect:frameRect toScreen:screen];
 }
 
 #pragma mark timer stuff
@@ -632,11 +671,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)toggleHelp {
 	if (!helpFld) {
-		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect]; //NSMakeRect(0,0,310,265)
+		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect];
 		[[self contentView] addSubview:helpFld]; [helpFld release];
-//		[helpFld setHorizontallyResizable:YES]; // NO by default
-//		[helpFld setVerticallyResizable:NO]; // YES by default
-//		[helpFld sizeToFit]; //doesn't do anything?
 		if (![helpFld readRTFDFromFile:
 			[[NSBundle mainBundle] pathForResource:@"creeveyhelp" ofType:@"rtf"]])
 			NSLog(@"couldn't load cheat sheet!");
@@ -657,6 +693,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		r.origin.x = s.width - r.size.width - 50;
 		r.origin.y = s.height - r.size.height - 55;
 		[helpFld setFrame:NSIntegralRect(r)];
+		helpFld.autoresizingMask = NSViewMinXMargin|NSViewMinYMargin;
 		return;
 	}
 	[helpFld setHidden:![helpFld isHidden]];
@@ -889,6 +926,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)mouseDown:(NSEvent *)e {
 	if ([imgView dragMode])
 		return;
+	if (!NSPointInRect(e.locationInWindow, self.contentView.frame))
+		return;
 	
 	mouseDragged = YES; // prevent the following mouseUp from advancing twice
 	    // this would happen if it was zoomed in
@@ -1020,6 +1059,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)removeImageForFile:(NSString *)s {
 	NSUInteger n = [filenames indexOfObject:s];
+	if (n >= filenames.count) return;
+
 	[filenames removeObjectAtIndex:n];
 	[imgCache removeImageForKey:s];
 	// if file before current file was deleted, shift index back one

@@ -218,6 +218,30 @@
 - (BOOL)currentFilesDeletable { return currentFilesDeletable; }
 - (BOOL)filenamesDone { return filenamesDone; }
 - (NSArray *)displayedFilenames { return displayedFilenames; }
+- (NSUInteger)indexOfFilename:(NSString *)s {
+	return [displayedFilenames indexOfObject:s inSortedRange:NSMakeRange(0, displayedFilenames.count) options:0 usingComparator:[self comparator]];
+}
+- (NSComparator)comparator {
+	switch (sortOrder) {
+		case 1:
+		default:
+			return ^NSComparisonResult(id a, id b) {
+				return [a localizedStandardCompare:b];
+			};
+		case 2:
+			return ^NSComparisonResult(id a, id b) {
+				return [a dateModifiedCompare:b];
+			};
+		case -1:
+			return ^NSComparisonResult(id a, id b) {
+				return [b localizedStandardCompare:a];
+			};
+		case -2:
+			return ^NSComparisonResult(id a, id b) {
+				return [b dateModifiedCompare:a];
+			};
+	}
+}
 
 - (NSString *)firstSelectedFilename {
 	return [imgMatrix firstSelectedFilename];
@@ -292,7 +316,8 @@
 		}
 	}
 	if (!thumb) thumb = _brokenDoc;
-	NSUInteger mtrxIdx = [[imgMatrix filenames] indexOfObject:s];
+	// since we already checked if the file is in the current directory, we can assume the matrix's files have the same sort order
+	NSUInteger mtrxIdx = [[imgMatrix filenames] indexOfObject:s inSortedRange:NSMakeRange(0, [imgMatrix filenames].count) options:0 usingComparator:[self comparator]];
 	if (mtrxIdx != NSNotFound) {
 		[imgMatrix updateImage:thumb atIndex:mtrxIdx];
 		if (addedToCache) {
@@ -306,16 +331,21 @@
 }
 	
 - (void)fileWasDeleted:(NSString *)s {
+	[self fileWasDeleted:s atIndex:NSNotFound];
+}
+- (void)fileWasDeleted:(NSString *)s atIndex:(NSUInteger)i {
 	if (![self pathIsCurrentDirectory:s]) return;
-	NSUInteger mtrxIdx, i = [filenames indexOfObject:s];
-	// ** linear search; should we make faster?
+	NSUInteger mtrxIdx;
+	if (i == NSNotFound)
+		i = [filenames indexOfObject:s inSortedRange:NSMakeRange(0, filenames.count) options:0 usingComparator:[self comparator]];
 	if (i != NSNotFound) {
 		stopCaching = 1;
 		[loadImageLock lock];
 		
-		if ((mtrxIdx = [[imgMatrix filenames] indexOfObject:s]) != NSNotFound)
-			[imgMatrix removeImageAtIndex:mtrxIdx]; // more linear searches
-		[displayedFilenames removeObject:s];
+		if ((mtrxIdx = [[imgMatrix filenames] indexOfObject:s inSortedRange:NSMakeRange(0, [imgMatrix filenames].count) options:0 usingComparator:[self comparator]]) != NSNotFound) {
+			[imgMatrix removeImageAtIndex:mtrxIdx];
+			[displayedFilenames removeObjectAtIndex:mtrxIdx];
+		}
 		[filenames removeObjectAtIndex:i];
 		
 		[loadImageLock unlock];
@@ -476,30 +506,17 @@
 		[secondaryImageCacheQueue removeAllObjects];
 		[imageCacheQueueLock unlockWithCondition:0];
 	}
+	[displayedFilenames sortUsingComparator:[self comparator]];
 	if (startSlideshowWhenReady) {
 		startSlideshowWhenReady = NO;
 		// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
 		if ([filesBeingOpened count]) {
-			[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:)
-											   withObject:[filesBeingOpened allObjects] // make a copy
-											waitUntilDone:NO];
+			NSArray *files = [filesBeingOpened.allObjects sortedArrayUsingComparator:[self comparator]];
+			[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:) withObject:files waitUntilDone:NO]; // this must be called after displayedFilenames is sorted in case it calls back for indexOfFilename:
 		}
 	}
-	if (abs(sortOrder) == 1) {
-		[displayedFilenames sortUsingSelector:@selector(localizedStandardCompare:)];
-	} else {
-		[displayedFilenames sortUsingSelector:@selector(dateModifiedCompare:)];
-	}
-	if (sortOrder < 0 && [displayedFilenames count]) {
-		// reverse the array
-		NSUInteger a, b;
-		a = 0;
-		b = [displayedFilenames count]-1;
-		while (a < b) {
-			[displayedFilenames exchangeObjectAtIndex:a withObjectAtIndex:b];
-			a++; b--;
-		}
-	}
+	if (thePath)
+		[filenames setArray:displayedFilenames]; // save the sorted list
 	filenamesDone = YES;
 
 	//NSLog(@"got %d files.", [filenames count]);

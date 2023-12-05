@@ -48,6 +48,7 @@
 - (void)selectIndex:(NSUInteger)i;
 - (NSString *)firstSelectedFilename;
 - (NSArray *)displayedFilenames;
+- (NSUInteger)indexOfFilename:(NSString *)s;
 - (BOOL)currentFilesDeletable;
 - (BOOL)filenamesDone;
 - (short int)sortOrder;

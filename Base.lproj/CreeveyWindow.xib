@@ -53,7 +53,7 @@ DQ
 </string>
                                         </buttonCell>
                                         <connections>
-                                            <action selector="slideshow:" target="-1" id="506"/>
+                                            <action selector="openSelectedFiles:" target="-1" id="XU6-sD-6xx"/>
                                         </connections>
                                     </button>
                                     <customView translatesAutoresizingMaskIntoConstraints="NO" id="369" customClass="DYCreeveyBrowser">

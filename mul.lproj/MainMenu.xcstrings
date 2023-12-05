@@ -1268,7 +1268,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slideshow Window"
+            "value" : "Diaschaufenster"
           }
         },
         "en" : {
@@ -1280,25 +1280,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slideshow Window"
+            "value" : "Pase de diapositivas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slideshow Window"
+            "value" : "Diaporama"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slideshow Window"
+            "value" : "Presentazione"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slideshow Window"
+            "value" : "幻燈片視窗"
           }
         }
       }
@@ -1424,7 +1424,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "播放幻燈片"
+            "value" : "播放幻燈片（全螢幕）"
           }
         }
       }
@@ -4989,6 +4989,48 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "根據方向屬性自動旋轉"
+          }
+        }
+      }
+    },
+    "FZ5-3D-1VQ.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Begin Slideshow In Window\"; ObjectID = \"FZ5-3D-1VQ\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diaschau im Fenster starten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Begin Slideshow In Window"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar pase de diapositivas (en ventana)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer le diaporama dans fenêtre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia la Presentazione nella finestra"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放幻燈片（視窗裡）"
           }
         }
       }

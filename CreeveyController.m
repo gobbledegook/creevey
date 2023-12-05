@@ -262,41 +262,46 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 - (void)slideshowFromAppOpen:(NSArray *)files {
-	[slidesWindow setBasePath:[frontWindow path]];
-	[slidesWindow setFilenames:[files count] > 1
-		? [files sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)]
-			// ** use smarter sorting here?
-		: [frontWindow displayedFilenames]];
-	[slidesWindow startSlideshowAtIndex: [files count] == 1
-		? [[frontWindow displayedFilenames] indexOfObject:files[0]]
-			// here's a fun (and SLOW) linear search
-		: NSNotFound];
+	[self startSlideshowFullscreen:[slidesWindow isVisible] ? slidesWindow.fullscreenMode : YES withFiles:files];
 }
 
-- (void)startSlideshow {
-	// check for nil?
-	// clever disabling of items should be ok
+- (void)startSlideshowFullscreen:(BOOL)flag {
+	[self startSlideshowFullscreen:flag withFiles:nil];
+}
+
+- (void)startSlideshowFullscreen:(BOOL)flag withFiles:(NSArray *)files{
+	slidesWindow.fullscreenMode = flag;
 	[slidesWindow setBasePath:[frontWindow path]];
-	NSIndexSet *s = [frontWindow selectedIndexes];
-	[slidesWindow setFilenames:[s count] > 1
-		? [frontWindow currentSelection]
-		: [frontWindow displayedFilenames]];
+	NSUInteger startIdx = NSNotFound;
+	if (files) {
+		[slidesWindow setFilenames:files.count > 1 ? files : [frontWindow displayedFilenames]];
+		if (files.count == 1) startIdx = [frontWindow indexOfFilename:files[0]];
+	} else {
+		NSIndexSet *s = [frontWindow selectedIndexes];
+		[slidesWindow setFilenames:s.count > 1 ? [frontWindow currentSelection] : [frontWindow displayedFilenames]];
+		if (s.count == 1) startIdx = s.firstIndex;
+	}
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
 		? [u floatForKey:@"slideshowAutoadvanceTime"]
 		: 0]; // see prefs section for more notes
 	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	[slidesWindow setAutoRotate:[[frontWindow imageMatrix] autoRotate]];
-	[slidesWindow startSlideshowAtIndex: [s count] == 1 ? [s firstIndex] : NSNotFound];
+	[slidesWindow startSlideshowAtIndex:startIdx];
 }
 
 - (IBAction)slideshow:(id)sender
 {
-	[self startSlideshow];
+	[self startSlideshowFullscreen:YES];
+}
+
+- (IBAction)slideshowInWindow:(id)sender {
+	[self startSlideshowFullscreen:NO];
 }
 
 - (IBAction)openSelectedFiles:(id)sender {
-	[self startSlideshow];
+	NSEvent *e = NSApp.currentEvent;
+	[self startSlideshowFullscreen:!(e.modifierFlags & NSEventModifierFlagOption)];
 }
 
 - (IBAction)revealSelectedFilesInFinder:(id)sender {
@@ -696,6 +701,7 @@ enum {
 	SLIDESHOW_SCALE_UP,
 	SLIDESHOW_ACTUAL_SIZE,
 	NEW_TAB,
+	BEGIN_SLIDESHOW_IN_WINDOW,
 	JPEG_OP = 100,
 	ROTATE_L = 107,
 	ROTATE_R = 105,
@@ -764,6 +770,7 @@ enum {
 		case REVEAL_IN_FINDER:
 			return YES;
 		case BEGIN_SLIDESHOW:
+		case BEGIN_SLIDESHOW_IN_WINDOW:
 			if ([slidesWindow isMainWindow] ) return NO;
 			return frontWindow && [frontWindow filenamesDone] && [[frontWindow displayedFilenames] count];
 		case SET_DESKTOP:
