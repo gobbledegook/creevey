@@ -69,7 +69,8 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	return YES;
 }
 - (void)endContentAccess {
-	self.counter = self.counter - 1;
+	if (self.counter)
+		self.counter = self.counter - 1;
 }
 - (void)discardContentIfPossible {
 	if (self.counter == 0) {

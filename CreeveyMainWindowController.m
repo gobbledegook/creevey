@@ -147,6 +147,14 @@
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
+	[_accessedLock lock];
+	DYImageCache *thumbsCache = [appDelegate thumbsCache];
+	for (NSString *s in _accessedFiles) {
+		[thumbsCache endAccess:ResolveAliasToPath(s)];
+	}
+	[_accessedFiles removeAllObjects];
+	[_accessedLock unlock];
+
 	imageCacheQueueRunning = NO;
 	[imageCacheQueueLock lock];
 	[imageCacheQueueLock unlockWithCondition:1];
@@ -476,13 +484,6 @@
 			}
 		}
 		[displayedFilenames addObjectsFromArray:filenames];
-		DYImageCache *thumbsCache = [appDelegate thumbsCache];
-		[_accessedLock lock];
-		for (NSString *s in _accessedFiles) {
-			[thumbsCache endAccess:ResolveAliasToPath(s)];
-		}
-		[_accessedFiles removeAllObjects];
-		[_accessedLock unlock];
 	} else if (currCat) { // currCat > 0 whenever cat changes (see keydown)
 		// this means deleting when a cat is displayed will cause unsightly flashing
 		// but we can live with that for now. maybe temp set currcat to 0?
@@ -523,7 +524,15 @@
 	[pool release];
 #pragma mark populate matrix
 	pool = [[NSAutoreleasePool alloc] init];
-		
+
+	DYImageCache *thumbsCache = [appDelegate thumbsCache];
+	[_accessedLock lock];
+	for (NSString *s in _accessedFiles) {
+		[thumbsCache endAccess:ResolveAliasToPath(s)];
+	}
+	[_accessedFiles removeAllObjects];
+	[_accessedLock unlock];
+
 	NSMutableIndexSet *selectedIndexes = [NSMutableIndexSet indexSet];
 	if ([displayedFilenames count] > 0) {
 		loadingDone = NO;
@@ -536,7 +545,6 @@
 		NSUInteger maxThumbs = [[NSUserDefaults standardUserDefaults]
 								  integerForKey:@"maxThumbsToLoad"];
 		
-		DYImageCache *thumbsCache = [appDelegate thumbsCache];
 		for (i=0; i<numFiles; ++i) {
 			if (stopCaching) {
 				//NSLog(@"aborted1 %@", origPath);
@@ -545,7 +553,9 @@
 			
 			NSString *origPath = displayedFilenames[i];
 			NSString *resolvedPath = ResolveAliasToPath(origPath);
-			NSImage *cachedImage = [thumbsCache imageForKey:resolvedPath]; // remember the thumbsCache's key is the resolved path!
+			NSImage *cachedImage = [thumbsCache imageForKeyInvalidatingCacheIfNecessary:resolvedPath]; // remember the thumbsCache's key is the resolved path!
+			// what happens if another window happens to invalidate a thumb that we started "access" to?
+			// Actually it won't matter if we make too many calls to endAccess:, worst case is we'll have to recache it at some point.
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[imgMatrix addImage:cachedImage withFilename:origPath];
 			});
