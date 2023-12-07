@@ -370,6 +370,28 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self scrollPoint:NSMakePoint(0, row*area_h + dy)];
 }
 
+#pragma mark menu stuff
+
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+	if ([menuItem action] == @selector(copy:)) return selectedIndexes.count > 0;
+	// selectAll:/selectNone:
+	return filenames.count > 0;
+}
+
+- (IBAction)copy:(id)sender {
+	NSMutableArray *items = [NSMutableArray arrayWithCapacity:selectedIndexes.count];
+	[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+		NSString *path = filenames[idx];
+		NSPasteboardItem *pbi = [[[NSPasteboardItem alloc] init] autorelease];
+		[pbi setString:path forType:NSPasteboardTypeString];
+		[pbi setData:[[NSURL fileURLWithPath:path isDirectory:NO] dataRepresentation] forType:NSPasteboardTypeFileURL];
+		[items addObject:pbi];
+	}];
+	NSPasteboard *pb = NSPasteboard.generalPasteboard;
+	[pb clearContents];
+	[pb writeObjects:items];
+}
+
 #pragma mark event stuff
 - (void)mouseDown:(NSEvent *)theEvent {
 	[[self window] makeFirstResponder:self];
