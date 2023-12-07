@@ -2,10 +2,10 @@
 
 @implementation DYRandomizableArray
 {
-   NSMutableArray *array, // working array
-	   *orderedArray,     // saved copy, only populated when array is randomized
-	   *randomToOrdered,  // parallel array to the working array
-	   *orderedToRandom;  // inversion of randomToOrdered
+	NSMutableArray *array, // working array
+			*orderedArray; // saved copy, only populated when array is randomized
+	NSMutableArray<NSNumber *> *randomToOrdered,  // parallel array to the working array
+							   *orderedToRandom;  // inversion of randomToOrdered
 }
 
 - (instancetype)init
@@ -44,6 +44,22 @@
 
 - (NSUInteger)indexOfObject:(id)anObject {
 	return [array indexOfObject:anObject];
+}
+
+- (NSUInteger)indexOfObject:(id)anObject usingComparator:(NSComparator)cmp {
+	NSArray *a = orderedArray.count ? orderedArray : array;
+	NSUInteger idx = [a indexOfObject:anObject inSortedRange:NSMakeRange(0, array.count) options:0 usingComparator:cmp];
+	return orderedArray.count ? orderedToRandom[idx].unsignedIntegerValue : idx;
+}
+
+- (NSUInteger)indexOfObject:(id)anObject usingComparator:(NSComparator)cmp insertIndex:(NSUInteger *)insertIdx {
+	NSUInteger count = array.count;
+	NSArray *a = orderedArray.count ? orderedArray : array;
+	NSUInteger idx = [a indexOfObject:anObject inSortedRange:NSMakeRange(0, count) options:NSBinarySearchingInsertionIndex usingComparator:cmp];
+	if (idx < count && [a[idx] isEqual:anObject])
+		return orderedArray.count ? orderedToRandom[idx].unsignedIntegerValue : idx;
+	*insertIdx = idx;
+	return NSNotFound;
 }
 
 // mutable array stuff
@@ -93,22 +109,30 @@
 	[self removeObjectAtIndex:i];
 }
 
-- (void)insertObject:(id)anObject withOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index {
+- (NSUInteger)insertObject:(id)anObject usingComparator:(NSComparator)cmp atIndex:(NSUInteger)index {
 	NSUInteger count = array.count;
 	if (index > count) index = count;
-	if (oIdx > count) oIdx = count;
+	NSMutableArray *a = orderedArray.count ? orderedArray : array;
+	NSUInteger oIdx = [a indexOfObject:anObject inSortedRange:NSMakeRange(0, count) options:NSBinarySearchingInsertionIndex usingComparator:cmp];
+	if (oIdx < count && [a[oIdx] isEqual:anObject])
+		return orderedArray.count ? orderedToRandom[oIdx].unsignedIntegerValue : oIdx;
+	return [self insertObject:anObject usingOrderedIndex:oIdx atIndex:index];
+}
+
+- (NSUInteger)insertObject:(id)anObject usingOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index {
+	NSUInteger count = array.count;
 	if ([orderedArray count]) {
 		[orderedArray insertObject:anObject atIndex:oIdx];
 		NSUInteger i;
 		for (i=0; i<count; ++i) {
 			NSUInteger n = [randomToOrdered[i] unsignedIntegerValue];
-			if (n > oIdx)
+			if (n >= oIdx)
 				randomToOrdered[i] = @(n+1);
 		}
 		[randomToOrdered insertObject:@(oIdx) atIndex:index];
 		for (i=0; i<count; ++i) {
 			NSUInteger n = [orderedToRandom[i] unsignedIntegerValue];
-			if (n > index)
+			if (n >= index)
 				orderedToRandom[i] = @(n+1);
 		}
 		[orderedToRandom insertObject:@(index) atIndex:oIdx];
@@ -116,6 +140,7 @@
 		index = oIdx;
 	}
 	[array insertObject:anObject atIndex:index];
+	return index;
 }
 
 // randomizable stuff

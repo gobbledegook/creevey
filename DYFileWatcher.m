@@ -1,0 +1,96 @@
+//
+//  DYFileWatcher.m
+//  Phoenix Slides
+//
+//  Created by 祥 on 12/6/23.
+//
+
+#import "DYFileWatcher.h"
+#import "DYCarbonGoodies.h"
+#import "CreeveyController.h"
+
+@interface DYFileWatcher ()
+@property (nonatomic, copy) NSString *path;
+- (instancetype)init NS_UNAVAILABLE;
+- (void)gotEventPaths:(NSArray *)eventPaths flags:(const FSEventStreamEventFlags *)eventFlags count:(size_t)n;
+@end
+
+static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t n, void *p, const FSEventStreamEventFlags flags[], const FSEventStreamEventId eventIds[])
+{
+	[(DYFileWatcher *)info gotEventPaths:(NSArray *)p flags:flags count:n];
+}
+
+@implementation DYFileWatcher
+{
+	FSEventStreamRef stream;
+	id <DYFileWatcherDelegate> _delegate;
+	CreeveyController *appDelegate;
+}
+
+- (instancetype)initWithDelegate:(id <DYFileWatcherDelegate>)d {
+	if (self = [super init]) {
+		_delegate = d;
+	}
+	return self;
+}
+
+- (void)dealloc {
+	[self stop];
+	[_path release];
+	_delegate = nil;
+	[super dealloc];
+}
+
+- (void)watchDirectory:(NSString *)s {
+	if (stream)
+		[self stop];
+	if ([s.stringByDeletingLastPathComponent isEqualToString:@"/"])
+		return; // just refuse to watch top level directories for now
+	FSEventStreamContext o;
+	o.version = 0;
+	o.info = (void *)self;
+	o.retain = NULL;
+	o.release = NULL;
+	o.copyDescription = NULL;
+	stream = FSEventStreamCreate(NULL, &fseventCallback, &o, (CFArrayRef)@[s], kFSEventStreamEventIdSinceNow, 2.0, kFSEventStreamCreateFlagFileEvents|kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagIgnoreSelf|kFSEventStreamCreateFlagMarkSelf);
+	FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+	if (!FSEventStreamStart(stream)) {
+		FSEventStreamInvalidate(stream);
+		stream = NULL;
+	}
+	self.path = s;
+	appDelegate = (CreeveyController *)NSApp.delegate;
+}
+
+- (void)gotEventPaths:(NSArray *)eventPaths flags:(const FSEventStreamEventFlags *)eventFlags count:(size_t)n	 {
+	NSMutableSet *files = [[[NSMutableSet alloc] init] autorelease];
+	for (size_t i=0; i<n; ++i) {
+		NSString *s = eventPaths[i];
+		FSEventStreamEventFlags f = eventFlags[i];
+		if (f & (kFSEventStreamEventFlagItemCreated|kFSEventStreamEventFlagItemModified|kFSEventStreamEventFlagItemRemoved|kFSEventStreamEventFlagItemRenamed)) {
+			if (f & kFSEventStreamEventFlagItemIsDir) continue;
+			if (_wantsSubfolders ? [s hasPrefix:_path] : [[s stringByDeletingLastPathComponent] isEqualToString:_path]) {
+				NSString *theFile = ResolveAliasToPath(s);
+				NSURL *url = [NSURL fileURLWithPath:theFile isDirectory:NO];
+				NSNumber *val;
+				if ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue) continue;
+				if (![appDelegate shouldShowFile:theFile]) continue;
+				[files addObject:s];
+			}
+		}
+	}
+	if (files.count)
+		[_delegate watcherFiles:files.allObjects];
+}
+
+- (void)stop {
+	if (stream) {
+		FSEventStreamStop(stream);
+		FSEventStreamInvalidate(stream);
+		FSEventStreamRelease(stream);
+		stream = NULL;
+	}
+}
+
+
+@end

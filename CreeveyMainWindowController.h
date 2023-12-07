@@ -54,6 +54,8 @@
 - (short int)sortOrder;
 - (void)setSortOrder:(short int)n;
 - (void)changeSortOrder:(short int)n;
+- (NSComparator)comparator;
+@property (readonly) BOOL wantsSubfolders;
 - (DYWrappingMatrix *)imageMatrix;
 
 //other

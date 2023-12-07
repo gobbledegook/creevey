@@ -12,6 +12,7 @@
 #import "DYCarbonGoodies.h"
 #import "DirBrowserDelegate.h"
 #import "NSStringDYBasePathExtension.h"
+#import "DYFileWatcher.h"
 
 #import "CreeveyController.h"
 #import "DYCreeveyBrowser.h"
@@ -38,13 +39,14 @@
 @end
 
 
-@interface CreeveyMainWindowController ()
+@interface CreeveyMainWindowController () <DYFileWatcherDelegate>
 {
-	volatile BOOL _background;
+	volatile BOOL _background, _wantsSubfolders;
 	NSImage *_brokenDoc, *_loadingImage;
 	NSMutableSet *_accessedFiles;
 	NSLock *_accessedLock, *_statusLock;
 	volatile NSTimeInterval _statusTime;
+	DYFileWatcher *_fileWatcher;
 }
 @property (nonatomic, readonly) NSSplitView *splitView;
 @property BOOL wantsSubfolders;
@@ -68,6 +70,7 @@
 		_accessedFiles = [[NSMutableSet alloc] init];
 		_accessedLock = [[NSLock alloc] init];
 		_statusLock = [[NSLock alloc] init];
+		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 	}
     return self;
 }
@@ -130,6 +133,7 @@
 }
 
 - (void)dealloc {
+	[_fileWatcher release];
 	[_recurseRoot release];
 	[filenames release];
 	[displayedFilenames release];
@@ -279,6 +283,44 @@
 	[self setPath:a[0]];
 }
 
+#pragma mark FSEvents stuff
+
+- (BOOL)wantsSubfolders {
+	return _wantsSubfolders;
+}
+- (void)setWantsSubfolders:(BOOL)b {
+	_wantsSubfolders = b;
+	_fileWatcher.wantsSubfolders = b;
+}
+
+- (void)watcherFiles:(NSArray *)files {
+	if (!filenamesDone) return;
+	NSFileManager *fm = NSFileManager.defaultManager;
+	for (NSString *s in files) {
+		NSUInteger count = filenames.count;
+		BOOL fileExists = [fm fileExistsAtPath:s];
+		NSUInteger idx = [filenames indexOfObject:s inSortedRange:NSMakeRange(0, count) options:NSBinarySearchingInsertionIndex usingComparator:[self comparator]];
+		if (idx < count && [filenames[idx] isEqualToString:s]) {
+			if (fileExists)
+				[self fileWasChanged:s];
+			else
+				[self fileWasDeleted:s atIndex:idx];
+		} else {
+			if (fileExists)
+				[self addFile:s atIndex:idx];
+		}
+	}
+}
+
+- (void)addFile:(NSString *)s atIndex:(NSUInteger)idx {
+	if (displayedFilenames.count == filenames.count) {
+		[displayedFilenames insertObject:s atIndex:idx];
+		[imgMatrix addImage:nil withFilename:s atIndex:idx];
+	}
+	[filenames insertObject:s atIndex:idx];
+	[self updateStatusFld];
+}
+
 - (void)fileWasChanged:(NSString *)s {
 	if (![self pathIsCurrentDirectory:s]) return;
 	// update thumb
@@ -370,7 +412,7 @@
 
 - (void)filesWereUndeleted:(NSArray *)a {
 	NSString *currentPath = [self path];
-	BOOL __block needsRefresh = NO;
+	BOOL needsRefresh = NO;
 	for (NSString *s in a) {
 		if ([s hasPrefix:currentPath])
 			needsRefresh = YES;
@@ -443,6 +485,9 @@
 		[imgMatrix removeAllImages];
 	});
 	if (thePath) {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[_fileWatcher stop];
+		});
 		[filenames removeAllObjects];
 		[displayedFilenames removeAllObjects];
 		[imageCacheQueueLock lock];
@@ -484,6 +529,9 @@
 			}
 		}
 		[displayedFilenames addObjectsFromArray:filenames];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[_fileWatcher watchDirectory:thePath];
+		});
 	} else if (currCat) { // currCat > 0 whenever cat changes (see keydown)
 		// this means deleting when a cat is displayed will cause unsightly flashing
 		// but we can live with that for now. maybe temp set currcat to 0?
@@ -607,6 +655,7 @@
 	currCat = 0;
 	[slidesBtn setEnabled:NO];
 	NSString *currentPath = [dirBrowserDelegate path];
+	_subfoldersButton.enabled = ![currentPath isEqualToString:@"/"]; // let's not ever load up the entire file system
 	if (self.wantsSubfolders && sender) { // sender is dirBrowserDelegate when non-nil
 		if (![currentPath hasPrefix:_recurseRoot]) {
 			self.wantsSubfolders = NO;

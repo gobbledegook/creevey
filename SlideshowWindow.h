@@ -47,8 +47,8 @@
 
 - (void)setCats:(NSMutableSet **)newCats;
 
-- (void)setFilenames:(NSArray *)files; // call this before starting the slideshow
-- (void)setBasePath:(NSString *)s;
+- (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block; // call this before starting the slideshow
+- (void)setFilenames:(NSArray *)files basePath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block; // or this version to watch the directory and update with directory changes during slideshow
 - (void)startSlideshow;
 - (void)startSlideshowAtIndex:(NSUInteger)n;
 - (void)endSlideshow;
@@ -65,8 +65,8 @@
 - (void)redisplayImage; // to force reload of current file, regardless of mod date
 - (BOOL)currentImageLoaded;
 - (void)removeImageForFile:(NSString *)s; // use this if something's been deleted
-- (void)insertFile:(NSString *)s atIndex:(NSUInteger)idx atOrderedIndex:(NSUInteger)oIdx; // use this to undo a deletion
-- (NSUInteger)currentOrderedIndex;
+- (void)insertFile:(NSString *)s atIndex:(NSUInteger)idx; // use this to undo a deletion
+- (void)filesWereUndeleted:(NSArray *)a;
 - (void)uncacheImage:(NSString *)s; // when an image is modified, remove it from cache
 
 - (void)setRerandomizeOnLoop:(BOOL)b;

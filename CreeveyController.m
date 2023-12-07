@@ -271,15 +271,26 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (void)startSlideshowFullscreen:(BOOL)flag withFiles:(NSArray *)files{
 	slidesWindow.fullscreenMode = flag;
-	[slidesWindow setBasePath:[frontWindow path]];
+	BOOL wantsUpdates;
 	NSUInteger startIdx = NSNotFound;
 	if (files) {
-		[slidesWindow setFilenames:files.count > 1 ? files : [frontWindow displayedFilenames]];
-		if (files.count == 1) startIdx = [frontWindow indexOfFilename:files[0]];
+		if ((wantsUpdates = files.count <= 1)) {
+			if (files.count == 1) startIdx = [frontWindow indexOfFilename:files[0]];
+			files = [frontWindow displayedFilenames];
+		}
 	} else {
 		NSIndexSet *s = [frontWindow selectedIndexes];
-		[slidesWindow setFilenames:s.count > 1 ? [frontWindow currentSelection] : [frontWindow displayedFilenames]];
-		if (s.count == 1) startIdx = s.firstIndex;
+		if ((wantsUpdates = s.count <= 1)) {
+			files = [frontWindow displayedFilenames];
+			if (s.count == 1) startIdx = s.firstIndex;
+		} else {
+			files = [frontWindow currentSelection];
+		}
+	}
+	if (wantsUpdates) {
+		[slidesWindow setFilenames:files basePath:[frontWindow path] wantsSubfolders:frontWindow.wantsSubfolders comparator:frontWindow.comparator];
+	} else {
+		[slidesWindow setFilenames:files basePath:[frontWindow path] comparator:frontWindow.comparator];
 	}
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
@@ -505,13 +516,13 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:s];
 			[thumbsCache removeImageForKey:s];
 			[slidesWindow removeImageForFile:s];
-			NSUInteger idx = [slidesWindow currentIndex], oIdx = [slidesWindow currentOrderedIndex];
+			NSUInteger idx = [slidesWindow currentIndex];
 			NSUndoManager *um = slidesWindow.undoManager;
 			[um registerUndoWithTarget:self handler:^(id target) {
 				NSError *err;
 				if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:&err]) {
 					if ([slidesWindow isMainWindow])
-						[slidesWindow insertFile:s atIndex:idx atOrderedIndex:oIdx];
+						[slidesWindow insertFile:s atIndex:idx];
 					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:@[s]];
 				} else {
 					NSAlert *alert = [[NSAlert alloc] init];
@@ -552,6 +563,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 						[moved addObject:a[0]];
 				}
 				[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
+				if ([slidesWindow isVisible])
+					[slidesWindow filesWereUndeleted:moved];
 				if (moved.count < n) {
 					NSAlert *alert = [[NSAlert alloc] init];
 					alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu file(s) could not be restored from the trash because of an error. You should probably check your Trash.",@""), n-moved.count];
@@ -573,6 +586,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 							[moved addObject:paths[i]];
 					}
 					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
+					if ([slidesWindow isVisible])
+						[slidesWindow filesWereUndeleted:moved];
 					if (moved.count < n) {
 						NSAlert *alert = [[NSAlert alloc] init];
 						alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu file(s) could not be moved back because of an error.",@""), n-moved.count];

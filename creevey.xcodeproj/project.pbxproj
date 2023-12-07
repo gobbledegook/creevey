@@ -43,6 +43,8 @@
 		F2711712182AADE6008F97E1 /* DYRandomizableArray.h in Headers */ = {isa = PBXBuildFile; fileRef = F2711710182AADE6008F97E1 /* DYRandomizableArray.h */; };
 		F2711713182AADE6008F97E1 /* DYRandomizableArray.m in Sources */ = {isa = PBXBuildFile; fileRef = F2711711182AADE6008F97E1 /* DYRandomizableArray.m */; };
 		F276A7461B4095F50045E67A /* ThumbnailContextMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F276A7481B4095F50045E67A /* ThumbnailContextMenu.xib */; };
+		F27F5AE82B207AB900BD45E9 /* DYFileWatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = F27F5AE62B207AB900BD45E9 /* DYFileWatcher.h */; };
+		F27F5AE92B207AB900BD45E9 /* DYFileWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = F27F5AE72B207AB900BD45E9 /* DYFileWatcher.m */; };
 		F28C1E1D0A86723000682516 /* general.gif in Resources */ = {isa = PBXBuildFile; fileRef = F28C1E1C0A86723000682516 /* general.gif */; };
 		F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */; };
 		F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */; };
@@ -168,6 +170,8 @@
 		F2711711182AADE6008F97E1 /* DYRandomizableArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYRandomizableArray.m; sourceTree = "<group>"; };
 		F276A7471B4095F50045E67A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ThumbnailContextMenu.xib; sourceTree = "<group>"; };
 		F277E1351917453600D2F574 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F27F5AE62B207AB900BD45E9 /* DYFileWatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DYFileWatcher.h; sourceTree = "<group>"; };
+		F27F5AE72B207AB900BD45E9 /* DYFileWatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DYFileWatcher.m; sourceTree = "<group>"; };
 		F28C1E1C0A86723000682516 /* general.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = general.gif; sourceTree = "<group>"; };
 		F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSIndexSetSymDiffExtension.h; sourceTree = "<group>"; };
 		F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSIndexSetSymDiffExtension.m; sourceTree = "<group>"; };
@@ -319,6 +323,8 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				F27F5AE62B207AB900BD45E9 /* DYFileWatcher.h */,
+				F27F5AE72B207AB900BD45E9 /* DYFileWatcher.m */,
 				F2711710182AADE6008F97E1 /* DYRandomizableArray.h */,
 				F2711711182AADE6008F97E1 /* DYRandomizableArray.m */,
 				F2FE4FA808842F2600550533 /* libjpeg */,
@@ -486,6 +492,7 @@
 				F2FE4FC808842F5500550533 /* jinclude.h in Headers */,
 				F2FE4FC908842F5500550533 /* jerror.h in Headers */,
 				F2FE4FCB08842F5500550533 /* transupp.h in Headers */,
+				F27F5AE82B207AB900BD45E9 /* DYFileWatcher.h in Headers */,
 				F2FE4FCD08842F5500550533 /* DYJpegtran.h in Headers */,
 				F2FA6DED2AF8CF4700F3A28B /* VDKQueue.h in Headers */,
 				F2FE507208848C9400550533 /* exifint.h in Headers */,
@@ -597,6 +604,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F27F5AE92B207AB900BD45E9 /* DYFileWatcher.m in Sources */,
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				F2AE88EA07EB877D008F2193 /* DirBrowserDelegate.m in Sources */,
 				F2AE890F07EB9BB7008F2193 /* CreeveyController.m in Sources */,

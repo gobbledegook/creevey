@@ -11,13 +11,16 @@
 - (T)objectAtIndex:(NSUInteger)index;
 - (T)objectAtIndexedSubscript:(NSUInteger)index; // support custom subscript, e.g. array[index]
 - (NSUInteger)indexOfObject:(T)anObject;
+- (NSUInteger)indexOfObject:(T)anObject usingComparator:(NSComparator)cmp;
+- (NSUInteger)indexOfObject:(T)anObject usingComparator:(NSComparator)cmp insertIndex:(NSUInteger *)insertIdx;
 
 // mutable array stuff
 - (void)setArray:(NSArray<T> *)otherArray;
 - (void)removeAllObjects;
 - (void)removeObjectAtIndex:(NSUInteger)index;
 - (void)removeObject:(T)anObject;
-- (void)insertObject:(T)anObject withOrderedIndex:(NSUInteger)oIdx atIndex:(NSUInteger)index;
+- (NSUInteger)insertObject:(T)anObject usingComparator:(NSComparator)cmp atIndex:(NSUInteger)index; // index is ignored if not in random mode. Returns the actual insert index
+- (NSUInteger)insertObject:(T)anObject usingOrderedIndex:(NSUInteger)insertIdx atIndex:(NSUInteger)index; // this should only ever be called with a valid oIdx!
 
 // randomizable stuff
 - (void)randomize;

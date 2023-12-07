@@ -15,12 +15,15 @@
 #import "NSStringDYBasePathExtension.h"
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
+#import "DYFileWatcher.h"
 
 static BOOL UsingMagicMouse(NSEvent *e) {
 	return [e phase] != NSEventPhaseNone || [e momentumPhase] != NSEventPhaseNone;
 }
 
-@interface SlideshowWindow ()
+@interface SlideshowWindow () <DYFileWatcherDelegate>
+@property (nonatomic, copy) NSComparator comparator;
+
 - (void)jump:(NSInteger)n;
 - (void)jumpTo:(NSUInteger)n;
 - (void)setTimer:(NSTimeInterval)s;
@@ -44,6 +47,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 {
 	DYRandomizableArray<NSString *> *filenames;
 	NSOperationQueue *_upcomingQueue;
+	DYFileWatcher *_fileWatcher;
 }
 
 + (void)initialize {
@@ -66,6 +70,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
 		imgCache.rotatable = YES;
 		_upcomingQueue = [[NSOperationQueue alloc] init];
+		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 		
  		[self setBackgroundColor:[NSColor blackColor]];
 		[self setOpaque:NO];
@@ -139,6 +144,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[imgCache release];
 	[helpFld release];
 	[_upcomingQueue release];
+	[_fileWatcher release];
+	[_comparator release];
 	[super dealloc];
 }
 
@@ -178,12 +185,14 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (BOOL)canBecomeKeyWindow { return YES; }
 - (BOOL)canBecomeMainWindow { return YES; }
 
-// start/end stuff
-- (void)setFilenames:(NSArray *)files {
-	[filenames setArray:files];
+#pragma mark start/end stuff
+- (void)setFilenames:(NSArray *)files basePath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block {
+	[self setFilenames:files basePath:s comparator:block];
+	_fileWatcher.wantsSubfolders = b;
+	[_fileWatcher watchDirectory:s];
 }
 
-- (void)setBasePath:(NSString *)s {
+- (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block {
 	if (currentIndex != NSNotFound)
 		[self saveZoomInfo]; // in case we're called without endSlideshow being called
 	
@@ -194,6 +203,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		else
 			basePath = [s copy];
 	}
+	[filenames setArray:files];
+	self.comparator = block;
 }
 
 - (NSString *)currentShortFilename {
@@ -253,6 +264,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)orderOut:(id)sender {
+	[_fileWatcher stop];
 	[self saveZoomInfo];
 
 	lastIndex = currentIndex;
@@ -323,6 +335,38 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	if (_fullscreenMode)
 		return [super constrainFrameRect:[[self screen] frame] toScreen:screen];
 	return [super constrainFrameRect:frameRect toScreen:screen];
+}
+
+- (void)watcherFiles:(NSArray *)files {
+	if (currentIndex == NSNotFound) return;
+	NSFileManager *fm = NSFileManager.defaultManager;
+	BOOL needUpdate = NO;
+	for (NSString *s in files) {
+		BOOL fileExists = [fm fileExistsAtPath:s];
+		if (currentIndex < filenames.count && [filenames[currentIndex] isEqualToString:s]) {
+			if (fileExists)
+				[self redisplayImage];
+			else
+				[self removeImageForFile:s atIndex:currentIndex];
+			continue;
+		}
+		NSUInteger insertIdx;
+		NSUInteger idx = [filenames indexOfObject:s usingComparator:self.comparator insertIndex:&insertIdx];
+		if (idx == NSNotFound) {
+			if (fileExists) {
+				[filenames insertObject:s usingOrderedIndex:insertIdx atIndex:filenames.count]; // appends to end if in random mode
+				if (!randomMode && insertIdx <= currentIndex) {
+					currentIndex++;
+				}
+				needUpdate = YES;
+			}
+		} else {
+			if (!fileExists)
+				[self removeImageForFile:s atIndex:idx];
+		}
+	}
+	if (needUpdate)
+		[self updateForAddedFiles];
 }
 
 #pragma mark timer stuff
@@ -1058,32 +1102,66 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)removeImageForFile:(NSString *)s {
-	NSUInteger n = [filenames indexOfObject:s];
-	if (n >= filenames.count) return;
-
+	[self removeImageForFile:s atIndex:NSNotFound];
+}
+- (void)removeImageForFile:(NSString *)s atIndex:(NSUInteger)n {
+	BOOL trashMode = (n == NSNotFound);
+	if (trashMode) {
+		n = [filenames indexOfObject:s usingComparator:_comparator];
+		if (n == NSNotFound) return;
+	}
+	BOOL current = (currentIndex == n);
 	[filenames removeObjectAtIndex:n];
 	[imgCache removeImageForKey:s];
 	// if file before current file was deleted, shift index back one
 	if (n < currentIndex)
 		currentIndex--;
-	// now if currentIndex == [filenames count], that means the last file in the list
+	// in trashMode, if currentIndex == [filenames count], that means the last file in the list
 	// was deleted, and displayImage will show a blank screen.
+	else if (!trashMode && currentIndex == filenames.count)
+		currentIndex--;
 
 	if (filenames.count == 0) {
 		// no more images to display!
 		[self endSlideshow];
 		return;
 	}
-	[self displayImage]; // reload at the current index
+	if (current)
+		[self displayImage]; // reload at the current index
+	else
+		[self updateInfoFld];
 }
 
-- (void)insertFile:(NSString *)s atIndex:(NSUInteger)idx atOrderedIndex:(NSUInteger)oIdx {
-	[filenames insertObject:s withOrderedIndex:oIdx atIndex:idx];
-	[self jumpTo:randomMode ? idx : oIdx];
+- (void)insertFile:(NSString *)s atIndex:(NSUInteger)idx {
+	idx = [filenames insertObject:s usingComparator:_comparator atIndex:idx];
+	[self jumpTo:idx];
 }
 
-- (NSUInteger)currentOrderedIndex {
-	return randomMode ? [filenames orderedIndexOfObjectAtIndex:currentIndex] : currentIndex;
+- (void)filesWereUndeleted:(NSArray *)a {
+	NSString *path = basePath;
+	if (path.length > 1 && [path characterAtIndex:path.length-1] == '/')
+		path = [basePath substringToIndex:path.length-1];
+	BOOL subFolders = _fileWatcher.wantsSubfolders;
+	BOOL needUpdate = NO;
+	for (NSString *s in a) {
+		if (subFolders ? [s hasPrefix:basePath] : [[s stringByDeletingLastPathComponent] isEqualToString:path]) {
+			NSUInteger idx = [filenames insertObject:s usingComparator:_comparator atIndex:filenames.count];
+			if (!randomMode && idx <= currentIndex) {
+				currentIndex++;
+			}
+			needUpdate = YES;
+		}
+	}
+	if (needUpdate)
+		[self updateForAddedFiles];
+}
+
+- (void)updateForAddedFiles {
+	// check if we're in trashMode
+	if (imgView.image == nil)
+		[self redisplayImage];
+	else
+		[self updateInfoFld];
 }
 
 #pragma mark cat methods
