@@ -50,7 +50,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Phoenix Slides</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Phoenix Slides 1.4.8, Copyright 2005-2023 Dominic Yu, Gold Mountain Software</string>
+	<string>Phoenix Slides 1.5, Copyright 2005-2023 Dominic Yu, Gold Mountain Software</string>
 	<key>CFBundleHelpBookFolder</key>
 	<string>Phoenix Slides Help</string>
 	<key>CFBundleHelpBookName</key>
