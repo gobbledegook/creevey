@@ -13,7 +13,6 @@
 #define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
 #define PADDING 16
-#define VERTPADDING 16
 #define DEFAULT_TEXTHEIGHT 12
 
 static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
@@ -77,6 +76,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 @interface DYWrappingMatrix () <NSDraggingSource>
 {
 	float _maxCellWidth;
+	float _hPadding, _vPadding;
 	NSSize _contentSize;
 	BOOL _respondsToLoadImageForFile, _respondsToSelectionDidChange;
 	NSMutableArray *_movedUrls, *_originPaths;
@@ -102,6 +102,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	dict[@"DYWrappingMatrixBgColor"] = [NSKeyedArchiver archivedDataWithRootObject:NSColor.controlBackgroundColor requiringSecureCoding:YES error:NULL];
 	dict[@"DYWrappingMatrixAllowMove"] = @NO;
 	dict[@"DYWrappingMatrixMaxCellWidth"] = @"160";
+	dict[@"thumbPadding"] = @(PADDING);
 	[defaults registerDefaults:dict];
 	
     static BOOL initialized = NO;
@@ -167,7 +168,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 												 name:NSViewFrameDidChangeNotification
 											   object:[self enclosingScrollView]];
 	[[[self enclosingScrollView] contentView] setPostsBoundsChangedNotifications:YES];
-	NSData *colorData = [NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"];
+	NSUserDefaults *udf = NSUserDefaults.standardUserDefaults;
+	float padding = [udf floatForKey:@"thumbPadding"];
+	_vPadding = _hPadding = padding < 0 ? 0 : padding > PADDING ? PADDING : padding;
+	NSData *colorData = [udf dataForKey:@"DYWrappingMatrixBgColor"];
 	NSColor *aColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
 	if (aColor == nil) {
 #pragma GCC diagnostic push
@@ -175,7 +179,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		aColor = [NSUnarchiver unarchiveObjectWithData:colorData];
 #pragma GCC diagnostic pop
 		NSData *migratedData = [NSKeyedArchiver archivedDataWithRootObject:aColor requiringSecureCoding:YES error:NULL];
-		[NSUserDefaults.standardUserDefaults setObject:migratedData forKey:@"DYWrappingMatrixBgColor"];
+		[udf setObject:migratedData forKey:@"DYWrappingMatrixBgColor"];
 	}
 	bgColor = [aColor retain];
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
@@ -265,11 +269,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	// all values dependent on bounds width, cellWidth(, numCells for resize:)
 	float self_w = [self bounds].size.width;
 	cellHeight = cellWidth*3/4;
-	numCols = (int)(self_w)/((int)cellWidth + PADDING/2);
+	numCols = (int)(self_w)/((int)cellWidth + _hPadding/2);
 	if (numCols == 0) numCols = 1;
 	columnSpacing = (self_w - numCols*cellWidth)/numCols;
 	area_w = cellWidth + columnSpacing;
-	area_h = cellHeight + VERTPADDING + textHeight;
+	area_h = cellHeight + _vPadding + textHeight;
 }
 - (NSInteger)point2cellnum:(NSPoint)p {
 	NSInteger col = MIN(numCols-1, (NSInteger)p.x/area_w); if (col < 0) col = 0;
@@ -289,7 +293,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	col = n%numCols;
 	return ScaledCenteredRect([self imageSizeForIndex:n],
 							  NSMakeRect(cellWidth*col + columnSpacing*(col + 0.5),
-										 (cellHeight+textHeight)*row + VERTPADDING*(row+0.5),
+										 (cellHeight+textHeight)*row + _vPadding*(row+0.5),
 										 cellWidth, cellHeight)); // rect for cell only
 }
 
@@ -545,7 +549,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	//NSLog(@"---------------------------");
 	NSUInteger i, row, col;
 	NSRect areaRect = NSMakeRect(0, 0, area_w, area_h);
-	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + VERTPADDING/2);
+	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + _vPadding/2);
 	NSRect cellRect;
 	NSWindow *myWindow = [self window];
 	[myTextCell setFont:[NSFont systemFontOfSize:cellWidth >= 160 ? 12 : 4+cellWidth/20]]; // ranges from 6 to 12: 6 + 6*(cellWidth-40)/(160-40)
@@ -579,7 +583,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		// calculate drawing area for thumb and filename area
 		if (textHeight) {
 			textCellRect.origin.x = areaRect.origin.x;
-			textCellRect.origin.y = areaRect.origin.y + area_h - textHeight - VERTPADDING/2;
+			textCellRect.origin.y = areaRect.origin.y + area_h - textHeight - _vPadding/2;
 		}
 		cellRect = [self imageRectForIndex:i];
 		if (![self needsToDrawRect:cellRect] &&
