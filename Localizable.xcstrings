@@ -1008,6 +1008,41 @@
         }
       }
     },
+    "Got It!" : {
+      "comment" : "welcome alert button 1",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstanden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entiendo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "J'ai compris"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fatto"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明白"
+          }
+        }
+      }
+    },
     "Group %i" : {
       "localizations" : {
         "de" : {
@@ -1072,6 +1107,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "高度"
+          }
+        }
+      }
+    },
+    "Hit the 'h' key to see a list of keyboard shortcuts you can use during the slideshow." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drücken Sie die Taste „h“, um eine Liste der Tastaturkürzel anzuzeigen, die Sie während der Diashow verwenden können."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presione la tecla \"h\" para mostrar una lista de atajos de teclado que puede usar durante la presentación de diapositivas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyez sur la touche «h» pour afficher une liste de raccourcis clavier que vous pouvez utiliser pendant le diaporama."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premi il tasto \"h\" per visualizzare un elenco di scorciatoie da tastiera che puoi utilizzare durante la presentazione."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請按 'h' 鍵盤以顯示幻燈片的簡單說明。"
           }
         }
       }
@@ -1709,6 +1778,41 @@
         }
       }
     },
+    "Show Me" : {
+      "comment" : "welcome alert button 2",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeig mir"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muéstrame"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Montre-moi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即顯示"
+          }
+        }
+      }
+    },
     "The file \"%@\" could not be restored from the trash because of an error: %@" : {
       "localizations" : {
         "de" : {
@@ -1915,6 +2019,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "警告"
+          }
+        }
+      }
+    },
+    "Welcome to Phoenix Slides!" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen bei Phoenix Slides!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Bienvenido a Phoenix Slides!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bienvenue sur Phoenix Slides!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benvenuti a Phoenix Slides!"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歡迎使用 Phoenix Slides"
           }
         }
       }

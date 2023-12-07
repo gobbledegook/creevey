@@ -312,6 +312,21 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[imgView setImage:nil];
 	[self displayImage];
 	[self makeKeyAndOrderFront:nil];
+
+	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
+	BOOL seenIntro = [u boolForKey:@"seenSlideshowIntro"];
+	if (!seenIntro) {
+		NSAlert *alert = [[NSAlert alloc] init];
+		alert.messageText = NSLocalizedString(@"Welcome to Phoenix Slides!",@"");
+		alert.informativeText = NSLocalizedString(@"Hit the 'h' key to see a list of keyboard shortcuts you can use during the slideshow.",@"");
+		[alert addButtonWithTitle:NSLocalizedString(@"Got It!", @"welcome alert button 1")];
+		[alert addButtonWithTitle:NSLocalizedString(@"Show Me", @"welcome alert button 2")];
+		if ([alert runModal] == NSAlertSecondButtonReturn)
+			[self toggleHelp];
+		[alert release];
+		[u setBool:YES forKey:@"seenSlideshowIntro"];
+	}
+
 	// ordering front seems to reset the cursor, so force it again
 	[imgView setCursor];
 }
