@@ -121,6 +121,6 @@
 
 
 
-@property (assign) id<VDKQueueDelegate> delegate;
+@property (weak) id<VDKQueueDelegate> delegate;
 
 @end

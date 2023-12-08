@@ -34,7 +34,7 @@ static BOOL FilesContainJPEG(NSArray *paths) {
 	return NO;
 }
 
-#define TAB(x,y)	[[[NSTextTab alloc] initWithType:x location:y] autorelease]
+#define TAB(x,y)	[[NSTextTab alloc] initWithType:x location:y]
 NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache, BOOL moreExif) {
 	id s, path;
 	path = ResolveAliasToPath(origPath);
@@ -44,7 +44,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
 	DYImageInfo *i = [cache infoForKey:path];
 	if (!i) {
-		i = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
+		i = [[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)];
 	}
 	if (i) {
 		id exifStr = [DYExiftags tagsForFile:path moreTags:moreExif];
@@ -74,7 +74,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	// ** this may not be optimal
 	if (r.location != NSNotFound) {
 		float x = 160;
-		NSMutableParagraphStyle *styl = [[[NSMutableParagraphStyle alloc] init] autorelease];
+		NSMutableParagraphStyle *styl = [[NSMutableParagraphStyle alloc] init];
 		[styl setHeadIndent:x];
 		[styl setTabStops:@[TAB(NSRightTabStopType,x-5), TAB(NSLeftTabStopType,x)]];
 		[styl setDefaultTabInterval:5];
@@ -82,11 +82,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		atts[NSParagraphStyleAttributeName] = styl;
 		[attStr setAttributes:atts range:NSMakeRange(r.location,[s length]-r.location)];
 	}
-	[s release];
-	return [attStr autorelease];
+	return attStr;
 }
 
-@interface TimeIntervalPlusWeekToStringTransformer : NSObject
+@interface TimeIntervalPlusWeekToStringTransformer : NSValueTransformer
 // using a val xformer means the field gets updated automatically
 @end
 @implementation TimeIntervalPlusWeekToStringTransformer
@@ -98,12 +97,13 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @end
 
 @interface CreeveyController ()
-@property (nonatomic, assign) BOOL appDidFinishLaunching;
-@property (nonatomic, assign) BOOL filesWereOpenedAtLaunch;
-@property (nonatomic, assign) BOOL windowsWereRestoredAtLaunch;
+@property (nonatomic) BOOL appDidFinishLaunching;
+@property (nonatomic) BOOL filesWereOpenedAtLaunch;
+@property (nonatomic) BOOL windowsWereRestoredAtLaunch;
 @end
 
 @implementation CreeveyController
+@synthesize slidesWindow, jpegProgressBar, exifTextView, exifThumbnailDiscloseBtn, prefsWin, startupDirFld, startupOptionMatrix, slideshowApplyBtn;
 
 +(void)initialize
 {
@@ -152,8 +152,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[defaults removeObjectForKey:@"com.ulikusterer.prefspanel.recentpage"];
 	}
 
-	id t = [[[TimeIntervalPlusWeekToStringTransformer alloc] init] autorelease];
-	[NSValueTransformer setValueTransformer:t
+	[NSValueTransformer setValueTransformer:[[TimeIntervalPlusWeekToStringTransformer alloc] init]
 									forName:@"TimeIntervalPlusWeekToStringTransformer"];
 }
 
@@ -165,7 +164,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		filetypeDescriptions = [[NSMutableDictionary alloc] init];
 		for (NSString *identifier in NSImage.imageUnfilteredTypes) {
 			// easier to use UTType class from UniformTypeIdentifiers, but that's only available in macOS 11
-			CFDictionaryRef t = UTTypeCopyDeclaration((CFStringRef)identifier);
+			CFDictionaryRef t = UTTypeCopyDeclaration((__bridge CFStringRef)identifier);
 			if (t == NULL) continue;
 			CFDictionaryRef tags = CFDictionaryGetValue(t, kUTTypeTagSpecificationKey);
 			if (tags) {
@@ -179,7 +178,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 					}
 				}
 				CFArrayRef ostypes = CFDictionaryGetValue(tags, kUTTagClassOSType);
-				if (ostypes) for (NSString *s in (NSArray *)ostypes) {
+				if (ostypes) for (NSString *s in (__bridge NSArray *)ostypes) {
 					// enclose HFS file types in single quotes, e.g. "'PICT'"
 					[fileostypes addObject:[NSString stringWithFormat:@"'%@'", s]];
 				}
@@ -187,7 +186,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			CFRelease(t);
 		}
 		_revealedDirectories = [[NSMutableSet alloc] initWithObjects:[NSURL fileURLWithPath:[@"~/Desktop/" stringByResolvingSymlinksInPath] isDirectory:YES], nil];
-		fileextensions = [[filetypes.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)] retain];
+		fileextensions = [filetypes.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
 		creeveyWindows = [[NSMutableArray alloc] initWithCapacity:5];
 		
 		thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
@@ -245,20 +244,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
 	[[NSNotificationCenter defaultCenter] removeObserver:localeChangeObserver];
 	[[NSNotificationCenter defaultCenter] removeObserver:screenChangeObserver];
-	[thumbsCache release];
-	[filetypes release];
-	[fileostypes release];
-	[disabledFiletypes release];
-	[_revealedDirectories release];
-	[fileextensions release];
-	[filetypeDescriptions release];
-	[creeveyWindows release];
-    [_jpegController release];
-    [_thumbnailContextMenu release];
 	short int i;
 	for (i=0; i<NUM_FNKEY_CATS; ++i)
-		[cats[i] release];
-	[super dealloc];
+		cats[i] = nil;
 }
 
 - (void)slideshowFromAppOpen:(NSArray *)files {
@@ -342,7 +330,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSString *s = [slidesWindow isMainWindow]
 		? [slidesWindow currentFile]
 		: [frontWindow currentSelection][0];
-	NSError *error = nil;
+	NSError * __autoreleasing error = nil;
 	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s isDirectory:NO]
 											forScreen:[NSScreen mainScreen]
 											  options:@{}
@@ -352,7 +340,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"Could not set the desktop because an error occurred. %@", @""), error.localizedDescription];
 		[alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"")];
 		[alert runModal];
-		[alert release];
 	};
 }
 
@@ -388,7 +375,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[alert addButtonWithTitle:NSLocalizedString(@"Continue", @"")];
 		[alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"")];
 		NSModalResponse response = [alert runModal];
-		[alert release];
 		if (response != NSAlertFirstButtonReturn)
 			return; // user cancelled
 		jinfo.preserveModificationDate = jinfo.resetOrientation ? [[NSUserDefaults standardUserDefaults] boolForKey:@"jpegPreserveModDate"]
@@ -489,7 +475,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
 - (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles resultingURL:(NSURL **)newURL {
 	NSURL *url = [NSURL fileURLWithPath:fullpath isDirectory:NO];
-	NSError * _Nullable error = nil;
+	NSError * __autoreleasing error = nil;
 	[[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:newURL error:&error];
 	if (!error)
 		return 1;
@@ -499,7 +485,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	if (numFiles > 1)
 		[alert addButtonWithTitle:NSLocalizedString(@"Continue", @"")];
 	NSModalResponse response = [alert runModal];
-	[alert release];
 	if (response == NSAlertFirstButtonReturn)
 		return 2;
 	return 0;
@@ -519,7 +504,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			NSUInteger idx = [slidesWindow currentIndex];
 			NSUndoManager *um = slidesWindow.undoManager;
 			[um registerUndoWithTarget:self handler:^(id target) {
-				NSError *err;
+				NSError * __autoreleasing err;
 				if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:&err]) {
 					if ([slidesWindow isMainWindow])
 						[slidesWindow insertFile:s atIndex:idx];
@@ -528,7 +513,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 					NSAlert *alert = [[NSAlert alloc] init];
 					alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file \"%@\" could not be restored from the trash because of an error: %@", @""), [s lastPathComponent], err.localizedDescription];
 					[alert runModal];
-					[alert release];
 				}
 			}];
 			[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move to Trash",@"")]];
@@ -552,7 +536,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			} else if (result == 2)
 				break;
 		}
-		// TODO: localize the strings below
 		NSUndoManager *um = frontWindow.window.undoManager;
 		n = trashedFiles.count;
 		if (n) {
@@ -569,7 +552,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 					NSAlert *alert = [[NSAlert alloc] init];
 					alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu file(s) could not be restored from the trash because of an error. You should probably check your Trash.",@""), n-moved.count];
 					[alert runModal];
-					[alert release];
 				}
 			}];
 			[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move to Trash (%lu File(s))",@"for undo"), n]];
@@ -592,7 +574,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 						NSAlert *alert = [[NSAlert alloc] init];
 						alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu file(s) could not be moved back because of an error.",@""), n-moved.count];
 						[alert runModal];
-						[alert release];
 					}
 				}];
 				[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move Files (%lu File(s))",@"for undo"), n]];
@@ -880,26 +861,37 @@ enum {
 	[NSApp orderFrontStandardAboutPanelWithOptions:@{@"ApplicationIcon": [NSImage imageNamed:@"logo"]}];
 }
 
+// avoid warning "PerformSelector may cause a leak because its selector is unknown"
+// ARC can't handle performSelector: with an unknown selector, so we explicitly convert the selector to a C function
+static void SendAction(NSMenuItem *sender) {
+	id target = sender.target;
+	if (target) {
+		SEL action = sender.action;
+		void (*func)(id, SEL, id) = (void *)[target methodForSelector:action];
+		func(target, action, sender);
+	}
+}
+
 - (IBAction)applySlideshowPrefs:(id)sender {
-	// ** this code is inelegant, but whatever
+	// TODO: can we get rid of the "Apply Prefs" button completely?
 	NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
 	NSMenu *m = [[[NSApp mainMenu] itemWithTag:SLIDESHOW_MENU] submenu];
 	NSMenuItem *i;
 	i = [m itemWithTag:LOOP];
 	[i setState:![u boolForKey:@"slideshowLoop"]];
-	[[i target] performSelector:[i action] withObject:i];
+	SendAction(i);
 	
 	i = [m itemWithTag:RANDOM_MODE];
 	[i setState:![u boolForKey:@"slideshowRandom"]];
-	[[i target] performSelector:[i action] withObject:i];
+	SendAction(i);
 
 	i = [m itemWithTag:SLIDESHOW_SCALE_UP];
 	[i setState:![u boolForKey:@"slideshowScaleUp"]];
-	[[i target] performSelector:[i action] withObject:i];
+	SendAction(i);
 
 	i = [m itemWithTag:SLIDESHOW_ACTUAL_SIZE];
 	[i setState:![u boolForKey:@"slideshowActualSize"]];
-	[[i target] performSelector:[i action] withObject:i];
+	SendAction(i);
 
 	// auto-advance, since it can only be set during slideshow (and not in menu)
 	// is automagically applied when slideshow starts
@@ -1048,7 +1040,6 @@ enum {
 	}
 	CreeveyMainWindowController *wc = [[CreeveyMainWindowController alloc] initWithWindowNibName:@"CreeveyWindow"];
 	[creeveyWindows addObject:wc];
-	[wc release];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowClosed:) name:NSWindowWillCloseNotification object:[wc window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowChanged:) name:NSWindowDidBecomeMainNotification object:[wc window]];
 	if (asTab)
@@ -1133,8 +1124,7 @@ enum {
 
 
 - (DYImageCache *)thumbsCache { return thumbsCache; }
-- (NSTextView *)exifTextView { return exifTextView; }
-- (NSMutableSet **)cats { return cats; }
+- (NSMutableSet * __strong *)cats { return cats; }
 
 - (BOOL)shouldShowFile:(NSString *)path {
 	NSString *pathExtension = [path pathExtension];

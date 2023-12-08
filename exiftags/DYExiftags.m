@@ -187,8 +187,8 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 		if (mptr->marker == JPEG_COM) {
 			// go backwards, comments at the beginning
 			[result insertString:@"\n" atIndex:0];
-			[result insertString:[[[NSString alloc] initWithBytes:mptr->data length:mptr->data_length
-														 encoding:NSMacOSRomanStringEncoding] autorelease]
+			[result insertString:[[NSString alloc] initWithBytes:mptr->data length:mptr->data_length
+														encoding:NSMacOSRomanStringEncoding]
 						 atIndex:0];
 			[result insertString:NSLocalizedString(@"JPEG Comment:\n", @"") atIndex:0];
 		} else if (mptr->marker == JPEG_APP0+1) {

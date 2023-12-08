@@ -18,7 +18,6 @@
 
 - (void)setTitle:(NSString *)s {
 	if (s == title) return;
-	[title release];
 	title = [s copy];
 }
 - (NSString *)title {
@@ -91,12 +90,6 @@
 		greyview = [[DYTransparentGreyView alloc] initWithFrame:NSZeroRect];
 	}
 	return self;
-}
-
-- (void)dealloc {
-	[typedString release];
-	[greyview release];
-	[super dealloc];
 }
 
 - (id <NSBrowserDelegate,DYCreeveyBrowserDelegate>)delegate {

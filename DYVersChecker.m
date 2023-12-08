@@ -26,7 +26,7 @@ void DYVersCheckForUpdateAndNotify(BOOL notify) {
 			if (notify)
 				alert.informativeText = NSLocalizedString(@"Could not check for update - an error occurred while connecting to the server.",@"");
 		} else {
-			NSString *responseText = [[[NSString alloc] initWithData:data encoding:NSMacOSRomanStringEncoding] autorelease];
+			NSString *responseText = [[NSString alloc] initWithData:data encoding:NSMacOSRomanStringEncoding];
 			NSScanner *scanner = [NSScanner scannerWithString:responseText];
 			NSInteger __block latestBuild = 0;
 			// the response should be a number followed by pairs of system version numbers and build numbers, systems ordered descending
@@ -64,6 +64,5 @@ void DYVersCheckForUpdateAndNotify(BOOL notify) {
 		}
 		if (notify && !newVersion)
 			[alert runModal];
-		[alert release];
 	}] resume];
 }

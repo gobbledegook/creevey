@@ -17,14 +17,15 @@
 
 static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t n, void *p, const FSEventStreamEventFlags flags[], const FSEventStreamEventId eventIds[])
 {
-	[(DYFileWatcher *)info gotEventPaths:(NSArray *)p flags:flags count:n];
+	[(__bridge DYFileWatcher *)info gotEventPaths:(__bridge NSArray *)(p) flags:flags count:n];
+	// NB: the CFArrayRef of event paths gets released after this returns
 }
 
 @implementation DYFileWatcher
 {
 	FSEventStreamRef stream;
-	id <DYFileWatcherDelegate> _delegate;
-	CreeveyController *appDelegate;
+	id <DYFileWatcherDelegate> __weak _delegate;
+	CreeveyController * __weak appDelegate;
 }
 
 - (instancetype)initWithDelegate:(id <DYFileWatcherDelegate>)d {
@@ -36,9 +37,6 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 
 - (void)dealloc {
 	[self stop];
-	[_path release];
-	_delegate = nil;
-	[super dealloc];
 }
 
 - (void)watchDirectory:(NSString *)s {
@@ -48,11 +46,11 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 		return; // just refuse to watch top level directories for now
 	FSEventStreamContext o;
 	o.version = 0;
-	o.info = (void *)self;
+	o.info = (__bridge void *)self;
 	o.retain = NULL;
 	o.release = NULL;
 	o.copyDescription = NULL;
-	stream = FSEventStreamCreate(NULL, &fseventCallback, &o, (CFArrayRef)@[s], kFSEventStreamEventIdSinceNow, 2.0, kFSEventStreamCreateFlagFileEvents|kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagIgnoreSelf|kFSEventStreamCreateFlagMarkSelf);
+	stream = FSEventStreamCreate(NULL, &fseventCallback, &o, (__bridge CFArrayRef)@[s], kFSEventStreamEventIdSinceNow, 2.0, kFSEventStreamCreateFlagFileEvents|kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagIgnoreSelf|kFSEventStreamCreateFlagMarkSelf);
 	FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 	if (!FSEventStreamStart(stream)) {
 		FSEventStreamInvalidate(stream);
@@ -63,7 +61,7 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 }
 
 - (void)gotEventPaths:(NSArray *)eventPaths flags:(const FSEventStreamEventFlags *)eventFlags count:(size_t)n	 {
-	NSMutableSet *files = [[[NSMutableSet alloc] init] autorelease];
+	NSMutableSet *files = [[NSMutableSet alloc] init];
 	for (size_t i=0; i<n; ++i) {
 		NSString *s = eventPaths[i];
 		FSEventStreamEventFlags f = eventFlags[i];

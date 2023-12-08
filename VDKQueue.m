@@ -33,10 +33,10 @@
 
 - (instancetype) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
 
-@property (atomic, copy) NSString *path;
-@property (atomic, assign) int watchedFD;
-@property (atomic, assign) u_int subscriptionFlags;
-@property (atomic, assign) uintptr_t uniqueId;
+@property (copy) NSString *path;
+@property int watchedFD;
+@property u_int subscriptionFlags;
+@property uintptr_t uniqueId;
 
 @end
 
@@ -51,7 +51,7 @@
 		_watchedFD = open([_path fileSystemRepresentation], O_EVTONLY, 0);
 		if (_watchedFD < 0)
 		{
-			[self autorelease];
+			self = nil;
 			return nil;
 		}
 		_subscriptionFlags = flags;
@@ -61,13 +61,7 @@
 
 -(void)	dealloc
 {
-	[_path release];
-	_path = nil;
-    
 	if (_watchedFD >= 0) close(_watchedFD);
-	_watchedFD = -1;
-	
-	[super dealloc];
 }
 
 @end
@@ -106,7 +100,7 @@
 		_coreQueueFD = kqueue();
 		if (_coreQueueFD == -1)
 		{
-			[self autorelease];
+			self = nil;
 			return nil;
 		}
 		
@@ -119,15 +113,9 @@
 
 - (void) dealloc
 {
-	[_pathMap release];
-    [_watchedPathEntries release];
-    _watchedPathEntries = nil;
-    
 	if(close(_coreQueueFD) == -1) {
 	   NSLog(@"VDKQueue: Couldn't close main kqueue (%d)", errno);
 	}
-
-    [super dealloc];
 }
 
 
@@ -150,14 +138,14 @@
             // All flags already set?
 			if(([pathEntry subscriptionFlags] | flags) == flags)
             {
-				return [[pathEntry retain] autorelease]; 
+				return pathEntry;
             }
 			
 			flags |= [pathEntry subscriptionFlags];
 		}
 		else
         {
-            pathEntry = [[[VDKQueuePathEntry alloc] initWithPath:path andSubscriptionFlags:flags] autorelease];
+            pathEntry = [[VDKQueuePathEntry alloc] initWithPath:path andSubscriptionFlags:flags];
         }
         
 		if (pathEntry)
@@ -181,7 +169,7 @@
 			}
         }
         
-        return [[pathEntry retain] autorelease];
+        return pathEntry;
     }
 }
 
@@ -199,9 +187,7 @@
 	
     while(_keepWatcherThreadRunning)
     {
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        @try 
-        {
+		@autoreleasepool {
             n = kevent(theFD, NULL, 0, &ev, 1, &timeout);
             if (n > 0)
             {
@@ -221,26 +207,19 @@
 						}
                         if (pe)
                         {
-                            NSString *fpath = [pe.path retain];         // Need to retain so it does not disappear while the block at the bottom is waiting to run on the main thread. Released in that block.
+                            NSString *fpath = pe.path;
                             if (!fpath) continue;
                             
                             // call the delegate method on the main thread.
 							u_int flags = ev.fflags;
-                            dispatch_async(dispatch_get_main_queue(), ^{
+							dispatch_async(dispatch_get_main_queue(), ^{
 								[_delegate VDKQueue:self receivedNotification:flags forPath:fpath];
-								[fpath release];
 							});
                         }
                     }
                 }
             }
         }
-        
-        @catch (NSException *localException) 
-        {
-            NSLog(@"Error in VDKQueue watcherThread: %@", localException);
-        }
-		[pool release];
     }
     
 #if DEBUG_LOG_THREAD_LIFETIME
@@ -261,8 +240,6 @@
 - (void) addPath:(NSString *)aPath
 {
     if (!aPath) return;
-    [aPath retain];
-    
     @synchronized(self)
     {
         VDKQueuePathEntry *entry = [_watchedPathEntries objectForKey:aPath];
@@ -273,16 +250,12 @@
             [self addPathToQueue:aPath notifyingAbout:VDKQueueNotifyDefault];
         }
     }
-    
-    [aPath release];
 }
 
 
 - (void) addPath:(NSString *)aPath notifyingAbout:(u_int)flags
 {
     if (!aPath) return;
-    [aPath retain];
-    
     @synchronized(self)
     {
         VDKQueuePathEntry *entry = [_watchedPathEntries objectForKey:aPath];
@@ -293,16 +266,12 @@
             [self addPathToQueue:aPath notifyingAbout:flags];
         }
     }
-    
-    [aPath release];
 }
 
 
 - (void) removePath:(NSString *)aPath
 {
     if (!aPath) return;
-    [aPath retain];
-    
     @synchronized(self)
 	{
 		VDKQueuePathEntry *entry = [_watchedPathEntries objectForKey:aPath];
@@ -313,8 +282,6 @@
             [_watchedPathEntries removeObjectForKey:aPath];
         }
 	}
-    
-    [aPath release];
 }
 
 

@@ -53,11 +53,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 @end
 
 @implementation DYMatrixState
-- (void)dealloc {
-	[_filenames release];
-	[super dealloc];
-}
-
 - (BOOL)imageWithFileInfoNeedsDisplay:(NSArray *)d {
 	NSUInteger i = [d[1] unsignedIntegerValue];
 	if (i < numCells && [_filenames[i] isEqualToString:d[0]]) {
@@ -80,14 +75,14 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSSize _contentSize;
 	BOOL _respondsToLoadImageForFile, _respondsToSelectionDidChange;
 	NSMutableArray *_movedUrls, *_originPaths;
-	id _appDelegate;
+	id __weak _appDelegate;
 }
 - (void)resize:(id)anObject; // called to recalc, set frame height
-@property (nonatomic, retain) NSArray *openWithAppIdentifiers; // saved in mouseDown for subsequent use by the context menu
+@property (nonatomic, strong) NSArray *openWithAppIdentifiers; // saved in mouseDown for subsequent use by the context menu
 @end
 
 @implementation DYWrappingMatrix
-@synthesize loadingImage;
+@synthesize delegate, loadingImage;
 
 + (Class)cellClass { return [NSActionCell class]; }
 	// NSActionCell or subclass required for target/action
@@ -149,7 +144,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		requestedFilenames = [[NSMutableSet alloc] init];
 		_movedUrls = [[NSMutableArray alloc] init];
 		_originPaths = [[NSMutableArray alloc] init];
-		// cellWidth should be initialized by an external controll during awakeFromNib
+		// cellWidth should be initialized by an external controller during awakeFromNib
 		_maxCellWidth = FLT_MAX;
 		textHeight = DEFAULT_TEXTHEIGHT;
 		autoRotate = YES;
@@ -181,7 +176,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		NSData *migratedData = [NSKeyedArchiver archivedDataWithRootObject:aColor requiringSecureCoding:YES error:NULL];
 		[udf setObject:migratedData forKey:@"DYWrappingMatrixBgColor"];
 	}
-	bgColor = [aColor retain];
+	bgColor = aColor;
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
 															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
 																 options:NSKeyValueObservingOptionNew
@@ -220,8 +215,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
 		[self setMaxCellWidth:[[NSUserDefaults standardUserDefaults] integerForKey:@"DYWrappingMatrixMaxCellWidth"]];
 	} else if ([keyPath isEqualToString:@"values.DYWrappingMatrixBgColor"]) {
-		[bgColor release];
-		bgColor = [[NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"] error:NULL] retain];
+		bgColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"] error:NULL];
 		[self setNeedsDisplay];
 	}
 }
@@ -231,17 +225,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixBgColor"];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[myCell release];
-	[myTextCell release];
-	[images release];
-	[filenames release];
-	[selectedIndexes release];
-	[requestedFilenames release];
-	[bgColor release];
-	[_openWithAppIdentifiers release];
-	[_movedUrls release];
-	[_originPaths release];
-	[super dealloc];
 }
 
 - (BOOL)acceptsFirstResponder { return YES; }
@@ -343,11 +326,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (NSArray<NSURL *> *)movedUrls {
-	return [[_movedUrls copy] autorelease];
+	return [_movedUrls copy];
 }
 
 - (NSArray<NSString *> *)originPaths {
-	return [[_originPaths copy] autorelease];
+	return [_originPaths copy];
 }
 
 #pragma mark filename stuff
@@ -386,7 +369,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSMutableArray *items = [NSMutableArray arrayWithCapacity:selectedIndexes.count];
 	[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
 		NSString *path = filenames[idx];
-		NSPasteboardItem *pbi = [[[NSPasteboardItem alloc] init] autorelease];
+		NSPasteboardItem *pbi = [[NSPasteboardItem alloc] init];
 		[pbi setString:path forType:NSPasteboardTypeString];
 		[pbi setData:[[NSURL fileURLWithPath:path isDirectory:NO] dataRepresentation] forType:NSPasteboardTypeFileURL];
 		[items addObject:pbi];
@@ -497,10 +480,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			[_originPaths addObject:path];
 			[_movedUrls addObject:url.fileReferenceURL];
 			// each pasteboard item has both a string and URL representation
-			NSPasteboardItem *pbi = [[[NSPasteboardItem alloc] init] autorelease];
+			NSPasteboardItem *pbi = [[NSPasteboardItem alloc] init];
 			[pbi setString:path forType:NSPasteboardTypeString];
 			[pbi setData:[url dataRepresentation] forType:NSPasteboardTypeFileURL];
-			NSDraggingItem *item = [[[NSDraggingItem alloc] initWithPasteboardWriter:pbi] autorelease];
+			NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:pbi];
 			// set an image to be dragged
 			// for performance reasons we use a block as an imagecomponentprovider rather than actual nsimages
 			// contrary to the documentation, the imageComponentsProvider is a block that returns an array, not an array of blocks
@@ -518,8 +501,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		}];
 		[self beginDraggingSessionWithItems:draggingItems event:theEvent source:self];
 	}
-	[oldSelection release];
-	[lastIterationSelection release];
 }
 
 - (void)resize:(id)anObject { // called by notification center
@@ -838,7 +819,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (DYMatrixState *)currentState {
-	DYMatrixState *o = [[[DYMatrixState alloc] init] autorelease];
+	DYMatrixState *o = [[DYMatrixState alloc] init];
 	o->numCells = numCells;
 	o->numCols = numCols;
 	o->area_w = area_w;
@@ -946,10 +927,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     return YES;
 }
 
-- (void)setDelegate:(id)d {
-	delegate = d; // NOT retained
-}
-
 #pragma mark contextual menu stuff
 
 - (void)openWith:(NSMenuItem *)sender
@@ -990,7 +967,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 
 	NSURL *firstFile = [NSURL fileURLWithPath:filenames[selectedIndexes.firstIndex] isDirectory:NO];
-	NSArray *allApplications = [(NSArray *)LSCopyApplicationURLsForURL((CFURLRef)firstFile, kLSRolesViewer|kLSRolesEditor) autorelease];
+	NSArray *allApplications = (NSArray *)CFBridgingRelease(LSCopyApplicationURLsForURL((__bridge CFURLRef)firstFile, kLSRolesViewer|kLSRolesEditor));
 	NSMutableArray *filteredApplications = [NSMutableArray array];
 	NSString *selfIdentifier = [NSBundle mainBundle].bundleIdentifier;
 	NSWorkspace *ws = [NSWorkspace sharedWorkspace];
@@ -998,8 +975,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	if (allApplications == nil || defaultAppURL == nil) {
 		// fail gracefully if the file is not openable
 		NSMenu *menu = [appDelegate thumbnailContextMenu];
-		NSMenu *openWithMenu = [[[NSMenu alloc] init] autorelease];
-		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"None Available", @"") action:NULL keyEquivalent:@""] autorelease];
+		NSMenu *openWithMenu = [[NSMenu alloc] init];
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"None Available", @"") action:NULL keyEquivalent:@""];
 		[openWithMenu addItem:item];
 		[menu itemAtIndex:0].submenu = openWithMenu;
 		return menu;
@@ -1033,11 +1010,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		return result;
 	}];
 	NSMutableArray *sortedAppIdentifiers = [NSMutableArray arrayWithCapacity:appIdentifiers.count];
-	NSMenu *openWithMenu = [[[NSMenu alloc] init] autorelease];
+	NSMenu *openWithMenu = [[NSMenu alloc] init];
 	if (![selfIdentifier isEqualToString:defaultIdentifier]) {
 		[sortedAppIdentifiers addObject:defaultIdentifier];
 		NSString *path = defaultAppURL.path;
-		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:[fm displayNameAtPath:path] action:@selector(openWith:) keyEquivalent:@""] autorelease];
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:[fm displayNameAtPath:path] action:@selector(openWith:) keyEquivalent:@""];
 		item.image = [ws iconForFile:path];
 		item.image.size = NSMakeSize(16, 16);
 		[openWithMenu addItem:item];
@@ -1052,12 +1029,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		if ([displayNames countForObject:displayName] > 1) {
 			displayName = [displayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", appIdentifier]];
 		}
-		NSMenuItem *item = [[[NSMenuItem alloc] initWithTitle:displayName action:@selector(openWith:) keyEquivalent:@""] autorelease];
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:displayName action:@selector(openWith:) keyEquivalent:@""];
 		item.image = [ws iconForFile:path];
 		item.image.size = NSMakeSize(16, 16);
 		[openWithMenu addItem:item];
 	}
-	self.openWithAppIdentifiers = [[sortedAppIdentifiers copy] autorelease];
+	self.openWithAppIdentifiers = [sortedAppIdentifiers copy];
     NSMenu *menu = [appDelegate thumbnailContextMenu];
 	[menu itemAtIndex:0].submenu = openWithMenu;
 	return menu;

@@ -17,11 +17,10 @@
 
 @interface SlideshowWindow : NSWindow
 {
-	NSMutableSet **cats;
+	NSMutableSet * __strong *cats;
     DYImageView *imgView;
 	NSTextField *infoFld, *catsFld; BOOL hideInfoFld, moreExif;
 	NSTextView *exifFld;
-//	int blurr;
 	
 	DYImageCache *imgCache;
 	
@@ -45,7 +44,7 @@
 }
 @property (nonatomic) BOOL fullscreenMode;
 
-- (void)setCats:(NSMutableSet **)newCats;
+- (void)setCats:(NSMutableSet * __strong *)newCats;
 
 - (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block; // call this before starting the slideshow
 - (void)setFilenames:(NSArray *)files basePath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block; // or this version to watch the directory and update with directory changes during slideshow

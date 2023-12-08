@@ -15,7 +15,7 @@
 
 NSString *ResolveAliasToPath(NSString *path) {
 	NSString *resolvedPath = nil;
-	CFURLRef url = CFURLCreateWithFileSystemPath(NULL /*allocator*/, (CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
+	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
 	if (url == NULL) return path;
 	// unlike FSResolveAliasFile, CFURLCreateBookMarkDataFromFile and its NSURL counterpart do not check
 	// the kIsAlias flag. Apparently not all aliases/bookmarks have this bit set. But for our
@@ -27,18 +27,18 @@ NSString *ResolveAliasToPath(NSString *path) {
 		CFRelease(b);
 	}
 	if (isAlias)
-		resolvedPath = ResolveAliasURLToPath((NSURL *)url);
+		resolvedPath = ResolveAliasURLToPath((__bridge NSURL *)url);
 	CFRelease(url);
 	return resolvedPath ?: path;
 }
 
 NSString *ResolveAliasURLToPath(NSURL *url) {
 	NSString *path = nil;
-	CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, (CFURLRef)url, NULL);
+	CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, (__bridge CFURLRef)url, NULL);
 	if (dataRef) {
 		CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
 		if (resolvedUrl) {
-			path = [(NSString *)CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle) autorelease];
+			path = (NSString *)CFBridgingRelease(CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle));
 			CFRelease(resolvedUrl);
 		}
 		CFRelease(dataRef);
@@ -56,7 +56,7 @@ BOOL FileIsJPEG(NSString *s) {
 
 + (instancetype)imageByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName
 {
-	return [[[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:fileName] autorelease];
+	return [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:fileName];
 }
 
 - (instancetype)initByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName

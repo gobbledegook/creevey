@@ -17,7 +17,6 @@ int main(int argc, const char *argv[])
 			alert.messageText = @"Incompatible System Version";
 			alert.informativeText = @"This program requires macOS 10.13 (High Sierra) or later.";
 			[alert runModal];
-			[alert release];
 		}
 		return 0;
 	}

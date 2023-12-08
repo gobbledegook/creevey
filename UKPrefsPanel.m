@@ -31,8 +31,16 @@
 
 #import "UKPrefsPanel.h"
 
+@interface UKPrefsPanel ()
+@property (nonatomic) NSString *autosaveName;		///< Identifier used for saving toolbar state and current selected page of prefs window.
+@end
 
 @implementation UKPrefsPanel
+{
+	NSMutableDictionary*	itemsList;			///< Auto-generated from tab view's items.
+	NSString*				baseWindowName;		///< Auto-fetched at awakeFromNib time. We append a colon and the name of the current page to the actual window title.
+}
+@synthesize tabView, autosaveName;
 
 /* -----------------------------------------------------------------------------
 	Constructor:
@@ -42,26 +50,12 @@
 {
 	if( self = [super init] )
 	{
-		tabView = nil;
 		itemsList = [[NSMutableDictionary alloc] init];
-		baseWindowName = [@"" retain];
-		autosaveName = [@"com.ulikusterer" retain];
+		baseWindowName = @"";
+		autosaveName = @"com.ulikusterer";
 	}
 	
 	return self;
-}
-
-
-/* -----------------------------------------------------------------------------
-	Destructor:
-   -------------------------------------------------------------------------- */
-
--(void)	dealloc
-{
-	[itemsList release];
-	[baseWindowName release];
-	[autosaveName release];
-	[super dealloc]; // ** DY
 }
 
 // stuff to resize intelligently -DY
@@ -114,8 +108,7 @@
 	wndTitle = [[tabView window] title];
 	if( [wndTitle length] > 0 )
 	{
-		[baseWindowName release];
-		baseWindowName = [[NSString stringWithFormat: @"%@ : ", wndTitle] retain];
+		baseWindowName = [NSString stringWithFormat: @"%@ : ", wndTitle];
 	}
 	
 	// Make sure our autosave-name is based on the one of our prefs window:
@@ -157,7 +150,7 @@
 	NSTabViewItem	*currPage = nil;
 	
 	if( toolbar == nil )   // No toolbar yet? Create one!
-		toolbar = [[[NSToolbar alloc] initWithIdentifier: [NSString stringWithFormat: @"%@.prefspanel.toolbar", autosaveName]] autorelease];
+		toolbar = [[NSToolbar alloc] initWithIdentifier: [NSString stringWithFormat: @"%@.prefspanel.toolbar", autosaveName]];
 	
     // Set up toolbar properties: Allow customization, give a default display mode, and remember state in user defaults 
     [toolbar setAllowsUserCustomization: NO];
@@ -190,10 +183,7 @@
 		currPage = [tabView tabViewItemAtIndex:0];
 	[[tabView window] setTitle: [baseWindowName stringByAppendingString: [currPage label]]];
 	
-	#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_3
-	if( [toolbar respondsToSelector: @selector(setSelectedItemIdentifier:)] )
-		[toolbar setSelectedItemIdentifier: [currPage identifier]];
-	#endif
+	toolbar.selectedItemIdentifier = currPage.identifier;
 }
 
 
@@ -209,45 +199,6 @@
 
 
 /* -----------------------------------------------------------------------------
-	setTabView:
-		Accessor for specifying the tab view to query.
-   -------------------------------------------------------------------------- */
-
--(void)			setTabView: (NSTabView*)tv
-{
-	tabView = tv;
-}
-
-
--(NSTabView*)   tabView
-{
-	return tabView;
-}
-
-
-/* -----------------------------------------------------------------------------
-	setAutosaveName:
-		Name used for saving state of prefs window.
-   -------------------------------------------------------------------------- */
-
--(void)			setAutosaveName: (NSString*)name
-{
-	if (name) {
-		// ignore if nil
-		[name retain];
-		[autosaveName release];
-		autosaveName = name;
-	}
-}
-
-
--(NSString*)	autosaveName
-{
-	return autosaveName;
-}
-
-
-/* -----------------------------------------------------------------------------
 	toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 		Create an item with the proper image and name based on our list
 		of tabs for the specified identifier.
@@ -257,7 +208,7 @@
 {
     // Required delegate method:  Given an item identifier, this method returns an item 
     // The toolbar will use this method to obtain toolbar items that can be displayed in the customization sheet, or in the toolbar itself 
-    NSToolbarItem   *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier: itemIdent] autorelease];
+    NSToolbarItem   *toolbarItem = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdent];
     NSString*		itemLabel;
 	
     if( (itemLabel = [itemsList objectForKey:itemIdent]) != nil )
@@ -292,12 +243,10 @@
 		automagically select the appropriate item when it is clicked.
    -------------------------------------------------------------------------- */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_3
 -(NSArray*) toolbarSelectableItemIdentifiers: (NSToolbar*)toolbar
 {
 	return [itemsList allKeys];
 }
-#endif
 
 
 /* -----------------------------------------------------------------------------
@@ -350,7 +299,7 @@
 
 -(NSArray*) toolbarAllowedItemIdentifiers: (NSToolbar *) toolbar
 {
-    NSMutableArray*		allowedItems = [[[itemsList allKeys] mutableCopy] autorelease];
+    NSMutableArray*		allowedItems = [[itemsList allKeys] mutableCopy];
 	
 	[allowedItems addObjectsFromArray: [NSArray arrayWithObjects: NSToolbarSeparatorItemIdentifier,
 				NSToolbarSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier,

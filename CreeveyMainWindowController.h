@@ -13,15 +13,10 @@
 
 @interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate,NSSplitViewDelegate>
 {
-    IBOutlet DYCreeveyBrowser *dirBrowser;
-	IBOutlet NSButton *slidesBtn;
-	IBOutlet DYWrappingMatrix *imgMatrix;
-	IBOutlet NSTextField *statusFld, *bottomStatusFld;
-
 	NSMutableArray *filenames, *displayedFilenames;
 	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
-	CreeveyController *appDelegate;
-	DirBrowserDelegate *dirBrowserDelegate;
+	CreeveyController * __weak appDelegate;
+	DirBrowserDelegate * __weak dirBrowserDelegate;
 	volatile char stopCaching;
 	
 	NSConditionLock *imageCacheQueueLock;
@@ -36,7 +31,12 @@
 	
 	short int currCat;
 }
-@property (assign) IBOutlet NSButton *subfoldersButton;
+@property (weak) IBOutlet DYCreeveyBrowser *dirBrowser;
+@property (weak) IBOutlet NSButton *slidesBtn;
+@property (weak) IBOutlet DYWrappingMatrix *imgMatrix;
+@property (weak) IBOutlet NSTextField *statusFld;
+@property (weak) IBOutlet NSTextField *bottomStatusFld;
+@property (weak) IBOutlet NSButton *subfoldersButton;
 
 //actions
 - (IBAction)setRecurseSubfolders:(id)sender;

@@ -57,12 +57,10 @@
 	if (wantExifThumb && (pixels = epeg_exif_thumb(im, &outsize))) {
 		NSData *data = [[NSData alloc] initWithBytesNoCopy:(void *)pixels length:outsize]; //outbuffer will be freed by NSData
 		imageRep = [[NSBitmapImageRep alloc] initWithData:data];
-		[data release];
 		//NSLog(@"exif thumb for %@", path);
 		NSSize tSize = [imageRep size];
 		if (((int)tSize.width)*height_in != ((int)(tSize.height))*width_in) {
 			// dimensions don't match
-			[imageRep release];
 			imageRep = nil;
 		}
 	}
@@ -115,10 +113,9 @@
 	
 	image = [[NSImage alloc] initWithSize:NSZeroSize];
 	[image addRepresentation:imageRep];
-	[imageRep release];
 	//NSLog(@"%@", NSStringFromSize([image size]));
 	
-	return [image autorelease];
+	return image;
 }
 
 + (NSImage *)exifThumbForPath:(NSString *)path {
@@ -135,7 +132,6 @@
 	if ((pixels = epeg_exif_thumb(im, &outsize))) {
 		NSData *data = [[NSData alloc] initWithBytesNoCopy:(void *)pixels length:outsize]; //outbuffer will be freed by NSData
 		imageRep = [[NSBitmapImageRep alloc] initWithData:data];
-		[data release];
 	}
 	epeg_close(im);
 	if (!imageRep)
@@ -143,9 +139,8 @@
 	
 	image = [[NSImage alloc] initWithSize:NSZeroSize];
 	[image addRepresentation:imageRep];
-	[imageRep release];
 	
-	return [image autorelease];
+	return image;
 }
 
 

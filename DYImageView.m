@@ -148,8 +148,7 @@
 
 - (void)setImage:(NSImage *)anImage {
 	if (anImage != image) {
-		[image release];
-		image = [anImage retain];
+		image = anImage;
 	}
 	zoomF = 0;
 	rotation = 0;
@@ -162,8 +161,7 @@
 - (void)setImage:(NSImage *)anImage zooming:(DYImageViewZoomMode)zoomMode {
 	if (anImage != image) {
 		if (!anImage) return; 
-		[image release];
-		image = [anImage retain];
+		image = anImage;
 		NSImageRep *rep = [image representations][0]; // ** assume not corrupt
 		if ([rep isKindOfClass:[NSBitmapImageRep class]]) {
 			[image setSize:NSMakeSize([rep pixelsWide], [rep pixelsHigh])];
@@ -509,7 +507,7 @@
 	i->zoomF = zoomF;
 	i->sourceRect = sourceRect;
 	i->destSize = destSize;
-	return [i autorelease];
+	return i;
 }
 - (void)setZoomInfo:(DYImageViewZoomInfo *)i {
 	zoomF = i->zoomF;

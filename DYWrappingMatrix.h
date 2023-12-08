@@ -32,8 +32,6 @@
 // in the scroll view.
 @interface DYWrappingMatrix : NSControl
 {
-	IBOutlet id delegate;
-	
 	NSColor *bgColor;
 	BOOL autoRotate;
 	NSImageCell *myCell;           // one cell, reused for efficiency
@@ -52,7 +50,8 @@
 	float cellHeight, columnSpacing, area_w, area_h;
 	unsigned int textHeight;
 }
-@property (assign, nonatomic) NSImage *loadingImage;
+@property (weak) IBOutlet id delegate;
+@property (weak, nonatomic) NSImage *loadingImage;
 
 + (NSSize)maxCellSize;
 
@@ -90,8 +89,6 @@
 - (void)setShowFilenames:(BOOL)b;
 - (BOOL)autoRotate;
 - (void)setAutoRotate:(BOOL)b;
-
-- (void)setDelegate:(id)d;
 
 // these return nonmutable copies of arrays and should each be called once when moveElsewhere is called
 - (NSArray<NSURL *> *)movedUrls;

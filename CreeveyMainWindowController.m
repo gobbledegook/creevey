@@ -44,16 +44,17 @@
 	volatile BOOL _background, _wantsSubfolders;
 	NSImage *_brokenDoc, *_loadingImage;
 	NSMutableSet *_accessedFiles;
-	NSLock *_accessedLock, *_statusLock;
+	NSLock *_accessedLock, *_statusLock, *_internalLock;
 	volatile NSTimeInterval _statusTime;
 	DYFileWatcher *_fileWatcher;
 }
 @property (nonatomic, readonly) NSSplitView *splitView;
 @property BOOL wantsSubfolders;
-@property (nonatomic, retain) NSString *recurseRoot;
+@property (nonatomic, strong) NSString *recurseRoot;
 @end
 
 @implementation CreeveyMainWindowController
+@synthesize dirBrowser, slidesBtn, imgMatrix, statusFld, bottomStatusFld;
 
 - (instancetype)initWithWindowNibName:(NSString *)windowNibName {
 	if (self = [super initWithWindowNibName:windowNibName]) {
@@ -70,6 +71,7 @@
 		_accessedFiles = [[NSMutableSet alloc] init];
 		_accessedLock = [[NSLock alloc] init];
 		_statusLock = [[NSLock alloc] init];
+		_internalLock = [[NSLock alloc] init];
 		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 	}
     return self;
@@ -93,8 +95,8 @@
 	dirBrowserDelegate = [dirBrowser delegate];
 	dirBrowserDelegate.revealedDirectories = appDelegate.revealedDirectories;
 
-	_brokenDoc = [[NSImage imageNamed:@"brokendoc.tif"] retain];
-	_loadingImage = [[NSImage imageNamed:@"loading.png"] retain];
+	_brokenDoc = [NSImage imageNamed:@"brokendoc.tif"];
+	_loadingImage = [NSImage imageNamed:@"loading.png"];
 	[imgMatrix setLoadingImage:_loadingImage];
 	[NSThread detachNewThreadSelector:@selector(thumbLoader:) toTarget:self withObject:nil];
 }
@@ -130,24 +132,6 @@
 - (NSSplitView *)splitView
 {
 	return [[[self window] contentView] subviews][0];
-}
-
-- (void)dealloc {
-	[_fileWatcher release];
-	[_recurseRoot release];
-	[filenames release];
-	[displayedFilenames release];
-	[loadImageLock release];
-	[filesBeingOpened release];
-	[imageCacheQueueLock release];
-	[imageCacheQueue release];
-	[secondaryImageCacheQueue release];
-	[_accessedFiles release];
-	[_accessedLock release];
-	[_statusLock release];
-	[_brokenDoc release];
-	[_loadingImage release];
-	[super dealloc];
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
@@ -286,11 +270,16 @@
 #pragma mark FSEvents stuff
 
 - (BOOL)wantsSubfolders {
-	return _wantsSubfolders;
+	[_internalLock lock];
+	BOOL result = _wantsSubfolders;
+	[_internalLock unlock];
+	return result;
 }
 - (void)setWantsSubfolders:(BOOL)b {
+	[_internalLock lock];
 	_wantsSubfolders = b;
 	_fileWatcher.wantsSubfolders = b;
+	[_internalLock unlock];
 }
 
 - (void)watcherFiles:(NSArray *)files {
@@ -356,7 +345,6 @@
 			}
 			else [thumbsCache dontAddFile:theFile];
 			thumb = result.image;
-			[result release];
 		} else {
 			thumb = [thumbsCache imageForKey:theFile];
 			if (thumb) {
@@ -391,14 +379,20 @@
 	if (i != NSNotFound) {
 		stopCaching = 1;
 		[loadImageLock lock];
-		
 		if ((mtrxIdx = [[imgMatrix filenames] indexOfObject:s inSortedRange:NSMakeRange(0, [imgMatrix filenames].count) options:0 usingComparator:[self comparator]]) != NSNotFound) {
 			[imgMatrix removeImageAtIndex:mtrxIdx];
 			[displayedFilenames removeObjectAtIndex:mtrxIdx];
 		}
 		[filenames removeObjectAtIndex:i];
-		
 		[loadImageLock unlock];
+
+		[_accessedLock lock];
+		if ([_accessedFiles containsObject:s]) {
+			[_accessedFiles removeObject:s];
+			[[appDelegate thumbsCache] endAccess:s];
+		}
+		[_accessedLock unlock];
+
 		if (!filenamesDone || !loadingDone) //[imgMatrix numCells] < [filenames count])
 			[NSThread detachNewThreadSelector:@selector(loadImages:)
 									 toTarget:self
@@ -438,7 +432,7 @@
 	[statusFld setStringValue:s];
 }
 
-- (void)updateStatusOnMainThread:(NSString * _Nullable (^)(void))f {
+- (void)updateStatusOnMainThread:(NSString * (^)(void))f {
 	[_statusLock lock];
 	NSTimeInterval timeStamp = _statusTime = NSDate.timeIntervalSinceReferenceDate;
 	[_statusLock unlock];
@@ -455,197 +449,188 @@
 #pragma mark load thread
 - (void)loadImages:(NSString *)thePath { // called in a separate thread
 										 //NSLog(@"loadImages thread started for %@", thePath);
-	[thePath retain];
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	// assume (incorrectly?) that threads will be executed in the order detached
 	// better to set in loadDir and pass it in?
 	NSTimeInterval myThreadTime;
-	myThreadTime = lastThreadTime = [NSDate timeIntervalSinceReferenceDate];
-	// setting stopCaching stops only one thread (see below)
-	// if there's a backlog of several threads, need to check thread time instead
-	[loadImageLock lock];
-	if (myThreadTime < lastThreadTime) {
-		//NSLog(@"stale thread aborted, %@", thePath);
-		[filesBeingOpened removeAllObjects];
-		[thePath release];
-		[pool release];
-		[loadImageLock unlock];
-		return;
-	}
-	stopCaching = 0;
-	NSThread.currentThread.name = [NSString stringWithFormat:@"loadImages:%@", thePath.lastPathComponent];
+	@autoreleasepool {
+		myThreadTime = lastThreadTime = [NSDate timeIntervalSinceReferenceDate];
+		// setting stopCaching stops only one thread (see below)
+		// if there's a backlog of several threads, need to check thread time instead
+		[loadImageLock lock];
+		if (myThreadTime < lastThreadTime) {
+			//NSLog(@"stale thread aborted, %@", thePath);
+			[filesBeingOpened removeAllObjects];
+			[loadImageLock unlock];
+			return;
+		}
+		stopCaching = 0;
+		NSThread.currentThread.name = [NSString stringWithFormat:@"loadImages:%@", thePath.lastPathComponent];
 
-	NSUInteger i = 0;
-	NSFileManager *fm = [NSFileManager defaultManager];
-	NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
-		// pull this function call out of the loop
-	//NSTimeInterval imgloadstarttime = [NSDate timeIntervalSinceReferenceDate];
+		NSUInteger i = 0;
+		NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
+		//NSTimeInterval imgloadstarttime = [NSDate timeIntervalSinceReferenceDate];
 	
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[imgMatrix removeAllImages];
-	});
-	if (thePath) {
 		dispatch_async(dispatch_get_main_queue(), ^{
-			[_fileWatcher stop];
+			[imgMatrix removeAllImages];
 		});
-		[filenames removeAllObjects];
-		[displayedFilenames removeAllObjects];
-		[imageCacheQueueLock lock];
-		[imageCacheQueue removeAllObjects];
-		[secondaryImageCacheQueue removeAllObjects];
-		[imageCacheQueueLock unlockWithCondition:0];
-		BOOL recurseSubfolders = self.wantsSubfolders;
-		NSDirectoryEnumerationOptions options = recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
-		options |= NSDirectoryEnumerationSkipsHiddenFiles;
-		NSDirectoryEnumerator *e = [fm enumeratorAtURL:[NSURL fileURLWithPath:thePath isDirectory:YES]
-							includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsAliasFileKey]
-											   options:options errorHandler:nil];
-		//NSLog(@"getting filenames...");
-		for (NSURL *url in e) {
-			NSString *aPath = url.path;
-			NSNumber *val;
-			if ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue) {
-				if (recurseSubfolders && [[aPath lastPathComponent] isEqualToString:@"Thumbs"])
-					[e skipDescendents]; // special addition for mbatch
-				continue;
-			}
+		if (thePath) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[_fileWatcher stop];
+			});
+			[filenames removeAllObjects];
+			[displayedFilenames removeAllObjects];
+			[imageCacheQueueLock lock];
+			[imageCacheQueue removeAllObjects];
+			[secondaryImageCacheQueue removeAllObjects];
+			[imageCacheQueueLock unlockWithCondition:0];
+			BOOL recurseSubfolders = self.wantsSubfolders;
+			NSDirectoryEnumerationOptions options = recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
+			options |= NSDirectoryEnumerationSkipsHiddenFiles;
+			NSFileManager *fm = NSFileManager.defaultManager;
+			NSDirectoryEnumerator *e = [fm enumeratorAtURL:[NSURL fileURLWithPath:thePath isDirectory:YES]
+								includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsAliasFileKey]
+												   options:options errorHandler:nil];
+			//NSLog(@"getting filenames...");
+			for (NSURL *url in e) {
+				NSString *aPath = url.path;
+				NSNumber *val;
+				if ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue) {
+					if (recurseSubfolders && [[aPath lastPathComponent] isEqualToString:@"Thumbs"])
+						[e skipDescendents]; // special addition for mbatch
+					continue;
+				}
 
-			NSString *theFile = aPath;
-			if ([url getResourceValue:&val forKey:NSURLIsAliasFileKey error:NULL] && val.boolValue) {
-				NSString *resolved = ResolveAliasURLToPath(url);
-				if (resolved) theFile = resolved;
+				NSString *theFile = aPath;
+				if ([url getResourceValue:&val forKey:NSURLIsAliasFileKey error:NULL] && val.boolValue) {
+					NSString *resolved = ResolveAliasURLToPath(url);
+					if (resolved) theFile = resolved;
+				}
+				if ([appDelegate shouldShowFile:theFile])
+				{
+					[filenames addObject:aPath];
+					if (++i % 100 == 0)
+						[self updateStatusOnMainThread:^NSString *{
+							return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i];
+						}];
+				}
+				if (stopCaching) {
+					[filenames removeAllObjects]; // so it fails count > 0 test below
+					break;
+				}
 			}
-			if ([appDelegate shouldShowFile:theFile])
-			{
-				[filenames addObject:aPath];
-				if (++i % 100 == 0)
-					[self updateStatusOnMainThread:^NSString *{
-						return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i];
-					}];
-			}
-			if (stopCaching) {
-				[filenames removeAllObjects]; // so it fails count > 0 test below
-				break;
-			}
-		}
-		[displayedFilenames addObjectsFromArray:filenames];
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[_fileWatcher watchDirectory:thePath];
-		});
-	} else if (currCat) { // currCat > 0 whenever cat changes (see keydown)
-		// this means deleting when a cat is displayed will cause unsightly flashing
-		// but we can live with that for now. maybe temp set currcat to 0?
-		[imageCacheQueueLock lock];
-		[imageCacheQueue removeAllObjects];
-		[secondaryImageCacheQueue removeAllObjects];
-		[imageCacheQueueLock unlockWithCondition:0];
-		[displayedFilenames removeAllObjects];
-		if (currCat == 1) {
-			currCat = 0;
 			[displayedFilenames addObjectsFromArray:filenames];
-		} else {
-			for (NSString *path in filenames) {
-				if ([[appDelegate cats][currCat-2] containsObject:path])
-					[displayedFilenames addObject:path];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[_fileWatcher watchDirectory:thePath];
+			});
+		} else if (currCat) { // currCat > 0 whenever cat changes (see keydown)
+			// this means deleting when a cat is displayed will cause unsightly flashing
+			// but we can live with that for now. maybe temp set currcat to 0?
+			[imageCacheQueueLock lock];
+			[imageCacheQueue removeAllObjects];
+			[secondaryImageCacheQueue removeAllObjects];
+			[imageCacheQueueLock unlockWithCondition:0];
+			[displayedFilenames removeAllObjects];
+			if (currCat == 1) {
+				currCat = 0;
+				[displayedFilenames addObjectsFromArray:filenames];
+			} else {
+				for (NSString *path in filenames) {
+					if ([[appDelegate cats][currCat-2] containsObject:path])
+						[displayedFilenames addObject:path];
+				}
+			}
+		} else { // if we got here, that means the sort order changed and currCat == 0
+			[imageCacheQueueLock lock];
+			[imageCacheQueue removeAllObjects];
+			[secondaryImageCacheQueue removeAllObjects];
+			[imageCacheQueueLock unlockWithCondition:0];
+		}
+		[displayedFilenames sortUsingComparator:[self comparator]];
+		if (startSlideshowWhenReady) {
+			startSlideshowWhenReady = NO;
+			// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
+			if ([filesBeingOpened count]) {
+				NSArray *files = [filesBeingOpened.allObjects sortedArrayUsingComparator:[self comparator]];
+				[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:) withObject:files waitUntilDone:NO]; // this must be called after displayedFilenames is sorted in case it calls back for indexOfFilename:
 			}
 		}
-	} else { // if we got here, that means the sort order changed and currCat == 0
-		[imageCacheQueueLock lock];
-		[imageCacheQueue removeAllObjects];
-		[secondaryImageCacheQueue removeAllObjects];
-		[imageCacheQueueLock unlockWithCondition:0];
+		if (thePath)
+			[filenames setArray:displayedFilenames]; // save the sorted list
+		filenamesDone = YES;
+		//NSLog(@"got %d files.", [filenames count]);
 	}
-	[displayedFilenames sortUsingComparator:[self comparator]];
-	if (startSlideshowWhenReady) {
-		startSlideshowWhenReady = NO;
-		// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
-		if ([filesBeingOpened count]) {
-			NSArray *files = [filesBeingOpened.allObjects sortedArrayUsingComparator:[self comparator]];
-			[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:) withObject:files waitUntilDone:NO]; // this must be called after displayedFilenames is sorted in case it calls back for indexOfFilename:
-		}
-	}
-	if (thePath)
-		[filenames setArray:displayedFilenames]; // save the sorted list
-	filenamesDone = YES;
-
-	//NSLog(@"got %d files.", [filenames count]);
-	[pool release];
 #pragma mark populate matrix
-	pool = [[NSAutoreleasePool alloc] init];
+	@autoreleasepool {
+		DYImageCache *thumbsCache = [appDelegate thumbsCache];
+		[_accessedLock lock];
+		for (NSString *s in _accessedFiles) {
+			[thumbsCache endAccess:ResolveAliasToPath(s)];
+		}
+		[_accessedFiles removeAllObjects];
+		[_accessedLock unlock];
 
-	DYImageCache *thumbsCache = [appDelegate thumbsCache];
-	[_accessedLock lock];
-	for (NSString *s in _accessedFiles) {
-		[thumbsCache endAccess:ResolveAliasToPath(s)];
-	}
-	[_accessedFiles removeAllObjects];
-	[_accessedLock unlock];
-
-	NSMutableIndexSet *selectedIndexes = [NSMutableIndexSet indexSet];
-	if ([displayedFilenames count] > 0) {
-		loadingDone = NO;
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[slidesBtn setEnabled:YES];
-		});
-		currentFilesDeletable = [fm isDeletableFileAtPath:displayedFilenames[0]];
-		
-		NSUInteger numFiles = [displayedFilenames count];
-		NSUInteger maxThumbs = [[NSUserDefaults standardUserDefaults]
-								  integerForKey:@"maxThumbsToLoad"];
-		
-		for (i=0; i<numFiles; ++i) {
-			if (stopCaching) {
-				//NSLog(@"aborted1 %@", origPath);
-				break;
-			}
-			
-			NSString *origPath = displayedFilenames[i];
-			NSString *resolvedPath = ResolveAliasToPath(origPath);
-			NSImage *cachedImage = [thumbsCache imageForKeyInvalidatingCacheIfNecessary:resolvedPath]; // remember the thumbsCache's key is the resolved path!
-			// what happens if another window happens to invalidate a thumb that we started "access" to?
-			// Actually it won't matter if we make too many calls to endAccess:, worst case is we'll have to recache it at some point.
+		NSUInteger i = 0;
+		NSMutableIndexSet *selectedIndexes = [NSMutableIndexSet indexSet];
+		if ([displayedFilenames count] > 0) {
+			loadingDone = NO;
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[imgMatrix addImage:cachedImage withFilename:origPath];
+				[slidesBtn setEnabled:YES];
 			});
-			if (cachedImage != nil) {
-				[thumbsCache beginAccess:resolvedPath];
-				[_accessedLock lock];
-				[_accessedFiles addObject:origPath];
-				[_accessedLock unlock];
-			}
-			if ([filesBeingOpened containsObject:origPath])
-				[selectedIndexes addIndex:i];
+			currentFilesDeletable = [NSFileManager.defaultManager isDeletableFileAtPath:displayedFilenames[0]];
+		
+			NSUInteger numFiles = [displayedFilenames count];
+			NSUInteger maxThumbs = [[NSUserDefaults standardUserDefaults]
+									integerForKey:@"maxThumbsToLoad"];
+		
+			for (; i<numFiles; ++i) {
+				if (stopCaching) {
+					//NSLog(@"aborted1 %@", origPath);
+					break;
+				}
+				NSString *origPath = displayedFilenames[i];
+				NSString *resolvedPath = ResolveAliasToPath(origPath);
+				NSImage *cachedImage = [thumbsCache imageForKeyInvalidatingCacheIfNecessary:resolvedPath]; // remember the thumbsCache's key is the resolved path!
+				// what happens if another window happens to invalidate a thumb that we started "access" to?
+				// Actually it won't matter if we make too many calls to endAccess:, worst case is we'll have to recache it at some point.
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[imgMatrix addImage:cachedImage withFilename:origPath];
+				});
+				if (cachedImage != nil) {
+					[thumbsCache beginAccess:resolvedPath];
+					[_accessedLock lock];
+					[_accessedFiles addObject:origPath];
+					[_accessedLock unlock];
+				}
+				if ([filesBeingOpened containsObject:origPath])
+					[selectedIndexes addIndex:i];
 
-			// now, to simulate the original behavior, add a certain number of
-			// images to the queue automatically
-			if (cachedImage == nil && i < maxThumbs) {
-				[imageCacheQueueLock lock];
-				[secondaryImageCacheQueue addObject:@[origPath, @(i)]];
-				[imageCacheQueueLock unlockWithCondition:1];
+				// now, to simulate the original behavior, add a certain number of
+				// images to the queue automatically
+				if (cachedImage == nil && i < maxThumbs) {
+					[imageCacheQueueLock lock];
+					[secondaryImageCacheQueue addObject:@[origPath, @(i)]];
+					[imageCacheQueueLock unlockWithCondition:1];
+				}
 			}
 		}
+		loadingDone = (i==[displayedFilenames count]);
+		/*if (i) {
+		 NSTimeInterval delta = [NSDate timeIntervalSinceReferenceDate] - imgloadstarttime;
+		 NSLog(@"%d files/%f secs = %f/s; %f s/file", i, delta,
+		 i / delta, delta/i);
+		 }*/
+		if (myThreadTime == lastThreadTime)
+			[self performSelectorOnMainThread:@selector(updateStatusFld) withObject:nil waitUntilDone:NO];
+		if (loadingDone && filesBeingOpened.count) {
+			[filesBeingOpened removeAllObjects];
+			if (myThreadTime == lastThreadTime && selectedIndexes.count)
+				dispatch_async(dispatch_get_main_queue(), ^{
+					if ([thePath isEqualToString:dirBrowserDelegate.currPath])
+						[imgMatrix scrollToFirstSelected:selectedIndexes];
+				});
+		}
+		[loadImageLock unlock];
 	}
-	loadingDone = (i==[displayedFilenames count]);
-	/*if (i) {
-		NSTimeInterval delta = [NSDate timeIntervalSinceReferenceDate] - imgloadstarttime;
-		NSLog(@"%d files/%f secs = %f/s; %f s/file", i, delta,
-			  i / delta, delta/i);
-	}*/
-	if (myThreadTime == lastThreadTime)
-		[self performSelectorOnMainThread:@selector(updateStatusFld)
-							   withObject:nil
-							waitUntilDone:NO];
-	if (loadingDone && filesBeingOpened.count) {
-		[filesBeingOpened removeAllObjects];
-		if (myThreadTime == lastThreadTime && selectedIndexes.count)
-			dispatch_async(dispatch_get_main_queue(), ^{
-				if ([thePath isEqualToString:dirBrowserDelegate.currPath])
-					[imgMatrix scrollToFirstSelected:selectedIndexes];
-			});
-	}
-	[loadImageLock unlock];
-	[pool release];
-	[thePath release];
 }
 
 - (IBAction)displayDir:(id)sender {
@@ -718,7 +703,7 @@
 				return;
 			}
 			
-			NSMutableSet **cats = [appDelegate cats];
+			NSMutableSet * __strong *cats = [appDelegate cats];
 			for (i=[a count]-1; i != -1; i--) { // TODO: this code is suspect
 				id fname = a[i];
 				if (c == 1) {
@@ -809,9 +794,7 @@
 			: NSLocalizedString(@"No images selected.", @"");
 			NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
 												[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
-			attStr =
-				[[[NSMutableAttributedString alloc] initWithString:s
-													   attributes:atts] autorelease];
+			attStr = [[NSMutableAttributedString alloc] initWithString:s attributes:atts];
 			[thumbView setImage:nil];
 		}
 		[attStr addAttribute:NSForegroundColorAttributeName value:[NSColor labelColor] range:NSMakeRange(0,[attStr length])];
@@ -848,7 +831,7 @@
 			 // see also modTime in DYImageCache
 			 if (!info) {
 				 // in case the thumbnail hasn't loaded into the cache yet, retrieve the file info ourselves.
-				 info = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
+				 info = [[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)];
 			 }
 			 s = info ? [[path stringByDeletingBasePath:basePath] stringByAppendingFormat:@" %dx%d (%@)",
 				 (int)info->pixelSize.width,
@@ -860,7 +843,7 @@
 		 default:
 			 for (NSString *path in [imgMatrix selectedFilenames]) {
 				 info = [thumbsCache infoForKey:ResolveAliasToPath(path)];
-				 if (!info) info = [[[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)] autorelease];
+				 if (!info) info = [[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)];
 				 if (info)
 					 totalSize += info->fileSize;
 			 }
@@ -894,170 +877,162 @@
 	NSUInteger i, lastCount = 0;
 	NSMutableArray *visibleQueue = [[NSMutableArray alloc] initWithCapacity:100];
 	NSString *loadingMsg = NSLocalizedString(@"Loading %lu of %lu...", @"");
+	BOOL workToDo = YES;
 	while (YES) {
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-		// all calls to the thumbnail view must be on the main thread, which we wait for synchronously
-		// to avoid a deadlock (where the view's drawRect calls our loadImageForFile, which modifies the cache queue),
-		// we save the state of the view before acquiring the lock (we can't use NSRecursiveLock since we need NSConditionLock)
-		DYMatrixState * __block currState;
-		dispatch_sync(dispatch_get_main_queue(), ^{
-			currState = [[imgMatrix currentState] retain];
-		});
-		[imageCacheQueueLock lockWhenCondition:1];
-		if (!imageCacheQueueRunning) {
-			// final cleanup before terminating thread
-			[imageCacheQueueLock unlockWithCondition:0];
-			[currState release];
-			[pool drain];
-			break;
-		}
-		// use secondary queue if primary queue is empty
-		// note: the secondary queue may be empty if all items are in the visibleQueue
-		if ([imageCacheQueue count] == 0 && [secondaryImageCacheQueue count]) {
-			[imageCacheQueue addObject:secondaryImageCacheQueue[0]];
-			[secondaryImageCacheQueue removeObjectAtIndex:0];
-		}
-		NSArray *d;
-		NSString *origPath;
-		// discard any items in the queue that are no longer in the browser's directory.
-		// prioritize important files (the visible ones) by putting them in a higher-priority array.
-		if (![visibleQueue count]                   // nothing in the priority queue, so search for more items to add to it...
-			&& [imageCacheQueue count] != lastCount // but skip this if nothing has been added to the queue
-			)
-		{
-			i = [imageCacheQueue count];
-			while (i--) {
+		@autoreleasepool {
+			// all calls to the thumbnail view must be on the main thread, which we wait for synchronously
+			// to avoid a deadlock (where the view's drawRect calls our loadImageForFile, which modifies the cache queue),
+			// we save the state of the view before acquiring the lock (we can't use NSRecursiveLock since we need NSConditionLock)
+			DYMatrixState * __block currState;
+			dispatch_sync(dispatch_get_main_queue(), ^{
+				currState = [imgMatrix currentState];
+			});
+			[imageCacheQueueLock lockWhenCondition:1];
+			if (!imageCacheQueueRunning) {
+				// final cleanup before terminating thread
+				[imageCacheQueueLock unlockWithCondition:0];
+				break;
+			}
+			// use secondary queue if primary queue is empty
+			// note: the secondary queue may be empty if all items are in the visibleQueue
+			if ([imageCacheQueue count] == 0 && [secondaryImageCacheQueue count]) {
+				[imageCacheQueue addObject:secondaryImageCacheQueue[0]];
+				[secondaryImageCacheQueue removeObjectAtIndex:0];
+			}
+			NSArray *d;
+			NSString *origPath;
+			// discard any items in the queue that are no longer in the browser's directory.
+			// prioritize important files (the visible ones) by putting them in a higher-priority array.
+			if (![visibleQueue count]                   // nothing in the priority queue, so search for more items to add to it...
+				&& [imageCacheQueue count] != lastCount // but skip this if nothing has been added to the queue
+				)
+			{
+				i = [imageCacheQueue count];
+				while (i--) {
+					d = imageCacheQueue[i];
+					origPath = d[0];
+					//NSLog(@"considering %@ for priority queue", [d objectForKey:@"index"]);
+					if (![self pathIsVisibleThreaded:origPath]) {
+						if ([imageCacheQueue count] > 1) // leave at least one item so it won't crash later (the next while loop assumes there's at least one item)
+							//NSLog(@"skipping %@ because path has changed", [d objectForKey:@"index"]),
+							[imageCacheQueue removeObjectAtIndex:i];
+						continue;
+					}
+					if ([currState imageWithFileInfoNeedsDisplay:d]) {
+						[visibleQueue addObject:d];
+						[imageCacheQueue removeObjectAtIndex:i];
+						//NSLog(@"prioritizing %@ because it is visible", [d objectForKey:@"index"]);
+					}
+				}
+			}
+			lastCount = [imageCacheQueue count];
+			// skip any files that are not visible in the matrix view.
+			i = 0;
+			while (YES) {
+				if ([visibleQueue count]) {
+					// run through this "pre-approved" array before touching the main queue
+					d = visibleQueue[0];
+					origPath = d[0];
+					if ([currState imageWithFileInfoNeedsDisplay:d] || [visibleQueue count] == 1) {
+						[visibleQueue removeObjectAtIndex:0];
+						//if ([imgMatrix imageWithFileInfoNeedsDisplay:d])
+						//	NSLog(@"processing %@ because needsDisplay", [d objectForKey:@"index"]);
+						//else NSLog(@"processing %@ as last item of priority queue", [d objectForKey:@"index"]);
+						break;
+					} else {
+						// if the cell is no longer visible, invalidate the visibleQueue
+						//NSLog(@"dropping %@ and removing %u items from visibleQueue", [d objectForKey:@"index"], [visibleQueue count]);
+						[imageCacheQueue addObjectsFromArray:visibleQueue];
+						[visibleQueue removeAllObjects];
+						continue;
+					}
+				}
 				d = imageCacheQueue[i];
 				origPath = d[0];
-				//NSLog(@"considering %@ for priority queue", [d objectForKey:@"index"]);
-				if (![self pathIsVisibleThreaded:origPath]) {
-					if ([imageCacheQueue count] > 1) // leave at least one item so it won't crash later (the next while loop assumes there's at least one item)
-						//NSLog(@"skipping %@ because path has changed", [d objectForKey:@"index"]),
-						[imageCacheQueue removeObjectAtIndex:i];
-					continue;
+				//NSLog(@"considering %@ in main loop", [d objectForKey:@"index"]);
+				if ([imageCacheQueue count]-1 == i) { // if we've reached the last item of the array, we have to process it
+					[imageCacheQueue removeObjectAtIndex:i];
+					//NSLog(@"processing %@ because it is the last item", [d objectForKey:@"index"]);
+					break;
 				}
 				if ([currState imageWithFileInfoNeedsDisplay:d]) {
-					[visibleQueue addObject:d];
 					[imageCacheQueue removeObjectAtIndex:i];
-					//NSLog(@"prioritizing %@ because it is visible", [d objectForKey:@"index"]);
-				}
-			}
-		}
-		lastCount = [imageCacheQueue count];
-		// skip any files that are not visible in the matrix view.
-		i = 0;
-		while (YES) {
-			if ([visibleQueue count]) {
-				// run through this "pre-approved" array before touching the main queue
-				d = visibleQueue[0];
-				origPath = d[0];
-				if ([currState imageWithFileInfoNeedsDisplay:d] || [visibleQueue count] == 1) {
-					[d retain];
-					[visibleQueue removeObjectAtIndex:0];
-					//if ([imgMatrix imageWithFileInfoNeedsDisplay:d])
-					//	NSLog(@"processing %@ because needsDisplay", [d objectForKey:@"index"]);
-					//else NSLog(@"processing %@ as last item of priority queue", [d objectForKey:@"index"]);
+					//NSLog(@"processing %@ as visible item", [d objectForKey:@"index"]);
 					break;
-				} else {
-					// if the cell is no longer visible, invalidate the visibleQueue
-					//NSLog(@"dropping %@ and removing %u items from visibleQueue", [d objectForKey:@"index"], [visibleQueue count]);
-					[imageCacheQueue addObjectsFromArray:visibleQueue];
-					[visibleQueue removeAllObjects];
-					continue;
 				}
+				++i;
 			}
-			d = imageCacheQueue[i];
-			origPath = d[0];
-			//NSLog(@"considering %@ in main loop", [d objectForKey:@"index"]);
-			if ([imageCacheQueue count]-1 == i) { // if we've reached the last item of the array, we have to process it
-				[d retain];
-				[imageCacheQueue removeObjectAtIndex:i];
-				//NSLog(@"processing %@ because it is the last item", [d objectForKey:@"index"]);
-				break;
-			}
-			if ([currState imageWithFileInfoNeedsDisplay:d]) {
-				[d retain];
-				[imageCacheQueue removeObjectAtIndex:i];
-				//NSLog(@"processing %@ as visible item", [d objectForKey:@"index"]);
-				break;
-			}
-			++i;
-		}
-		BOOL workToDo = ([imageCacheQueue count] || [visibleQueue count] || [secondaryImageCacheQueue count]);
-		[imageCacheQueueLock unlockWithCondition:workToDo ? 1 : 0]; // keep the condition as 1 (more work needs to be done) if there's still stuff in the array
-		[currState release];
-
-		NSString *theFile = ResolveAliasToPath(origPath);
-		NSSize cellSize = [DYWrappingMatrix maxCellSize];
-		NSImage *thumb = [thumbsCache imageForKey:theFile];
-		BOOL addedToCache = NO;
-		if (thumb) {
-			[thumbsCache beginAccess:theFile];
-			addedToCache = YES;
-		} else {
-			// we're rolling our own cancelPreviousPerformRequestsWithTarget here
-			// before updating the status field in the main thread, we check if anyone else has modified it (or dispatched a block to modify it) after the timeStamp
-			[self updateStatusOnMainThread:^NSString *{
-				if ([imgMatrix numCells] == 0) return nil; // don't set status string if there are no thumbs (could happen if a file is in the queue when the path changes)
-				[_accessedLock lock];
-				NSUInteger i = _accessedFiles.count;
-				[_accessedLock unlock];
-				return [NSString stringWithFormat:loadingMsg, i+1, [imgMatrix numCells]];
-			}];
-			if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
-				DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
-				if (FileIsJPEG(theFile)) {
-					result.image =
-					[EpegWrapper imageWithPath:theFile
-								   boundingBox:cellSize
-									   getSize:&result->pixelSize
-									 exifThumb:useExifThumbs
-								getOrientation:&result->exifOrientation];
-					//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
-				}
-				if (!result.image)
-					[thumbsCache createScaledImage:result];
-
-				if (result.image) {
-					[thumbsCache addImage:result forFile:theFile];
-					addedToCache = YES;
-				}
-				else
-					[thumbsCache dontAddFile:theFile]; //NSLog(@"couldn't load image %@", origPath);
-				thumb = result.image;
-				[result release];
+			workToDo = ([imageCacheQueue count] || [visibleQueue count] || [secondaryImageCacheQueue count]);
+			[imageCacheQueueLock unlockWithCondition:workToDo ? 1 : 0]; // keep the condition as 1 (more work needs to be done) if there's still stuff in the array
+			
+			NSString *theFile = ResolveAliasToPath(origPath);
+			NSSize cellSize = [DYWrappingMatrix maxCellSize];
+			NSImage *thumb = [thumbsCache imageForKey:theFile];
+			BOOL addedToCache = NO;
+			if (thumb) {
+				[thumbsCache beginAccess:theFile];
+				addedToCache = YES;
 			} else {
-				// someone beat us to it
-				thumb = [thumbsCache imageForKey:theFile];
-				if (thumb) {
-					[thumbsCache beginAccess:theFile];
-					addedToCache = YES;
-				}
-			}
-		}
-
-		if (!thumb) thumb = _brokenDoc;
-		dispatch_async(dispatch_get_main_queue(), ^{
-			if ([imgMatrix setImage:thumb atIndex:[d[1] unsignedIntegerValue] forFilename:origPath]) {
-				if (addedToCache) {
+				// we're rolling our own cancelPreviousPerformRequestsWithTarget here
+				// before updating the status field in the main thread, we check if anyone else has modified it (or dispatched a block to modify it) after the timeStamp
+				[self updateStatusOnMainThread:^NSString *{
+					if ([imgMatrix numCells] == 0) return nil; // don't set status string if there are no thumbs (could happen if a file is in the queue when the path changes)
 					[_accessedLock lock];
-					[_accessedFiles addObject:origPath];
+					NSUInteger i = _accessedFiles.count;
 					[_accessedLock unlock];
+					return [NSString stringWithFormat:loadingMsg, i+1, [imgMatrix numCells]];
+				}];
+				if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
+					DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
+					if (FileIsJPEG(theFile)) {
+						result.image =
+						[EpegWrapper imageWithPath:theFile
+									   boundingBox:cellSize
+										   getSize:&result->pixelSize
+										 exifThumb:useExifThumbs
+									getOrientation:&result->exifOrientation];
+						//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
+					}
+					if (!result.image)
+						[thumbsCache createScaledImage:result];
+
+					if (result.image) {
+						[thumbsCache addImage:result forFile:theFile];
+						addedToCache = YES;
+					}
+					else
+						[thumbsCache dontAddFile:theFile]; //NSLog(@"couldn't load image %@", origPath);
+					thumb = result.image;
+				} else {
+					// someone beat us to it
+					thumb = [thumbsCache imageForKey:theFile];
+					if (thumb) {
+						[thumbsCache beginAccess:theFile];
+						addedToCache = YES;
+					}
 				}
-			} else if (addedToCache) {
-				[thumbsCache endAccess:origPath];
 			}
-		});
-		[d release];
-		if (_background)
-			[NSThread sleepForTimeInterval:0.1];
-		[pool drain];
+
+			if (!thumb) thumb = _brokenDoc;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				if ([imgMatrix setImage:thumb atIndex:[d[1] unsignedIntegerValue] forFilename:origPath]) {
+					if (addedToCache) {
+						[_accessedLock lock];
+						[_accessedFiles addObject:origPath];
+						[_accessedLock unlock];
+					}
+				} else if (addedToCache) {
+					[thumbsCache endAccess:origPath];
+				}
+			});
+			if (_background)
+				[NSThread sleepForTimeInterval:0.1];
+		}
 		if (!workToDo)
 			[self performSelectorOnMainThread:@selector(updateStatusFld)
 								   withObject:nil
 								waitUntilDone:NO];
 	}
-	[visibleQueue release];
 }
 
 @end

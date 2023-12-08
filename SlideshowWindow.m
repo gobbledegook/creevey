@@ -77,7 +77,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
 		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
-		currentIndex = NSNotFound;//blurr=8;
+		currentIndex = NSNotFound;
    }
     return self;
 }
@@ -85,19 +85,18 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (void)awakeFromNib {
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
 	[[self contentView] addSubview:imgView];
-	[imgView release]; // the prev line retained it
 	[imgView setFrame:[self contentView].frame];
 	imgView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 	
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
-	[imgView addSubview:infoFld]; [infoFld release];
+	[imgView addSubview:infoFld];
 	infoFld.autoresizingMask = NSViewMaxXMargin|NSViewMaxYMargin;
 	[infoFld setBackgroundColor:[NSColor grayColor]];
 	[infoFld setBezeled:NO];
 	[infoFld setEditable:NO];
 	
 	catsFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,imgView.bounds.size.height-20,300,20)];
-	[imgView addSubview:catsFld]; [catsFld release];
+	[imgView addSubview:catsFld];
 	catsFld.autoresizingMask = NSViewMaxXMargin|NSViewMinYMargin;
 	[catsFld setBackgroundColor:[NSColor grayColor]];
 	[catsFld setBezeled:NO];
@@ -106,16 +105,16 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	
 	NSSize s = [imgView bounds].size;
 	NSScrollView *sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(s.width-360,0,360,s.height-20)];
-	[imgView addSubview:sv]; [sv release];
+	[imgView addSubview:sv];
 	[sv setAutoresizingMask:NSViewHeightSizable | NSViewMinXMargin];
 	
 	exifFld = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,[sv contentSize].width,20)];
-	[sv setDocumentView:exifFld]; [exifFld release];
+	[sv setDocumentView:exifFld];
 	exifFld.autoresizingMask = NSViewHeightSizable | NSViewWidthSizable | NSViewMinXMargin;
 
 	[sv setDrawsBackground:NO];
 	[sv setHasVerticalScroller:YES];
-	[sv setVerticalScroller:[[[NSScroller alloc] init] autorelease]];
+	[sv setVerticalScroller:[[NSScroller alloc] init]];
 	[[sv verticalScroller] setControlSize:NSControlSizeSmall];
 	[sv setAutohidesScrollers:YES];
 	//[exifFld setEditable:NO];
@@ -134,19 +133,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		default:
 			break;
 	}
-}
-
-- (void)dealloc {
-	[filenames release];
-	[rotations release];
-	[flips release];
-	[zooms release];
-	[imgCache release];
-	[helpFld release];
-	[_upcomingQueue release];
-	[_fileWatcher release];
-	[_comparator release];
-	[super dealloc];
 }
 
 - (void)setFullscreenMode:(BOOL)b {
@@ -177,7 +163,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	return autoRotate;
 }
 
-- (void)setCats:(NSMutableSet **)newCats {
+- (void)setCats:(NSMutableSet * __strong *)newCats {
     cats = newCats;
 }
 
@@ -197,9 +183,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[self saveZoomInfo]; // in case we're called without endSlideshow being called
 	
 	if (s != basePath) {
-		[basePath release];
 		if ([s characterAtIndex:[s length]-1] != '/')
-			basePath = [[s stringByAppendingString:@"/"] retain];
+			basePath = [s stringByAppendingString:@"/"];
 		else
 			basePath = [s copy];
 	}
@@ -223,8 +208,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 			boundingRect.size.height -= inset;
 		}
 	}
-	[oldScreen release];
-	oldScreen = [mainScreen retain];
+	oldScreen = mainScreen;
 	NSSize oldSize = [imgCache boundingSize];
 	if (oldSize.width < boundingRect.size.width
 		|| oldSize.height < boundingRect.size.height) {
@@ -323,7 +307,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[alert addButtonWithTitle:NSLocalizedString(@"Show Me", @"welcome alert button 2")];
 		if ([alert runModal] == NSAlertSecondButtonReturn)
 			[self toggleHelp];
-		[alert release];
 		[u setBool:YES forKey:@"seenSlideshowIntro"];
 	}
 
@@ -466,26 +449,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 	attStr = Fileinfo2EXIFString(filenames[currentIndex],
 								 imgCache,moreExif);
 	NSRange r = NSMakeRange(0,[attStr length]);
-	NSShadow *shdw = [[[NSShadow alloc] init] autorelease];
+	NSShadow *shdw = [[NSShadow alloc] init];
 	[shdw setShadowColor:[NSColor blackColor]];
 	[shdw setShadowBlurRadius:7]; // 7 or 8 is good
 	[attStr addAttribute:NSShadowAttributeName
 				   value:shdw
 				   range:r];
-//	[attStr addAttribute:NSStrokeColorAttributeName
-//				   value:[NSColor blackColor]
-//				   range:r];
-//	[attStr addAttribute:NSStrokeWidthAttributeName
-//				   value:[NSNumber numberWithFloat:-3]
-//				   range:r];
-//	[attStr addAttribute:NSExpansionAttributeName
-//				   value:[NSNumber numberWithFloat:0.1]
-//				   range:r];
 	[exifFld replaceCharactersInRange:NSMakeRange(0,[[exifFld string] length])
 							  withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
 										documentAttributes:@{}]];
 	[exifFld setTextColor:[NSColor whiteColor]];
-	//NSLog(@"%i",blurr);
 }
 
 
@@ -517,7 +490,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSLocalizedString(@"seconds", @""),
 			NSLocalizedString(@"PAUSED", @"")]
 								  : @""]];
-//	[infoFld setNeedsDisplay:YES];
 	[infoFld sizeToFit];
 //	[infoFld setNeedsDisplay:YES];
 	[imgView setNeedsDisplay:YES]; // **
@@ -627,7 +599,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		r.origin.y = (s.height - r.size.height)/2;
 
 		loopImageView = [[NSImageView alloc] initWithFrame:NSIntegralRect(r)];
-		[[self contentView] addSubview:loopImageView]; [loopImageView release];
+		[[self contentView] addSubview:loopImageView];
 		[loopImageView setImage:loopImage];
 	}
 	[loopImageView setHidden:NO];
@@ -638,7 +610,6 @@ scheduledTimerWithTimeInterval:timerIntvl
     [theAnim setAnimationCurve:NSAnimationEaseIn];
 
     [theAnim startAnimation];
-    [theAnim release];
 }
 
 - (void)jump:(NSInteger)n { // go forward n pics (negative numbers go backwards)
@@ -731,7 +702,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)toggleHelp {
 	if (!helpFld) {
 		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect];
-		[[self contentView] addSubview:helpFld]; [helpFld release];
+		[[self contentView] addSubview:helpFld];
 		if (![helpFld readRTFDFromFile:
 			[[NSBundle mainBundle] pathForResource:@"creeveyhelp" ofType:@"rtf"]])
 			NSLog(@"couldn't load cheat sheet!");
@@ -891,11 +862,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 			}
 			[[NSUserDefaults standardUserDefaults] setInteger:2 forKey:@"DYSlideshowWindowVisibleFields"];
 			break;
-//		case 'e':
-//			[self toggleExif];
-//			break;
-//		case 'j': blurr--; [self updateExifFld]; break;
-//		case 'k': blurr++; [self updateExifFld]; break;
 		case 'l':
 			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self setRotation:90];
@@ -1072,17 +1038,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)cacheAndDisplay:(NSString *)s {
 	if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	[imgCache cacheFile:s]; // this operation takes time...
-	if (currentIndex != NSNotFound && [filenames[currentIndex] isEqualToString:s]) {
-		//NSLog(@"cacheAndDisplay now displaying %@", idx);
-		[self performSelectorOnMainThread:@selector(displayImage) // requires 10.2
-							   withObject:nil waitUntilDone:NO];
-	} /*else {
+	@autoreleasepool {
+		[imgCache cacheFile:s]; // this operation takes time...
+		if (currentIndex != NSNotFound && [filenames[currentIndex] isEqualToString:s]) {
+			//NSLog(@"cacheAndDisplay now displaying %@", idx);
+			[self performSelectorOnMainThread:@selector(displayImage) withObject:nil waitUntilDone:NO];
+		} /*else {
 		NSLog(@"cacheAndDisplay aborted %@", idx);
-		// the user hit next or something, we don't need this anymore		
-	} */
-	[pool release];
+		// the user hit next or something, we don't need this anymore
+		} */
+	}
 }
 
 #pragma mark accessors

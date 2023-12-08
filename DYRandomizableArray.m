@@ -20,15 +20,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-    [array release];
-	[orderedArray release];
-	[randomToOrdered release];
-	[orderedToRandom release];
-	[super dealloc];
-}
-
 // array stuff
 - (NSUInteger)count {
 	return [array count];
@@ -180,7 +171,7 @@
 		[randomToOrdered exchangeObjectAtIndex:startIndex withObjectAtIndex:i];
 	}
 	while (--i) {
-		NSUInteger randomIndex = arc4random_uniform(i+1);
+		NSUInteger randomIndex = arc4random_uniform((uint32_t)i+1);
 		[array exchangeObjectAtIndex:i withObjectAtIndex:randomIndex];
 		[randomToOrdered exchangeObjectAtIndex:i withObjectAtIndex:randomIndex]; // simultaneously save r2o array (it's parallel)
 		orderedToRandom[[randomToOrdered[i] unsignedIntegerValue]] = @(i); // and save the inverse values to o2r array

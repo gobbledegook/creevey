@@ -430,7 +430,6 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	//NSLog(@"%@", [fatts objectAtIndex:0]);
 	NSData *theData = [[NSData alloc] initWithBytesNoCopy:thebytes length:numbytes freeWhenDone:YES];
 	[theData writeToFile:thePath atomically:YES];
-	[theData release];
 	
 	//restore date created, hfs codes
 	[[NSFileManager defaultManager] setAttributes:[NSDictionary dictionaryWithObjects:fatts forKeys:fkeys]

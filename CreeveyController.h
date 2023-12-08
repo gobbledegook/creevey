@@ -19,10 +19,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @interface CreeveyController : NSObject <NSApplicationDelegate,NSTableViewDataSource,NSWindowRestoration>
 {
 	NSMutableSet *cats[NUM_FNKEY_CATS];
-    IBOutlet SlideshowWindow *slidesWindow;
-	IBOutlet NSProgressIndicator *jpegProgressBar;
-	IBOutlet NSTextView *exifTextView; BOOL exifWasVisible;
-	IBOutlet NSButton *exifThumbnailDiscloseBtn;
+    BOOL exifWasVisible;
 
 	NSMutableSet *filetypes;
 	NSMutableSet *disabledFiletypes;
@@ -30,28 +27,34 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSArray *fileextensions;
 	NSMutableDictionary *filetypeDescriptions;
 	NSMutableArray *creeveyWindows;
-	CreeveyMainWindowController *frontWindow;
+	CreeveyMainWindowController * __weak frontWindow;
 	
 	DYImageCache *thumbsCache;
 	
 	// prefs stuff
-	IBOutlet NSPanel *prefsWin;
-	IBOutlet NSTextField *startupDirFld;
-	IBOutlet NSMatrix *startupOptionMatrix;
-	IBOutlet NSButton *slideshowApplyBtn;
 	NSColor *slideshowBgColor;
 	id localeChangeObserver;
 	id screenChangeObserver;
 }
 
-@property (retain) IBOutlet DYJpegtranPanel *jpegController;
-@property (retain) IBOutlet NSMenu *thumbnailContextMenu;
+@property (strong) IBOutlet DYJpegtranPanel *jpegController;
+@property (strong) IBOutlet NSMenu *thumbnailContextMenu;
 @property (readonly) NSMutableSet *revealedDirectories; // set of invisible directories that should be shown in the browser
 
+@property (weak) IBOutlet SlideshowWindow *slidesWindow;
+@property (weak) IBOutlet NSProgressIndicator *jpegProgressBar;
+@property (weak) IBOutlet NSTextView *exifTextView;
+@property (weak) IBOutlet NSButton *exifThumbnailDiscloseBtn;
+
+// prefs stuff
+@property (weak) IBOutlet NSPanel *prefsWin;
+@property (weak) IBOutlet NSTextField *startupDirFld;
+@property (weak) IBOutlet NSMatrix *startupOptionMatrix;
+@property (weak) IBOutlet NSButton *slideshowApplyBtn;
+
 // accessors
-- (NSMutableSet **)cats;
+- (NSMutableSet * __strong *)cats;
 - (DYImageCache *)thumbsCache;
-- (NSTextView *)exifTextView;
 - (BOOL)shouldShowFile:(NSString *)path;
 
 - (IBAction)slideshow:(id)sender;

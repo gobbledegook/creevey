@@ -21,7 +21,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 	NSSize pixelSize;
 	unsigned short exifOrientation;
 }
-@property (retain, nonatomic) NSImage *image;
+@property (strong, nonatomic) NSImage *image;
 @property (readonly, nonatomic) NSString *path;
 @property (readonly, nonatomic) NSDate *modTime;
 - (instancetype)initWithPath:(NSString *)s NS_DESIGNATED_INITIALIZER;
@@ -30,7 +30,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 
 @interface DYImageCache : NSObject
-@property (assign, nonatomic) BOOL rotatable; // default is NO
+@property (nonatomic) BOOL rotatable; // default is NO
 - (instancetype)initWithCapacity:(NSUInteger)n NS_DESIGNATED_INITIALIZER;
 
 - (float)boundingWidth;

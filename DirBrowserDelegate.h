@@ -13,7 +13,7 @@
 @interface DirBrowserDelegate : NSObject <DYCreeveyBrowserDelegate>
 - (NSString*)path;
 - (void)setPath:(NSString *)s;
-@property (assign) IBOutlet NSBrowser *b;
-@property (assign) NSMutableSet *revealedDirectories;
-@property (atomic, readonly) NSString *currPath;
+@property (weak) IBOutlet NSBrowser *b;
+@property (weak) NSMutableSet *revealedDirectories;
+@property (readonly) NSString *currPath;
 @end

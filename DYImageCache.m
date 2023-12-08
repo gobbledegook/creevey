@@ -39,12 +39,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 @implementation DYImageInfo
 @synthesize image, path, modTime;
 
-- (void)dealloc {
-	[image release];
-	[modTime release];
-	[super dealloc];
-}
-
 - (instancetype)initWithPath:(NSString *)s {
 	if (self = [super init]) {
 		path = [s copy];
@@ -52,7 +46,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		
 		// get modTime
 		NSDictionary *fattrs = [[NSFileManager defaultManager] attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL];
-		modTime = [[fattrs fileModificationDate] retain];
+		modTime = [fattrs fileModificationDate];
 		
 		// get fileSize
 		fileSize = [fattrs fileSize];
@@ -74,7 +68,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 - (void)discardContentIfPossible {
 	if (self.counter == 0) {
-		[image release];
 		image = nil;
 		// we expect to be immediately evicted
 	}
@@ -97,7 +90,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSUInteger maxImages;
 	volatile BOOL cachingShouldStop;
 	
-	NSFileManager *fm;
 	NSImageInterpolation interpolationType;
 }
 - (instancetype)init NS_UNAVAILABLE;
@@ -113,8 +105,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		
 		cacheLock = [[NSLock alloc] init];
 		pendingLock = [[NSConditionLock alloc] initWithCondition:0];
-		
-		fm = [NSFileManager defaultManager];
 	}
     return self;
 }
@@ -136,13 +126,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	interpolationType = t;
 }
 
-- (void)dealloc {
-	[images release];
-	[pending release];
-	[cacheLock release];
-	[pendingLock release];
-	[super dealloc];
-}
 
 - (void)createScaledImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0)
@@ -173,7 +156,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 				|| ([oldRep isKindOfClass:[NSBitmapImageRep class]]
 					&& [((NSBitmapImageRep*)oldRep) valueForProperty:NSImageFrameCount])) {
 				// special case for animated gifs
-				result = [orig retain];
+				result = orig;
 				if (!NSEqualSizes(oldSize,[orig size]))
 					[orig setSize:oldSize];
 				// in which case, don't set nevercache for returned images?
@@ -198,9 +181,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 			}
 		}
 	}
-	[orig release];
 	imgInfo.image = result;
-	[result release];
 }
 
 // see usage note in the .h file.
@@ -220,7 +201,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 
 	// now add it to cache
 	[self addImage:result forFile:s];
-	[result release];
 	//NSLog(@"caching %@ done!", idx);
 }
 
@@ -265,7 +245,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 
 - (DYImageInfo *)infoForKey:(NSString *)s {
-	// ** unlike imageforkey, this is nonmagical
 	return [images objectForKey:s];
 }
 
@@ -278,7 +257,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	if (imgInfo) {
 		// must resolve alias before getting mod time
 		// b/c that's what we do in scaleImage
-		NSDate *modTime = [[fm attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL] fileModificationDate];
+		NSDate *modTime = [[NSFileManager.defaultManager attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL] fileModificationDate];
 
 		// == nil if file doesn't exist
 		if ((modTime == nil && imgInfo.modTime == nil)

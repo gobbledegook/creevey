@@ -21,9 +21,9 @@ NSString *defaultPath(void) {
 }
 
 @interface DirBrowserDelegate () <VDKQueueDelegate>
-@property (nonatomic, retain) NSString *rootVolumeName;
-@property (atomic, retain) NSString *currPath;
-@property (nonatomic, retain) NSURL *currFileRef;
+@property (nonatomic, strong) NSString *rootVolumeName;
+@property (strong) NSString *currPath;
+@property (nonatomic, strong) NSURL *currFileRef;
 @end
 
 @implementation DirBrowserDelegate
@@ -54,18 +54,11 @@ NSString *defaultPath(void) {
 	[w removeObserver:_unmountVolumeObserver];
 	[w removeObserver:_renameVolumeObserver];
 	[kq stopWatching];
-	[kq release];
-	[cols release];
-	[colsInternal release];
-	[rootVolumeName release];
-	[currPath release];
-	[currFileRef release];
-	[super dealloc];
 }
 
 - (void)awakeFromNib {
-	DirBrowserDelegate __weak *zelf = self;
-	NSBrowser __weak *b = _b;
+	DirBrowserDelegate * __weak zelf = self;
+	NSBrowser * __weak b = _b;
 	NSNotificationCenter *w = [NSWorkspace.sharedWorkspace notificationCenter];
 	_mountVolumeObserver = [w addObserverForName:NSWorkspaceDidMountNotification object:nil queue:nil usingBlock:^(NSNotification *n) {
 		[b reloadColumn:0];
