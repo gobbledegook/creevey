@@ -1,12 +1,10 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2014 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//  DYJpegtran.m
-//
 //  Created by Dominic Yu 2005 July 11
 
 #import "DYJpegtran.h"
@@ -204,8 +202,8 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	}
 	
 	/* Open files first, so setjmp can assume they're open. */
-	if ((input_file = fopen([thePath fileSystemRepresentation], "rb")) == NULL) {
-		NSLog(@"DYJpegtran can't open %s\n", [thePath fileSystemRepresentation]);
+	if ((input_file = fopen(thePath.fileSystemRepresentation, "rb")) == NULL) {
+		NSLog(@"DYJpegtran can't open %s\n", thePath.fileSystemRepresentation);
 		return NO;
 	}
 	if ((output_file = tmpfile()) == NULL) {
@@ -367,7 +365,7 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 		} else if (i.delThumb) {
 			newapp1 = delete_exif_thumb(app1markerptr->data,app1markerptr->data_length,&outSize);
 		} else if (i.replaceThumb) {
-			newapp1 = replace_exif_thumb((unsigned char *)[i.newThumb bytes],[i.newThumb length],
+			newapp1 = replace_exif_thumb((unsigned char *)i.newThumb.bytes,i.newThumb.length,
 										 i.newThumbSize.width,i.newThumbSize.height,
 										 app1markerptr->data,
 										 app1markerptr->data_length,
@@ -426,13 +424,13 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	NSMutableArray *fkeys = [NSMutableArray arrayWithObjects:NSFileCreationDate, NSFileHFSCreatorCode, NSFileHFSTypeCode, nil];
 	if (i.preserveModificationDate)
 		[fkeys addObject:NSFileModificationDate];
-	NSArray *fatts = [[[NSFileManager defaultManager] attributesOfItemAtPath:[thePath stringByResolvingSymlinksInPath] error:NULL] objectsForKeys:fkeys notFoundMarker:[NSNull null]];
+	NSArray *fatts = [[NSFileManager.defaultManager attributesOfItemAtPath:thePath.stringByResolvingSymlinksInPath error:NULL] objectsForKeys:fkeys notFoundMarker:[NSNull null]];
 	//NSLog(@"%@", [fatts objectAtIndex:0]);
 	NSData *theData = [[NSData alloc] initWithBytesNoCopy:thebytes length:numbytes freeWhenDone:YES];
 	[theData writeToFile:thePath atomically:YES];
 	
 	//restore date created, hfs codes
-	[[NSFileManager defaultManager] setAttributes:[NSDictionary dictionaryWithObjects:fatts forKeys:fkeys]
+	[NSFileManager.defaultManager setAttributes:[NSDictionary dictionaryWithObjects:fatts forKeys:fkeys]
 									 ofItemAtPath:thePath error:NULL];
 	
 	/* All done. */

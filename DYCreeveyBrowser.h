@@ -1,4 +1,4 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
@@ -8,7 +8,10 @@
 /* DYCreeveyBrowser */
 
 #import <Cocoa/Cocoa.h>
-@protocol DYCreeveyBrowserDelegate <NSObject>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@protocol DYCreeveyBrowserDelegate <NSBrowserDelegate>
 - (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(NSInteger)column;
 - (void)browserWillSendAction:(NSBrowser *)sender;
 @end
@@ -17,5 +20,7 @@
 // allows drag and drop
 // supports separate display/underlying paths
 @interface DYCreeveyBrowser : NSBrowser
-- (id <NSBrowserDelegate,DYCreeveyBrowserDelegate>)delegate;
+@property (nullable, weak) id<DYCreeveyBrowserDelegate> delegate;
 @end
+
+NS_ASSUME_NONNULL_END

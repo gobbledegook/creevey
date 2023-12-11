@@ -1,11 +1,9 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
-
-/* DYWrappingMatrix */
 
 #import <Cocoa/Cocoa.h>
 
@@ -31,68 +29,44 @@
 // to find the correct index and update, then draw it if it's visible
 // in the scroll view.
 @interface DYWrappingMatrix : NSControl
-{
-	NSColor *bgColor;
-	BOOL autoRotate;
-	NSImageCell *myCell;           // one cell, reused for efficiency
-	NSCell *myTextCell; // for drawing the file name
-	NSMutableArray *images;
-	NSMutableArray *filenames;
-	NSMutableSet *requestedFilenames; // keep track of which files we've requested images for
-	float cellWidth;
-	NSUInteger numCells;
-	NSMutableIndexSet *selectedIndexes;
-	
-	BOOL dragEntered;
-	
-	// vars used for repeated calculations
-	int numCols;
-	float cellHeight, columnSpacing, area_w, area_h;
-	unsigned int textHeight;
-}
 @property (weak) IBOutlet id delegate;
 @property (weak, nonatomic) NSImage *loadingImage;
 
-+ (NSSize)maxCellSize;
+@property (class, readonly) NSSize maxCellSize;
 
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s;
 - (void)addImage:(NSImage *)theImage withFilename:(NSString *)s atIndex:(NSUInteger)i;
 - (void)updateImage:(NSImage *)theImage atIndex:(NSUInteger)i;
 - (BOOL)setImage:(NSImage *)theImage atIndex:(NSUInteger)i forFilename:(NSString *)s; // to be called on main thread from other thread
-- (DYMatrixState *)currentState;
+@property (nonatomic, readonly) DYMatrixState *currentState;
 - (void)removeAllImages;
 - (void)removeImageAtIndex:(NSUInteger)i;
 
-- (NSArray *)filenames;
-- (NSMutableIndexSet *)selectedIndexes;
-- (NSArray *)selectedFilenames;
-- (NSString *)firstSelectedFilename;
+@property (nonatomic, readonly) NSArray *filenames;
+@property (nonatomic, readonly) NSMutableIndexSet *selectedIndexes;
+@property (nonatomic, readonly, copy) NSArray *selectedFilenames;
+@property (nonatomic, readonly) NSString *firstSelectedFilename;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
 - (void)selectIndex:(NSUInteger)i;
 - (void)scrollToFirstSelected:(NSIndexSet *)x;
 
-- (NSUInteger)numCells;
-- (NSSize)cellSize;
+@property (nonatomic, readonly) NSUInteger numCells;
 
 // minCellWidth, cellWidth, and maxCellWidth are bound to the slider via a generic NSObjectController
 // minCellWidth is hard-coded
 // cellWidth may change dynamically
 // maxCellWidth should be bound to the corresponding controller's value, and must also be initialized separately
-- (float)maxCellWidth;
-- (float)minCellWidth;
-- (float)cellWidth;
-- (void)setCellWidth:(float)w;
-- (void)setMaxCellWidth:(float)w;
+@property (nonatomic) float maxCellWidth;
+@property (nonatomic, readonly) float minCellWidth;
+@property (nonatomic) float cellWidth;
 
-- (BOOL)showFilenames;
-- (void)setShowFilenames:(BOOL)b;
-- (BOOL)autoRotate;
-- (void)setAutoRotate:(BOOL)b;
+@property (nonatomic) BOOL showFilenames;
+@property (nonatomic) BOOL autoRotate;
 
 // these return nonmutable copies of arrays and should each be called once when moveElsewhere is called
-- (NSArray<NSURL *> *)movedUrls;
-- (NSArray<NSString *> *)originPaths;
+@property (nonatomic, readonly, copy) NSArray<NSURL *> *movedUrls;
+@property (nonatomic, readonly, copy) NSArray<NSString *> *originPaths;
 @end
 
 @interface NSObject(DYWrappingMatrixTarget)
@@ -101,6 +75,6 @@
 - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)s;
 - (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i;
 - (unsigned short)exifOrientationForFile:(NSString *)s;
-- (NSMenu *)thumbnailContextMenu;
+@property (readonly) NSMenu *thumbnailContextMenu;
 @end
 

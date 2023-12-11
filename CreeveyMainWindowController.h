@@ -1,36 +1,15 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-/* CreeveyMainWindowController */
-
 #import <Cocoa/Cocoa.h>
 
-@class DYWrappingMatrix, DYCreeveyBrowser, CreeveyController, DirBrowserDelegate;
+@class DYWrappingMatrix, DYCreeveyBrowser;
 
 @interface CreeveyMainWindowController : NSWindowController <NSWindowDelegate,NSSplitViewDelegate>
-{
-	NSMutableArray *filenames, *displayedFilenames;
-	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
-	CreeveyController * __weak appDelegate;
-	DirBrowserDelegate * __weak dirBrowserDelegate;
-	volatile char stopCaching;
-	
-	NSConditionLock *imageCacheQueueLock;
-	NSMutableArray *imageCacheQueue, *secondaryImageCacheQueue;
-	volatile BOOL imageCacheQueueRunning;
-
-	BOOL currentFilesDeletable;
-	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
-		startSlideshowWhenReady;
-	NSMutableSet *filesBeingOpened; // to be selected
-	short int sortOrder;
-	
-	short int currCat;
-}
 @property (weak) IBOutlet DYCreeveyBrowser *dirBrowser;
 @property (weak) IBOutlet NSButton *slidesBtn;
 @property (weak) IBOutlet DYWrappingMatrix *imgMatrix;
@@ -38,25 +17,22 @@
 @property (weak) IBOutlet NSTextField *bottomStatusFld;
 @property (weak) IBOutlet NSButton *subfoldersButton;
 
-//actions
 - (IBAction)setRecurseSubfolders:(id)sender;
 
 // accessors
-- (NSString *)path;
-- (NSArray *)currentSelection;
-- (NSIndexSet *)selectedIndexes;
+@property (nonatomic, readonly, copy) NSString *path;
+@property (nonatomic, readonly, copy) NSArray *currentSelection;
+@property (nonatomic, readonly) NSIndexSet *selectedIndexes;
 - (void)selectIndex:(NSUInteger)i;
-- (NSString *)firstSelectedFilename;
-- (NSArray *)displayedFilenames;
+@property (nonatomic, readonly) NSArray *displayedFilenames;
 - (NSUInteger)indexOfFilename:(NSString *)s;
-- (BOOL)currentFilesDeletable;
-- (BOOL)filenamesDone;
-- (short int)sortOrder;
-- (void)setSortOrder:(short int)n;
+@property (nonatomic, readonly) BOOL currentFilesDeletable;
+@property (nonatomic, readonly) BOOL filenamesDone;
+@property (nonatomic) short sortOrder;
 - (void)changeSortOrder:(short int)n;
-- (NSComparator)comparator;
+@property (nonatomic, readonly) NSComparator comparator;
 @property (readonly) BOOL wantsSubfolders;
-- (DYWrappingMatrix *)imageMatrix;
+@property (nonatomic, readonly) DYWrappingMatrix *imageMatrix;
 
 //other
 - (void)setDefaultPath;
@@ -69,6 +45,5 @@
 - (void)fileWasDeleted:(NSString *)s;
 - (void)filesWereUndeleted:(NSArray *)a;
 - (void)updateExifInfo;
-
 
 @end

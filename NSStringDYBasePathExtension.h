@@ -5,13 +5,9 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//  NSStringDYBasePathExtension.h
-//  creevey
-//
 //  Created by d on 2005.04.26.
 
 #import <Cocoa/Cocoa.h>
-
 
 @interface NSString (NSStringDYBasePathExtension)
 // assume basePath has trailing '/'

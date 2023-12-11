@@ -5,19 +5,15 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//  NSStringDYBasePathExtension.m
-//  creevey
-//
 //  Created by d on 2005.04.26.
 
 #import "NSStringDYBasePathExtension.h"
-
 
 @implementation NSString (NSStringDYBasePathExtension)
 // assume basePath has trailing '/'
 - (NSString *)stringByDeletingBasePath:(NSString *)basePath {
 	NSRange r = [self rangeOfString:basePath];
-	if (r.location == 0 && r.length < [self length]) {
+	if (r.location == 0 && r.length < self.length) {
 		return [self substringFromIndex:r.length];
 	}
 	return self;

@@ -62,12 +62,9 @@
 //      VDKQueue does not take this approach, but favors the "manual" method of "stop-watching-then-rewatch". 
 //
 
-
-
 #import <Foundation/Foundation.h>
 #include <sys/types.h>
 #include <sys/event.h>
-
 
 //
 //  Logical OR these values into the u_int that you pass in the -addPath:notifyingAbout: method
@@ -81,11 +78,6 @@
 #define VDKQueueNotifyAboutLinkCountChanged			NOTE_LINK		// Item's link count changed.
 #define VDKQueueNotifyAboutAccessRevocation			NOTE_REVOKE		// Access to item was revoked.
 
-#define VDKQueueNotifyDefault						(VDKQueueNotifyAboutRename | VDKQueueNotifyAboutWrite \
-                                                    | VDKQueueNotifyAboutDelete | VDKQueueNotifyAboutAttributeChange \
-                                                    | VDKQueueNotifyAboutSizeIncrease | VDKQueueNotifyAboutLinkCountChanged \
-                                                    | VDKQueueNotifyAboutAccessRevocation)
-
 //
 //  specify a delegate and implement this method to respond to kQueue events.
 //  Note the required statement! For speed, this class does not check to make sure the delegate implements this method. (When I say "required" I mean it!)
@@ -93,13 +85,8 @@
 @class VDKQueue;
 @protocol VDKQueueDelegate <NSObject>
 @required
-
 -(void) VDKQueue:(VDKQueue *)queue receivedNotification:(u_int)flags forPath:(NSString*)fpath;
-
 @end
-
-
-
 
 
 @interface VDKQueue : NSObject
@@ -109,17 +96,11 @@
 //  
 //  Warning: You must pass full, root-relative paths. Do not pass tilde-abbreviated paths or file URLs. 
 //
-- (void) addPath:(NSString *)aPath;
-- (void) addPath:(NSString *)aPath notifyingAbout:(u_int)flags;     // See note above for values to pass in "flags"
-
+- (void) addPath:(NSString *)aPath notifyingAbout:(u_int)flags; // See note above for values to pass in "flags"
 - (void) removePath:(NSString *)aPath;
 - (void) removeAllPaths;
-
-- (void) stopWatching;                                              // You must call this when you release the VDKQueue object
-
-- (NSUInteger) numberOfWatchedPaths;                                //  Returns the number of paths that this VDKQueue instance is actively watching.
-
-
+- (void) stopWatching;                                          // You must call this when you release the VDKQueue object
+@property (readonly) NSUInteger numberOfWatchedPaths;           // Returns the number of paths that this VDKQueue instance is actively watching.
 
 @property (weak) id<VDKQueueDelegate> delegate;
 

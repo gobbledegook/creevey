@@ -25,30 +25,26 @@
 #import <fcntl.h>
 #include <sys/stat.h>
 
-#pragma mark VDKQueuePathEntry
-#pragma mark -
+#pragma mark VDKQueuePathEntry -
 
 //  This is a simple model class used to hold info about each path we watch.
 @interface VDKQueuePathEntry : NSObject
-
-- (instancetype) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
-
+- (instancetype)init NS_UNAVAILABLE;
+- (instancetype)initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags NS_DESIGNATED_INITIALIZER;
 @property (copy) NSString *path;
 @property int watchedFD;
 @property u_int subscriptionFlags;
 @property uintptr_t uniqueId;
-
 @end
 
 @implementation VDKQueuePathEntry
 
 - (instancetype) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
 {
-    self = [super init];
-	if (self)
+	if (self = [super init])
 	{
 		_path = [inPath copy];
-		_watchedFD = open([_path fileSystemRepresentation], O_EVTONLY, 0);
+		_watchedFD = open(_path.fileSystemRepresentation, O_EVTONLY, 0);
 		if (_watchedFD < 0)
 		{
 			self = nil;
@@ -67,18 +63,7 @@
 @end
 
 
-
-
-
-
-
-
-
-
-
-#pragma mark -
-#pragma mark VDKQueue
-#pragma mark -
+#pragma mark - VDKQueue -
 
 @implementation VDKQueue
 {
@@ -89,13 +74,11 @@
 	BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
 }
 
-#pragma mark -
-#pragma mark INIT/DEALLOC
+#pragma mark - INIT/DEALLOC
 
 - (instancetype) init
 {
-	self = [super init];
-	if (self)
+	if (self = [super init])
 	{
 		_coreQueueFD = kqueue();
 		if (_coreQueueFD == -1)
@@ -110,7 +93,6 @@
 	return self;
 }
 
-
 - (void) dealloc
 {
 	if(close(_coreQueueFD) == -1) {
@@ -119,32 +101,19 @@
 }
 
 
-
-
-
-#pragma mark -
-#pragma mark PRIVATE METHODS
-
-- (VDKQueuePathEntry *)	addPathToQueue:(NSString *)path notifyingAbout:(u_int)flags
+- (void) addPath:(NSString *)path notifyingAbout:(u_int)flags
 {
 	static uintptr_t gUniqueID = 0;
+	if (!path) return;
 	@synchronized(self)
 	{
         // Are we already watching this path?
-		VDKQueuePathEntry *pathEntry = [_watchedPathEntries objectForKey:path];
-		
-        if (pathEntry)
-		{
+		VDKQueuePathEntry *pathEntry = _watchedPathEntries[path];
+        if (pathEntry) {
             // All flags already set?
-			if(([pathEntry subscriptionFlags] | flags) == flags)
-            {
-				return pathEntry;
-            }
-			
-			flags |= [pathEntry subscriptionFlags];
-		}
-		else
-        {
+			if ((pathEntry.subscriptionFlags | flags) == flags) return;
+			flags |= pathEntry.subscriptionFlags;
+		} else {
             pathEntry = [[VDKQueuePathEntry alloc] initWithPath:path andSubscriptionFlags:flags];
         }
         
@@ -154,11 +123,11 @@
 			struct kevent		ev;
 			EV_SET(&ev, [pathEntry watchedFD], EVFILT_VNODE, EV_ADD | EV_ENABLE | EV_CLEAR, flags, 0, (void *)gUniqueID);
 			
-			[pathEntry setSubscriptionFlags:flags];
-			[pathEntry setUniqueId:gUniqueID];
-			[_pathMap setObject:pathEntry forKey:@(gUniqueID++)];
+			pathEntry.subscriptionFlags = flags;
+			pathEntry.uniqueId = gUniqueID;
+			_pathMap[@(gUniqueID++)] = pathEntry;
 
-            [_watchedPathEntries setObject:pathEntry forKey:path];
+            _watchedPathEntries[path] = pathEntry;
             kevent(_coreQueueFD, &ev, 1, NULL, 0, &nullts);
             
 			// Start the thread that fetches and processes our events if it's not already running.
@@ -168,8 +137,6 @@
 				[NSThread detachNewThreadSelector:@selector(watcherThread:) toTarget:self withObject:nil];
 			}
         }
-        
-        return pathEntry;
     }
 }
 
@@ -185,42 +152,27 @@
 	NSLog(@"watcherThread started.");
 #endif
 	
-    while(_keepWatcherThreadRunning)
-    {
+    while(_keepWatcherThreadRunning) {
 		@autoreleasepool {
-            n = kevent(theFD, NULL, 0, &ev, 1, &timeout);
-            if (n > 0)
-            {
-                //NSLog( @"KEVENT returned %d", n );
-                if (ev.filter == EVFILT_VNODE)
-                {
-                    //NSLog( @"KEVENT filter is EVFILT_VNODE" );
-                    if (ev.fflags)
-                    {
-                        //NSLog( @"KEVENT flags are set" );
-                        
-						uintptr_t uid = (uintptr_t)ev.udata;
-						VDKQueuePathEntry *pe;
-						@synchronized(self)
-						{
-							pe = [_pathMap objectForKey:@(uid)];
-						}
-                        if (pe)
-                        {
-                            NSString *fpath = pe.path;
-                            if (!fpath) continue;
-                            
-                            // call the delegate method on the main thread.
-							u_int flags = ev.fflags;
-							dispatch_async(dispatch_get_main_queue(), ^{
-								[_delegate VDKQueue:self receivedNotification:flags forPath:fpath];
-							});
-                        }
-                    }
-                }
-            }
-        }
-    }
+			n = kevent(theFD, NULL, 0, &ev, 1, &timeout);
+			if (n > 0 && ev.filter == EVFILT_VNODE && ev.fflags) {
+				uintptr_t uid = (uintptr_t)ev.udata;
+				VDKQueuePathEntry *pe;
+				@synchronized(self) {
+					pe = _pathMap[@(uid)];
+				}
+				if (pe) {
+					NSString *fpath = pe.path;
+					if (!fpath) continue;
+
+					// call the delegate method on the main thread.
+					dispatch_async(dispatch_get_main_queue(), ^{
+						[_delegate VDKQueue:self receivedNotification:ev.fflags forPath:fpath];
+					});
+				}
+			}
+		}
+	}
     
 #if DEBUG_LOG_THREAD_LIFETIME
 	NSLog(@"watcherThread finished.");
@@ -229,52 +181,14 @@
 }
 
 
-
-
-
-
-#pragma mark -
-#pragma mark PUBLIC METHODS
-
-
-- (void) addPath:(NSString *)aPath
-{
-    if (!aPath) return;
-    @synchronized(self)
-    {
-        VDKQueuePathEntry *entry = [_watchedPathEntries objectForKey:aPath];
-        
-        // Only add this path if we don't already have it.
-        if (!entry)
-        {
-            [self addPathToQueue:aPath notifyingAbout:VDKQueueNotifyDefault];
-        }
-    }
-}
-
-
-- (void) addPath:(NSString *)aPath notifyingAbout:(u_int)flags
-{
-    if (!aPath) return;
-    @synchronized(self)
-    {
-        VDKQueuePathEntry *entry = [_watchedPathEntries objectForKey:aPath];
-        
-        // Only add this path if we don't already have it.
-        if (!entry)
-        {
-            [self addPathToQueue:aPath notifyingAbout:flags];
-        }
-    }
-}
-
+#pragma mark - PUBLIC METHODS
 
 - (void) removePath:(NSString *)aPath
 {
     if (!aPath) return;
     @synchronized(self)
 	{
-		VDKQueuePathEntry *entry = [_watchedPathEntries objectForKey:aPath];
+		VDKQueuePathEntry *entry = _watchedPathEntries[aPath];
         
         // Remove it only if we're watching it.
         if (entry) {
@@ -318,14 +232,10 @@
     
     @synchronized(self)
     {
-        count = [_watchedPathEntries count];
+        count = _watchedPathEntries.count;
     }
     
     return count;
 }
 
-
-
-
 @end
-

@@ -5,13 +5,10 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//  NSIndexSetSymDiffExtension.h
 //  Created by d on 2005.06.13.
 
 #import <Cocoa/Cocoa.h>
 
-
 @interface NSMutableIndexSet (SymDiffExtension)
-
 - (void)symmetricDifference:(NSIndexSet *)setB;
 @end

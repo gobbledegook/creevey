@@ -1,4 +1,4 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
@@ -11,7 +11,7 @@
 
 static NSString * const _Volumes = @"/Volumes";
 
-NSString *defaultPath(void) {
+static NSString *defaultPath(void) {
 	NSFileManager *fm = NSFileManager.defaultManager;
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	NSString *path = [u stringForKey:@"picturesFolderPath"];
@@ -49,7 +49,7 @@ NSString *defaultPath(void) {
     return self;
 }
 - (void)dealloc {
-	NSNotificationCenter *w = [NSWorkspace.sharedWorkspace notificationCenter];
+	NSNotificationCenter *w = NSWorkspace.sharedWorkspace.notificationCenter;
 	[w removeObserver:_mountVolumeObserver];
 	[w removeObserver:_unmountVolumeObserver];
 	[w removeObserver:_renameVolumeObserver];
@@ -59,7 +59,7 @@ NSString *defaultPath(void) {
 - (void)awakeFromNib {
 	DirBrowserDelegate * __weak zelf = self;
 	NSBrowser * __weak b = _b;
-	NSNotificationCenter *w = [NSWorkspace.sharedWorkspace notificationCenter];
+	NSNotificationCenter *w = NSWorkspace.sharedWorkspace.notificationCenter;
 	_mountVolumeObserver = [w addObserverForName:NSWorkspaceDidMountNotification object:nil queue:nil usingBlock:^(NSNotification *n) {
 		[b reloadColumn:0];
 	}];
@@ -99,7 +99,7 @@ NSString *defaultPath(void) {
 	if (isRenamed) {
 		// check if the "rename" is actually a move-to-trash
 		NSString *newPath = currFileRef.path;
-		NSString *trashPath = [[NSFileManager.defaultManager URLsForDirectory:NSTrashDirectory inDomains:NSLocalDomainMask][0] path];
+		NSString *trashPath = ([NSFileManager.defaultManager URLsForDirectory:NSTrashDirectory inDomains:NSLocalDomainMask][0]).path;
 		if ([newPath hasPrefix:trashPath]) {
 			isTrashed = YES;
 		}
@@ -108,9 +108,9 @@ NSString *defaultPath(void) {
 	// if a directory was renamed, currFileRef should be able to resolve it to the new path
 	if (!isRenamed || isTrashed) {
 		// if we get here, something was deleted (or worse, expelled)
-		newPath = [fpath stringByDeletingLastPathComponent];
+		newPath = fpath.stringByDeletingLastPathComponent;
 		while (![NSFileManager.defaultManager fileExistsAtPath:newPath] && newPath.length > 1) {
-			newPath = [fpath stringByDeletingLastPathComponent];
+			newPath = fpath.stringByDeletingLastPathComponent;
 		}
 		if (newPath.length == 1) newPath = defaultPath();
 	}
@@ -137,14 +137,14 @@ NSString *defaultPath(void) {
 	if ([rootVolumeName isEqualToString:s])
 		return @"/";
 	if ([rootVolumeName isEqualToString:[_b pathToColumn:1]]) {
-		return [s substringFromIndex:[rootVolumeName length]];
+		return [s substringFromIndex:rootVolumeName.length];
 	}
 	return [_Volumes stringByAppendingString:s];
 }
 
 -(NSString*)path {
 	NSString *s = [_b path];
-	if (![_b isLoaded]) return s;
+	if (!_b.loaded) return s;
 	return [self browserpath2syspath:s];
 }
 
@@ -166,7 +166,7 @@ NSString *defaultPath(void) {
 			s = [rootVolumeName stringByAppendingString:aPath];
 	}
 	// save currPath here so browser can look ahead for invisible directories when loading
-	currBrowserPathComponents = [s pathComponents];
+	currBrowserPathComponents = s.pathComponents;
 	if (!browserInited) {
 		[_b selectRow:0 inColumn:0];
 		browserInited = YES;
@@ -185,14 +185,14 @@ NSString *defaultPath(void) {
 // puts array of directory names located in path
 // into our display and internal arrays
 - (NSInteger)loadDir:(NSString *)path inCol:(NSInteger)n {
-	NSFileManager *fm = [NSFileManager defaultManager];
-	while ([cols count] < n+1) {
+	NSFileManager *fm = NSFileManager.defaultManager;
+	while (cols.count < n+1) {
 		[cols addObject:[NSMutableArray arrayWithCapacity:15]];
 		[colsInternal addObject:[NSMutableArray arrayWithCapacity:15]];
 	}
 	NSMutableArray *sortArray = [NSMutableArray arrayWithCapacity:15];
 	NSString *nextColumn = nil;
-	if ([currBrowserPathComponents count] > n+1)
+	if (currBrowserPathComponents.count > n+1)
 		nextColumn = currBrowserPathComponents[n+1];
 	
 	// ignore NSError here, forin can handle both nil and empty arrays
@@ -228,7 +228,7 @@ NSString *defaultPath(void) {
 		[displayNames addObject:nameArray[0]];
 		[filesystemNames addObject:nameArray[1]];
 	}
-	return [displayNames count];
+	return displayNames.count;
 }
 
 #pragma mark NSBrowser delegate methods
@@ -247,7 +247,7 @@ NSString *defaultPath(void) {
 #pragma mark DYCreeveyBrowserDelegate methods
 - (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(NSInteger)column {
 	NSMutableArray *a = cols[column]; // use cols, not colsInternal here, since we sort by display names
-	NSUInteger i, n = [a count];
+	NSUInteger i, n = a.count;
 	NSUInteger inputLength = s.length;
 	for (i=0; i<n; ++i) {
 		NSString *label = a[i];
@@ -272,18 +272,18 @@ NSString *defaultPath(void) {
 		// keep removing path components from the old path (and deregistering them from kqueue)
 		// until you find a directory that is also a directory on the new path (could be root, newPath exactly, or some parent directory of both)
 		while (!([newPath hasPrefix:s] &&
-				 ([s length] == 1 // @"/"
-				  || [newPath length] == [s length]
-				  || [newPath characterAtIndex:[s length]] == '/'))) {
+				 (s.length == 1 // @"/"
+				  || newPath.length == s.length
+				  || [newPath characterAtIndex:s.length] == '/'))) {
 			[kq removePath:s];
-			s = [s stringByDeletingLastPathComponent];
+			s = s.stringByDeletingLastPathComponent;
 		}
 	}
 	// s is now the shared prefix
 	// we will register with kqueue all the new path components
 	// but skip anything directly inside /Volumes. We will use NSWorkspace notifications to watch for mounted/renamed volumes instead.
 	if ([s isEqualToString:@"/"] && [newPath hasPrefix:@"/Volumes/"]) {
-		NSRange r = [newPath rangeOfString:@"/" options:0 range:NSMakeRange(9,[newPath length]-9)]; // 9 is length of @"/Volumes/"
+		NSRange r = [newPath rangeOfString:@"/" options:0 range:NSMakeRange(9,newPath.length-9)]; // 9 is length of @"/Volumes/"
 		if (r.location != NSNotFound)
 			s = [newPath substringToIndex:r.location];
 		else
@@ -292,7 +292,7 @@ NSString *defaultPath(void) {
 	NSString *newPathTmp = newPath;
 	while (!([newPathTmp isEqualToString:s])) {
 		[kq addPath:newPathTmp notifyingAbout:NOTE_RENAME|NOTE_DELETE];
-		newPathTmp = [newPathTmp stringByDeletingLastPathComponent];
+		newPathTmp = newPathTmp.stringByDeletingLastPathComponent;
 	}
 
 	self.currPath = newPath;

@@ -1,15 +1,11 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
-//
-//  DYImageCache.h
-//  creevey
-//
+
 //  Created by d on 2005.04.15.
-//
 
 #import <Cocoa/Cocoa.h>
 
@@ -25,7 +21,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 @property (readonly, nonatomic) NSString *path;
 @property (readonly, nonatomic) NSDate *modTime;
 - (instancetype)initWithPath:(NSString *)s NS_DESIGNATED_INITIALIZER;
-- (NSString *)pixelSizeAsString;
+@property (nonatomic, readonly, copy) NSString *pixelSizeAsString;
 @end
 
 
@@ -33,9 +29,8 @@ NSString *FileSize2String(unsigned long long fileSize);
 @property (nonatomic) BOOL rotatable; // default is NO
 - (instancetype)initWithCapacity:(NSUInteger)n NS_DESIGNATED_INITIALIZER;
 
-- (float)boundingWidth;
-- (NSSize)boundingSize;
-- (void)setBoundingSize:(NSSize)aSize;
+@property (nonatomic, readonly) float boundingWidth;
+@property (nonatomic) NSSize boundingSize;
 - (void)setInterpolationType:(NSImageInterpolation)t;
 
 - (void)cacheFile:(NSString *)s;

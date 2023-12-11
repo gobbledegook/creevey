@@ -1,12 +1,10 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2012 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-//  DYExiftags.m
-//
 //  Created by Dominic Yu 2005 July 12
 
 #import "DYExiftags.h"
@@ -165,7 +163,7 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 	FILE * input_file;
 	
 	/* Open files first, so setjmp can assume they're open. */
-	if ((input_file = fopen([aPath fileSystemRepresentation], "rb")) == NULL) {
+	if ((input_file = fopen(aPath.fileSystemRepresentation, "rb")) == NULL) {
 		return nil;
 	}
 	srcinfo.err = jpeg_std_error(&jsrcerr.pub);
@@ -208,8 +206,8 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 				}
 			}
 			exiffree(t);
-			if ([result length]) // in case APP1 header is not EXIF!
-				[result deleteCharactersInRange:NSMakeRange([result length]-2,2)];
+			if (result.length) // in case APP1 header is not EXIF!
+				[result deleteCharactersInRange:NSMakeRange(result.length-2,2)];
 			    // delete two trailing newlines (see printprops)
 			    // this is not run for jpeg comments (duh)
 		}
@@ -242,7 +240,7 @@ unsigned char *exifHeaderForFile(NSString *aPath, unsigned *len) {
 	FILE * input_file;
 	
 	/* Open files first, so setjmp can assume they're open. */
-	if ((input_file = fopen([aPath fileSystemRepresentation], "rb")) == NULL)
+	if ((input_file = fopen(aPath.fileSystemRepresentation, "rb")) == NULL)
 		return NULL;
 	srcinfo.err = jpeg_std_error(&jsrcerr.pub);
 	jsrcerr.pub.error_exit = _my_error_handler;

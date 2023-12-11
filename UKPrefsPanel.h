@@ -34,26 +34,11 @@
 
 */
 
-	
-
-/* -----------------------------------------------------------------------------
-	Headers:
-   -------------------------------------------------------------------------- */
-
 #import <Foundation/Foundation.h>
-
-
-/* -----------------------------------------------------------------------------
-	Classes:
-   -------------------------------------------------------------------------- */
 
 @interface UKPrefsPanel : NSObject <NSToolbarDelegate>
 @property (nonatomic, weak) NSTabView *tabView; ///< The tabless tab-view containing the different pref panes. (you should just hook this up in IB)
 
 // Action for hooking up this object and the menu item:
--(IBAction)		orderFrontPrefsPanel: (id)sender;
-
-// You don't have to care about these:
--(IBAction)	changePanes: (id)sender;
-
+-(IBAction) orderFrontPrefsPanel: (id)sender;
 @end

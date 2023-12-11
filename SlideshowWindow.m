@@ -1,11 +1,9 @@
-//Copyright 2005 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
-
-#include "stdlib.h"
 
 #import "DYJpegtran.h"
 #import "DYExiftags.h"
@@ -18,7 +16,7 @@
 #import "DYFileWatcher.h"
 
 static BOOL UsingMagicMouse(NSEvent *e) {
-	return [e phase] != NSEventPhaseNone || [e momentumPhase] != NSEventPhaseNone;
+	return e.phase != NSEventPhaseNone || e.momentumPhase != NSEventPhaseNone;
 }
 
 @interface SlideshowWindow () <DYFileWatcherDelegate>
@@ -45,6 +43,31 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 @implementation SlideshowWindow
 {
+	NSMutableSet * __strong *cats;
+	DYImageView *imgView;
+	NSTextField *infoFld, *catsFld; BOOL hideInfoFld, moreExif;
+	NSTextView *exifFld;
+	
+	DYImageCache *imgCache;
+	
+	NSTimeInterval timerIntvl; BOOL timerPaused;
+	NSTimer *autoTimer;
+	
+	NSMutableDictionary *rotations, *zooms, *flips;
+	
+	NSString *basePath;
+	NSScreen *oldScreen;
+	volatile NSUInteger currentIndex;
+	NSUInteger lastIndex; // for outside access to last slide shown
+	
+	NSTextView *helpFld;
+	NSImageView *loopImageView;
+	
+	BOOL loopMode, randomMode, rerandomizeOnLoop, autoRotate;
+	unsigned char keyIsRepeating;
+	
+	BOOL mouseDragged;
+
 	DYRandomizableArray<NSString *> *filenames;
 	NSOperationQueue *_upcomingQueue;
 	DYFileWatcher *_fileWatcher;
@@ -52,7 +75,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 + (void)initialize {
 	if (self != [SlideshowWindow class]) return;
-	[[NSUserDefaults standardUserDefaults] registerDefaults:@{@"DYSlideshowWindowVisibleFields": @0}];
+	[NSUserDefaults.standardUserDefaults registerDefaults:@{@"DYSlideshowWindowVisibleFields": @0}];
 }
 
 #define MAX_CACHED 15
@@ -72,7 +95,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		_upcomingQueue = [[NSOperationQueue alloc] init];
 		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 		
- 		[self setBackgroundColor:[NSColor blackColor]];
+ 		self.backgroundColor = NSColor.blackColor;
 		[self setOpaque:NO];
 		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
 		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
@@ -84,38 +107,38 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (void)awakeFromNib {
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
-	[[self contentView] addSubview:imgView];
-	[imgView setFrame:[self contentView].frame];
+	[self.contentView addSubview:imgView];
+	imgView.frame = self.contentView.frame;
 	imgView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 	
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld];
 	infoFld.autoresizingMask = NSViewMaxXMargin|NSViewMaxYMargin;
-	[infoFld setBackgroundColor:[NSColor grayColor]];
+	infoFld.backgroundColor = NSColor.grayColor;
 	[infoFld setBezeled:NO];
 	[infoFld setEditable:NO];
 	
 	catsFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,imgView.bounds.size.height-20,300,20)];
 	[imgView addSubview:catsFld];
 	catsFld.autoresizingMask = NSViewMaxXMargin|NSViewMinYMargin;
-	[catsFld setBackgroundColor:[NSColor grayColor]];
+	catsFld.backgroundColor = NSColor.grayColor;
 	[catsFld setBezeled:NO];
 	[catsFld setEditable:NO]; // **
 	[catsFld setHidden:YES];
 	
-	NSSize s = [imgView bounds].size;
+	NSSize s = imgView.bounds.size;
 	NSScrollView *sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(s.width-360,0,360,s.height-20)];
 	[imgView addSubview:sv];
-	[sv setAutoresizingMask:NSViewHeightSizable | NSViewMinXMargin];
+	sv.autoresizingMask = NSViewHeightSizable | NSViewMinXMargin;
 	
-	exifFld = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,[sv contentSize].width,20)];
-	[sv setDocumentView:exifFld];
+	exifFld = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,sv.contentSize.width,20)];
+	sv.documentView = exifFld;
 	exifFld.autoresizingMask = NSViewHeightSizable | NSViewWidthSizable | NSViewMinXMargin;
 
 	[sv setDrawsBackground:NO];
 	[sv setHasVerticalScroller:YES];
-	[sv setVerticalScroller:[[NSScroller alloc] init]];
-	[[sv verticalScroller] setControlSize:NSControlSizeSmall];
+	sv.verticalScroller = [[NSScroller alloc] init];
+	sv.verticalScroller.controlSize = NSControlSizeSmall;
 	[sv setAutohidesScrollers:YES];
 	//[exifFld setEditable:NO];
 	[exifFld setDrawsBackground:NO];
@@ -123,7 +146,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	//[exifFld setVerticallyResizable:NO];
 	[sv setHidden:YES];
 	
-	switch ([[NSUserDefaults standardUserDefaults] integerForKey:@"DYSlideshowWindowVisibleFields"]) {
+	switch ([NSUserDefaults.standardUserDefaults integerForKey:@"DYSlideshowWindowVisibleFields"]) {
 		case 0:
 			hideInfoFld = YES;
 			break;
@@ -183,7 +206,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[self saveZoomInfo]; // in case we're called without endSlideshow being called
 	
 	if (s != basePath) {
-		if ([s characterAtIndex:[s length]-1] != '/')
+		if ([s characterAtIndex:s.length-1] != '/')
 			basePath = [s stringByAppendingString:@"/"];
 		else
 			basePath = [s copy];
@@ -200,25 +223,25 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (void)configureScreen
 {
 	NSScreen *mainScreen = [NSScreen mainScreen];
-	NSRect screenRect = [mainScreen frame];
+	NSRect screenRect = mainScreen.frame;
 	NSRect boundingRect = screenRect;
 	if (@available(macOS 12.0, *)) {
-		CGFloat inset = [mainScreen safeAreaInsets].top;
+		CGFloat inset = mainScreen.safeAreaInsets.top;
 		if (inset) {
 			boundingRect.size.height -= inset;
 		}
 	}
 	oldScreen = mainScreen;
-	NSSize oldSize = [imgCache boundingSize];
+	NSSize oldSize = imgCache.boundingSize;
 	if (oldSize.width < boundingRect.size.width
 		|| oldSize.height < boundingRect.size.height) {
 		[imgCache removeAllImages];
 	}
-	[imgCache setBoundingSize:boundingRect.size];
+	imgCache.boundingSize = boundingRect.size;
 	if (_fullscreenMode) {
 		[self setFrame:screenRect display:NO];
-		boundingRect.origin = [imgView frame].origin;
-		[imgView setFrame:boundingRect];
+		boundingRect.origin = imgView.frame.origin;
+		imgView.frame = boundingRect;
 	} else {
 		NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:@"DYSlideshowWindowFrame"];
 		NSRect r;
@@ -231,13 +254,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 			r.origin.y = screenRect.size.height;
 		}
 		[self setFrame:r display:NO];
-		[imgView setFrame:self.contentLayoutRect];
+		imgView.frame = self.contentLayoutRect;
 	}
 }
 
 - (void)resetScreen
 {
-	if ([[oldScreen deviceDescription][@"NSScreenNumber"] isNotEqualTo:[[self screen] deviceDescription][@"NSScreenNumber"]]) {
+	if ([oldScreen.deviceDescription[@"NSScreenNumber"] isNotEqualTo:self.screen.deviceDescription[@"NSScreenNumber"]]) {
 		[self configureScreen];
 		[self displayImage];
 	}
@@ -278,7 +301,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		return;
 	}
 	
-	if (![self isVisible]) {
+	if (!self.visible) {
 		[self configureScreen];
 	}
 	
@@ -291,9 +314,9 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	currentIndex = startIndex;
 	[self setTimer:timerIntvl]; // reset the timer, in case running
 	if (helpFld) [helpFld setHidden:YES];
-	[exifFld setString:@""];
+	exifFld.string = @"";
 	[imgCache beginCaching];
-	[imgView setImage:nil];
+	imgView.image = nil;
 	[self displayImage];
 	[self makeKeyAndOrderFront:nil];
 
@@ -316,13 +339,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (void)becomeMainWindow { // need this when switching apps
 	if (_fullscreenMode)
-		[NSApp setPresentationOptions:NSApplicationPresentationHideDock|NSApplicationPresentationAutoHideMenuBar];
+		NSApp.presentationOptions = NSApplicationPresentationHideDock|NSApplicationPresentationAutoHideMenuBar;
 	[super becomeMainWindow];
 }
 
 - (void)resignMainWindow {
 	if (_fullscreenMode)
-		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
+		NSApp.presentationOptions = NSApplicationPresentationDefault;
 	[super resignMainWindow];
 }
 
@@ -331,7 +354,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	// As of 10.15.1(?) when the menubar hides, the window will get moved up by the height of the menubar.
 	// This should be the correct fix for that.
 	if (_fullscreenMode)
-		return [super constrainFrameRect:[[self screen] frame] toScreen:screen];
+		return [super constrainFrameRect:self.screen.frame toScreen:screen];
 	return [super constrainFrameRect:frameRect toScreen:screen];
 }
 
@@ -397,7 +420,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 						target:self
 					  selector:@selector(nextTimer:)
 					  userInfo:nil repeats:NO];
-		[autoTimer setTolerance:0.2];
+		autoTimer.tolerance = 0.2;
 	}
 }
 
@@ -421,8 +444,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 #pragma mark display stuff
 - (float)calcZoom:(NSSize)sourceSize {
 	// calc here b/c larger images have already been cached & shrunk!
-	NSRect boundsRect = [imgView convertRect:[imgView bounds] toView:nil]; // get pixels, not points
-	int rotation = [imgView rotation];
+	NSRect boundsRect = [imgView convertRect:imgView.bounds toView:nil]; // get pixels, not points
+	int rotation = imgView.rotation;
 	float tmp;
 	if (rotation == 90 || rotation == -90) {
 		tmp = boundsRect.size.width;
@@ -430,7 +453,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		boundsRect.size.height = tmp;
 	}
 	
-	if (![imgView scalesUp]
+	if (!imgView.scalesUp
 		&& sourceSize.width <= boundsRect.size.width
 		&& sourceSize.height <= boundsRect.size.height)
 	{
@@ -448,17 +471,17 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSMutableAttributedString *attStr;
 	attStr = Fileinfo2EXIFString(filenames[currentIndex],
 								 imgCache,moreExif);
-	NSRange r = NSMakeRange(0,[attStr length]);
+	NSRange r = NSMakeRange(0,attStr.length);
 	NSShadow *shdw = [[NSShadow alloc] init];
-	[shdw setShadowColor:[NSColor blackColor]];
-	[shdw setShadowBlurRadius:7]; // 7 or 8 is good
+	shdw.shadowColor = NSColor.blackColor;
+	shdw.shadowBlurRadius = 7; // 7 or 8 is good
 	[attStr addAttribute:NSShadowAttributeName
 				   value:shdw
 				   range:r];
-	[exifFld replaceCharactersInRange:NSMakeRange(0,[[exifFld string] length])
-							  withRTF:[attStr RTFFromRange:NSMakeRange(0,[attStr length])
+	[exifFld replaceCharactersInRange:NSMakeRange(0,exifFld.string.length)
+							  withRTF:[attStr RTFFromRange:NSMakeRange(0,attStr.length)
 										documentAttributes:@{}]];
-	[exifFld setTextColor:[NSColor whiteColor]];
+	exifFld.textColor = NSColor.whiteColor;
 }
 
 
@@ -473,15 +496,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 		default: dir = @"";
 	}
 	if (r < 0) r = -r;
-	float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
-	[infoFld setStringValue:[NSString stringWithFormat:@"[%lu/%lu] %@ - %@ - %@%@%@%@ %@",
+	float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
+	infoFld.stringValue = [NSString stringWithFormat:@"[%lu/%lu] %@ - %@ - %@%@%@%@ %@",
 		currentIndex+1, (unsigned long)filenames.count,
 		[self currentShortFilename],
 		FileSize2String(info->fileSize),
-		[info pixelSizeAsString],
-		(zoom != 1.0 || [imgView zoomMode]) ? [NSString stringWithFormat:
+		info.pixelSizeAsString,
+		(zoom != 1.0 || imgView.zoomMode) ? [NSString stringWithFormat:
 			@" @ %.0f%%", zoom*100] : @"",
-		[imgView isImageFlipped] ? NSLocalizedString(@" flipped", @"") : @"",
+						   imgView.imageFlipped ? NSLocalizedString(@" flipped", @"") : @"",
 		r ? [NSString stringWithFormat:
 			NSLocalizedString(@" rotated%@ %i%C", @""), dir, r, 0xb0] : @"", //degrees
 		timerIntvl && timerPaused ? [NSString stringWithFormat:@" %@(%.1f%@) %@",
@@ -489,14 +512,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 			timerIntvl,
 			NSLocalizedString(@"seconds", @""),
 			NSLocalizedString(@"PAUSED", @"")]
-								  : @""]];
+								  : @""];
 	[infoFld sizeToFit];
 //	[infoFld setNeedsDisplay:YES];
 	[imgView setNeedsDisplay:YES]; // **
 }
 
 - (void)updateInfoFld {
-	[self updateInfoFldWithRotation:[imgView rotation]];
+	[self updateInfoFldWithRotation:imgView.rotation];
 }
 
 - (void)redisplayImage {
@@ -526,8 +549,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[infoFld setHidden:NO];
 		[infoFld setStringValue:NSLocalizedString(@"End of slideshow (last file was deleted)", @"")];
 		[infoFld sizeToFit];
-		[exifFld setString:@""];
-		[imgView setImage:nil];
+		exifFld.string = @"";
+		imgView.image = nil;
 		return;
 	}
 	NSString *theFile = filenames[currentIndex];
@@ -537,13 +560,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 		//NSLog(@"displaying %d", currentIndex);
 		NSNumber *rot = rotations[theFile];
 		DYImageViewZoomInfo *zoomInfo = zooms[theFile];
-		int r = rot ? [rot intValue] : 0;
+		int r = rot ? rot.intValue : 0;
 		BOOL imgFlipped = [flips[theFile] boolValue];
 		
 		if (hideInfoFld) [infoFld setHidden:YES]; // this must happen before setImage, for redraw purposes
-		[imgView setImage:img];
-		if (r) [imgView setRotation:r];
-		if (imgFlipped) [imgView setFlip:YES];
+		imgView.image = img;
+		if (r) imgView.rotation = r;
+		if (imgFlipped) imgView.imageFlipped = YES;
 		// ** see keyDown for specifics
 		// if zoomed in, we need to set a different image
 		// here, copy-pasted from keyDown
@@ -553,29 +576,29 @@ scheduledTimerWithTimeInterval:timerIntvl
 			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
 			rotations[theFile] = @(r);
 			flips[theFile] = @(imgFlipped);
-			[imgView setRotation:r];
-			[imgView setFlip:imgFlipped];
+			imgView.rotation = r;
+			imgView.imageFlipped = imgFlipped;
 		}
-		if (zoomInfo || ([imgView showActualSize] &&
-						 !(info->pixelSize.width < [imgView bounds].size.width &&
-						   info->pixelSize.height < [imgView bounds].size.height))) {
+		if (zoomInfo || (imgView.showActualSize &&
+						 !(info->pixelSize.width < imgView.bounds.size.width &&
+						   info->pixelSize.height < imgView.bounds.size.height))) {
 			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(theFile)]
 					  zooming:zoomInfo ? DYImageViewZoomModeManual : DYImageViewZoomModeActualSize];
-			if (zoomInfo) [imgView setZoomInfo:zoomInfo];
+			if (zoomInfo) imgView.zoomInfo = zoomInfo;
 		}
 		[self updateInfoFldWithRotation:r];
-		if (![[exifFld enclosingScrollView] isHidden]) [self updateExifFld];
+		if (!exifFld.enclosingScrollView.hidden) [self updateExifFld];
 		if (timerIntvl) [self runTimer];
 	} else {
 		if (hideInfoFld) [infoFld setHidden:NO];
-		[infoFld setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Loading [%i/%i] %@...", @""),
-			(unsigned int)currentIndex+1, (unsigned int)filenames.count, [self currentShortFilename]]];
+		infoFld.stringValue = [NSString stringWithFormat:NSLocalizedString(@"Loading [%i/%i] %@...", @""),
+			(unsigned int)currentIndex+1, (unsigned int)filenames.count, [self currentShortFilename]];
 		[infoFld sizeToFit];
 		return;
 	}
 	if (keyIsRepeating) return; // don't bother precaching if we're fast-forwarding anyway
 
-	if ([self isMainWindow] && ![imgView dragMode])
+	if (self.isMainWindow && !imgView.dragMode)
 		[NSCursor setHiddenUntilMouseMoves:YES];
 
 	short int i;
@@ -591,23 +614,23 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)showLoopAnimation {
 	if (!loopImageView) {
 		NSImage *loopImage = [NSImage imageNamed:@"loop_forward.tiff"];
-		NSSize s = [loopImage size];
+		NSSize s = loopImage.size;
 		NSRect r;
 		r.size = s;
-		s = [[self contentView] frame].size;
+		s = self.contentView.frame.size;
 		r.origin.x = (s.width - r.size.width)/2;
 		r.origin.y = (s.height - r.size.height)/2;
 
 		loopImageView = [[NSImageView alloc] initWithFrame:NSIntegralRect(r)];
-		[[self contentView] addSubview:loopImageView];
-		[loopImageView setImage:loopImage];
+		[self.contentView addSubview:loopImageView];
+		loopImageView.image = loopImage;
 	}
 	[loopImageView setHidden:NO];
 
 	NSDictionary *viewDict = @{ NSViewAnimationTargetKey: loopImageView, NSViewAnimationEffectKey: NSViewAnimationFadeOutEffect };
     NSViewAnimation *theAnim = [[NSViewAnimation alloc] initWithViewAnimations:@[viewDict]];
-	[theAnim setDuration:0.9];
-    [theAnim setAnimationCurve:NSAnimationEaseIn];
+	theAnim.duration = 0.9;
+    theAnim.animationCurve = NSAnimationEaseIn;
 
     [theAnim startAnimation];
 }
@@ -670,8 +693,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)saveZoomInfo {
 	if (currentIndex == filenames.count) return;
-	if ([imgView zoomInfoNeedsSaving])
-		zooms[filenames[currentIndex]] = [imgView zoomInfo];
+	if (imgView.zoomInfoNeedsSaving)
+		zooms[filenames[currentIndex]] = imgView.zoomInfo;
 }
 
 - (void)setRotation:(int)n {
@@ -694,19 +717,19 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)toggleExif {
-	[[exifFld enclosingScrollView] setHidden:![[exifFld enclosingScrollView] isHidden]];
-	if (![[exifFld enclosingScrollView] isHidden])
+	exifFld.enclosingScrollView.hidden = !exifFld.enclosingScrollView.hidden;
+	if (!exifFld.enclosingScrollView.hidden)
 		[self updateExifFld];
 }
 
 - (void)toggleHelp {
 	if (!helpFld) {
 		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect];
-		[[self contentView] addSubview:helpFld];
+		[self.contentView addSubview:helpFld];
 		if (![helpFld readRTFDFromFile:
-			[[NSBundle mainBundle] pathForResource:@"creeveyhelp" ofType:@"rtf"]])
+			[NSBundle.mainBundle pathForResource:@"creeveyhelp" ofType:@"rtf"]])
 			NSLog(@"couldn't load cheat sheet!");
-		[helpFld setBackgroundColor:[NSColor lightGrayColor]];
+		helpFld.backgroundColor = NSColor.lightGrayColor;
 		[helpFld setSelectable:NO];
 //		NSLayoutManager *lm = [helpFld layoutManager];
 //		NSRange rnge = [lm glyphRangeForCharacterRange:NSMakeRange(0,[[helpFld textStorage] length])
@@ -716,17 +739,17 @@ scheduledTimerWithTimeInterval:timerIntvl
 //																   effectiveRange:NULL]].size;
 //			//[[helpFld textStorage] size];
 //		NSLog(NSStringFromRange(rnge));
-		NSSize s = [[helpFld textStorage] size];
+		NSSize s = [helpFld.textStorage size];
 		NSRect r = NSMakeRect(0,0,s.width+10,s.height);
 		// width must be bigger than text, or wrappage will occur
-		s = [[self contentView] frame].size;
+		s = self.contentView.frame.size;
 		r.origin.x = s.width - r.size.width - 50;
 		r.origin.y = s.height - r.size.height - 55;
-		[helpFld setFrame:NSIntegralRect(r)];
+		helpFld.frame = NSIntegralRect(r);
 		helpFld.autoresizingMask = NSViewMinXMargin|NSViewMinYMargin;
 		return;
 	}
-	[helpFld setHidden:![helpFld isHidden]];
+	helpFld.hidden = !helpFld.hidden;
 }
 
 #pragma mark event stuff
@@ -734,7 +757,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)keyUp:(NSEvent *)e {
 	if (keyIsRepeating) {
 		keyIsRepeating = 0;
-		switch ([[e characters] characterAtIndex:0]) {
+		switch ([e.characters characterAtIndex:0]) {
 			case ' ':
 			case NSRightArrowFunctionKey:
 			case NSDownArrowFunctionKey:
@@ -750,10 +773,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 }
 - (void)keyDown:(NSEvent *)e {
-	if ([[e characters] length] == 0) return; // avoid exception on deadkeys
-	unichar c = [[e characters] characterAtIndex:0];
+	if (e.characters.length == 0) return; // avoid exception on deadkeys
+	unichar c = [e.characters characterAtIndex:0];
 	if (c >= '1' && c <= '9') {
-		if (([e modifierFlags] & NSEventModifierFlagNumericPad) != 0 && [imgView zoomMode]) {
+		if ((e.modifierFlags & NSEventModifierFlagNumericPad) != 0 && imgView.zoomMode) {
 			if (c == '5') {
 				NSBeep();
 			} else {
@@ -761,8 +784,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 				c -= '0';
 				if (c<=3) y = 1; else if (c>=7) y = -1; else y = 0;
 				if (c%3 == 0) x = -1; else if (c%3 == 1) x = 1; else x=0;
-				[imgView fakeDragX:([imgView bounds].size.width/2)*x
-								 y:([imgView bounds].size.height/2)*y];
+				[imgView fakeDragX:(imgView.bounds.size.width/2)*x
+								 y:(imgView.bounds.size.height/2)*y];
 			}
 		} else {
 			if (timerIntvl == 0 || timerPaused) [self jump:1];
@@ -778,14 +801,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
 		if (currentIndex == filenames.count) { NSBeep(); return; }
 		[self assignCat:c - NSF1FunctionKey + 1
-				 toggle:([e modifierFlags] & NSEventModifierFlagCommand) != 0];
+				 toggle:(e.modifierFlags & NSEventModifierFlagCommand) != 0];
 		//NSLog(@"got cat %i", c - NSF1FunctionKey + 1);
 		return;
 	}
-	if ([e isARepeat] && keyIsRepeating < MAX_REPEATING_CACHED) {
+	if (e.ARepeat && keyIsRepeating < MAX_REPEATING_CACHED) {
 		keyIsRepeating++;
 	}
-	if (c == ' ' && (([e modifierFlags] & NSEventModifierFlagShift) != 0)) {
+	if (c == ' ' && ((e.modifierFlags & NSEventModifierFlagShift) != 0)) {
 		c = NSLeftArrowFunctionKey;
 	}
 	DYImageInfo *obj;
@@ -806,11 +829,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case NSRightArrowFunctionKey:
 		case NSDownArrowFunctionKey:
 			// hold down option to go to the next non-randomized slide
-			[self jump:1 ordered:([e modifierFlags] & NSEventModifierFlagOption) != 0];
+			[self jump:1 ordered:(e.modifierFlags & NSEventModifierFlagOption) != 0];
 			break;
 		case NSLeftArrowFunctionKey:
 		case NSUpArrowFunctionKey:
-			[self jump:-1 ordered:([e modifierFlags] & NSEventModifierFlagOption) != 0];
+			[self jump:-1 ordered:(e.modifierFlags & NSEventModifierFlagOption) != 0];
 			break;
 		case NSHomeFunctionKey:
 			[self jump:-currentIndex]; // <0 stops auto-advance
@@ -830,18 +853,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 			break;
 		case 'i':
 			// cycles three ways: info, info + exif, none
-			hideInfoFld = ![infoFld isHidden] && ![[exifFld enclosingScrollView] isHidden];
-			if (![infoFld isHidden])
+			hideInfoFld = !infoFld.hidden && !exifFld.enclosingScrollView.hidden;
+			if (!infoFld.hidden)
 				[self toggleExif];
-			[infoFld setHidden:hideInfoFld]; // 10.3 or later!
+			infoFld.hidden = hideInfoFld; // 10.3 or later!
 			{
 				unsigned short infoFldVisible = 0;
-				if (![[exifFld enclosingScrollView] isHidden]) {
+				if (!exifFld.enclosingScrollView.hidden) {
 					infoFldVisible = 2;
 				} else if (!hideInfoFld) {
 					infoFldVisible = 1;
 				}
-				[[NSUserDefaults standardUserDefaults] setInteger:infoFldVisible forKey:@"DYSlideshowWindowVisibleFields"];
+				[NSUserDefaults.standardUserDefaults setInteger:infoFldVisible forKey:@"DYSlideshowWindowVisibleFields"];
 			}
 			break;
 		case 'h':
@@ -851,7 +874,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[self toggleHelp];
 			break;
 		case 'I':
-			if ([[exifFld enclosingScrollView] isHidden]) {
+			if (exifFld.enclosingScrollView.hidden) {
 				moreExif = YES;
 				hideInfoFld = NO;
 				[self toggleExif];
@@ -860,7 +883,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				moreExif = !moreExif;
 				[self updateExifFld];
 			}
-			[[NSUserDefaults standardUserDefaults] setInteger:2 forKey:@"DYSlideshowWindowVisibleFields"];
+			[NSUserDefaults.standardUserDefaults setInteger:2 forKey:@"DYSlideshowWindowVisibleFields"];
 			break;
 		case 'l':
 			if (currentIndex == filenames.count) { NSBeep(); return; }
@@ -884,7 +907,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case '-':
 			if (currentIndex == filenames.count) { NSBeep(); return; }
 			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
-				if (obj.image == [imgView image]
+				if (obj.image == imgView.image
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) { // cached image smaller than orig
 					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filenames[currentIndex])]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
@@ -913,14 +936,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (BOOL)performKeyEquivalent:(NSEvent *)e {
-	unichar c = [[e characters] characterAtIndex:0];
+	unichar c = [e.characters characterAtIndex:0];
 	//NSLog([e charactersIgnoringModifiers]);
 	//NSLog([e characters]);
 	// charactersIgnoringModifiers is 10.4 or later, and doesn't play well with Dvorak Qwerty-cmd
 	DYImageInfo *obj;
 	switch (c) {
 		case '=':
-			if (!([e modifierFlags] & NSEventModifierFlagNumericPad))
+			if (!(e.modifierFlags & NSEventModifierFlagNumericPad))
 				c = '+';
 			// intentional fall-through
 		case '+':
@@ -928,7 +951,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if (currentIndex == filenames.count) { NSBeep(); return YES; }
 			// ** code copied from keyDown
 			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
-				if (obj.image == [imgView image]
+				if (obj.image == imgView.image
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) {  // cached image smaller than orig
 					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filenames[currentIndex])]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
@@ -949,29 +972,29 @@ scheduledTimerWithTimeInterval:timerIntvl
 // mouse control added for 1.2.2 (2006 Aug)
 
 - (void)mouseDown:(NSEvent *)e {
-	if ([imgView dragMode])
+	if (imgView.dragMode)
 		return;
 	if (!NSPointInRect(e.locationInWindow, self.contentView.frame))
 		return;
 	
 	mouseDragged = YES; // prevent the following mouseUp from advancing twice
 	    // this would happen if it was zoomed in
-	if ([e clickCount] == 1)
+	if (e.clickCount == 1)
 		[self jump:1];
-	else if ([e clickCount] == 2)
+	else if (e.clickCount == 2)
 		[self endSlideshow];
 }
 
 // while zoomed, wait until mouseUp to advance/end
 - (void)mouseUp:(NSEvent *)e {
-	if (![imgView dragMode])
+	if (!imgView.dragMode)
 		return;
 	if (mouseDragged)
 		return;
 	
-	if ([e clickCount] == 1)
+	if (e.clickCount == 1)
 		[self jump:1];
-	else if ([e clickCount] == 2)
+	else if (e.clickCount == 2)
 		[self endSlideshow];
 }
 
@@ -980,7 +1003,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)sendEvent:(NSEvent *)e {
-	NSEventType t = [e type];
+	NSEventType t = e.type;
 
 	// override to send right clicks to self
 	if (t == NSEventTypeRightMouseDown)	{
@@ -1000,7 +1023,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)scrollWheel:(NSEvent *)e {
 	if (UsingMagicMouse(e)) return;
-	float y = [e deltaY];
+	float y = e.deltaY;
 	int sign = y < 0 ? 1 : -1;
 	[self jump:sign*(floor(fabs(y)/7.0)+1)];
 }
@@ -1011,13 +1034,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSString *filename = filenames[currentIndex];
 	DYImageInfo *info = [imgCache infoForKey:filename];
 	if (info) {
-		float zoom = [imgView zoomMode] ? [imgView zoomF] : [self calcZoom:info->pixelSize];
-		if (info.image == [imgView image]
+		float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
+		if (info.image == imgView.image
 			&& !NSEqualSizes(info->pixelSize, info.image.size)) { // cached image smaller than orig
 			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filename)]
 					  zooming:DYImageViewZoomModeManual];
 		}
-		[imgView setZoomF:zoom * (1.0 + [event magnification])];
+		[imgView setZoomF:zoom * (1.0 + event.magnification)];
 		[self updateInfoFld];
 	}
 }
@@ -1062,22 +1085,22 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (currentIndex == filenames.count) { // if showing "last file was deleted" screen
 		return nil;
 	}
-	return filenames[[self currentIndex]];
+	return filenames[self.currentIndex];
 }
 - (NSString *)basePath {
 	return basePath;
 }
 - (unsigned short)currentOrientation {
-	NSString *theFile = filenames[[self currentIndex]];
+	NSString *theFile = filenames[self.currentIndex];
 	NSNumber *rot = rotations[theFile];
-	return components_to_exiforientation(rot ? [rot intValue] : 0, [flips[theFile] boolValue]);
+	return components_to_exiforientation(rot ? rot.intValue : 0, [flips[theFile] boolValue]);
 }
 - (unsigned short)currentFileExifOrientation {
-	return [imgCache infoForKey:filenames[[self currentIndex]]]->exifOrientation;
+	return [imgCache infoForKey:filenames[self.currentIndex]]->exifOrientation;
 }
 
 - (BOOL)currentImageLoaded {
-	NSString *s = [self currentFile];
+	NSString *s = self.currentFile;
 	return [imgCache infoForKey:s] != nil;
 }
 
@@ -1124,7 +1147,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	BOOL subFolders = _fileWatcher.wantsSubfolders;
 	BOOL needUpdate = NO;
 	for (NSString *s in a) {
-		if (subFolders ? [s hasPrefix:basePath] : [[s stringByDeletingLastPathComponent] isEqualToString:path]) {
+		if (subFolders ? [s hasPrefix:basePath] : [s.stringByDeletingLastPathComponent isEqualToString:path]) {
 			NSUInteger idx = [filenames insertObject:s usingComparator:_comparator atIndex:filenames.count];
 			if (!randomMode && idx <= currentIndex) {
 				currentIndex++;
@@ -1153,8 +1176,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if ([cats[i] containsObject:s])
 			[labels addObject:[NSString stringWithFormat:NSLocalizedString(@"Group %i", @""), i+2]];
 	}
-	if ([labels count]) {
-		[catsFld setStringValue:[labels componentsJoinedByString:@", "]];
+	if (labels.count) {
+		catsFld.stringValue = [labels componentsJoinedByString:@", "];
 		[catsFld sizeToFit];
 		[catsFld setHidden:NO];
 	} else {
@@ -1174,7 +1197,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		else
 			[cats[n-2] addObject:s];
 		if (toggle)
-			[imgView setNeedsDisplayInRect:[catsFld frame]]; // in case the field shrinks
+			[imgView setNeedsDisplayInRect:catsFld.frame]; // in case the field shrinks
 	}
 	[self displayCats];
 }
@@ -1182,16 +1205,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 #pragma mark menu methods
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
-	if ([menuItem tag] == 3) // Loop
+	if (menuItem.tag == 3) // Loop
 		return YES;
-	if ([menuItem tag] == 8) // Scale Up
+	if (menuItem.tag == 8) // Scale Up
 		return YES;
-	if ([menuItem tag] == 9) // Actual Size
+	if (menuItem.tag == 9) // Actual Size
 		return YES;
-	if ([menuItem tag] == 7) // random
+	if (menuItem.tag == 7) // random
 		return YES;
 	// check if the item's menu is the slideshow menu
-	return [[menuItem menu] itemWithTag:3] ? [self isActive]
+	return [menuItem.menu itemWithTag:3] ? [self isActive]
 										   : [super validateMenuItem:menuItem];
 }
 
@@ -1206,12 +1229,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 - (IBAction)toggleCheatSheet:(id)sender {
 	[self toggleHelp];
-	//[sender setState:![helpFld isHidden]]; // ** wrong if user hits 'h'
 }
 - (IBAction)toggleScalesUp:(id)sender {
 	BOOL b = ![sender state];
 	[sender setState:b];
-	[imgView setScalesUp:b];
+	imgView.scalesUp = b;
 	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound)
 		[self updateInfoFld];
@@ -1234,7 +1256,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (currentIndex == filenames.count)
 			currentIndex = 0;
 		else
-			currentIndex = [filenames orderedIndexOfObjectAtIndex:currentIndex];
+			currentIndex = [filenames orderedIndexFromIndex:currentIndex];
 		[filenames derandomize];
 	}
 	[self displayImage];
@@ -1248,7 +1270,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	// then change vars and re-display
 	[sender setState:b];
-	[imgView setShowActualSize:b];
+	imgView.showActualSize = b;
 	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound) [self displayImage];
 }
