@@ -163,6 +163,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	if (b) {
 		self.styleMask = NSWindowStyleMaskBorderless;
 		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+		if (self.visible)
+			[self configureScreen];
 	} else {
 		self.styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
 		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
@@ -222,16 +224,16 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (void)configureScreen
 {
-	NSScreen *mainScreen = [NSScreen mainScreen];
-	NSRect screenRect = mainScreen.frame;
+	NSScreen *myScreen = self.visible ? self.screen : NSScreen.mainScreen;
+	NSRect screenRect = myScreen.frame;
 	NSRect boundingRect = screenRect;
 	if (@available(macOS 12.0, *)) {
-		CGFloat inset = mainScreen.safeAreaInsets.top;
+		CGFloat inset = myScreen.safeAreaInsets.top;
 		if (inset) {
 			boundingRect.size.height -= inset;
 		}
 	}
-	oldScreen = mainScreen;
+	oldScreen = myScreen;
 	NSSize oldSize = imgCache.boundingSize;
 	if (oldSize.width < boundingRect.size.width
 		|| oldSize.height < boundingRect.size.height) {
