@@ -484,13 +484,17 @@ static time_t ExifDateFromFile(NSString *s) {
 
 - (void)filesWereUndeleted:(NSArray *)a {
 	NSString *currentPath = self.path;
-	BOOL needsRefresh = NO;
+	BOOL subfolders = self.wantsSubfolders;
 	for (NSString *s in a) {
-		if ([s hasPrefix:currentPath])
-			needsRefresh = YES;
+		if (subfolders ? [s hasPrefix:currentPath] : [s.stringByDeletingLastPathComponent isEqualToString:currentPath])
+			dispatch_async(dispatch_get_main_queue(), ^{
+				if (!filenamesDone) return;
+				NSUInteger count = filenames.count;
+				NSUInteger idx = [filenames indexOfObject:s inSortedRange:NSMakeRange(0, count) options:NSBinarySearchingInsertionIndex usingComparator:self.comparator];
+				if (idx == count || ![filenames[idx] isEqualToString:s])
+					[self addFile:s atIndex:idx];
+			});
 	}
-	if (needsRefresh)
-		[self setPath:currentPath];
 }
 
 - (void)updateStatusFld {
