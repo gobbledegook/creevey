@@ -10064,12 +10064,12 @@ unsigned char *CopyExifDataFromRawFile(const char *path, int *outLen) {
 	status = (identify(),!is_raw);
 	unsigned char *data = 0;
 	if (exifBase != -1) {
-		exifSize += 6;
+		int dataSize = exifSize + 6;
 		fseek(ifp, exifBase, SEEK_SET);
-		if ((data = malloc(exifSize))) {
+		if ((data = malloc(dataSize))) {
 			memcpy(data, "Exif\0\0", 6); // add this so we can pass it to exiftags
 			fread(data+6, 1, exifSize, ifp);
-			*outLen = exifSize;
+			*outLen = dataSize;
 		}
 	}
 	fclose(ifp);
