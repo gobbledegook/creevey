@@ -10,18 +10,25 @@
 @implementation DYJpegtranPanel
 - (IBAction)transformChanged:(id)sender
 {
-	self.trimBtn.enabled = [sender selectedItem].tag==JXFORM_NONE || [sender selectedItem].tag==JXFORM_TRANSPOSE
-		? NSOffState : NSOnState;
+	NSInteger tag = _transformMenu.selectedItem.tag;
+	_trimBtn.enabled = tag != JXFORM_NONE && tag != JXFORM_TRANSPOSE;
+	_convertButton.enabled =
+		_transformMenu.selectedItem.tag ||
+		(_trimBtn.enabled && _trimBtn.state) ||
+		_progressiveBtn.state ||
+		_optimizeBtn.state ||
+		_grayscaleBtn.state ||
+		_markersMenu.selectedItem.tag != JCOPYOPT_ALL;
 }
 
 - (IBAction)convert:(id)sender
 {
-	[NSApp stopModalWithCode:100];
+	[NSApp stopModalWithCode:NSModalResponseOK];
 }
 
 - (IBAction)stopModal:(id)sender
 {
-	[NSApp stopModal];
+	[NSApp stopModalWithCode:NSModalResponseCancel];
 }
 
 - (BOOL)runOptionsPanel:(DYJpegtranInfo *)i {
@@ -37,7 +44,7 @@
 	// run dialog
 	NSModalResponse n = [NSApp runModalForWindow:self.transformMenu.window];
 	[self.transformMenu.window orderOut:nil];
-	if (n != 100) return NO;
+	if (n != NSModalResponseOK) return NO;
 	
 	// fill in the blanks
 	i->tinfo.transform = (JXFORM_CODE)self.transformMenu.selectedItem.tag;

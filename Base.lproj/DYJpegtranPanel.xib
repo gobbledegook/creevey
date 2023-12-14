@@ -60,6 +60,7 @@
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
                         <connections>
+                            <action selector="transformChanged:" target="36" id="KQe-v0-nvH"/>
                             <outlet property="nextKeyView" destination="14" id="ive-En-dzJ"/>
                         </connections>
                     </button>
@@ -72,6 +73,7 @@
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
                         <connections>
+                            <action selector="transformChanged:" target="36" id="gW2-EQ-q6a"/>
                             <outlet property="nextKeyView" destination="28" id="U5M-Pl-LhA"/>
                         </connections>
                     </button>
@@ -84,6 +86,7 @@
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
                         <connections>
+                            <action selector="transformChanged:" target="36" id="Nfg-DY-TgR"/>
                             <outlet property="nextKeyView" destination="11" id="9Vp-8Q-Now"/>
                         </connections>
                     </button>
@@ -96,6 +99,7 @@
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
                         <connections>
+                            <action selector="transformChanged:" target="36" id="mME-rd-YSv"/>
                             <outlet property="nextKeyView" destination="35" id="sde-bc-C6a"/>
                         </connections>
                     </button>
@@ -120,7 +124,7 @@
                     </box>
                     <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="27">
                         <rect key="frame" x="413" y="12" width="82" height="32"/>
-                        <buttonCell key="cell" type="push" title="Convert" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="57">
+                        <buttonCell key="cell" type="push" title="Convert" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" inset="2" id="57">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
@@ -146,6 +150,7 @@ DQ
                             </menu>
                         </popUpButtonCell>
                         <connections>
+                            <action selector="transformChanged:" target="36" id="Jgo-Bd-ngv"/>
                             <outlet property="nextKeyView" destination="13" id="K0Y-CN-Axe"/>
                         </connections>
                     </popUpButton>
@@ -201,6 +206,7 @@ Gw
         </window>
         <customObject id="36" userLabel="DYJpegtranPanel" customClass="DYJpegtranPanel">
             <connections>
+                <outlet property="convertButton" destination="27" id="5Z7-en-WU4"/>
                 <outlet property="grayscaleBtn" destination="14" id="43"/>
                 <outlet property="markersMenu" destination="28" id="Ujy-Ww-JNa"/>
                 <outlet property="optimizeBtn" destination="35" id="42"/>
