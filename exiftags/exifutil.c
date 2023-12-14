@@ -68,15 +68,13 @@ exifdie(const char *msg)
 void
 exifwarn(const char *msg)
 {
-
-	fprintf(stderr, "%s: %s\n", progname, msg);
+//	fprintf(stderr, "%s: %s\n", progname, msg);
 }
 
 void
 exifwarn2(const char *msg1, const char *msg2)
 {
-
-	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
+//	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
 }
 
 

@@ -99,6 +99,7 @@ int histogram[4][0x2000];
 void (*write_thumb)(), (*write_fun)();
 void (*load_raw)(), (*thumb_load_raw)();
 jmp_buf failure;
+int exifBase, exifSize;
 
 struct decode {
   struct decode *branch[2];
@@ -5779,6 +5780,7 @@ int CLASS parse_tiff_ifd (int base)
           is_raw = 0;
         break;
       case 306:                                /* DateTime */
+		exifBase = base;
         get_timestamp(0);
         break;
       case 315:                                /* Artist */
@@ -6107,6 +6109,7 @@ guess_cfa_pc:
     }
     fseek (ifp, save, SEEK_SET);
   }
+  if (exifBase != -1) exifSize = ftell(ifp)-exifBase;
   if (sony_length && (buf = (unsigned *) malloc(sony_length))) {
     fseek (ifp, sony_offset, SEEK_SET);
     fread (buf, sony_length, 1, ifp);
@@ -10037,6 +10040,43 @@ void CLASS write_ppm_tiff()
     fwrite (ppm, colors*output_bps/8, width, ofp);
   }
   free (ppm);
+}
+
+unsigned char *CopyExifDataFromRawFile(const char *path, int *outLen) {
+	int status = 1;
+	raw_image = 0;
+	image = 0;
+	meta_data = 0;
+	ofp = stdout;
+	if (setjmp (failure)) {
+	  fclose(ifp);
+	  status = 1;
+	  goto cleanup2;
+	}
+	ifname = path;
+	if (!(ifp = fopen (ifname, "rb"))) {
+	  perror (ifname);
+	  return 0;
+	}
+	// we assume that the timestamp lives inside the EXIF metadata,
+	// so we set exifBase and size at the same time timestamp gets set
+	exifBase = -1;
+	status = (identify(),!is_raw);
+	unsigned char *data = 0;
+	if (exifBase != -1) {
+		exifSize += 6;
+		fseek(ifp, exifBase, SEEK_SET);
+		if ((data = malloc(exifSize))) {
+			memcpy(data, "Exif\0\0", 6); // add this so we can pass it to exiftags
+			fread(data+6, 1, exifSize, ifp);
+			*outLen = exifSize;
+		}
+	}
+	fclose(ifp);
+cleanup2:
+	if (meta_data) free (meta_data);
+	if (image) free (image);
+	return data;
 }
 
 time_t ExifDateFromRawFile(const char *path) {

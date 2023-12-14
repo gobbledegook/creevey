@@ -1,4 +1,4 @@
-//Copyright 2005-2012 Dominic Yu. Some rights reserved.
+//Copyright 2005-2023 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
@@ -8,6 +8,8 @@
 //  Created by Dominic Yu 2005 July 12
 
 #import "DYExiftags.h"
+#import "DYCarbonGoodies.h"
+#import "dcraw.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,78 +21,71 @@
 
 static uint16_t read2byte(FILE * f, char o);
 static BOOL SeekExifInJpeg(FILE * infile);
+static int SeekExifInHeif(FILE * f);
 static BOOL SeekExifSubIFD(FILE * f, char *oo);
 
 struct my_error_mgr {
 	struct jpeg_error_mgr pub;	/* "public" fields */
-	
 	jmp_buf setjmp_buffer;	/* for return to caller */
 };
-
 typedef struct my_error_mgr * my_error_ptr;
-
-static void 
-_my_error_handler(j_common_ptr cinfo)
+static void _my_error_handler(j_common_ptr cinfo)
 {
-	my_error_ptr errmgr;
-	
-	errmgr = (my_error_ptr)cinfo->err;
-	longjmp(errmgr->setjmp_buffer, 1);
+	longjmp(((my_error_ptr)cinfo->err)->setjmp_buffer, 1);
 	return;
 }
 
-static NSString *
-printprops(struct exifprop *list, unsigned short lvl, int pas)
+static void appendprops(NSMutableString *result, unsigned char *data, int len, BOOL showMore)
 {
-	//const char *n;
-	NSMutableString *result = [NSMutableString stringWithCapacity:100];
-	
-	switch (lvl) {
-		case ED_UNK:
-			[result appendString:NSLocalizedString(@"Unsupported Properties:\n", @"")];
-			break;
-		case ED_CAM:
-			[result appendString:NSLocalizedString(@"Camera-Specific Properties:\n", @"")];
-			break;
-		case ED_IMG:
-			[result appendString:NSLocalizedString(@"Image-Specific Properties:\n", @"")];
-			break;
-		case ED_VRB:
-			[result appendString:NSLocalizedString(@"Other Properties:\n", @"")];
-			break;
+	// ED_UNK, ED_CAM, ED_IMG, ED_VRB
+	static NSString *headings[4]; // ARC inits these to nil
+	if (headings[0] == nil) {
+		headings[0] = NSLocalizedString(@"Unsupported Properties:\n", @"");
+		headings[1] = NSLocalizedString(@"Camera-Specific Properties:\n", @"");
+		headings[2] = NSLocalizedString(@"Image-Specific Properties:\n", @"");
+		headings[3] = NSLocalizedString(@"Other Properties:\n", @"");
 	}
-	
+
+	NSMutableString *section[4];
+	unsigned short i = 0;
+	for (; i<4; ++i) section[i] = [NSMutableString string];
+
+	struct exiftags *t = exifparse(data, len);
+	if (!t) return;
+	struct exifprop *list = t->props;
 	while (list) {
-		
-		/* Take care of point-and-shoot values. */
-		
-		if (list->lvl == ED_PAS)
-			list->lvl = pas ? ED_CAM : ED_IMG;
-		
-		/* For now, just treat overridden & bad values as verbose. */
-		
-		if (list->lvl == ED_OVR || list->lvl == ED_BAD)
-			list->lvl = ED_VRB;
-		if (list->lvl == lvl) {
+		unsigned short lvl = list->lvl;
+		if (list->lvl == ED_PAS) lvl = ED_IMG; // point-and-shoot values
+		if (list->lvl > ED_VRB) lvl = ED_VRB; // treat overridden & bad values as verbose
+
+		if (showMore || lvl == ED_CAM || lvl == ED_IMG) {
 			// fancy localization footwork
-			//n = list->descr ? list->descr : list->name;
-			id internalKey = [NSString stringWithCString:list->name encoding:NSISOLatin1StringEncoding];
-			id locString = NSLocalizedStringFromTable(internalKey,
-													  @"EXIF", @"");
-			if (locString == internalKey && list->descr)
-				// failed, use exiftag's English desc
-				// but check if it's NULL
+			NSString *internalKey = [NSString stringWithCString:list->name encoding:NSISOLatin1StringEncoding];
+			NSString *locString = NSLocalizedStringFromTable(internalKey, @"EXIF", @"");
+			if (locString == internalKey && list->descr) // fall back to exiftag's English desc, if available
 				locString = [NSString stringWithCString:list->descr encoding:NSISOLatin1StringEncoding];
+			
+			for (i=0;lvl>>=1;i++); // convert the flag to an index
+			[section[i] appendFormat:@"\t%@:\t", locString];
 			if (list->str)
-				[result appendFormat:@"\t%@:\t%s\n", locString, list->str]; // %s strings seem to get interpreted as MacRoman, which is good enough for now, given that EXIF doesn't have a standard encoding for string values
+				[section[i] appendFormat:@"%s\n", list->str];
+			// %s strings seem to get interpreted as MacRoman, which is good enough for now, given that EXIF doesn't have a standard encoding for string values
 			else
-				[result appendFormat:@"\t%@:\t%d\n", locString, list->value];
+				[section[i] appendFormat:@"%d\n", list->value];
 		}
-		
 		list = list->next;
 	}
-	[result appendString:@"\n"];
-	return result;
+	for (i=1; i<=4; ++i) {
+		if (i==4) i=0; // do 0th item (ED_UNK) last
+		if (section[i].length) {
+			[result appendString:headings[i]];
+			[result appendString:section[i]];
+			[result appendString:@"\n"];
+		}
+		if (i==0) i=4;
+	}
+	free(t);
+	if (result.length) [result deleteCharactersInRange:NSMakeRange(result.length-2,2)]; // trailing newlines
 }
 
 
@@ -98,68 +93,72 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 
 + (NSString *)tagsForFile:(NSString *)aPath moreTags:(BOOL)showMore {
 	NSMutableString *result = [NSMutableString stringWithCapacity:100];
-	struct exiftags *t;
-	int pas = 0;
-	struct jpeg_decompress_struct srcinfo;
-	struct my_error_mgr jsrcerr;
-	FILE * input_file;
-	
-	/* Open files first, so setjmp can assume they're open. */
-	if ((input_file = fopen(aPath.fileSystemRepresentation, "rb")) == NULL) {
-		return nil;
-	}
-	srcinfo.err = jpeg_std_error(&jsrcerr.pub);
-	jsrcerr.pub.error_exit = _my_error_handler;
-	
-	if (setjmp(jsrcerr.setjmp_buffer)) {
+	NSString *extension = aPath.pathExtension.lowercaseString;
+	if (IsRaw(extension)) {
+		int len;
+		unsigned char *data = CopyExifDataFromRawFile(aPath.fileSystemRepresentation, &len);
+		if (data) {
+			appendprops(result, data, len, showMore);
+			free(data);
+		}
+	} else if (IsHeif(extension)) {
+		FILE * f;
+		if ((f = fopen(aPath.fileSystemRepresentation, "rb")) == NULL) return nil;
+		int len = 0;
+		if ((len = SeekExifInHeif(f))) {
+			fseek(f, -6, SEEK_CUR); // start at "Exif\0\0"
+			len -= 4; // minus app marker + length fields (or whatever filler heif is using)
+			unsigned char *data = malloc(len);
+			if (data) {
+				fread(data, 1, len, f);
+				appendprops(result, data, len, showMore);
+				free(data);
+			}
+		}
+		fclose(f);
+	} else if (FileIsJPEG(aPath)) {
+		struct jpeg_decompress_struct srcinfo;
+		struct my_error_mgr jsrcerr;
+		FILE * input_file;
+		
+		/* Open files first, so setjmp can assume they're open. */
+		if ((input_file = fopen(aPath.fileSystemRepresentation, "rb")) == NULL) {
+			return nil;
+		}
+		srcinfo.err = jpeg_std_error(&jsrcerr.pub);
+		jsrcerr.pub.error_exit = _my_error_handler;
+		
+		if (setjmp(jsrcerr.setjmp_buffer)) {
+			jpeg_destroy_decompress(&srcinfo);
+			fclose(input_file);
+			return nil;
+		}
+		jpeg_create_decompress(&srcinfo);
+		jpeg_stdio_src(&srcinfo, input_file);
+		jpeg_save_markers(&srcinfo,JPEG_COM,0xFFFF);
+		jpeg_save_markers(&srcinfo,JPEG_APP0+1,0xFFFF);
+		jpeg_read_header(&srcinfo, TRUE);
+		
+		jpeg_saved_marker_ptr mptr = srcinfo.marker_list;
+		while (mptr) {
+			if (mptr->marker == JPEG_COM) {
+				// go backwards, comments at the beginning
+				[result insertString:@"\n" atIndex:0];
+				[result insertString:[[NSString alloc] initWithBytes:mptr->data length:mptr->data_length
+															encoding:NSMacOSRomanStringEncoding]
+							 atIndex:0];
+				[result insertString:NSLocalizedString(@"JPEG Comment:\n", @"") atIndex:0];
+			} else if (mptr->marker == JPEG_APP0+1) {
+				appendprops(result, mptr->data, mptr->data_length, showMore);
+			}
+			mptr = mptr->next;
+		}
+		[result insertString:@"\n" atIndex:0];
+		if (jpeg_has_multiple_scans(&srcinfo))
+			[result insertString:NSLocalizedString(@"Progressive JPEG file\n", @"") atIndex:0];
 		jpeg_destroy_decompress(&srcinfo);
 		fclose(input_file);
-		return nil;
 	}
-	jpeg_create_decompress(&srcinfo);
-	jpeg_stdio_src(&srcinfo, input_file);
-	jpeg_save_markers(&srcinfo,JPEG_COM,0xFFFF);
-	jpeg_save_markers(&srcinfo,JPEG_APP0+1,0xFFFF);
-	jpeg_read_header(&srcinfo, TRUE);
-	
-	jpeg_saved_marker_ptr mptr = srcinfo.marker_list;
-	while (mptr) {
-		if (mptr->marker == JPEG_COM) {
-			// go backwards, comments at the beginning
-			[result insertString:@"\n" atIndex:0];
-			[result insertString:[[NSString alloc] initWithBytes:mptr->data length:mptr->data_length
-														encoding:NSMacOSRomanStringEncoding]
-						 atIndex:0];
-			[result insertString:NSLocalizedString(@"JPEG Comment:\n", @"") atIndex:0];
-		} else if (mptr->marker == JPEG_APP0+1) {
-			t = exifparse(mptr->data, mptr->data_length);
-			// may return NULL if it's not a proper EXIF marker
-			
-			if (t && t->props) {
-				//if (dumplvl & ED_CAM)
-				[result appendString:printprops(t->props, ED_CAM, pas)];
-				//if (dumplvl & ED_IMG)
-				[result appendString:printprops(t->props, ED_IMG, pas)];
-				if (showMore) {
-					//if (dumplvl & ED_VRB)
-					[result appendString:printprops(t->props, ED_VRB, pas)];
-					//if (dumplvl & ED_UNK)
-					[result appendString:printprops(t->props, ED_UNK, pas)];
-				}
-			}
-			exiffree(t);
-			if (result.length) // in case APP1 header is not EXIF!
-				[result deleteCharactersInRange:NSMakeRange(result.length-2,2)];
-			    // delete two trailing newlines (see printprops)
-			    // this is not run for jpeg comments (duh)
-		}
-		mptr = mptr->next;
-	}
-	[result insertString:@"\n" atIndex:0];
-	if (jpeg_has_multiple_scans(&srcinfo))
-		[result insertString:NSLocalizedString(@"Progressive JPEG file\n", @"") atIndex:0];
-	jpeg_destroy_decompress(&srcinfo);
-	fclose(input_file);
 	return result;
 }
 
@@ -218,7 +217,7 @@ static uint64_t read8bytem(FILE * f) {
 	return ((uint64_t)b[0] << 56) | ((uint64_t)b[1] << 48) | ((uint64_t)b[2] << 40) | ((uint64_t)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7];
 }
 
-static BOOL SeekExifInHeif(FILE * f) {
+static int SeekExifInHeif(FILE * f) {
 	// heif files are composed of "atoms" aka "boxes"
 	BOOL inited = NO;
 	for (;;) {
@@ -295,12 +294,13 @@ static BOOL SeekExifInHeif(FILE * f) {
 					// found Exif offset! Assume there's one and only one extent
 					if (index_size) fseek(f, index_size, SEEK_CUR);
 					off_t exifOffset = offset_size == 8 ? read8bytem(f) : read4bytem(f);
+					uint64_t exifLength = length_size == 8 ? read8bytem(f) : read4bytem(f);
 					exifOffset += base_offset;
 					fseeko(f, exifOffset+4, SEEK_SET);
 					unsigned char buf[6];
 					if (6 != fread(buf, 1, 6, f)) return 0;
 					if (memcmp(buf, "Exif\0\0", 6)) return 0;
-					return YES;
+					return (int)exifLength;
 				}
 			}
 			fseeko(f, boxStart + boxLen, SEEK_SET);
@@ -417,7 +417,7 @@ time_t ExifDatetimeForFile(const char *path, DYExiftagsFileType type) {
 			ok = SeekExifInJpeg(input_file);
 			break;
 		case HEIF:
-			ok = SeekExifInHeif(input_file);
+			ok = SeekExifInHeif(input_file) != 0;
 			break;
 	}
 	if (!ok) {
