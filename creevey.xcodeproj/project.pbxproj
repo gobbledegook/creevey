@@ -103,6 +103,8 @@
 		F2FE508A08848C9400550533 /* exif.c in Sources */ = {isa = PBXBuildFile; fileRef = F2FE506F08848C9400550533 /* exif.c */; };
 		F2FE508B08848C9400550533 /* DYExiftags.h in Headers */ = {isa = PBXBuildFile; fileRef = F2FE507008848C9400550533 /* DYExiftags.h */; };
 		F2FE508C08848C9400550533 /* panasonic.c in Sources */ = {isa = PBXBuildFile; fileRef = F2FE507108848C9400550533 /* panasonic.c */; };
+		F2FFD7C82B2805C100036217 /* dcraw.h in Headers */ = {isa = PBXBuildFile; fileRef = F2FFD7C62B2805C100036217 /* dcraw.h */; };
+		F2FFD7C92B2805C100036217 /* dcraw.c in Sources */ = {isa = PBXBuildFile; fileRef = F2FFD7C72B2805C100036217 /* dcraw.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -242,6 +244,8 @@
 		F2FE506F08848C9400550533 /* exif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = exif.c; path = exiftags/exif.c; sourceTree = "<group>"; };
 		F2FE507008848C9400550533 /* DYExiftags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DYExiftags.h; path = exiftags/DYExiftags.h; sourceTree = "<group>"; };
 		F2FE507108848C9400550533 /* panasonic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = panasonic.c; path = exiftags/panasonic.c; sourceTree = "<group>"; };
+		F2FFD7C62B2805C100036217 /* dcraw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dcraw.h; sourceTree = "<group>"; };
+		F2FFD7C72B2805C100036217 /* dcraw.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dcraw.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -328,6 +332,8 @@
 				F2711710182AADE6008F97E1 /* DYRandomizableArray.h */,
 				F2711711182AADE6008F97E1 /* DYRandomizableArray.m */,
 				F2FE4FA808842F2600550533 /* libjpeg */,
+				F2FFD7C62B2805C100036217 /* dcraw.h */,
+				F2FFD7C72B2805C100036217 /* dcraw.c */,
 				F25EA26E08673274003728C2 /* Epeg */,
 				F2FE4F9E08842EF400550533 /* jpegtran */,
 				F2047B7308576D2D00D6103F /* kqueue */,
@@ -487,6 +493,7 @@
 				F25EA2860867329C003728C2 /* Epeg.h in Headers */,
 				F2FE4FB808842F3500550533 /* jpeglib.h in Headers */,
 				F2FE4FB908842F3500550533 /* jmorecfg.h in Headers */,
+				F2FFD7C82B2805C100036217 /* dcraw.h in Headers */,
 				F2FE4FBA08842F3500550533 /* jconfig.h in Headers */,
 				F2FE4FC708842F5500550533 /* jpegint.h in Headers */,
 				F2FE4FC808842F5500550533 /* jinclude.h in Headers */,
@@ -613,6 +620,7 @@
 				F299B06307FDF5F7006028C1 /* DYImageView.m in Sources */,
 				F29CD2370800C372000B0F91 /* DYCarbonGoodies.m in Sources */,
 				F2F54191080A3846008AE60F /* DYCreeveyBrowser.m in Sources */,
+				F2FFD7C92B2805C100036217 /* dcraw.c in Sources */,
 				F234C0180810E9B700175D50 /* DYImageCache.m in Sources */,
 				F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */,
 				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,

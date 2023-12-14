@@ -723,6 +723,7 @@ enum {
 	ROTATE_SAVE = 117,
 	SORT_NAME = 201,
 	SORT_DATE_MODIFIED = 202,
+	SORT_EXIF_DATE = 203,
 	SHOW_FILE_NAMES = 251,
 	AUTO_ROTATE = 261,
 	SLIDESHOW_MENU = 1001,
@@ -803,10 +804,16 @@ enum {
 
 - (void)updateMenuItemsForSorting:(short int)sortNum {
 	short int sortType = abs(sortNum);
-	BOOL sortAscending = sortNum > 0;
+	NSInteger tag = 200 + sortType;
 	NSMenu *m = [NSApp.mainMenu itemWithTag:VIEW_MENU].submenu;
-	[[m itemWithTag:sortType == 2 ? SORT_NAME : SORT_DATE_MODIFIED] setState:NSOffState];
-	[[m itemWithTag:200+sortType] setState:sortAscending ? NSOnState : NSMixedState];
+	for (NSInteger i = 201; i <= SORT_EXIF_DATE; ++i) {
+		NSMenuItem *item = [m itemWithTag:i];
+		if (i == tag) {
+			item.state = sortNum > 0 ? NSOnState : NSMixedState;
+		} else {
+			item.state = NSOffState;
+		}
+	}
 }
 
 - (IBAction)sortThumbnails:(id)sender {

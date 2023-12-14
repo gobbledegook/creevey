@@ -13,6 +13,12 @@
 NSString *ResolveAliasToPath(NSString *path);
 NSString *ResolveAliasURLToPath(NSURL *url);
 
+// for extensions
+BOOL IsJPEG(NSString *x);
+BOOL IsRaw(NSString *x);
+BOOL IsHeif(NSString *x);
+
+// for paths
 BOOL FileIsJPEG(NSString *s);
 
 @interface NSImage (DYCarbonGoodies)

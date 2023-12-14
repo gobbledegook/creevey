@@ -42,9 +42,31 @@ NSString *ResolveAliasURLToPath(NSURL *url) {
 	return path;
 }
 
+BOOL IsJPEG(NSString *x) {
+	return [x isEqualToString:@"jpg"] || [x isEqualToString:@"jpeg"];
+}
+
+BOOL IsRaw(NSString *x) {
+	static NSSet *exts;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		exts = [NSSet setWithArray:@[@"3fr", @"arw", @"cr2", @"cr3", @"crw", @"dcr", @"dng", @"dxo", @"erf", @"exr", @"fff", @"iiq", @"mos", @"mrw", @"nef", @"nrw", @"orf", @"pef", @"raf", @"raw", @"rw2", @"rwl", @"srf", @"srw", @"tif"]];
+	});
+	return [exts containsObject:x];
+}
+
+BOOL IsHeif(NSString *x) {
+	static NSSet *exts;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		exts = [NSSet setWithArray:@[@"heic", @"heics", @"heif", @"hif", @"avci"]];
+	});
+	return [exts containsObject:x];
+}
+
 BOOL FileIsJPEG(NSString *s) {
-	return [s.pathExtension.lowercaseString isEqualToString:@"jpg"]
-	|| [s.pathExtension.lowercaseString isEqualToString:@"jpeg"]
+	NSString *x = [s.pathExtension lowercaseString];
+	return [x isEqualToString:@"jpg"] || [x isEqualToString:@"jpeg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
 

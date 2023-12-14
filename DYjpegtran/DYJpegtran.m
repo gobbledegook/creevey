@@ -120,10 +120,9 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 		return NULL;
 	}
 	fclose(output_file);
-	*outLen = numbytes;
+	*outLen = (unsigned)numbytes;
 	return thebytes;
-	}
-
+}
 
 
 @implementation DYJpegtran
@@ -365,7 +364,7 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 		} else if (i.delThumb) {
 			newapp1 = delete_exif_thumb(app1markerptr->data,app1markerptr->data_length,&outSize);
 		} else if (i.replaceThumb) {
-			newapp1 = replace_exif_thumb((unsigned char *)i.newThumb.bytes,i.newThumb.length,
+			newapp1 = replace_exif_thumb((unsigned char *)i.newThumb.bytes,(unsigned)i.newThumb.length,
 										 i.newThumbSize.width,i.newThumbSize.height,
 										 app1markerptr->data,
 										 app1markerptr->data_length,

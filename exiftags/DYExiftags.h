@@ -10,11 +10,17 @@
 #include "jpeglib.h"
 #import <Foundation/Foundation.h>
 
+typedef NS_ENUM(char, DYExiftagsFileType) {
+	JPEG,
+	HEIF,
+};
+
 @interface DYExiftags : NSObject
 + (NSString *)tagsForFile:(NSString *)aPath moreTags:(BOOL)showMore;
 + (unsigned short)orientationForFile:(NSString *)aPath;
 @end
 
+time_t ExifDatetimeForFile(const char *path, DYExiftagsFileType type);
 
 // after some false starts, i've decided the following are best here.
 // perhaps even better, we could make a pure C file with these instead.
@@ -22,17 +28,16 @@
 unsigned char *find_exif_thumb(unsigned char *b, unsigned len,
 							   unsigned *outLen);
 
-//except for find_exif_thumb, all of these allocate new memory, which
-// the caller is responsible for freeing
-unsigned char *exifHeaderForFile(NSString *aPath, unsigned *len);
+// these two functions allocate new memory, which the caller is responsible for freeing
 unsigned char *delete_exif_thumb(unsigned char *b, unsigned len,
 								 unsigned *outLen);
-unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthumblen,
+unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned newthumblen,
 								  JDIMENSION newWidth, JDIMENSION newHeight,
 								  unsigned char *b, unsigned len,
 								  unsigned *outLen);
-// obviously this doesn't malloc
+
 // returns 0 if there's no valid exif orientation
+// optionally reset orientation to 1 (assuming you malloc'd the memory)
 unsigned short exif_orientation(unsigned char *b, unsigned len, char reset);
 
 // finally, some utility functions for converting the orientations to degrees and horizontal flips

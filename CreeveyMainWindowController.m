@@ -16,22 +16,79 @@
 #import "DYCreeveyBrowser.h"
 #import "DYImageCache.h"
 #import "DYWrappingMatrix.h"
+#import "dcraw.h"
+#import <sys/stat.h>
+#import "DYExiftags.h"
 
 @implementation NSString (DateModifiedCompare)
 
 - (NSComparisonResult)dateModifiedCompare:(NSString *)other
 {
-	NSFileManager *fm = NSFileManager.defaultManager;
-	NSComparisonResult r = NSOrderedSame;
-	NSDate *aDate = [[fm attributesOfItemAtPath:self.stringByResolvingSymlinksInPath error:NULL] fileModificationDate];
-	NSDate *bDate = [[fm attributesOfItemAtPath:other.stringByResolvingSymlinksInPath error:NULL] fileModificationDate];
-	// dates will be nil on error
-	if (aDate != nil || bDate != nil)
-		r = [aDate compare:bDate];
-	if (r == NSOrderedSame) { // use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
-		return [self localizedStandardCompare:other];
+	struct stat aBuf, bBuf;
+	if (stat(self.fileSystemRepresentation, &aBuf) == 0 &&
+		stat(other.fileSystemRepresentation, &bBuf) == 0) {
+		time_t aTime = aBuf.st_mtimespec.tv_sec;
+		time_t bTime = bBuf.st_mtimespec.tv_sec;
+		if (aTime != bTime)
+			return aTime < bTime ? NSOrderedAscending : NSOrderedDescending;
 	}
-	return r;
+	// use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
+	return [self localizedStandardCompare:other];
+}
+
+//#define LOGSORT
+
+static time_t ExifDateFromFile(NSString *s) {
+	s = ResolveAliasToPath(s);
+	NSString *x = [s.pathExtension lowercaseString];
+	const char *c = s.fileSystemRepresentation;
+	time_t t;
+#ifdef LOGSORT
+	static NSMutableSet *seen;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		seen = [NSMutableSet set];
+	});
+	BOOL w = [seen containsObject:s];
+	[seen addObject:s];
+#endif
+	if (IsRaw(x) &&
+		(t = ExifDateFromRawFile(c)) != -1) {
+#ifdef LOGSORT
+		if (!w) NSLog(@"raw %@:%@", [NSDate dateWithTimeIntervalSince1970:t], s.lastPathComponent);
+#endif
+		return t;
+	}
+	if ((IsJPEG(x) || [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"]) &&
+		(t = ExifDatetimeForFile(c, NO)) != -1) {
+#ifdef LOGSORT
+		if (!w) NSLog(@"jpg %@:%@", [NSDate dateWithTimeIntervalSince1970:t], s.lastPathComponent);
+#endif
+		return t;
+	}
+	if (IsHeif(x) &&
+		(t = ExifDatetimeForFile(c, YES)) != -1) {
+#ifdef LOGSORT
+		if (!w) NSLog(@"heic %@:%@", [NSDate dateWithTimeIntervalSince1970:t], s.lastPathComponent);
+#endif
+		return t;
+	}
+	struct stat buf;
+	t = stat(c, &buf) ? -1 : buf.st_birthtimespec.tv_sec;
+#ifdef LOGSORT
+		if (!w) NSLog(@"stat %@:%@", [NSDate dateWithTimeIntervalSince1970:t], s.lastPathComponent);
+#endif
+	return t;
+}
+
+- (NSComparisonResult)exifDateCompare:(NSString *)other {
+	time_t aTime, bTime;
+	if ((aTime = ExifDateFromFile(self)) != -1 &&
+		(bTime = ExifDateFromFile(other)) != -1 &&
+		aTime != bTime) {
+		return aTime < bTime ? NSOrderedAscending : NSOrderedDescending;
+	}
+	return [self localizedStandardCompare:other];
 }
 
 @end
@@ -251,6 +308,14 @@
 		case -2:
 			return ^NSComparisonResult(id a, id b) {
 				return [b dateModifiedCompare:a];
+			};
+		case 3:
+			return ^NSComparisonResult(id a, id b) {
+				return [a exifDateCompare:b];
+			};
+		case -3:
+			return ^NSComparisonResult(id a, id b) {
+				return [b exifDateCompare:a];
 			};
 	}
 }
@@ -532,9 +597,6 @@
 				}
 			}
 			[displayedFilenames addObjectsFromArray:filenames];
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[_fileWatcher watchDirectory:thePath];
-			});
 		} else if (currCat) { // currCat > 0 whenever cat changes (see keydown)
 			// this means deleting when a cat is displayed will cause unsightly flashing
 			// but we can live with that for now. maybe temp set currcat to 0?
@@ -558,6 +620,9 @@
 			[secondaryImageCacheQueue removeAllObjects];
 			[imageCacheQueueLock unlockWithCondition:0];
 		}
+		[self updateStatusOnMainThread:^NSString *{
+			return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), filenames.count];
+		}];
 		[displayedFilenames sortUsingComparator:self.comparator];
 		if (startSlideshowWhenReady) {
 			startSlideshowWhenReady = NO;
@@ -632,8 +697,13 @@
 		 NSLog(@"%d files/%f secs = %f/s; %f s/file", i, delta,
 		 i / delta, delta/i);
 		 }*/
-		if (myThreadTime == lastThreadTime)
+		if (myThreadTime == lastThreadTime) {
 			[self performSelectorOnMainThread:@selector(updateStatusFld) withObject:nil waitUntilDone:NO];
+			if (thePath)
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[_fileWatcher watchDirectory:thePath];
+				});
+		}
 		if (loadingDone && filesBeingOpened.count) {
 			[filesBeingOpened removeAllObjects];
 			if (myThreadTime == lastThreadTime && selectedIndexes.count)

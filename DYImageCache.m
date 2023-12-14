@@ -10,6 +10,7 @@
 #import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
 #import "DYExiftags.h"
+#import <sys/stat.h>
 
 #define N_StringFromFileSize_UNITS 3
 NSString *FileSize2String(unsigned long long fileSize) {
@@ -31,19 +32,18 @@ NSString *FileSize2String(unsigned long long fileSize) {
 @property NSUInteger counter;
 @end
 @implementation DYImageInfo
-@synthesize image, path, modTime;
+@synthesize image, path;
 
 - (instancetype)initWithPath:(NSString *)s {
 	if (self = [super init]) {
 		path = [s copy];
 		_counter = 1; // NSCache may try to evict us immediately!
 		
-		// get modTime
-		NSDictionary *fattrs = [NSFileManager.defaultManager attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL];
-		modTime = [fattrs fileModificationDate];
-		
-		// get fileSize
-		fileSize = [fattrs fileSize];
+		struct stat buf;
+		if (!stat(ResolveAliasToPath(s).fileSystemRepresentation, &buf)) {
+			modTime = buf.st_mtimespec.tv_sec;
+			fileSize = buf.st_size;
+		}
 	}
 	return self;
 }
@@ -251,11 +251,11 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	if (imgInfo) {
 		// must resolve alias before getting mod time
 		// b/c that's what we do in scaleImage
-		NSDate *modTime = [[NSFileManager.defaultManager attributesOfItemAtPath:ResolveAliasToPath(s) error:NULL] fileModificationDate];
+		struct stat buf;
+		time_t modTime = stat(ResolveAliasToPath(s).fileSystemRepresentation, &buf) ? 0 : buf.st_mtimespec.tv_sec;
 
 		// == nil if file doesn't exist
-		if ((modTime == nil && imgInfo.modTime == nil)
-			|| (modTime && imgInfo.modTime && [modTime isEqualToDate:imgInfo.modTime]))
+		if (modTime == imgInfo->modTime)
 			return imgInfo.image;
 		[self removeImageForKey:s];
 	}

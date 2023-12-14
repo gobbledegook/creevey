@@ -337,6 +337,48 @@
         }
       }
     },
+    "59a-4i-N1u.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Sort by EXIF/Creation Date\"; ObjectID = \"59a-4i-N1u\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausrichten nach EXIF/Erstellungsdatum"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by EXIF/Creation Date"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por fecha EXIF/creación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangement - Date EXIF/création"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organizza per data EXIF / di creazione"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據 EXIF / 製作日期排列"
+          }
+        }
+      }
+    },
     "81.title" : {
       "comment" : "Class = \"NSMenu\"; title = \"File\"; ObjectID = \"81\";",
       "extractionState" : "extracted_with_value",

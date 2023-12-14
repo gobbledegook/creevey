@@ -189,6 +189,12 @@ CA
                                     <action selector="sortThumbnails:" target="207" id="853"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Sort by EXIF/Creation Date" tag="203" keyEquivalent="3" id="59a-4i-N1u">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                <connections>
+                                    <action selector="sortThumbnails:" target="207" id="obX-W0-MSt"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="854"/>
                             <menuItem title="Show File Names" tag="251" id="855">
                                 <modifierMask key="keyEquivalentModifierMask"/>

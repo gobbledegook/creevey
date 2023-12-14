@@ -13,13 +13,13 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 @interface DYImageInfo : NSObject {
 	@public // access these instance variables like a struct
-	unsigned long long fileSize;
+	time_t modTime;
+	off_t fileSize;
 	NSSize pixelSize;
 	unsigned short exifOrientation;
 }
 @property (strong, nonatomic) NSImage *image;
 @property (readonly, nonatomic) NSString *path;
-@property (readonly, nonatomic) NSDate *modTime;
 - (instancetype)initWithPath:(NSString *)s NS_DESIGNATED_INITIALIZER;
 @property (nonatomic, readonly, copy) NSString *pixelSizeAsString;
 @end

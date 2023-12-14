@@ -17,6 +17,10 @@
 #include "exif.h"
 #include "exifint.h"
 
+static uint16_t read2byte(FILE * f, char o);
+static BOOL SeekExifInJpeg(FILE * infile);
+static BOOL SeekExifSubIFD(FILE * f, char *oo);
+
 struct my_error_mgr {
 	struct jpeg_error_mgr pub;	/* "public" fields */
 	
@@ -96,68 +100,6 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 	NSMutableString *result = [NSMutableString stringWithCapacity:100];
 	struct exiftags *t;
 	int pas = 0;
-/*	unsigned char *exifbuf;
-	int mark, gotexif, first;
-	unsigned int len, rlen;
-	FILE *fp;
-
-	gotexif = FALSE;
-	first = 0;
-	exifbuf = NULL;
-	
-	if ((fp = fopen([aPath fileSystemRepresentation],"r")) == NULL) {
-		return nil;
-	}
-	
-	while (jpegscan(fp, &mark, &len, !(first++))) {
-		
-		if (mark != JPEG_M_APP1) {
-			if (fseek(fp, len, SEEK_CUR)) {
-				fclose(fp);
-				return nil;
-			} //exifdie((const char *)strerror(errno));
-			continue;
-		}
-		
-		exifbuf = (unsigned char *)malloc(len);
-		if (!exifbuf) {
-			fclose(fp);
-			return nil;
-		}	//exifdie((const char *)strerror(errno));
-		
-		rlen = fread(exifbuf, 1, len, fp);
-		if (rlen != len) {
-			//exifwarn("error reading JPEG (length mismatch)");
-			free(exifbuf);
-			fclose(fp);
-			return nil;
-		}
-		
-		t = exifparse(exifbuf, len);
-		
-		if (t && t->props) {
-			gotexif = TRUE;
-			
-			//if (dumplvl & ED_CAM)
-			[result appendString:printprops(t->props, ED_CAM, pas)];
-			//if (dumplvl & ED_IMG)
-			[result appendString:printprops(t->props, ED_IMG, pas)];
-			//if (dumplvl & ED_VRB)
-			//[result appendString:printprops(t->props, ED_VRB, pas)];
-			//if (dumplvl & ED_UNK)
-			//[result appendString:printprops(t->props, ED_UNK, pas)];
-		}
-		exiffree(t);
-		free(exifbuf);
-	}
-	fclose(fp);
-	
-	if (!gotexif) {
-		//exifwarn("couldn't find Exif data");
-		return nil;
-	}
-	
-	return [result copy];*/
 	struct jpeg_decompress_struct srcinfo;
 	struct my_error_mgr jsrcerr;
 	FILE * input_file;
@@ -222,53 +164,282 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 }
 
 + (unsigned short)orientationForFile:(NSString *)aPath {
-	unsigned len;
-	unsigned char *app1 = exifHeaderForFile(aPath,&len);
-	if (!app1)
-		return 0;
-	unsigned short z = exif_orientation(app1,len,0);
-	free(app1);
+	FILE * f;
+	if ((f = fopen(aPath.fileSystemRepresentation, "rb")) == NULL) return 0;
+	unsigned short z = 0;
+	if (SeekExifInJpeg(f)) {
+		char o;
+		if (SeekExifSubIFD(f, &o)) {
+			uint16_t n = read2byte(f,o);
+			if (n) {
+				while (n--) {
+					if (read2byte(f,o) == 0x0112) {
+						fseek(f, 6, SEEK_CUR);
+						z = read2byte(f,o);
+						break;
+					}
+					fseek(f, 10, SEEK_CUR);
+				}
+			}
+		}
+	}
+	fclose(f);
 	return z;
 }
 
 @end
 
-
-unsigned char *exifHeaderForFile(NSString *aPath, unsigned *len) {
-	struct jpeg_decompress_struct srcinfo;
-	struct my_error_mgr jsrcerr;
-	FILE * input_file;
-	
-	/* Open files first, so setjmp can assume they're open. */
-	if ((input_file = fopen(aPath.fileSystemRepresentation, "rb")) == NULL)
-		return NULL;
-	srcinfo.err = jpeg_std_error(&jsrcerr.pub);
-	jsrcerr.pub.error_exit = _my_error_handler;
-	
-	if (setjmp(jsrcerr.setjmp_buffer)) {
-		jpeg_destroy_decompress(&srcinfo);
-		fclose(input_file);
-		return NULL;
-	}
-	jpeg_create_decompress(&srcinfo);
-	jpeg_stdio_src(&srcinfo, input_file);
-	jpeg_save_markers(&srcinfo,JPEG_APP0+1,0xFFFF);
-	jpeg_read_header(&srcinfo, TRUE);
-	
-	jpeg_saved_marker_ptr mptr = srcinfo.marker_list;
-	unsigned char *newapp1 = NULL;
-	if (mptr && (mptr->marker == JPEG_APP0+1)) {
-		newapp1 = malloc(mptr->data_length);
-		if (newapp1) {
-			memcpy(newapp1,mptr->data,mptr->data_length);
-			*len = mptr->data_length;
-		}
-	}
-	jpeg_destroy_decompress(&srcinfo);
-	fclose(input_file);
-	return newapp1;
+// let's just assume any values we want are non-zero
+static uint16_t read2byte(FILE * f, char o) {
+	int b = fgetc(f), c;
+	if (b == EOF || (c = fgetc(f)) == EOF) return 0;
+	if (o) return (b << 8) | c;
+	return (c << 8) | b;
+}
+static uint16_t read2bytem(FILE * f) {
+	int b = fgetc(f), c;
+	if (b == EOF || (c = fgetc(f)) == EOF) return 0;
+	return (b << 8) | c;
+}
+static uint32_t read4byte(FILE * f, char o) {
+	unsigned char b[4];
+	if (4 != fread(b, 1, 4, f)) return 0;
+	if (o) return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+	return (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | b[0];
+}
+static uint32_t read4bytem(FILE * f) {
+	unsigned char b[4];
+	if (4 != fread(b, 1, 4, f)) return 0;
+	return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+}
+static uint64_t read8bytem(FILE * f) {
+	unsigned char b[8];
+	if (8 != fread(b, 1, 8, f)) return 0;
+	return ((uint64_t)b[0] << 56) | ((uint64_t)b[1] << 48) | ((uint64_t)b[2] << 40) | ((uint64_t)b[3] << 32) | (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7];
 }
 
+static BOOL SeekExifInHeif(FILE * f) {
+	// heif files are composed of "atoms" aka "boxes"
+	BOOL inited = NO;
+	for (;;) {
+		off_t boxStart = ftello(f);
+		uint64_t boxLen = read4bytem(f); // each atom starts with a 4-byte length
+		if (boxLen < 8 && boxLen != 1)   // length==1 means an 8-byte length follows the type
+			return NO;
+		unsigned char type[4];
+		if (4 != fread(type, 1, 4, f)) return 0;
+		if (!inited) {
+			// as a sanity check, make sure the first atom is 'ftyp'
+			inited = YES;
+			if (memcmp(type, "ftyp", 4)) return 0;
+		}
+		if (boxLen == 1) {
+			boxLen = read8bytem(f);
+		}
+		if (memcmp(type, "meta", 4)) {
+			if (fseeko(f, boxStart+boxLen, SEEK_SET)) // skip to next atom
+				return 0;
+			continue;
+		}
+		// found "meta" atom
+		off_t metaEnd = boxStart + boxLen;
+		fseek(f, 4, SEEK_CUR); // skip vers/flag
+		uint32_t exifID = UINT32_MAX;
+		while ((boxStart = ftello(f)) < metaEnd) {
+			boxLen = read4bytem(f);
+			if (boxLen < 8) return 0;
+			if (4 != fread(type, 1, 4, f)) return 0;
+			int version;
+			if (!memcmp(type, "iinf", 4)) {
+				version = fgetc(f);
+				fseek(f, 3, SEEK_CUR); // skip flag
+				uint32_t n = version ? read4bytem(f) : read2bytem(f);
+				for (uint32_t i = 0; i < n; ++i) {
+					off_t eStart = ftello(f);
+					uint32_t eLen = read4bytem(f);
+					if (eLen < 16) return 0; // must have at least size, type "infe", flag, and data
+					fseek(f, 4, SEEK_CUR); // assume "infe"
+					version = fgetc(f);
+					fseek(f, 3, SEEK_CUR);
+					uint32_t itemID;
+					itemID = version <= 2 ? read2bytem(f) : read4bytem(f);
+					fseek(f, 2, SEEK_CUR); // skip protection_index
+					fread(type, 1, 4, f);
+					if (!memcmp(type, "Exif", 4))
+						exifID = itemID;
+					fseeko(f, eStart+eLen, SEEK_SET);
+				}
+			} else if (!memcmp(type, "iloc", 4)) {
+				version = fgetc(f);
+				fseek(f, 3, SEEK_CUR);
+				uint16_t config = read2bytem(f);
+				uint16_t offset_size = (config >> 12) & 0xF;
+				uint16_t length_size = (config >> 8) & 0xF;
+				uint16_t base_offset_size = (config >> 4) & 0xF;
+				uint16_t index_size = version >= 1 ? config & 0xF : 0;
+				uint32_t n = version < 2 ? read2bytem(f) : read4bytem(f);
+				if (n > 20000) return 0; // this value copied from libheif
+				for (uint32_t i = 0; i < n; ++i) {
+					uint32_t myId = version < 2 ? read2bytem(f) : read4bytem(f);
+					if (version >= 1) fseek(f, 2, SEEK_CUR); // skip construction_method
+					fseek(f, 2, SEEK_CUR); // skip data_reference_index
+					uint64_t base_offset = 0;
+					if (base_offset_size == 4) base_offset = read4bytem(f);
+					else if (base_offset_size == 8) base_offset = read8bytem(f);
+					uint16_t numExtents = read2bytem(f);
+					if (numExtents > 32) return 0;
+					if (myId != exifID) {
+						fseek(f, numExtents*(index_size+offset_size+length_size), SEEK_CUR);
+						continue;
+					}
+					// found Exif offset! Assume there's one and only one extent
+					if (index_size) fseek(f, index_size, SEEK_CUR);
+					off_t exifOffset = offset_size == 8 ? read8bytem(f) : read4bytem(f);
+					exifOffset += base_offset;
+					fseeko(f, exifOffset+4, SEEK_SET);
+					unsigned char buf[6];
+					if (6 != fread(buf, 1, 6, f)) return 0;
+					if (memcmp(buf, "Exif\0\0", 6)) return 0;
+					return YES;
+				}
+			}
+			fseeko(f, boxStart + boxLen, SEEK_SET);
+		}
+	}
+	return 0;
+}
+
+static BOOL SeekExifInJpeg(FILE * infile)
+{
+	int a = fgetc(infile);
+	if (a != 0xff || fgetc(infile) != 0xD8) return 0; // file starts with FFD8
+	for(;;){
+		int itemlen;
+		int prev = 0;
+		int marker = 0;
+		for (a=0;;a++){
+			marker = fgetc(infile);
+			if (marker == EOF) return 0; // Unexpected end of file
+			if (marker != 0xff && prev == 0xff) break; // each marker is FFxx, where xx is the marker number
+			prev = marker;
+		}
+		if (a > 10)
+			return 0; // Extraneous {a-1} padding bytes before section {marker}
+
+		// Read the length of the section (in big endian order)
+		itemlen = read2bytem(infile);
+		if (itemlen < 2) return 0; // invalid marker
+
+		unsigned char buf[6];
+		switch(marker){
+			case 0xDA: // stop before hitting compressed data
+			case 0xD9: // End Of Image
+				return 0;
+
+			case 0xE1: // Exif (or possibly XMP)
+				if (6 != fread(buf, 1, 6, infile)) return 0; // hit EOF
+				if (memcmp(buf, "Exif\0\0", 6)) return 0; // not Exif
+				return 1; // found it!
+				break;
+
+			default: // Skip any other sections.
+				break;
+		}
+		fseek(infile, itemlen-2, SEEK_CUR);
+	}
+	return 0;
+}
+
+static BOOL SeekExifSubIFD(FILE * f, char *oo) {
+	long b0 = ftell(f);
+
+	// get endian-ness
+	enum byteorder o;
+	unsigned char buf[2] = "\0\0";
+	fread(buf, 1, 2, f);
+	if (!memcmp(buf, "MM", 2)) o = 1;
+	else if (!memcmp(buf, "II", 2)) o = 0;
+	else return 0;
+
+	// verify TIFF header
+	if (read2byte(f,o) != 42) return 0;
+	u_int32_t offset = read4byte(f, o);
+	if (!offset) return 0;
+
+	fseek(f, b0+offset, SEEK_SET);
+	uint16_t n;
+	n = read2byte(f,o); // number of entries in this IFD
+	if (!n) return 0;
+	uint32_t exifOffset = 0;
+	while (n--) {
+		if (read2byte(f,o) == 0x8769) // offset to Exif SubIFD
+		{
+			fseek(f, 6, SEEK_CUR); // 2 + 6 = 8
+			exifOffset = read4byte(f,o); // + 4 = 12
+			break;
+		}
+		fseek(f, 10, SEEK_CUR); // 2 + 10 = 12 (each entry is 12 bytes)
+	}
+	if (!exifOffset) return 0;
+
+	fseek(f, b0+exifOffset, SEEK_SET);
+	*oo = o;
+	return YES;
+}
+
+static BOOL exif_datetimeoriginal(FILE * f, unsigned char *outBuf) {
+	long b0 = ftell(f);
+	char o;
+	if (!SeekExifSubIFD(f, &o)) return NO;
+
+	uint16_t n = read2byte(f,o);
+	if (!n) return NO;
+	uint32_t stringOffset = 0;
+	while (n--) {
+		if (read2byte(f,o) == 0x9003) // DateTimeOriginal
+		{
+			fseek(f, 6, SEEK_CUR);
+			stringOffset = read4byte(f,o);
+			break;
+		}
+		fseek(f, 10, SEEK_CUR);
+	}
+	return stringOffset && !fseek(f, b0+stringOffset, SEEK_SET) && 20 == fread(outBuf, 1, 20, f);
+}
+
+time_t ExifDatetimeForFile(const char *path, DYExiftagsFileType type) {
+	FILE * input_file;
+	if ((input_file = fopen(path, "rb")) == NULL)
+		return -1;
+	BOOL ok = NO;
+	switch (type) {
+		case JPEG:
+			ok = SeekExifInJpeg(input_file);
+			break;
+		case HEIF:
+			ok = SeekExifInHeif(input_file);
+			break;
+	}
+	if (!ok) {
+		fclose(input_file);
+		return -1;
+	}
+	time_t result = -1;
+	unsigned char s[20];
+	if (exif_datetimeoriginal(input_file, s)) {
+		s[19] = 0; // make sure string is null-terminated before passing to sscanf
+		struct tm t;
+		if (sscanf((char *)s, "%d:%d:%d %d:%d:%d", &t.tm_year, &t.tm_mon,
+				   &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec) == 6) {
+			t.tm_year -= 1900;
+			t.tm_mon -= 1;
+			t.tm_isdst = -1;
+			result = mktime(&t);
+		}
+	}
+	fclose(input_file);
+	return result;
+}
 
 static unsigned largestExifOffset(unsigned oldLargest,
 								  unsigned char *b0, unsigned len,
@@ -363,58 +534,25 @@ unsigned char *delete_exif_thumb(unsigned char *b, unsigned len,
 								 unsigned *outLen)
 {
 	return replace_exif_thumb(NULL,0,0,0,b,len,outLen);
-// the following code strips out the entire IFD1 EXIF block
-// this may be undesirable if we wish to regenerate a thumb at some future point
-//	if (memcmp(b, "Exif\0\0", 6)) {
-//		return NULL;
-//	}
-//	b += 6;
-//	len -= 6;
-//	unsigned char *b0 = b; // save beginning for offsets, later
-//	enum byteorder o;
-//	/* Determine endianness of the TIFF data. */
-//	if (!memcmp(b, "MM", 2))
-//		o = BIG;
-//	else if (!memcmp(b, "II", 2))
-//		o = LITTLE;
-//	else {
-//		return NULL;
-//	}
-//	b += 2;
-//	
-//	/* Verify the TIFF header. */
-//	if (exif2byte(b, o) != 42) {
-//		return NULL;
-//	}
-//	b += 2;
-//	
-//	/* Get the 0th IFD, where all of the good stuff should start. */
-//	b = b0 + exif4byte(b, o);
-//	/* skip the 0th IFD */
-//	b += 12*exif2byte(b,o);
-//	b += 2; // don't forget the two bytes you read in the last line!
-//	unsigned n = exif4byte(b,o); // offset of next IFD
-//	unsigned offset_of_link_to_ifd1offset = b - b0 + 6;
-//	if (n == 0)
-//		return NULL;
-//	b = b0 + n;
-//	
-//	unsigned ifd1offset = n + 6; // save IFD1 offset
-//	
-//	/* make sure this is the last IFD */
-//	b += 12*exif2byte(b,o);
-//	b += 2;
-//	if (exif4byte(b,o))
-//		return NULL;
-//	
-//	unsigned char *newapp1;
-//	newapp1 = malloc(ifd1offset);
-//	if (!newapp1)
-//		return NULL;
-//	memcpy(newapp1, b0-6, ifd1offset);
-//	byte4exif(0,newapp1 + offset_of_link_to_ifd1offset,o);
-//	*outLen = ifd1offset;
-//	return newapp1;
+}
+
+u_int32_t bytesTo0thIFD(unsigned char *b, unsigned len, enum byteorder *o) {
+	if (len < 16) return 0; // 14 bytes read in this function, plus two for length of IFD
+	if (memcmp(b, "Exif\0\0", 6)) return 0;
+	b += 6;
+
+	/* Determine endianness of the TIFF data. */
+	if (!memcmp(b, "MM", 2)) *o = BIG;
+	else if (!memcmp(b, "II", 2)) *o = LITTLE;
+	else return 0;
+	b += 2;
+
+	/* Verify the TIFF header. */
+	if (exif2byte(b, *o) != 42) return 0;
+	b += 2;
+
+	/* Get the 0th IFD, where all of the good stuff should start. */
+	return exif4byte(b, *o);
 }
 
 // n.b. code sort of duplicated in (actually copied from) my modified copy of epeg.c
@@ -424,40 +562,17 @@ unsigned char *delete_exif_thumb(unsigned char *b, unsigned len,
 // there's no error checking for type of data, but it MUST be JPEG, and you must
 // calculate its width and height beforehand
 // caller is responsible for freeing the new app1 data
-unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthumblen,
+unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned newthumblen,
 								  JDIMENSION newWidth, JDIMENSION newHeight,
 								  unsigned char *b, unsigned len,
 								  unsigned *outLen)
 {
-	if (memcmp(b, "Exif\0\0", 6)) {
-		return NULL;
-	}
-	b += 6;
-	len -= 6;
-	unsigned char *b0 = b; // save beginning for offsets, later
 	enum byteorder o;
-	
-	/* Determine endianness of the TIFF data. */
-	
-	if (!memcmp(b, "MM", 2))
-		o = BIG;
-	else if (!memcmp(b, "II", 2))
-		o = LITTLE;
-	else {
-		return NULL;
-	}
-	
-	b += 2;
-	
-	/* Verify the TIFF header. */
-	
-	if (exif2byte(b, o) != 42) {
-		return NULL;
-	}
-	b += 2;
-	
-	/* Get the 0th IFD, where all of the good stuff should start. */
-	b = b0 + exif4byte(b, o);
+	u_int32_t offset = bytesTo0thIFD(b, len, &o);
+	if (!offset) return NULL;
+	unsigned char *b0 = b + 6; // save beginning for offsets, later
+	len -= 6;
+	b = b0 + offset;
 	/* skip the 0th IFD */
 	b += 12*exif2byte(b,o);
 	b += 2; // don't forget the two bytes you read in the last line!
@@ -473,8 +588,8 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthum
 
 	n = exif2byte(b,o); // number of tags in IFD1
 	b += 2;
-	unsigned long thumbStart = 0;
-	unsigned long thumbLength = 0;
+	unsigned thumbStart = 0;
+	unsigned thumbLength = 0;
 	
 	u_int32_t tmp;
 	while (n--) {
@@ -551,42 +666,22 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned long newthum
 	return b0 + thumbStart;
 }
 
-// ** lots of repeated code here; factor out stuff to verify tiff header?
-// also, make sure our pointer doesn't go past len.
 unsigned short exif_orientation(unsigned char *b, unsigned len, char reset) {
-	if (memcmp(b, "Exif\0\0", 6)) {
-		return 0;
-	}
-	b += 6;
-	len -= 6;
-	unsigned char *b0 = b; // save beginning for offsets, later
 	enum byteorder o;
-	/* Determine endianness of the TIFF data. */
-	if (!memcmp(b, "MM", 2))
-		o = BIG;
-	else if (!memcmp(b, "II", 2))
-		o = LITTLE;
-	else {
-		return 0;
-	}
-	b += 2;
-	
-	/* Verify the TIFF header. */
-	if (exif2byte(b, o) != 42) {
-		return 0;
-	}
-	b += 2;
-	
-	/* Get the 0th IFD, where all of the good stuff should start. */
-	b = b0 + exif4byte(b, o);
+	u_int32_t offset = bytesTo0thIFD(b, len, &o);
+	if (!offset) return 0;
+	unsigned char *b0 = b + 6; // save beginning for offsets, later
+	len -= 6;
+	b = b0 + offset;
 	unsigned n;
 	n = exif2byte(b,o); // number of entries in this IFD
 	b += 2;
+	if (len < offset + 2 + n*12) return 0;
 	while (n--) {
 		if (exif2byte(b,o) == 0x0112) // orientation
 		{
 			unsigned short z = exif2byte(b+8,o);
-			if (reset && (b - b0 + 4 <= len))
+			if (reset)
 				byte2exif(1,b+8,o);
 			if (z > 0 && z <= 8)
 				return z;

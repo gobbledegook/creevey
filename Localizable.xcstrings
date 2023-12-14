@@ -1813,6 +1813,40 @@
         }
       }
     },
+    "Sorting %lu filenames…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richte %lu Dateinamen aus…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenando %lu nombres de archivos…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tri de %lu noms de fichiers…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sto ordinando %lu nomi dei file…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在排列 %lu 個檔案名稱⋯⋯"
+          }
+        }
+      }
+    },
     "The file \"%@\" could not be restored from the trash because of an error: %@" : {
       "localizations" : {
         "de" : {
