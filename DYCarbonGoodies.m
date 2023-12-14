@@ -65,7 +65,7 @@ BOOL IsHeif(NSString *x) {
 }
 
 BOOL FileIsJPEG(NSString *s) {
-	NSString *x = [s.pathExtension lowercaseString];
+	NSString *x = s.pathExtension.lowercaseString;
 	return [x isEqualToString:@"jpg"] || [x isEqualToString:@"jpeg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }

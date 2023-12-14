@@ -31,7 +31,6 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 @property (nonatomic, readonly) float boundingWidth;
 @property (nonatomic) NSSize boundingSize;
-- (void)setInterpolationType:(NSImageInterpolation)t;
 
 - (void)cacheFile:(NSString *)s;
 

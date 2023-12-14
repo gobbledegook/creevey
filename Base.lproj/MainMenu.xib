@@ -217,17 +217,17 @@ CA
                         <items>
                             <menuItem title="Rotate Left" tag="107" keyEquivalent="L" id="453">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="454"/>
+                                    <action selector="transformJpeg:" target="207" id="454"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Rotate Right" tag="105" keyEquivalent="R" id="451">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="452"/>
+                                    <action selector="transformJpeg:" target="207" id="452"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Rotate 180°" tag="106" id="466">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="476"/>
+                                    <action selector="transformJpeg:" target="207" id="476"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="463">
@@ -235,22 +235,22 @@ CA
                             </menuItem>
                             <menuItem title="Flip Horizontal ↔" tag="101" id="464">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="477"/>
+                                    <action selector="transformJpeg:" target="207" id="477"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Flip Vertical ↕" tag="102" id="465">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="478"/>
+                                    <action selector="transformJpeg:" target="207" id="478"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Transpose (Flip Diag.) ↙" tag="103" id="490">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="492"/>
+                                    <action selector="transformJpeg:" target="207" id="492"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Transverse Transpose ↘" tag="104" id="491">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="493"/>
+                                    <action selector="transformJpeg:" target="207" id="493"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="473">
@@ -258,7 +258,7 @@ CA
                             </menuItem>
                             <menuItem title="Make Progressive" tag="111" id="469">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="479"/>
+                                    <action selector="transformJpeg:" target="207" id="479"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="475">
@@ -266,12 +266,12 @@ CA
                             </menuItem>
                             <menuItem title="Save Rotation" tag="117" keyEquivalent="S" id="857">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="858"/>
+                                    <action selector="transformJpeg:" target="207" id="858"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Advanced Options…" tag="100" keyEquivalent="J" id="470">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="480"/>
+                                    <action selector="transformJpeg:" target="207" id="480"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -282,7 +282,7 @@ CA
                         <items>
                             <menuItem title="Rotate JPEG Files by Orientation Tag" tag="113" id="660">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="661"/>
+                                    <action selector="transformJpeg:" target="207" id="661"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="659">
@@ -290,12 +290,12 @@ CA
                             </menuItem>
                             <menuItem title="Reset Orientation Tag…" tag="114" id="658">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="669"/>
+                                    <action selector="transformJpeg:" target="207" id="669"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Regenerate EXIF Thumbnail…" tag="115" id="647">
                                 <connections>
-                                    <action selector="rotateTest:" target="207" id="649"/>
+                                    <action selector="transformJpeg:" target="207" id="649"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -840,7 +840,7 @@ Gw
                                             <rect key="frame" x="17" y="16" width="443" height="265"/>
                                             <clipView key="contentView" id="Wd4-0s-G4f">
                                                 <rect key="frame" x="1" y="1" width="441" height="263"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="mgp-YH-OsR" id="ejY-yM-jVY">
                                                         <rect key="frame" x="0.0" y="0.0" width="441" height="246"/>
@@ -1115,12 +1115,12 @@ Gw
                 <menuItem title="✎" id="671"/>
                 <menuItem title="Rotate Left" tag="137" id="651">
                     <connections>
-                        <action selector="rotateTest:" target="207" id="657"/>
+                        <action selector="transformJpeg:" target="207" id="657"/>
                     </connections>
                 </menuItem>
                 <menuItem title="Rotate Right" tag="135" id="652">
                     <connections>
-                        <action selector="rotateTest:" target="207" id="656"/>
+                        <action selector="transformJpeg:" target="207" id="656"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="653">
@@ -1128,7 +1128,7 @@ Gw
                 </menuItem>
                 <menuItem title="Remove Thumbnail…" tag="116" id="654">
                     <connections>
-                        <action selector="rotateTest:" target="207" id="670"/>
+                        <action selector="transformJpeg:" target="207" id="670"/>
                     </connections>
                 </menuItem>
             </items>

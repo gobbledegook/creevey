@@ -204,6 +204,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block {
+	[_fileWatcher stop];
 	if (currentIndex != NSNotFound)
 		[self saveZoomInfo]; // in case we're called without endSlideshow being called
 	

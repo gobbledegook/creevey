@@ -83,8 +83,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSSize boundingSize;
 	NSUInteger maxImages;
 	volatile BOOL cachingShouldStop;
-	
-	NSImageInterpolation interpolationType;
 }
 - (instancetype)init NS_UNAVAILABLE;
 @end
@@ -115,11 +113,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 - (float)boundingWidth { return boundingSize.width; }
 - (NSSize)boundingSize { return boundingSize; }
-
-- (void)setInterpolationType:(NSImageInterpolation)t {
-	interpolationType = t;
-}
-
 
 - (void)createScaledImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0)

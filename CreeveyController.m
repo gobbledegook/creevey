@@ -125,34 +125,30 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 {
 	if (self != [CreeveyController class]) return;
 
-    NSMutableDictionary *dict;
-    NSUserDefaults *defaults;
-	
-    defaults=NSUserDefaults.standardUserDefaults;
-	
-    dict=[NSMutableDictionary dictionary];
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
 	NSString *s = CREEVEY_DEFAULT_PATH;
-    dict[@"picturesFolderPath"] = s;
-    dict[@"lastFolderPath"] = s;
-    dict[@"startupOption"] = @0;
-	dict[@"thumbCellWidth"] = @120.0f;
-	dict[@"getInfoVisible"] = @NO;
-	dict[@"autoVersCheck"] = @YES;
-	dict[@"jpegPreserveModDate"] = @NO;
-	dict[@"slideshowAutoadvance"] = @NO;
-	dict[@"slideshowAutoadvanceTime"] = @5.25f;
-	dict[@"slideshowLoop"] = @NO;
-	dict[@"slideshowRandom"] = @NO;
-	dict[@"slideshowScaleUp"] = @NO;
-	dict[@"slideshowActualSize"] = @NO;
-	dict[@"slideshowBgColor"] = [NSKeyedArchiver archivedDataWithRootObject:NSColor.blackColor];
-	dict[@"exifThumbnailShow"] = @NO;
-	dict[@"showFilenames"] = @YES;
-	dict[@"sortBy"] = @1; // sort by filename, ascending
-	dict[@"Slideshow:RerandomizeOnLoop"] = @YES;
-	dict[@"maxThumbsToLoad"] = @100;
-	dict[@"autoRotateByOrientationTag"] = @YES;
-    [defaults registerDefaults:dict];
+	[defaults registerDefaults:@{
+		@"picturesFolderPath": s,
+		@"lastFolderPath": s,
+		@"startupOption": @0,
+		@"thumbCellWidth": @120.0f,
+		@"getInfoVisible": @NO,
+		@"autoVersCheck": @YES,
+		@"jpegPreserveModDate": @NO,
+		@"slideshowAutoadvance": @NO,
+		@"slideshowAutoadvanceTime": @5.25f,
+		@"slideshowLoop": @NO,
+		@"slideshowRandom": @NO,
+		@"slideshowScaleUp": @NO,
+		@"slideshowActualSize": @NO,
+		@"slideshowBgColor": [NSKeyedArchiver archivedDataWithRootObject:NSColor.blackColor],
+		@"exifThumbnailShow": @NO,
+		@"showFilenames": @YES,
+		@"sortBy": @1, // sort by filename, ascending
+		@"Slideshow:RerandomizeOnLoop": @YES,
+		@"maxThumbsToLoad": @100,
+		@"autoRotateByOrientationTag": @YES,
+	}];
 
 	// migrate old RBSplitView pref
 	if (0.0 == [defaults floatForKey:@"MainWindowSplitViewTopHeight"]) {
@@ -207,7 +203,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		
 		thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
 		thumbsCache.boundingSize = DYWrappingMatrix.maxCellSize;
-		[thumbsCache setInterpolationType:NSImageInterpolationNone];
 		
 		short int i;
 		for (i=0; i<NUM_FNKEY_CATS; ++i) {
@@ -348,7 +343,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		: frontWindow.currentSelection[0];
 	NSError * __autoreleasing error = nil;
 	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s isDirectory:NO]
-											forScreen:[NSScreen mainScreen]
+											forScreen:NSScreen.mainScreen
 											  options:@{}
 												error:&error];
 	if (error)  {
@@ -359,9 +354,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	};
 }
 
-// this is called "test" even though it works now.
-// moral: name your functions correctly from the start.
-- (IBAction)rotateTest:(id)sender {
+- (IBAction)transformJpeg:(id)sender {
 	DYJpegtranInfo jinfo;
 	NSInteger t = [sender tag] - 100;
 	if (t == 0) {
@@ -540,7 +533,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		NSMutableArray<NSArray *> *trashedFiles = [NSMutableArray arrayWithCapacity:n];
 		for (i=0; i < n; ++i) {
 			NSString *fullpath = a[i];
-			NSURL *newURL;
+			NSURL * __autoreleasing newURL;
 			char result = (doTrash ? [self trashFile:fullpath numLeft:n-i resultingURL:&newURL] : 1);
 			if (result == 1) {
 				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
@@ -548,7 +541,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 				if (slidesWindow.visible)
 					[slidesWindow removeImageForFile:fullpath];
 				if (doTrash)
-					[trashedFiles addObject:@[fullpath, newURL]];
+					[trashedFiles addObject:@[fullpath, newURL]]; // this is a pair representing the old and new file locations
 			} else if (result == 2)
 				break;
 		}

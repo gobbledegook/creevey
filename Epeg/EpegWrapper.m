@@ -25,7 +25,7 @@
 	NSImage *image;
 	int width_in, height_in;
 	
-	im = epeg_file_open([path fileSystemRepresentation]);
+	im = epeg_file_open(path.fileSystemRepresentation);
 	if (!im)
 		return nil;
 	
@@ -58,7 +58,7 @@
 		NSData *data = [[NSData alloc] initWithBytesNoCopy:(void *)pixels length:outsize]; //outbuffer will be freed by NSData
 		imageRep = [[NSBitmapImageRep alloc] initWithData:data];
 		//NSLog(@"exif thumb for %@", path);
-		NSSize tSize = [imageRep size];
+		NSSize tSize = imageRep.size;
 		if (((int)tSize.width)*height_in != ((int)(tSize.height))*width_in) {
 			// dimensions don't match
 			imageRep = nil;
@@ -122,7 +122,7 @@
 	Epeg_Image *im = NULL;
 	NSImage *image;
 	
-	im = epeg_file_open([path fileSystemRepresentation]);
+	im = epeg_file_open(path.fileSystemRepresentation);
 	if (!im)
 		return nil;
 	

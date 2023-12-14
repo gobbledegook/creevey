@@ -113,13 +113,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 {
 	if (self != [DYWrappingMatrix class]) return;
 	// prefs stuff
-    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-	NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-	dict[@"DYWrappingMatrixBgColor"] = [NSKeyedArchiver archivedDataWithRootObject:NSColor.controlBackgroundColor requiringSecureCoding:YES error:NULL];
-	dict[@"DYWrappingMatrixAllowMove"] = @NO;
-	dict[@"DYWrappingMatrixMaxCellWidth"] = @"160";
-	dict[@"thumbPadding"] = @(PADDING);
-	[defaults registerDefaults:dict];
+	[NSUserDefaults.standardUserDefaults registerDefaults:@{
+		@"DYWrappingMatrixBgColor": [NSKeyedArchiver archivedDataWithRootObject:NSColor.controlBackgroundColor requiringSecureCoding:YES error:NULL],
+		@"DYWrappingMatrixAllowMove": @NO,
+		@"DYWrappingMatrixMaxCellWidth": @"160",
+		@"thumbPadding": @(PADDING),
+	}];
 	
     static BOOL initialized = NO;
     /* Make sure code only gets executed once. */
@@ -204,8 +203,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 															  forKeyPath:@"values.DYWrappingMatrixBgColor"
 																 options:NSKeyValueObservingOptionNew
 																 context:NULL];
-	_respondsToLoadImageForFile = [delegate respondsToSelector:@selector(wrappingMatrix:loadImageForFile:atIndex:)];
-	_respondsToSelectionDidChange = [delegate respondsToSelector:@selector(wrappingMatrix:selectionDidChange:)];
+	_respondsToLoadImageForFile = [delegate respondsToSelector:@selector(wrappingMatrixWantsImageForFile:atIndex:)];
+	_respondsToSelectionDidChange = [delegate respondsToSelector:@selector(wrappingMatrixSelectionDidChange:)];
 	_appDelegate = NSApp.delegate;
 }
 
@@ -221,7 +220,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		if (n && _respondsToLoadImageForFile) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			for (NSUInteger i = 0; i < n; ++i) {
 				if (images[i] != loadingImage)
-					[delegate wrappingMatrix:self loadImageForFile:filenames[i] atIndex:i];
+					[delegate wrappingMatrixWantsImageForFile:filenames[i] atIndex:i];
 			}
 		});
 	}
@@ -466,8 +465,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 					[self autoscroll:theEvent]; // always check visibleRect for autoscroll
 				[lastIterationSelection symmetricDifference:selectedIndexes];
 				if (lastIterationSelection.count) {
-					// if selection changed...
-					[self updateStatusString];
+					[self notifySelectionDidChange];
 					for (NSUInteger i=lastIterationSelection.firstIndex; i != NSNotFound; i = [lastIterationSelection indexGreaterThanIndex:i]) {
 						[self selectionNeedsDisplay:i];
 					}
@@ -569,7 +567,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		NSString *filename = filenames[i];
 		if (img == loadingImage) {
 			if (_respondsToLoadImageForFile && ![requestedFilenames containsObject:filename]) {
-				NSImage *newImage = [delegate wrappingMatrix:self loadImageForFile:filename atIndex:i];
+				NSImage *newImage = [delegate wrappingMatrixWantsImageForFile:filename atIndex:i];
 				if (newImage) {
 					images[i] = newImage;
 					img = newImage;
@@ -640,7 +638,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	cg.imageInterpolation = oldInterp;
 }
 - (void)scrollSelectionToVisible:(NSUInteger)n {
-	[self updateStatusString];
+	[self notifySelectionDidChange];
 	NSRect r = [self cellnum2rect:n];
 	[self selectionNeedsDisplay:n];
 	// round down for better auto-scrolling
@@ -661,7 +659,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	r.size.height = (int)r.size.height;
 	[self scrollRectToVisible:r];
-	[self updateStatusString];
+	[self notifySelectionDidChange];
 }
 
 - (void)keyDown:(NSEvent *)e {
@@ -796,7 +794,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	for (i=0; i<numCells; ++i) {
 		[self selectionNeedsDisplay:i];
 	}
-	[self updateStatusString];
+	[self notifySelectionDidChange];
 }
 
 - (IBAction)selectNone:(id)sender {
@@ -805,7 +803,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	for (i=0; i<numCells; ++i) {
 		[self selectionNeedsDisplay:i];
 	}
-	[self updateStatusString];
+	[self notifySelectionDidChange];
 }
 
 - (NSUInteger)numCells {
@@ -847,10 +845,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	return o;
 }
 
-// ** should probably be called something like updateSelectionWithDelegate
-- (void)updateStatusString {
+- (void)notifySelectionDidChange {
 	if (_respondsToSelectionDidChange)
-		[delegate wrappingMatrix:self selectionDidChange:selectedIndexes];
+		[delegate wrappingMatrixSelectionDidChange:selectedIndexes];
 }
 
 #pragma mark add/delete images stuff
@@ -893,7 +890,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
 	} while (++i<=numCells);
 	// use <=, not <, because we need to redraw the last cell, which has shifted
-	[self updateStatusString];
+	[self notifySelectionDidChange];
 }
 
 

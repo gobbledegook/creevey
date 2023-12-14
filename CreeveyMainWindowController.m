@@ -40,7 +40,7 @@
 
 static time_t ExifDateFromFile(NSString *s) {
 	s = ResolveAliasToPath(s);
-	NSString *x = [s.pathExtension lowercaseString];
+	NSString *x = s.pathExtension.lowercaseString;
 	const char *c = s.fileSystemRepresentation;
 	time_t t;
 #ifdef LOGSORT
@@ -60,14 +60,14 @@ static time_t ExifDateFromFile(NSString *s) {
 		return t;
 	}
 	if ((IsJPEG(x) || [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"]) &&
-		(t = ExifDatetimeForFile(c, NO)) != -1) {
+		(t = ExifDatetimeForFile(c, JPEG)) != -1) {
 #ifdef LOGSORT
 		if (!w) NSLog(@"jpg %@:%@", [NSDate dateWithTimeIntervalSince1970:t], s.lastPathComponent);
 #endif
 		return t;
 	}
 	if (IsHeif(x) &&
-		(t = ExifDatetimeForFile(c, YES)) != -1) {
+		(t = ExifDatetimeForFile(c, HEIF)) != -1) {
 #ifdef LOGSORT
 		if (!w) NSLog(@"heic %@:%@", [NSDate dateWithTimeIntervalSince1970:t], s.lastPathComponent);
 #endif
@@ -900,7 +900,7 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 #pragma mark wrapping matrix methods
- - (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)selectedIndexes {
+ - (void)wrappingMatrixSelectionDidChange:(NSIndexSet *)selectedIndexes {
 	 NSString *s, *path, *basePath;
 	 DYImageInfo *info;
 	 DYImageCache *thumbsCache = appDelegate.thumbsCache;
@@ -943,7 +943,7 @@ static time_t ExifDateFromFile(NSString *s) {
 	 [self updateExifInfo];
 }
 
-- (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i {
+- (NSImage *)wrappingMatrixWantsImageForFile:(NSString *)filename atIndex:(NSUInteger)i {
 	DYImageCache *thumbsCache = appDelegate.thumbsCache;
 	NSImage *thumb = [thumbsCache imageForKeyInvalidatingCacheIfNecessary:ResolveAliasToPath(filename)];
 	if (thumb) return thumb;

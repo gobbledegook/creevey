@@ -40,7 +40,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)revealSelectedFilesInFinder:(id)sender;
 - (IBAction)setDesktopPicture:(id)sender;
 - (IBAction)moveToTrash:(id)sender;
-- (IBAction)rotateTest:(id)sender;
+- (IBAction)transformJpeg:(id)sender;
 - (IBAction)sortThumbnails:(id)sender;
 - (IBAction)doShowFilenames:(id)sender;
 - (IBAction)doAutoRotateDisplayedImage:(id)sender;

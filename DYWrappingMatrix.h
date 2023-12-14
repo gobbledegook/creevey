@@ -72,8 +72,8 @@
 @interface NSObject(DYWrappingMatrixTarget)
 - (void)moveToTrash:(id)sender; // dragging to trashcan will call this
 - (void)moveElsewhere; // moving a file to the Finder will call this
-- (void)wrappingMatrix:(DYWrappingMatrix *)m selectionDidChange:(NSIndexSet *)s;
-- (NSImage *)wrappingMatrix:(DYWrappingMatrix *)m loadImageForFile:(NSString *)filename atIndex:(NSUInteger)i;
+- (void)wrappingMatrixSelectionDidChange:(NSIndexSet *)s;
+- (NSImage *)wrappingMatrixWantsImageForFile:(NSString *)filename atIndex:(NSUInteger)i;
 - (unsigned short)exifOrientationForFile:(NSString *)s;
 @property (readonly) NSMenu *thumbnailContextMenu;
 @end
