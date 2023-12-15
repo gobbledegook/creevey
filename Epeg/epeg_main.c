@@ -74,7 +74,7 @@ epeg_memory_open(unsigned char *data, int size)
    Epeg_Image *im;
    
    im = calloc(1, sizeof(Epeg_Image));
-   im->in.f = _epeg_memfile_read_open(data, size);
+   im->in.f = fmemopen(data, size, "r");
    if (!im->in.f)
      {
 	epeg_close(im);
@@ -1011,7 +1011,7 @@ _epeg_decode(Epeg_Image *im)
 
    if (setjmp(im->jerr.setjmp_buffer))
      {
-	epeg_close(im);
+	//epeg_close(im); // DY: let client call epeg_close on failure
 	return 1;
      }
 
@@ -1179,7 +1179,7 @@ _epeg_encode(Epeg_Image *im)
    if (im->out.file)
      im->out.f = fopen(im->out.file, "wb");
    else
-     im->out.f = _epeg_memfile_write_open(&data, &size);
+     im->out.f = open_memstream((char **)&data, &size);
    if (!im->out.f)
      {
 	im->error = 1;
@@ -1240,14 +1240,18 @@ _epeg_encode(Epeg_Image *im)
    
    jpeg_finish_compress(&(im->out.jinfo));
    
-   if (im->in.f)                       jpeg_destroy_decompress(&(im->in.jinfo));
-   if ((im->in.f) && (im->in.file))    fclose(im->in.f);
-   if ((im->in.f) && (!im->in.file))   _epeg_memfile_read_close(im->in.f);
-   if (im->out.f)                      jpeg_destroy_compress(&(im->out.jinfo));
-   if ((im->out.f) && (im->out.file))  fclose(im->out.f);
-   if ((im->out.f) && (!im->out.file)) _epeg_memfile_write_close(im->out.f);
-   im->in.f = NULL;
-   im->out.f = NULL;
+   if (im->in.f)
+	{
+		jpeg_destroy_decompress(&(im->in.jinfo));
+		fclose(im->in.f);
+		im->in.f = NULL;
+	}
+   if (im->out.f)
+	{
+		jpeg_destroy_compress(&(im->out.jinfo));
+		fclose(im->out.f);
+		im->out.f = NULL;
+	}
    
    if (im->out.mem.data) *(im->out.mem.data) = data;
    if (im->out.mem.size) *(im->out.mem.size) = size;

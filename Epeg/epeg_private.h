@@ -1,7 +1,6 @@
 #ifndef _EPEG_PRIVATE_H
 #define _EPEG_PRIVATE_H
 
-#define _GNU_SOURCE /* need this for fmemopen & open_memstream */
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -13,8 +12,6 @@
 #include <sys/stat.h>
 #include <setjmp.h>
 #include <jpeglib.h>
-
-#include "config.h"
 
 typedef struct _epeg_error_mgr *emptr;
 
@@ -71,9 +68,4 @@ struct _Epeg_Image
    //END
 };
 
-FILE *_epeg_memfile_read_open   (void *data, size_t size);
-void  _epeg_memfile_read_close  (FILE *f);
-FILE *_epeg_memfile_write_open  (void **data, size_t *size);
-void  _epeg_memfile_write_close (FILE *f);
-    
 #endif

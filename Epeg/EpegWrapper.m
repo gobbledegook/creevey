@@ -85,14 +85,13 @@
 		epeg_decode_size_set(im, width_out, height_out);
 		epeg_decode_colorspace_set(im, EPEG_RGB8);
 
-		if (epeg_scale_only(im) != 0)
+		if (epeg_scale_only(im) != 0) {
+			epeg_close(im);
 			return nil;
-		// sep call to epeg_scale_only, if error, the epeg handle will _probably_
-		// be closed (but not necessarily, it seems--see the epeg source)
+		}
 		pixels = epeg_pixels_get(im, 0, 0, width_out, height_out);
 		if (!pixels) {
-			NSLog(@"epeg unable to get pixels for path '%@'", path);
-			epeg_close(im); // ... we _should_ need to close here, though
+			epeg_close(im);
 			return nil;
 		}
 		imageRep =
@@ -109,7 +108,7 @@
 		memcpy([imageRep bitmapData], pixels, (width_out * height_out * 3));
 		epeg_pixels_free(im, pixels);
 	}
-	epeg_close(im);// */
+	epeg_close(im);
 	
 	image = [[NSImage alloc] initWithSize:NSZeroSize];
 	[image addRepresentation:imageRep];

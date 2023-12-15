@@ -30,11 +30,9 @@
 		F254E96F08919E2B00DE9C38 /* makers.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E96D08919E2B00DE9C38 /* makers.h */; };
 		F254E97008919E2B00DE9C38 /* makers.c in Sources */ = {isa = PBXBuildFile; fileRef = F254E96E08919E2B00DE9C38 /* makers.c */; };
 		F254E9940891A7FB00DE9C38 /* EXIF.strings in Resources */ = {isa = PBXBuildFile; fileRef = F254E9930891A7FB00DE9C38 /* EXIF.strings */; };
-		F25EA27C0867329C003728C2 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2710867329C003728C2 /* config.h */; };
 		F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = F25EA2760867329C003728C2 /* EpegWrapper.m */; };
 		F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2770867329C003728C2 /* EpegWrapper.h */; };
 		F25EA2830867329C003728C2 /* epeg_private.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2780867329C003728C2 /* epeg_private.h */; };
-		F25EA2840867329C003728C2 /* epeg_memfile.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA2790867329C003728C2 /* epeg_memfile.c */; };
 		F25EA2850867329C003728C2 /* epeg_main.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA27A0867329C003728C2 /* epeg_main.c */; };
 		F25EA2860867329C003728C2 /* Epeg.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA27B0867329C003728C2 /* Epeg.h */; };
 		F261A049182B5ED4001D9336 /* loading.png in Resources */ = {isa = PBXBuildFile; fileRef = F261A048182B5ED4001D9336 /* loading.png */; };
@@ -156,11 +154,9 @@
 		F254E98F0891A7E100DE9C38 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F254E9950891A80400DE9C38 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/EXIF.strings"; sourceTree = "<group>"; };
 		F25C834D0895D35D009C0A03 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "zh-Hant"; path = "zh-Hant.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
-		F25EA2710867329C003728C2 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = Epeg/config.h; sourceTree = "<group>"; };
 		F25EA2760867329C003728C2 /* EpegWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EpegWrapper.m; path = Epeg/EpegWrapper.m; sourceTree = "<group>"; };
 		F25EA2770867329C003728C2 /* EpegWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EpegWrapper.h; path = Epeg/EpegWrapper.h; sourceTree = "<group>"; };
 		F25EA2780867329C003728C2 /* epeg_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = epeg_private.h; path = Epeg/epeg_private.h; sourceTree = "<group>"; };
-		F25EA2790867329C003728C2 /* epeg_memfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_memfile.c; path = Epeg/epeg_memfile.c; sourceTree = "<group>"; };
 		F25EA27A0867329C003728C2 /* epeg_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_main.c; path = Epeg/epeg_main.c; sourceTree = "<group>"; };
 		F25EA27B0867329C003728C2 /* Epeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Epeg.h; path = Epeg/Epeg.h; sourceTree = "<group>"; };
 		F261A048182B5ED4001D9336 /* loading.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = loading.png; sourceTree = "<group>"; };
@@ -402,11 +398,9 @@
 		F25EA26E08673274003728C2 /* Epeg */ = {
 			isa = PBXGroup;
 			children = (
-				F25EA2710867329C003728C2 /* config.h */,
 				F25EA2770867329C003728C2 /* EpegWrapper.h */,
 				F25EA2760867329C003728C2 /* EpegWrapper.m */,
 				F25EA2780867329C003728C2 /* epeg_private.h */,
-				F25EA2790867329C003728C2 /* epeg_memfile.c */,
 				F25EA27A0867329C003728C2 /* epeg_main.c */,
 				F25EA27B0867329C003728C2 /* Epeg.h */,
 			);
@@ -487,7 +481,6 @@
 				F234C0170810E9B700175D50 /* DYImageCache.h in Headers */,
 				F209762B081F51A300AD4E00 /* NSStringDYBasePathExtension.h in Headers */,
 				F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */,
-				F25EA27C0867329C003728C2 /* config.h in Headers */,
 				F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */,
 				F25EA2830867329C003728C2 /* epeg_private.h in Headers */,
 				F25EA2860867329C003728C2 /* Epeg.h in Headers */,
@@ -625,7 +618,6 @@
 				F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */,
 				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,
 				F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */,
-				F25EA2840867329C003728C2 /* epeg_memfile.c in Sources */,
 				F25EA2850867329C003728C2 /* epeg_main.c in Sources */,
 				F2FE4FCA08842F5500550533 /* DYJpegtran.m in Sources */,
 				F2FE4FCC08842F5500550533 /* transupp.c in Sources */,

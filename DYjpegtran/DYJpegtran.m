@@ -109,7 +109,6 @@ static unsigned char *transformThumbnail(unsigned char *b, unsigned len,
 	jpeg_destroy_decompress(&srcinfo);
 	
 	/* Close files, if we opened them */
-	//_epeg_memfile_read_close(input_file);
 	fclose(input_file);
 	long numbytes = ftell(output_file);
 	void *thebytes = malloc(numbytes);
