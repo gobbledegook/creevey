@@ -28,7 +28,7 @@ struct _Epeg_Image
    unsigned char                  *pixels;
    unsigned char                 **lines;
    
-   char                            scaled : 1;
+   char                            scaled;
    
    int                             error;
    
@@ -60,7 +60,7 @@ struct _Epeg_Image
       FILE                        *f;
       struct jpeg_compress_struct  jinfo;
       int                          quality;
-      char                         thumbnail_info : 1;
+      char                         thumbnail_info;
    } out;
    //BEGIN DY ADDITIONS
    unsigned char *thumbStart;

@@ -1,3 +1,4 @@
+#include "dcraw.h"
 #define DCRAW_VERSION "9.28"
 
 #define NODEPS
@@ -54,6 +55,8 @@ typedef unsigned long long UINT64;
 #define ushort unsigned short
 #endif
 
+#include <pthread.h>
+static pthread_mutex_t mutex;
 /*
    All global variables are defined here, and all functions that
    access them are prefixed with "CLASS".  For thread-safety, all
@@ -3791,69 +3794,6 @@ void CLASS remove_zeroes()
               tot += (n++,BAYER(r,c));
         if (n) BAYER(row,col) = tot/n;
       }
-}
-
-/*
-   Seach from the current directory up to the root looking for
-   a ".badpixels" file, and fix those pixels now.
- */
-void CLASS bad_pixels (const char *cfname)
-{
-  FILE *fp=0;
-  char *fname, *cp, line[128];
-  int len, time, row, col, r, c, rad, tot, n, fixed=0;
-
-  if (!filters) return;
-  if (cfname)
-    fp = fopen (cfname, "r");
-  else {
-    for (len=32 ; ; len *= 2) {
-      fname = (char *) malloc (len);
-      if (!fname) return;
-      if (getcwd (fname, len-16)) break;
-      free (fname);
-      if (errno != ERANGE) return;
-    }
-#if defined(WIN32) || defined(DJGPP)
-    if (fname[1] == ':')
-      memmove (fname, fname+2, len-2);
-    for (cp=fname; *cp; cp++)
-      if (*cp == '\\') *cp = '/';
-#endif
-    cp = fname + strlen(fname);
-    if (cp[-1] == '/') cp--;
-    while (*fname == '/') {
-      strcpy (cp, "/.badpixels");
-      if ((fp = fopen (fname, "r"))) break;
-      if (cp == fname) break;
-      while (*--cp != '/');
-    }
-    free (fname);
-  }
-  if (!fp) return;
-  while (fgets (line, 128, fp)) {
-    cp = strchr (line, '#');
-    if (cp) *cp = 0;
-    if (sscanf (line, "%d %d %d", &col, &row, &time) != 3) continue;
-    if ((unsigned) col >= width || (unsigned) row >= height) continue;
-    if (time > timestamp) continue;
-    for (tot=n=0, rad=1; rad < 3 && n==0; rad++)
-      for (r = row-rad; r <= row+rad; r++)
-        for (c = col-rad; c <= col+rad; c++)
-          if ((unsigned) r < height && (unsigned) c < width &&
-                (r != row || c != col) && fcol(r,c) == fcol(row,col)) {
-            tot += BAYER2(r,c);
-            n++;
-          }
-    BAYER2(row,col) = tot/n;
-    if (verbose) {
-      if (!fixed++)
-        fprintf (stderr,_("Fixed dead pixels at:"));
-      fprintf (stderr, " %d,%d", col, row);
-    }
-  }
-  if (fixed) fputc ('\n', stderr);
-  fclose (fp);
 }
 
 void CLASS subtract (const char *fname)
@@ -9768,81 +9708,6 @@ void CLASS convert_to_rgb()
   if (document_mode && filters) colors = 1;
 }
 
-void CLASS fuji_rotate()
-{
-  int i, row, col;
-  double step;
-  float r, c, fr, fc;
-  unsigned ur, uc;
-  ushort wide, high, (*img)[4], (*pix)[4];
-
-  if (!fuji_width) return;
-  if (verbose)
-    fprintf (stderr,_("Rotating image 45 degrees...\n"));
-  fuji_width = (fuji_width - 1 + shrink) >> shrink;
-  step = sqrt(0.5);
-  wide = fuji_width / step;
-  high = (height - fuji_width) / step;
-  img = (ushort (*)[4]) calloc (high, wide*sizeof *img);
-  merror (img, "fuji_rotate()");
-
-  for (row=0; row < high; row++)
-    for (col=0; col < wide; col++) {
-      ur = r = fuji_width + (row-col)*step;
-      uc = c = (row+col)*step;
-      if (ur > height-2 || uc > width-2) continue;
-      fr = r - ur;
-      fc = c - uc;
-      pix = image + ur*width + uc;
-      for (i=0; i < colors; i++)
-        img[row*wide+col][i] =
-          (pix[    0][i]*(1-fc) + pix[      1][i]*fc) * (1-fr) +
-          (pix[width][i]*(1-fc) + pix[width+1][i]*fc) * fr;
-    }
-  free (image);
-  width  = wide;
-  height = high;
-  image  = img;
-  fuji_width = 0;
-}
-
-void CLASS stretch()
-{
-  ushort newdim, (*img)[4], *pix0, *pix1;
-  int row, col, c;
-  double rc, frac;
-
-  if (pixel_aspect == 1) return;
-  if (verbose) fprintf (stderr,_("Stretching the image...\n"));
-  if (pixel_aspect < 1) {
-    newdim = height / pixel_aspect + 0.5;
-    img = (ushort (*)[4]) calloc (width, newdim*sizeof *img);
-    merror (img, "stretch()");
-    for (rc=row=0; row < newdim; row++, rc+=pixel_aspect) {
-      frac = rc - (c = rc);
-      pix0 = pix1 = image[c*width];
-      if (c+1 < height) pix1 += width*4;
-      for (col=0; col < width; col++, pix0+=4, pix1+=4)
-        FORCC img[row*width+col][c] = pix0[c]*(1-frac) + pix1[c]*frac + 0.5;
-    }
-    height = newdim;
-  } else {
-    newdim = width * pixel_aspect + 0.5;
-    img = (ushort (*)[4]) calloc (height, newdim*sizeof *img);
-    merror (img, "stretch()");
-    for (rc=col=0; col < newdim; col++, rc+=1/pixel_aspect) {
-      frac = rc - (c = rc);
-      pix0 = pix1 = image[c];
-      if (c+1 < width) pix1 += 4;
-      for (row=0; row < height; row++, pix0+=width*4, pix1+=width*4)
-        FORCC img[row*newdim+col][c] = pix0[c]*(1-frac) + pix1[c]*frac + 0.5;
-    }
-    width = newdim;
-  }
-  free (image);
-  image = img;
-}
-
 int CLASS flip_index (int row, int col)
 {
   if (flip & 4) SWAP(row,col);
@@ -10042,26 +9907,166 @@ void CLASS write_ppm_tiff()
   free (ppm);
 }
 
-unsigned char *CopyExifDataFromRawFile(const char *path, int *outLen) {
+char *ExtractThumbnailFromRawFile(const char *path, size_t *outSize, unsigned short *tw, unsigned short *th, enum dcraw_type *tType, unsigned short *rw, unsigned short *rh) {
 	int status = 1;
+	pthread_mutex_lock(&mutex);
 	raw_image = 0;
 	image = 0;
+	oprof = 0;
 	meta_data = 0;
 	ofp = stdout;
+	if (setjmp(failure)) {
+		fclose(ifp);
+		if (fileno(ofp) > 2) fclose(ofp);
+		status = 1;
+		goto cleanup;
+	}
+	ifname = path;
+	if (!(ifp = fopen(ifname, "rb"))) {
+		perror (ifname);
+		pthread_mutex_unlock(&mutex);
+		return 0;
+	}
+	status = (identify(),!is_raw);
+	write_fun = &CLASS write_ppm_tiff;
+	if ((status = !thumb_offset)) {
+		goto next;
+	} else if (thumb_load_raw) {
+		load_raw = thumb_load_raw;
+		data_offset = thumb_offset;
+		height = thumb_height;
+		width  = thumb_width;
+		filters = 0;
+		colors = 3;
+	} else {
+		fseek (ifp, thumb_offset, SEEK_SET);
+		write_fun = write_thumb;
+		goto thumbnail;
+	}
+	if (load_raw == &CLASS kodak_ycbcr_load_raw) {
+		height += height & 1;
+		width  += width  & 1;
+	}
+	if (!is_raw) {
+next:
+		fclose(ifp);
+		pthread_mutex_unlock(&mutex);
+		return 0;
+	}
+	shrink = filters && (half_size || ((threshold || aber[0] != 1 || aber[2] != 1)));
+	iheight = (height + shrink) >> shrink;
+	iwidth  = (width  + shrink) >> shrink;
+	if (meta_length) {
+	  meta_data = (char *) malloc (meta_length);
+	  merror (meta_data, "main()");
+	}
+	if (filters || colors == 1) {
+	  raw_image = (ushort *) calloc ((raw_height+7), raw_width*2);
+	  merror (raw_image, "main()");
+	} else {
+	  image = (ushort (*)[4]) calloc (iheight, iwidth*sizeof *image);
+	  merror (image, "main()");
+	}
+	fseeko (ifp, data_offset, SEEK_SET);
+	(*load_raw)();
+	if (document_mode == 3) {
+		top_margin = left_margin = fuji_width = 0;
+		height = raw_height;
+		width  = raw_width;
+	}
+	iheight = (height + shrink) >> shrink;
+	iwidth  = (width  + shrink) >> shrink;
+	if (raw_image) {
+		image = (ushort (*)[4]) calloc (iheight, iwidth*sizeof *image);
+		merror (image, "main()");
+		crop_masked_pixels();
+		free (raw_image);
+	}
+	if (zero_is_bad) remove_zeroes();
+	int quality = 0, i = cblack[3], c;
+	FORC3 if (i > cblack[c]) i = cblack[c];
+	FORC4 cblack[c] -= i;
+	black += i;
+	i = cblack[6];
+	FORC (cblack[4] * cblack[5])
+		if (i > cblack[6+c]) i = cblack[6+c];
+	FORC (cblack[4] * cblack[5])
+		cblack[6+c] -= i;
+	black += i;
+	FORC4 cblack[c] += black;
+	if (is_foveon) {
+		if (document_mode || load_raw == &CLASS foveon_dp_load_raw) {
+			for (i=0; i < height*width*4; i++)
+				if ((short) image[0][i] < 0) image[0][i] = 0;
+		} else foveon_interpolate();
+	} else if (document_mode < 2)
+		scale_colors();
+	pre_interpolate();
+	if (filters && !document_mode) {
+		if (quality == 0)
+			lin_interpolate();
+		else if (quality == 1 || colors > 3)
+			vng_interpolate();
+		else if (quality == 2 && filters > 1000)
+			ppg_interpolate();
+		else if (filters == 9)
+			xtrans_interpolate (quality*2-3);
+		else
+			ahd_interpolate();
+	}
+	if (mix_green)
+		for (colors=3, i=0; i < height*width; i++)
+			image[i][1] = (image[i][1] + image[i][3]) >> 1;
+	if (!is_foveon && colors == 3) median_filter();
+	if (!is_foveon && highlight == 2) blend_highlights();
+	if (!is_foveon && highlight > 2) recover_highlights();
+	convert_to_rgb();
+	char *data;
+thumbnail:
+	ofp = open_memstream(&data, outSize);
+	if (!ofp) {
+		status = 1;
+		goto cleanup;
+	}
+	(*write_fun)();
+	*tw = thumb_width;
+	*th = thumb_height;
+	*rw = raw_width;
+	*rh = raw_height;
+	if (write_fun == &jpeg_thumb)
+		*tType = dc_jpeg;
+	else if (output_tiff && write_fun == &write_ppm_tiff)
+		*tType = dc_tiff;
+	else
+		*tType = dc_ppm;
+	fclose(ifp);
+	fclose(ofp);
+cleanup:
+	free(meta_data);
+	free(oprof);
+	free(image);
+	pthread_mutex_unlock(&mutex);
+	if (status) return 0;
+	return data;
+}
+
+unsigned char *CopyExifDataFromRawFile(const char *path, int *outLen) {
+	pthread_mutex_lock(&mutex);
 	if (setjmp (failure)) {
 	  fclose(ifp);
-	  status = 1;
-	  goto cleanup2;
+	  pthread_mutex_unlock(&mutex);
+	  return 0;
 	}
 	ifname = path;
 	if (!(ifp = fopen (ifname, "rb"))) {
 	  perror (ifname);
+	  pthread_mutex_unlock(&mutex);
 	  return 0;
 	}
 	// we assume that the timestamp lives inside the EXIF metadata,
 	// so we set exifBase and size at the same time timestamp gets set
 	exifBase = -1;
-	status = (identify(),!is_raw);
+	identify();
 	unsigned char *data = 0;
 	if (exifBase != -1) {
 		int dataSize = exifSize + 6;
@@ -10073,33 +10078,32 @@ unsigned char *CopyExifDataFromRawFile(const char *path, int *outLen) {
 		}
 	}
 	fclose(ifp);
-cleanup2:
-	if (meta_data) free (meta_data);
-	if (image) free (image);
+	pthread_mutex_unlock(&mutex);
 	return data;
 }
 
 time_t ExifDateFromRawFile(const char *path) {
-	int status = 1;
-	raw_image = 0;
-	image = 0;
-	meta_data = 0;
-	ofp = stdout;
+	pthread_mutex_lock(&mutex);
 	if (setjmp (failure)) {
 	  fclose(ifp);
-	  status = 1;
-	  goto cleanup;
+	  pthread_mutex_unlock(&mutex);
+	  return -1;
 	}
 	ifname = path;
 	if (!(ifp = fopen (ifname, "rb"))) {
 	  perror (ifname);
-	  return 0;
+	  pthread_mutex_unlock(&mutex);
+	  return -1;
 	}
-	status = (identify(),!is_raw);
+	identify();
 	fclose(ifp);
-cleanup:
-	if (meta_data) free (meta_data);
-	if (image) free (image);
-	if (status) return 0;
+	pthread_mutex_unlock(&mutex);
+	if (!is_raw) return -1;
 	return timestamp;
+}
+
+// because of the global variables, calling functions in here is not thread safe
+// for now we'll just use a lock to make sure they run one at a time
+void dcraw_init(void) {
+	pthread_mutex_init(&mutex, NULL);
 }

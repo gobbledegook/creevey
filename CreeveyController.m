@@ -17,6 +17,7 @@
 #import "DYJpegtranPanel.h"
 #import "DYVersChecker.h"
 #import "DYExiftags.h"
+#import "dcraw.h"
 
 #define MAX_THUMBS 2000
 #define DYVERSCHECKINTERVAL 604800
@@ -124,6 +125,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 +(void)initialize
 {
 	if (self != [CreeveyController class]) return;
+
+	dcraw_init();
 
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
 	NSString *s = CREEVEY_DEFAULT_PATH;

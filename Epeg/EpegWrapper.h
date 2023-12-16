@@ -17,6 +17,12 @@
 				 exifThumb:(BOOL)wantExifThumb
 			getOrientation:(unsigned short *)orientationOut; // pass NULL if you don't need it
 
++ (NSImage *)imageWithData:(char *)data
+					   len:(int)len
+			   boundingBox:(NSSize)boundingBox
+				 exifThumb:(BOOL)wantExifThumb
+			getOrientation:(unsigned short *)orientationOut;
+
 //+ (NSString *)jpegErrorMessage;
 
 + (NSImage *)exifThumbForPath:(NSString *)path;

@@ -1080,6 +1080,10 @@ static time_t ExifDateFromFile(NSString *s) {
 					return [NSString stringWithFormat:loadingMsg, i+1, imgMatrix.numCells];
 				}];
 				if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
+					char *data;
+					size_t len;
+					unsigned short thumbW, thumbH, rawW, rawH;
+					enum dcraw_type thumbType;
 					BOOL useExifThumbs = _maxCellWidth == 160;
 					DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
 					if (FileIsJPEG(theFile)) {
@@ -1090,6 +1094,17 @@ static time_t ExifDateFromFile(NSString *s) {
 										 exifThumb:useExifThumbs
 									getOrientation:&result->exifOrientation];
 						//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
+					} else if (IsRaw(theFile.pathExtension.lowercaseString) &&
+							   (data = ExtractThumbnailFromRawFile(theFile.fileSystemRepresentation, &len, &thumbW, &thumbH, &thumbType, &rawW, &rawH))) {
+						result->pixelSize.width = rawW;
+						result->pixelSize.height = rawH;
+						if (thumbType == dc_jpeg) {
+							result.image = [EpegWrapper imageWithData:data len:(int)len boundingBox:cellSize exifThumb:useExifThumbs getOrientation:&result->exifOrientation];
+						}
+						if (!result.image) {
+							[thumbsCache createScaledImage:result fromImage:[[NSImage alloc] initWithData:[NSData dataWithBytesNoCopy:data length:len freeWhenDone:NO]]];
+						}
+						free(data);
 					}
 					if (!result.image)
 						[thumbsCache createScaledImage:result];

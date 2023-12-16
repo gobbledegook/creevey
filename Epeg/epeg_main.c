@@ -726,6 +726,9 @@ epeg_scale_only(Epeg_Image *im)
      return 1;
    return 0;
 }
+FILE *epeg_fp(Epeg_Image *im) {
+	return im->in.f;
+}
 //END DY ADDITIONS
 /**
  * FIXME: Document this
@@ -1151,13 +1154,12 @@ _epeg_decode_for_trim(Epeg_Image *im)
 static int
 _epeg_trim(Epeg_Image *im)
 {
-   int            y, a, b, w, h;
+   int            y, a, b, h;
    
    if ((im->in.w == im->out.w) && (im->in.h == im->out.h)) return 1;
    if (im->scaled) return 1;
    
    im->scaled = 1;
-   w = im->out.w;
    h = im->out.h;
    a = im->out.x;
    b = im->out.y;

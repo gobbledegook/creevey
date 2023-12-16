@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdio.h>
 
    typedef enum _Epeg_Colorspace
      {
@@ -49,6 +50,7 @@ extern "C" {
 //BEGIN DY ADDITIONS
    int           epeg_scale_only                (Epeg_Image *im);
    unsigned char *epeg_exif_thumb(Epeg_Image *im, unsigned long *outsize);
+   FILE          *epeg_fp(Epeg_Image *im);
 //   const char   *epeg_error_msg();
 //END DY ADDITIONS
 #ifdef __cplusplus

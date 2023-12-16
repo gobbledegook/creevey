@@ -114,16 +114,10 @@ NSString *FileSize2String(unsigned long long fileSize) {
 - (float)boundingWidth { return boundingSize.width; }
 - (NSSize)boundingSize { return boundingSize; }
 
-- (void)createScaledImage:(DYImageInfo *)imgInfo {
-	if (imgInfo->fileSize == 0)
-		return;  // nsimage crashes on zero-length files
-	
+
+static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYImageInfo *imgInfo) {
+	NSImage *result;
 	NSSize maxSize = boundingSize;
-	NSImage *orig, *result = nil;
-
-	orig = [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(imgInfo.path)];
-
-	// now scale the img
 	if (orig && orig.representations.count) { // why doesn't it return nil for corrupt jpegs?
 		NSImageRep *oldRep = orig.representations[0];
 		NSSize oldSize, newSize;
@@ -169,6 +163,17 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		}
 	}
 	imgInfo.image = result;
+}
+
+- (void)createScaledImage:(DYImageInfo *)imgInfo {
+	if (imgInfo->fileSize == 0)
+		return;  // nsimage crashes on zero-length files
+	NSImage *orig = [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(imgInfo.path)];
+	ScaleImage(orig, boundingSize, _rotatable, imgInfo);
+}
+
+- (void)createScaledImage:(DYImageInfo *)imgInfo fromImage:(NSImage *)orig {
+	ScaleImage(orig, boundingSize, _rotatable, imgInfo);
 }
 
 // see usage note in the .h file.

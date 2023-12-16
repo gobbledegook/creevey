@@ -15,20 +15,31 @@
 //	return [NSString stringWithCString:epeg_error_msg()];
 //}
 
+static NSImage *ImageFromEpegStruct(Epeg_Image *im, NSSize boundingBox, NSSize *pixSize, BOOL wantExifThumb, unsigned short *orientation);
+
 + (NSImage *)imageWithPath:(NSString *)path
 			   boundingBox:(NSSize)boundingBox
 				   getSize:(NSSize *)pixSize
 				 exifThumb:(BOOL)wantExifThumb
 			getOrientation:(unsigned short *)orientationOut {
+	Epeg_Image *im = epeg_file_open(path.fileSystemRepresentation);
+	if (!im) return nil;
+	return ImageFromEpegStruct(im, boundingBox, pixSize, wantExifThumb, orientationOut);
+}
 
-	Epeg_Image *im = NULL;
++ (NSImage *)imageWithData:(char *)data
+					   len:(int)len
+			   boundingBox:(NSSize)boundingBox
+				 exifThumb:(BOOL)wantExifThumb
+			getOrientation:(unsigned short *)orientationOut {
+	Epeg_Image *im = epeg_memory_open((unsigned char *)data, len);
+	if (!im) return nil;
+	return ImageFromEpegStruct(im, boundingBox, NULL, wantExifThumb, orientationOut);
+}
+
+static NSImage *ImageFromEpegStruct(Epeg_Image *im, NSSize boundingBox, NSSize *pixSize, BOOL wantExifThumb, unsigned short *orientationOut) {
 	NSImage *image;
 	int width_in, height_in;
-	
-	im = epeg_file_open(path.fileSystemRepresentation);
-	if (!im)
-		return nil;
-	
 	epeg_size_get(im, &width_in, &height_in);
 	if (width_in < boundingBox.width || height_in < boundingBox.height) {
 		// fail if either dimension is too small
@@ -36,10 +47,15 @@
 		epeg_close(im);
 		return nil;
 	}
-	pixSize->width = width_in;
-	pixSize->height = height_in;
-	
-	unsigned short orientation = [DYExiftags orientationForFile:path];
+	if (pixSize) {
+		pixSize->width = width_in;
+		pixSize->height = height_in;
+	}
+	FILE * f = epeg_fp(im); // borrow the open file pointer for our own purposes
+	long pos = ftell(f);
+	rewind(f);
+	unsigned short orientation = ExifOrientationForFile(f);
+	fseek(f, pos, SEEK_SET);
 	if (orientationOut) *orientationOut = orientation;
 	if (/* autorotate && */ orientation >= 5
 		&& boundingBox.width < boundingBox.height != width_in < height_in) {

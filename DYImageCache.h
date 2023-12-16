@@ -39,6 +39,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 // you MUST call addImage or dontAdd if attemptLock returns YES
 - (BOOL)attemptLockOnFile:(NSString *)s; // will sleep if s is pending, then return NO
 - (void)createScaledImage:(DYImageInfo *)imgInfo; // if i->image is nil, you must replace with dummy image
+- (void)createScaledImage:(DYImageInfo *)imgInfo fromImage:(NSImage *)orig;
 - (void)addImage:(DYImageInfo *)img forFile:(NSString *)s;
 - (void)dontAddFile:(NSString *)s; // simply remove from pending
 

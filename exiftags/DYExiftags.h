@@ -21,6 +21,7 @@ typedef NS_ENUM(char, DYExiftagsFileType) {
 @end
 
 time_t ExifDatetimeForFile(const char *path, DYExiftagsFileType type);
+unsigned short ExifOrientationForFile(FILE * f);
 
 // after some false starts, i've decided the following are best here.
 // perhaps even better, we could make a pure C file with these instead.

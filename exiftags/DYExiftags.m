@@ -162,9 +162,7 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 	return result;
 }
 
-+ (unsigned short)orientationForFile:(NSString *)aPath {
-	FILE * f;
-	if ((f = fopen(aPath.fileSystemRepresentation, "rb")) == NULL) return 0;
+unsigned short ExifOrientationForFile(FILE * f) {
 	unsigned short z = 0;
 	if (SeekExifInJpeg(f)) {
 		char o;
@@ -182,6 +180,13 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 			}
 		}
 	}
+	return z;
+}
+
++ (unsigned short)orientationForFile:(NSString *)aPath {
+	FILE * f = fopen(aPath.fileSystemRepresentation, "rb");
+	if (f == NULL) return 0;
+	unsigned short z = ExifOrientationForFile(f);
 	fclose(f);
 	return z;
 }
