@@ -111,6 +111,7 @@ static time_t ExifDateFromFile(NSString *s) {
 	NSConditionLock *imageCacheQueueLock;
 	NSMutableArray *imageCacheQueue, *secondaryImageCacheQueue;
 	volatile BOOL imageCacheQueueRunning;
+	volatile NSInteger _maxCellWidth;
 	
 	BOOL currentFilesDeletable;
 	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
@@ -161,7 +162,7 @@ static time_t ExifDateFromFile(NSString *s) {
 	splitView.delegate = self; // must set delegate after restoring position so the didResize notification doesn't save the height from the nib
 
 	[imgMatrix setFrameSize:imgMatrix.superview.frame.size];
-	imgMatrix.maxCellWidth = [u integerForKey:@"DYWrappingMatrixMaxCellWidth"];
+	imgMatrix.maxCellWidth = _maxCellWidth = [u integerForKey:@"DYWrappingMatrixMaxCellWidth"];
 	imgMatrix.cellWidth = [u floatForKey:@"thumbCellWidth"];
 	self.window.restorationClass = [CreeveyController class];
 	
@@ -172,6 +173,18 @@ static time_t ExifDateFromFile(NSString *s) {
 	_loadingImage = [NSImage imageNamed:@"loading.png"];
 	imgMatrix.loadingImage = _loadingImage;
 	[NSThread detachNewThreadSelector:@selector(thumbLoader:) toTarget:self withObject:nil];
+	[NSUserDefaultsController.sharedUserDefaultsController addObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth" options:0 context:NULL];
+}
+
+- (void)dealloc {
+	[NSUserDefaultsController.sharedUserDefaultsController removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)c context:(void *)context
+{
+	if ([keyPath isEqualToString:@"values.DYWrappingMatrixMaxCellWidth"]) {
+		_maxCellWidth = [NSUserDefaults.standardUserDefaults integerForKey:@"DYWrappingMatrixMaxCellWidth"];
+	}
 }
 
 - (void)window:(NSWindow *)window willEncodeRestorableState:(NSCoder *)state
@@ -958,8 +971,6 @@ static time_t ExifDateFromFile(NSString *s) {
 	NSThread.currentThread.name = @"thumbLoader:";
 	DYImageCache *thumbsCache = appDelegate.thumbsCache;
 	// only use exif thumbs if we're at the smallest thumbnail  setting
-	BOOL useExifThumbs = [NSUserDefaults.standardUserDefaults
-						  integerForKey:@"DYWrappingMatrixMaxCellWidth"] == 160;
 	NSUInteger i, lastCount = 0;
 	NSMutableArray *visibleQueue = [[NSMutableArray alloc] initWithCapacity:100];
 	NSString *loadingMsg = NSLocalizedString(@"Loading %lu of %lu...", @"");
@@ -1069,6 +1080,7 @@ static time_t ExifDateFromFile(NSString *s) {
 					return [NSString stringWithFormat:loadingMsg, i+1, imgMatrix.numCells];
 				}];
 				if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
+					BOOL useExifThumbs = _maxCellWidth == 160;
 					DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
 					if (FileIsJPEG(theFile)) {
 						result.image =
