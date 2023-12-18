@@ -18,7 +18,8 @@ Contenido:
 	<li><a href="#cats">Grupos/Categorías</a></li>
 	<li><a href="#story">La historia </a></li>
 	<li><a href="#ack">Agradecimientos</a></li>
-	<li><a href="#vers">Histórico de versiones/Información de contacto</a></li>
+	<li><a href="#vers">Histórico de versiones</a></li>
+	<li><a href="#contact">Información de contacto</a></li>
 </ul>
 
 
@@ -216,221 +217,11 @@ También puede contribuir ofreciendo ayuda para la programación o realizando do
 
 <h2><a name="vers"></a>Historial de cambios </h2>
 
-2023.12.14 1.5.1
+More Version History (inglés):
 <ul>
-	<li>sort by EXIF date (jpeg, heif, and raw supported)</li>
-	<li>show EXIF info for heif and (many) raw files</li>
-	<li>a couple of bug fixes</li>
+	<li><a href="../../version.html">Phoenix Slides Version History</a></li>
 </ul>
 
-2023.12.06 1.5
-<ul>
-	<li>add option to view slideshow in resizable window (in Slideshow menu, or hold down option while starting a slideshow)</li>
-	<li>thumbnail view and slideshow will now automatically update when your files are moved/changed (for most directories)</li>
-	<li>restore ability to refresh thumbnails when reloading a directory</li>
-	<li>support tabs</li>
-	<li>add keyboard shortcut (cmd-opt-R) for Random mode</li>
-	<li>allow pinch to zoom thumbnails</li>
-	<li>enable "Copy" of file paths in thumbnail view</li>
-	<li>add hidden preference for thumbnail padding: e.g., <tt>defaults write net.blyt.phoenixslides thumbPadding -float 5</tt> (accepts values of 0-16, but anything under 5 may look terrible)</li>
-</ul>
-
-2023.11.24 1.4.8
-<ul>
-	<li>avoid the notch on newer macbooks</li>
-	<li>allow undo after moving files to the trash/Finder</li>
-	<li>improve performance and memory usage when loading thumbnails</li>
-	<li>restore feature: drag files to directory browser to open that directory (broken since 10.6 Snow Leopard!)</li>
-	<li>files are now selected when dropping them onto the app or thumbnail view</li>
-	<li>improve behavior (don't reload) if the current directory is renamed, deleted, unmounted</li>
-	<li>show file type descriptions in the preferences</li>
-	<li>fix some crashes that could happen after closing a window</li>
-	<li>fix broken contextual menu when right-clicking on corrupt files</li>
-	<li>the maxThumbsToLoad hidden preference now defaults to 100</li>
-	<li>other bug fixes</li>
-	<li>now requires macOS 10.13 or later</li>
-</ul>
-
-2021.12.15 1.4.7
-<ul>
-	<li>improve image interpolation quality in slideshow</li>
-	<li>improve "Check For Update" behavior</li>
-</ul>
-
-2021.11.20 1.4.6
-<ul>
-	<li>fix slideshow window position on macOS 12 (Monterey)</li>
-	<li>support native Apple Silicon</li>
-</ul>
-
-2019.11.13 1.4.5
-<ul>
-	<li>fix slideshow window position when menubar is hidden on macOS 10.15</li>
-	<li>resize slideshow window when changing displays</li>
-	<li>notarized for GateKeeper on macOS 10.15 (Catalina)</li>
-</ul>
-
-2018.11.30 1.4.4
-<ul>
-	<li>fix crash when showing categories in thumbnail view</li>
-	<li>restore the "Show Large Images at Actual Size" feature</li>
-</ul>
-
-2018.11.20 1.4.3
-<ul>
-	<li>support pinch gesture to zoom</li>
-	<li>support Dark Mode in macOS 10.14</li>
-	<li>fix slow drawing/high CPU usage when displaying lots of thumbnails</li>
-	<li>change description for "on startup" preference to "when opening a new window" to more accurately describe the behavior with the system's "restore windows" preference</li>
-	<li>notarize app for macOS 10.14</li>
-</ul>
-
-2016.05.28 1.4.2
-<ul>
-	<li>fix bug where slideshow would not start if "Random" mode was selected</li>
-</ul>
-
-2016.05.23 1.4.1
-<ul>
-	<li>fixed bug where thumbnail view was clipped until the window was resized (this only happened on OS X 10.11)</li>
-	<li>fixed bug with "Apply Settings" button in Slideshow Settings</li>
-	<li>windows are now restored when the app is re-opened (if the preference is checked in the "General" System Preferences)</li>
-	<li>added "Open With" contextual menu</li>
-	<li>fixed bug with scroll position of thumbnail view</li>
-	<li>fixed type-to-select in directory browser</li>
-	<li>better handling of invisible files</li>
-	<li>fixed crash when starting a slideshow at launch</li>
-	<li>fixed some localizations</li>
-</ul>
-
-2014.08.21 1.4
-<ul>
-	<li>code-signed for Gatekeeper on 10.9.5</li>
-	<li>added preference to hide certain files types (e.g., pdf files)</li>
-	<li>now requires OS X 10.9 or later (major code rewrite!)</li>
-</ul>
-
-2014.05.14 1.3.1
-<ul>
-	<li>fixed crash when changing the sort order (e.g. when sorting by last modified)</li>
-	<li>reenable scrollwheel navigation in slideshows when using a non-Magic Mouse</li>
-	<li>fixed slideshow window not appearing when window is moved to a second display on OS X 10.9</li>
-	<li>fixed problem where Phoenix Slides stopped noticing if a folder you were browsing got renamed or moved</li>
-	<li>fixed bug in slideshow: file deleted in browser window was not updated in the slideshow</li>
-	<li>improved handling of invisible folders</li>
-	<li>update version check to handle larger system versions</li>
-	<li>fixed some cosmetic bugs (degree symbol in EXIF info; display of non-integer auto-advance times)</li>
-</ul>
-
-2014.01.11 1.3
-<ul>
-	<li>thumbnails load immediately when you scroll to them</li>
-	<li>you can now change from random to sequential during a slideshow</li>
-	<li>code-signed to run with Gatekeeper on 10.7+</li>
-	<li>limit placed on number of thumbnails automatically loaded (This avoids app crashes. You can change this value to anything from 0 to something very large. The default is 3000. Type something like <tt>defaults write net.blyt.phoenixslides maxThumbsToLoad -int 8000</tt> in a Terminal window.)</li>
-	<li>hit option-left/up and option-right/down to jump to the previous/next sequential slide while in random mode</li>
-	<li>added visual indicator when looping a slideshow</li>
-	<li>now shows empty screen when removing last slide (instead of going backwards)</li>
-	<li>autorotate setting saved across launches</li>
-	<li>autorotate setting available in slideshows as well</li>
-	<li>disabled use of scrollwheel/scrolling to advance slideshows (this feature didn't play well with the Magic Mouse)</li>
-	<li>relative paths (not just file names) are shown at the bottom of the browser window</li>
-	<li>handles mixed-case file extensions (.JpEg)</li>
-	<li>JPEG menu items now correctly enabled even if first selected item is not a JPEG</li>
-	<li>fixed "show file names" menu item checkmark</li>
-	<li>fixed exception when mounting a new disk</li>
-	<li>fixed exception when user typed a dead key (e.g. option-e)</li>
-	<li>fixed erroneous "there is a new version" message when the server returns a bad HTTP status code</li>
-	<li>updated to exiftags 1.01</li>
-	<li>improved French and Italian localizations</li>
-</ul>
-
-2012.10.14 1.2.8
-<ul>
-	<li>info bar during slideshow is now hidden by default; showing/hiding of the info bar is now retained when quitting</li>
-	<li>universal binary again! the last version inadvertently dropped support for powerpc machines. (although, this will probably be the last version to support anything before 10.6)</li>
-</ul>
-
-2012.07.27 1.2.7
-<ul>
-	<li>sort thumbnails by name or date</li>
-	<li>names in the browser are sorted by name now</li>
-	<li>thumbnail window now auto-rotates JPEGs with orientation tags (e.g. from your iPhone)</li>
-	<li>new "Rotate by Tag" command to apply a lossless JPEG rotation according to the orientation tag</li>
-	<li>in slideshow mode: added a new command to save the currently displayed orientation using lossless JPEG rotation</li>
-	<li>JPEG rotation commands are now applied relative to the currently displayed orientation</li>
-	<li>hitting '*' during slideshow now resets rotation and flip (in addition to zoom)</li>
-	<li>added hidden preference to <em>not</em> re-randomize at the start of a new loop when both "Loop" and "Random" are active: type <tt>defaults write net.blyt.phoenixslides Slideshow:RerandomizeOnLoop -boolean NO</tt> in a Terminal window</li>
-	<li>fixed bug where super-skinny images might crash the browser (thanks to Luis Lozano)</li>
-	<li>fixed: white line on the right side of some 180-degree rotations</li>
-	<li>fixed bug where you're stuck in a slideshow if you dragged something to the Phoenix Slides icon, then switch to view a particular "category", then switched away from that window (e.g. another app) and back again (thanks to Doc O'Leary)</li>
-	<li>fixed bug where a jpeg would remain flipped in the slideshow after modifying it</li>
-	<li>fixed bug where slideshow rotations would be stored incorrectly after flipping</li>
-	<li>fixed: aliases in slideshows can now show EXIF info</li>
-	<li>fixed: replace thumb works with aliases</li>
-	<li>updated some localizations</li>
-</ul>
-
-2009.08.31 1.2.6
-<ul>
-	<li>works with Mac OS X 10.6 (Snow Leopard)</li>
-	<li>when slideshow is running, slideshow no longer switches screens</li>
-	<li>when running in random AND loop mode, re-randomize at the start of each loop</li>
-	<li>fixed crash on badly formatted ("field type mismatch") EXIF headers</li>
-	<li>improved Italian localization</li>
-</ul>
-
-2009.03.23 1.2.5
-<ul>
-	<li>fixed - no more white line in scaled-down images</li>
-	<li>new preference for larger thumbnails</li>
-	<li>new preference to allow moving files/making aliases</li>
-	<li>new - hit 'f' to flip during slideshow</li>
-	<li>new - shift-space goes back</li>
-	<li>new - set thumbnail background color</li>
-	<li>fixed - dragging to trash can now removes thumbnail from view (bug introduced in 1.2)</li>
-	<li>fixed bug when reading JPEG Comments with 8-bit characters</li>
-</ul>
-
-2007.05.01 1.2.4
-<ul>
-	<li>fixed crash when reading certain non-standard EXIF headers</li>
-	<li>fixed sporadic hangs (spinning wheel cursor, often affected Intel machines)</li>
-	<li>fixed white line drawing artifacts in thumbnail view</li>
-	<li>some internal changes to work with resolution independence (in anticipation of Leopard)</li>
-</ul>
-
-2007.04.20 1.2.3
-<ul>
-	<li>New icon (thanks to Takeshi Gondo)</li>
-	<li>Selected thumbnail now matches last viewed slide</li>
-	<li>Items now sorted by filename (Finder order)</li>
-	<li>Skips folders named "Thumbs" (for better iPhoto library browsing)</li>
-	<li>fixed - exif thumb popup menu now hides when info window is collapsed</li>
-	<li>fixed - ghost of last thumbnail no longer remains when deleting a file</li>
-	<li>fixed - jpeg transformations no longer cause menubar/dock to show during slideshows</li>
-	<li>Italian localization</li>
-</ul>
-
-2006.10.25 1.2.2
-<ul>
-	<li>Auto-rotate JPEGs according to EXIF Orientation tag</li>
-	<li>JPEG rotations now reset orientation tag, fixing an inconsistency with Preview</li>
-	<li>reset orientation tag, delete/rebuild EXIF thumbnail</li>
-	<li>JPEG rotations also rotate EXIF thumbnail</li>
-	<li>left- and right-click now go forward/back in slideshow; double-click ends slideshow</li>
-	<li>scroll wheel can be used to navigate slideshow</li>
-	<li>command-+/- can now zoom in/out slideshow</li>
-	<li>hand cursor appears when you can drag zoomed images</li>
-	<li>new and improved preferences window</li>
-	<li>set slideshow background color/transparency (perhaps not very useful but very cool)</li>
-	<li>resizable columns in the folder browser</li>
-	<li>fixed crash when exiting slideshow with images waiting to be cached (also made currentIndex volatile)</li>
-	<li>fixed: jpeg files with non-EXIF APP1 tags no longer cause problems with selection/info display</li>
-	<li>fixed: jpeg rotation during slideshow didn't update if "don't change modification date" was checked</li>
-	<li>fixed: rotating and trashing files in thumbnails window will now cause slideshow to update too</li>
-	<li>French localization</li>
-</ul>
 
 2006.01.03 1.2.1
 <ul>
@@ -481,7 +272,7 @@ También puede contribuir ofreciendo ayuda para la programación o realizando do
 
 2005.04.28 1.0 primer liberación pública.
 
-<h2>Contacto/Licencia</h2>
+<h2><a name="contact"></a>Contacto/Licencia</h2>
 <p>Sitio web oficial:
 <a href="https://blyt.net/phxslides/">https://blyt.net/phxslides/</a>
 </p>
