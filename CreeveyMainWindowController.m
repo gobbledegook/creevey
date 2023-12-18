@@ -9,7 +9,6 @@
 #import "EpegWrapper.h"
 #import "DYCarbonGoodies.h"
 #import "DirBrowserDelegate.h"
-#import "NSStringDYBasePathExtension.h"
 #import "DYFileWatcher.h"
 
 #import "CreeveyController.h"
@@ -112,6 +111,7 @@ static time_t ExifDateFromFile(NSString *s) {
 	NSMutableArray *imageCacheQueue, *secondaryImageCacheQueue;
 	volatile BOOL imageCacheQueueRunning;
 	volatile NSInteger _maxCellWidth;
+	BOOL exifWindowNeedsUpdate;
 	
 	BOOL currentFilesDeletable;
 	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
@@ -874,31 +874,31 @@ static time_t ExifDateFromFile(NSString *s) {
 
 - (void)updateExifInfo:(id)sender {
 	NSTextView *exifTextView = appDelegate.exifTextView;
+	if (!exifTextView.window.visible) return;
 	NSView *mainView = exifTextView.window.contentView;
-	NSButton *moreBtn = [mainView viewWithTag:1];
 	NSImageView *thumbView = [mainView viewWithTag:2];
 	NSMutableAttributedString *attStr;
 	NSMutableIndexSet *selectedIndexes = imgMatrix.selectedIndexes;
-	if (exifTextView.window.visible) {
-		if (selectedIndexes.count == 1) {
-			attStr = Fileinfo2EXIFString(imgMatrix.firstSelectedFilename,
-										 appDelegate.thumbsCache,
-										 moreBtn.state);
-			// exif thumbnail
-			thumbView.image = [EpegWrapper exifThumbForPath:ResolveAliasToPath(imgMatrix.firstSelectedFilename)];
-		} else {
-			id s = selectedIndexes.count
-			? [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
-				(unsigned int)selectedIndexes.count]
-			: NSLocalizedString(@"No images selected.", @"");
-			NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
-												[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
-			attStr = [[NSMutableAttributedString alloc] initWithString:s attributes:atts];
-			[thumbView setImage:nil];
-		}
-		[attStr addAttribute:NSForegroundColorAttributeName value:[NSColor labelColor] range:NSMakeRange(0,attStr.length)];
-		[exifTextView.textStorage setAttributedString:attStr];
+	if (selectedIndexes.count == 1) {
+		DYImageCache *cache = appDelegate.thumbsCache;
+		NSString *path = imgMatrix.firstSelectedFilename;
+		NSButton *moreBtn = [mainView viewWithTag:1];
+		attStr = Fileinfo2EXIFString(path, cache, moreBtn.state);
+		NSString *resolvedPath = ResolveAliasToPath(path);
+		exifWindowNeedsUpdate = [cache infoForKey:resolvedPath] == nil;
+		if (!exifWindowNeedsUpdate)
+			thumbView.image = [EpegWrapper exifThumbForPath:resolvedPath];
+	} else {
+		id s = selectedIndexes.count
+		? [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
+		   (unsigned int)selectedIndexes.count]
+		: NSLocalizedString(@"No images selected.", @"");
+		attStr = [[NSMutableAttributedString alloc] initWithString:s attributes:@{NSFontAttributeName:[NSFont userFontOfSize:12]}];
+		[thumbView setImage:nil];
+		exifWindowNeedsUpdate = NO;
 	}
+	[attStr addAttribute:NSForegroundColorAttributeName value:[NSColor labelColor] range:NSMakeRange(0,attStr.length)];
+	[exifTextView.textStorage setAttributedString:attStr];
 }
 
 - (void)updateExifInfo {
@@ -913,47 +913,64 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 #pragma mark wrapping matrix methods
- - (void)wrappingMatrixSelectionDidChange:(NSIndexSet *)selectedIndexes {
-	 NSString *s, *path, *basePath;
-	 DYImageInfo *info;
-	 DYImageCache *thumbsCache = appDelegate.thumbsCache;
-	 unsigned long long totalSize = 0;
-	 switch (selectedIndexes.count) {
-		 case 0:
-			 s = @"";
-			 break;
-		 case 1:
-			 basePath = [[dirBrowserDelegate path] stringByAppendingString:@"/"];
-			 path = imgMatrix.firstSelectedFilename;
-			 info = [thumbsCache infoForKey:ResolveAliasToPath(path)];
-			 // must resolve alias here b/c that's what we do in loadImages
-			 // see also modTime in DYImageCache
-			 if (!info) {
-				 // in case the thumbnail hasn't loaded into the cache yet, retrieve the file info ourselves.
-				 info = [[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)];
-			 }
-			 s = info ? [[path stringByDeletingBasePath:basePath] stringByAppendingFormat:@" %dx%d (%@)",
-				 (int)info->pixelSize.width,
-				 (int)info->pixelSize.height,
-				 FileSize2String(info->fileSize)]
-				   : [[path stringByDeletingBasePath:basePath] stringByAppendingString:
-					   @" - bad image file!"];
-			 break;
-		 default:
-			 for (NSString *path in imgMatrix.selectedFilenames) {
-				 info = [thumbsCache infoForKey:ResolveAliasToPath(path)];
-				 if (!info) info = [[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)];
-				 if (info)
-					 totalSize += info->fileSize;
-			 }
-			 s = [NSString stringWithFormat:@"%@ (%@)",
-					 [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
-					 (unsigned int)selectedIndexes.count],
+- (void)wrappingMatrixSelectionDidChange:(NSIndexSet *)selectedIndexes {
+	NSString *s;
+	NSUInteger count = selectedIndexes.count;
+	if (count == 0) {
+		s = @"";
+	} else {
+		NSString *path, *theFile;
+		DYImageInfo *info;
+		DYImageCache *thumbsCache = appDelegate.thumbsCache;
+		if (count == 1) {
+			path = imgMatrix.firstSelectedFilename;
+			theFile = ResolveAliasToPath(path);
+			info = [thumbsCache infoForKey:theFile];
+			NSSize pixelSize;
+			off_t fileSize;
+			if (info) {
+				pixelSize = info->pixelSize;
+				fileSize = info->fileSize;
+			} else {
+				struct stat buf;
+				if (!stat(theFile.fileSystemRepresentation, &buf))
+					fileSize = buf.st_size;
+				else
+					fileSize = 0;
+				CGImageSourceRef imgSrc = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:theFile isDirectory:NO], NULL);
+				if (imgSrc) {
+					NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceShouldCache: @NO};
+					NSDictionary *props = (NSDictionary *)CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(imgSrc, 0, (__bridge CFDictionaryRef)opts));
+					pixelSize.width = [props[(__bridge NSString *)kCGImagePropertyPixelWidth] floatValue];
+					pixelSize.height = [props[(__bridge NSString *)kCGImagePropertyPixelHeight] floatValue];
+					CFRelease(imgSrc);
+				} else
+					pixelSize = NSMakeSize(0, 0);
+			}
+			NSUInteger idx = [dirBrowserDelegate path].length+1;
+			NSString *fileName = idx > path.length ? path : [path substringFromIndex:idx];
+			s = [fileName stringByAppendingFormat:@" %dx%d (%@)",
+				 (int)pixelSize.width, (int)pixelSize.height, FileSize2String(fileSize)];
+		} else {
+			unsigned long long totalSize = 0;
+			for (NSString *path in imgMatrix.selectedFilenames) {
+				NSString *theFile = ResolveAliasToPath(path);
+				info = [thumbsCache infoForKey:theFile];
+				if (info)
+					totalSize += info->fileSize;
+				else {
+					struct stat buf;
+					if (!stat(theFile.fileSystemRepresentation, &buf))
+						totalSize += buf.st_size;
+				}
+			}
+			s = [NSString stringWithFormat:@"%@ (%@)",
+				 [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""), (unsigned int)selectedIndexes.count],
 				 FileSize2String(totalSize)];
-			 break;
-	 }
-	 bottomStatusFld.stringValue = s;
-	 [self updateExifInfo];
+		}
+	}
+	bottomStatusFld.stringValue = s;
+	[self updateExifInfo];
 }
 
 - (NSImage *)wrappingMatrixWantsImageForFile:(NSString *)filename atIndex:(NSUInteger)i {
@@ -1133,6 +1150,9 @@ static time_t ExifDateFromFile(NSString *s) {
 						[_accessedLock lock];
 						[_accessedFiles addObject:origPath];
 						[_accessedLock unlock];
+						if (exifWindowNeedsUpdate && self.window.isMainWindow && [imgMatrix.firstSelectedFilename isEqualToString:origPath]) {
+							[self updateExifInfo];
+						}
 					}
 				} else if (addedToCache) {
 					[thumbsCache endAccess:origPath];

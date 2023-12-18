@@ -35,16 +35,12 @@ static BOOL FilesContainJPEG(NSArray *paths) {
 
 #define TAB(x,y)	[[NSTextTab alloc] initWithType:x location:y]
 NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache *cache, BOOL moreExif) {
-	id s, path;
-	path = ResolveAliasToPath(origPath);
-	s = [[NSMutableString alloc] init];
+	NSString *path = ResolveAliasToPath(origPath);
+	NSMutableString *s = [[NSMutableString alloc] init];
 	[s appendString:origPath.lastPathComponent];
 	if (path != origPath)
 		[s appendFormat:@"\n[%@->%@]", NSLocalizedString(@"Alias", @""), path];
 	DYImageInfo *i = [cache infoForKey:path];
-	if (!i) {
-		i = [[DYImageInfo alloc] initWithPath:ResolveAliasToPath(path)];
-	}
 	if (i) {
 		id exifStr = [DYExiftags tagsForFile:path moreTags:moreExif];
 		[s appendFormat:@"\n%@ (%qu bytes)\n%@: %d %@: %d",
@@ -59,29 +55,23 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		unsigned long long fsize;
 		fsize = [[NSFileManager.defaultManager attributesOfItemAtPath:[path stringByResolvingSymlinksInPath] error:NULL] fileSize];
 		// fsize will be 0 on error
-		[s appendFormat:@"\n%@ (%qu bytes)\n%@",
-			FileSize2String(fsize), fsize,
-			NSLocalizedString(@"Unable to read file", @"")];
+		[s appendFormat:@"\n%@ (%qu bytes)",
+			FileSize2String(fsize), fsize];
 	}
 	
-	NSMutableDictionary *atts = [NSMutableDictionary dictionaryWithObject:
-										[NSFont userFontOfSize:12] forKey:NSFontAttributeName];
-	NSMutableAttributedString *attStr =
-		[[NSMutableAttributedString alloc] initWithString:s
-											   attributes:atts];
-	NSRange r = [s rangeOfString:NSLocalizedString(@"Camera-Specific Properties:\n", @"")];
-	// ** this may not be optimal
-	if (r.location != NSNotFound) {
+	static NSDictionary *atts;
+	if (atts == nil) {
 		float x = 160;
 		NSMutableParagraphStyle *styl = [[NSMutableParagraphStyle alloc] init];
 		styl.headIndent = x;
 		styl.tabStops = @[TAB(NSRightTabStopType,x-5), TAB(NSLeftTabStopType,x)];
 		styl.defaultTabInterval = 5;
-		
-		atts[NSParagraphStyleAttributeName] = styl;
-		[attStr setAttributes:atts range:NSMakeRange(r.location,[s length]-r.location)];
+		atts = @{
+			NSFontAttributeName: [NSFont userFontOfSize:12],
+			NSParagraphStyleAttributeName: styl,
+		};
 	}
-	return attStr;
+	return [[NSMutableAttributedString alloc] initWithString:s attributes:atts];
 }
 
 @interface TimeIntervalPlusWeekToStringTransformer : NSValueTransformer

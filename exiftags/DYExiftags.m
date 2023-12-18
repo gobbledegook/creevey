@@ -153,12 +153,12 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 			}
 			mptr = mptr->next;
 		}
-		[result insertString:@"\n" atIndex:0];
 		if (jpeg_has_multiple_scans(&srcinfo))
 			[result insertString:NSLocalizedString(@"Progressive JPEG file\n", @"") atIndex:0];
 		jpeg_destroy_decompress(&srcinfo);
 		fclose(input_file);
 	}
+	[result insertString:@"\n" atIndex:0];
 	return result;
 }
 

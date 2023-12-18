@@ -1956,6 +1956,7 @@
       }
     },
     "Unable to read file" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
