@@ -22,7 +22,7 @@
 static uint16_t read2byte(FILE * f, char o);
 static BOOL SeekExifInJpeg(FILE * infile);
 static int SeekExifInHeif(FILE * f);
-static BOOL SeekExifSubIFD(FILE * f, char *oo);
+static BOOL SeekExifIFD0(FILE * f, char *oo);
 
 struct my_error_mgr {
 	struct jpeg_error_mgr pub;	/* "public" fields */
@@ -166,7 +166,7 @@ unsigned short ExifOrientationForFile(FILE * f) {
 	unsigned short z = 0;
 	if (SeekExifInJpeg(f)) {
 		char o;
-		if (SeekExifSubIFD(f, &o)) {
+		if (SeekExifIFD0(f, &o)) {
 			uint16_t n = read2byte(f,o);
 			if (n) {
 				while (n--) {
@@ -355,7 +355,7 @@ static BOOL SeekExifInJpeg(FILE * infile)
 	return 0;
 }
 
-static BOOL SeekExifSubIFD(FILE * f, char *oo) {
+static BOOL SeekExifIFD0(FILE * f, char *oo) {
 	long b0 = ftell(f);
 
 	// get endian-ness
@@ -372,6 +372,14 @@ static BOOL SeekExifSubIFD(FILE * f, char *oo) {
 	if (!offset) return 0;
 
 	fseek(f, b0+offset, SEEK_SET);
+	*oo = o;
+	return YES;
+}
+
+static BOOL SeekExifSubIFD(FILE * f, char *oo) {
+	long b0 = ftell(f);
+	if (!SeekExifIFD0(f, oo)) return 0;
+	enum byteorder o = *oo;
 	uint16_t n;
 	n = read2byte(f,o); // number of entries in this IFD
 	if (!n) return 0;
@@ -388,7 +396,6 @@ static BOOL SeekExifSubIFD(FILE * f, char *oo) {
 	if (!exifOffset) return 0;
 
 	fseek(f, b0+exifOffset, SEEK_SET);
-	*oo = o;
 	return YES;
 }
 
