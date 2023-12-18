@@ -488,10 +488,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 
-// display image number "currentIndex"
-// if it's not cached, say "Loading" and spin off a thread to cache it
 - (void)updateInfoFldWithRotation:(int)r {
 	DYImageInfo *info = [imgCache infoForKey:filenames[currentIndex]];
+	if (info == nil) {
+		// avoid crash if user tries to rotate before the image has loaded
+		return;
+	}
 	id dir;
 	switch (r) {
 		case 90: dir = NSLocalizedString(@" left", @""); break;
