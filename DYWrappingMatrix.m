@@ -495,9 +495,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			NSURL *url = [NSURL fileURLWithPath:path isDirectory:NO];
 			[_originPaths addObject:path];
 			[_movedUrls addObject:url.fileReferenceURL];
-			// each pasteboard item has both a string and URL representation
 			NSPasteboardItem *pbi = [[NSPasteboardItem alloc] init];
-			[pbi setString:path forType:NSPasteboardTypeString];
 			[pbi setString:url.absoluteString forType:NSPasteboardTypeFileURL];
 			NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:pbi];
 			// set an image to be dragged
