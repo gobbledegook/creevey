@@ -62,7 +62,7 @@
 //      VDKQueue does not take this approach, but favors the "manual" method of "stop-watching-then-rewatch". 
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 #include <sys/types.h>
 #include <sys/event.h>
 
@@ -100,7 +100,6 @@
 - (void) removePath:(NSString *)aPath;
 - (void) removeAllPaths;
 - (void) stopWatching;                                          // You must call this when you release the VDKQueue object
-@property (readonly) NSUInteger numberOfWatchedPaths;           // Returns the number of paths that this VDKQueue instance is actively watching.
 
 @property (weak) id<VDKQueueDelegate> delegate;
 

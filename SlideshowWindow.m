@@ -10,7 +10,6 @@
 
 #import "SlideshowWindow.h"
 #import "DYCarbonGoodies.h"
-#import "NSStringDYBasePathExtension.h"
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
 #import "DYFileWatcher.h"
@@ -57,7 +56,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	
 	NSString *basePath;
 	NSScreen *oldScreen;
-	volatile NSUInteger currentIndex;
+	NSUInteger currentIndex;
 	NSUInteger lastIndex; // for outside access to last slide shown
 	
 	NSTextView *helpFld;
@@ -220,7 +219,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 - (NSString *)currentShortFilename {
 	NSString *s = filenames[currentIndex];
-	return [s stringByDeletingBasePath:basePath];
+	return s.length <= basePath.length ? s : [s substringFromIndex:basePath.length];
 }
 
 - (void)configureScreen

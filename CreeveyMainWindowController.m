@@ -114,18 +114,19 @@ static time_t ExifDateFromFile(NSString *s) {
 	BOOL exifWindowNeedsUpdate;
 	
 	BOOL currentFilesDeletable;
-	volatile BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
+	BOOL filenamesDone, loadingDone, // loadingDone only meaningful if filenamesDone is true, always check both!
 	startSlideshowWhenReady;
 	NSMutableSet *filesBeingOpened; // to be selected
 	short int sortOrder;
 	
 	short int currCat;
 	
-	volatile BOOL _background, _wantsSubfolders;
+	volatile BOOL _background;
+	BOOL _wantsSubfolders;
 	NSImage *_brokenDoc, *_loadingImage;
 	NSMutableSet *_accessedFiles;
-	NSLock *_accessedLock, *_statusLock, *_internalLock;
-	volatile NSTimeInterval _statusTime;
+	NSLock *_accessedLock, *_internalLock;
+	_Atomic(NSTimeInterval) _statusTime;
 	DYFileWatcher *_fileWatcher;
 }
 @synthesize dirBrowser, slidesBtn, imgMatrix, statusFld, bottomStatusFld;
@@ -144,7 +145,6 @@ static time_t ExifDateFromFile(NSString *s) {
 		appDelegate = (CreeveyController *)NSApp.delegate;
 		_accessedFiles = [[NSMutableSet alloc] init];
 		_accessedLock = [[NSLock alloc] init];
-		_statusLock = [[NSLock alloc] init];
 		_internalLock = [[NSLock alloc] init];
 		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 	}
@@ -521,21 +521,14 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 - (void)updateStatusString:(NSString *)s {
-	[_statusLock lock];
 	_statusTime = NSDate.timeIntervalSinceReferenceDate;
-	[_statusLock unlock];
 	statusFld.stringValue = s;
 }
 
 - (void)updateStatusOnMainThread:(NSString * (^)(void))f {
-	[_statusLock lock];
 	NSTimeInterval timeStamp = _statusTime = NSDate.timeIntervalSinceReferenceDate;
-	[_statusLock unlock];
 	dispatch_async(dispatch_get_main_queue(), ^{
-		[_statusLock lock];
-		NSTimeInterval latestStatusTime = _statusTime;
-		[_statusLock unlock];
-		if (latestStatusTime > timeStamp) return;
+		if (_statusTime > timeStamp) return;
 		NSString *s = f();
 		if (s) statusFld.stringValue = s;
 	});
@@ -945,7 +938,7 @@ static time_t ExifDateFromFile(NSString *s) {
 					pixelSize.height = [props[(__bridge NSString *)kCGImagePropertyPixelHeight] floatValue];
 					CFRelease(imgSrc);
 				} else
-					pixelSize = NSMakeSize(0, 0);
+					pixelSize = NSZeroSize;
 			}
 			NSUInteger idx = [dirBrowserDelegate path].length+1;
 			NSString *fileName = idx > path.length ? path : [path substringFromIndex:idx];

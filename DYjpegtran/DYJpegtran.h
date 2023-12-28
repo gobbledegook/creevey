@@ -7,7 +7,7 @@
 
 //  Created by Dominic Yu 2005 July 11
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 #include "jpeglib.h"
 #include "transupp.h"
 

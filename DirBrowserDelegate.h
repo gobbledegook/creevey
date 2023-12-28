@@ -5,10 +5,9 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-#import <Cocoa/Cocoa.h>
-#import "DYCreeveyBrowser.h"
+@import Cocoa;
 
-@interface DirBrowserDelegate : NSObject <DYCreeveyBrowserDelegate>
+@interface DirBrowserDelegate : NSObject
 - (NSString*)path;
 - (void)setPath:(NSString *)s;
 @property (weak) IBOutlet NSBrowser *b;

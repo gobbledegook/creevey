@@ -5,7 +5,7 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 #define CREEVEY_DEFAULT_PATH [@"~/Pictures" stringByResolvingSymlinksInPath]
 
 @class DYImageCache, SlideshowWindow, DYJpegtranPanel;

@@ -31,46 +31,40 @@
 @interface VDKQueuePathEntry : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags NS_DESIGNATED_INITIALIZER;
-@property (copy) NSString *path;
-@property int watchedFD;
+@property (readonly) NSString *path;
+@property (readonly) int watchedFD;
 @property u_int subscriptionFlags;
-@property uintptr_t uniqueId;
+@property (readonly) uintptr_t uniqueId;
 @end
 
 @implementation VDKQueuePathEntry
-
-- (instancetype) initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags;
-{
-	if (self = [super init])
-	{
+- (instancetype)initWithPath:(NSString*)inPath andSubscriptionFlags:(u_int)flags {
+	static uintptr_t gUniqueID = 0;
+	if (self = [super init]) {
 		_path = [inPath copy];
 		_watchedFD = open(_path.fileSystemRepresentation, O_EVTONLY, 0);
-		if (_watchedFD < 0)
-		{
+		if (_watchedFD < 0) {
 			self = nil;
 			return nil;
 		}
 		_subscriptionFlags = flags;
+		_uniqueId = gUniqueID++;
 	}
 	return self;
 }
-
--(void)	dealloc
-{
-	if (_watchedFD >= 0) close(_watchedFD);
+- (void)dealloc {
+	close(_watchedFD);
 }
-
 @end
 
 
 #pragma mark - VDKQueue -
 
-@implementation VDKQueue
-{
+@implementation VDKQueue {
 @private
 	int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
-	NSMutableDictionary    *_watchedPathEntries;                    // List of VDKQueuePathEntries. Keys are NSStrings of the path that each VDKQueuePathEntry is for.
-	NSMutableDictionary    *_pathMap;                               // unique id -> path entry (for thread safety)
+	NSMutableDictionary<NSString *, VDKQueuePathEntry *> *_watchedPathEntries; // path -> path entry
+	NSMutableDictionary<NSNumber *, VDKQueuePathEntry *> *_pathMap; // unique id -> path entry (for thread safety)
 	BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
 }
 
@@ -103,7 +97,6 @@
 
 - (void) addPath:(NSString *)path notifyingAbout:(u_int)flags
 {
-	static uintptr_t gUniqueID = 0;
 	if (!path) return;
 	@synchronized(self)
 	{
@@ -113,30 +106,22 @@
             // All flags already set?
 			if ((pathEntry.subscriptionFlags | flags) == flags) return;
 			flags |= pathEntry.subscriptionFlags;
+			pathEntry.subscriptionFlags = flags;
 		} else {
             pathEntry = [[VDKQueuePathEntry alloc] initWithPath:path andSubscriptionFlags:flags];
+			_watchedPathEntries[path] = pathEntry;
+			_pathMap[@(pathEntry.uniqueId)] = pathEntry;
         }
-        
-		if (pathEntry)
-		{
-			struct timespec		nullts = { 0, 0 };
-			struct kevent		ev;
-			EV_SET(&ev, [pathEntry watchedFD], EVFILT_VNODE, EV_ADD | EV_ENABLE | EV_CLEAR, flags, 0, (void *)gUniqueID);
-			
-			pathEntry.subscriptionFlags = flags;
-			pathEntry.uniqueId = gUniqueID;
-			_pathMap[@(gUniqueID++)] = pathEntry;
 
-            _watchedPathEntries[path] = pathEntry;
-            kevent(_coreQueueFD, &ev, 1, NULL, 0, &nullts);
-            
-			// Start the thread that fetches and processes our events if it's not already running.
-			if(!_keepWatcherThreadRunning)
-			{
-				_keepWatcherThreadRunning = YES;
-				[NSThread detachNewThreadSelector:@selector(watcherThread:) toTarget:self withObject:nil];
-			}
-        }
+		struct kevent ev;
+		EV_SET(&ev, pathEntry.watchedFD, EVFILT_VNODE, EV_ADD|EV_CLEAR, flags, 0, (void *)pathEntry.uniqueId);
+		kevent(_coreQueueFD, &ev, 1, NULL, 0, &(struct timespec){0,0});
+
+		// Start the thread that fetches and processes our events if it's not already running.
+		if (!_keepWatcherThreadRunning) {
+			_keepWatcherThreadRunning = YES;
+			[NSThread detachNewThreadSelector:@selector(watcherThread:) toTarget:self withObject:nil];
+		}
     }
 }
 
@@ -146,7 +131,7 @@
     int					n;
     struct kevent		ev;
     struct timespec     timeout = { 1, 0 };     // 1 second timeout. Should be longer, but we need this thread to exit when a kqueue is dealloced, so 1 second timeout is quite a while to wait.
-	int					theFD = _coreQueueFD;	// So we don't have to risk accessing iVars when the thread is terminated.
+	const int			theFD = _coreQueueFD;	// So we don't have to risk accessing iVars when the thread is terminated.
 	NSThread.currentThread.name = @"VDKQueue";
 #if DEBUG_LOG_THREAD_LIFETIME
 	NSLog(@"watcherThread started.");
@@ -162,12 +147,9 @@
 					pe = _pathMap[@(uid)];
 				}
 				if (pe) {
-					NSString *fpath = pe.path;
-					if (!fpath) continue;
-
 					// call the delegate method on the main thread.
 					dispatch_async(dispatch_get_main_queue(), ^{
-						[_delegate VDKQueue:self receivedNotification:ev.fflags forPath:fpath];
+						[_delegate VDKQueue:self receivedNotification:ev.fflags forPath:pe.path];
 					});
 				}
 			}
@@ -223,19 +205,6 @@
 		[_pathMap removeAllObjects];
 		[_watchedPathEntries removeAllObjects];
 	}
-}
-
-
-- (NSUInteger) numberOfWatchedPaths
-{
-    NSUInteger count;
-    
-    @synchronized(self)
-    {
-        count = _watchedPathEntries.count;
-    }
-    
-    return count;
 }
 
 @end

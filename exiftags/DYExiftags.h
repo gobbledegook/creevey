@@ -8,7 +8,7 @@
 //  Created by Dominic Yu 2005 July 12
 
 #include "jpeglib.h"
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 typedef NS_ENUM(char, DYExiftagsFileType) {
 	JPEG,

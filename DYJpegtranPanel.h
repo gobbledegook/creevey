@@ -5,7 +5,7 @@
 //a letter to Creative Commons, 559 Nathan Abbott Way, Stanford,
 //California 94305, USA.
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 #import "DYJpegtran.h"
 
 @interface DYJpegtranPanel : NSObject

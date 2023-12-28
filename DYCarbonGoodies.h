@@ -7,7 +7,7 @@
 
 //  Created by d on 2005.04.03.
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // returns path if it's not an alias, or if not resolvable
 NSString *ResolveAliasToPath(NSString *path);

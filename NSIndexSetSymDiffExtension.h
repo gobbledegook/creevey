@@ -7,7 +7,7 @@
 
 //  Created by d on 2005.06.13.
 
-#import <Cocoa/Cocoa.h>
+@import Foundation;
 
 @interface NSMutableIndexSet (SymDiffExtension)
 - (void)symmetricDifference:(NSIndexSet *)setB;

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8D1107280486CEB800E47090 /* creevey_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -15,8 +14,6 @@
 		F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */; };
 		F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */; };
 		F202E2CB19170E4900EDDCEC /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2C919170E4900EDDCEC /* MainMenu.xib */; };
-		F209762B081F51A300AD4E00 /* NSStringDYBasePathExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */; };
-		F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */; };
 		F20A7A4C0A85E1E300F4221C /* UKPrefsPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = F20A7A4A0A85E1E300F4221C /* UKPrefsPanel.h */; };
 		F20A7A4D0A85E1E300F4221C /* UKPrefsPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = F20A7A4B0A85E1E300F4221C /* UKPrefsPanel.m */; };
 		F20ACC0E088E011A004CFE14 /* DYJpegtranPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = F20ACC0C088E011A004CFE14 /* DYJpegtranPanel.h */; };
@@ -111,7 +108,6 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = creevey_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Phoenix Slides.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Phoenix Slides.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2029D2D0820B68D00CE44FA /* phxslides.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = phxslides.icns; sourceTree = "<group>"; };
@@ -129,8 +125,6 @@
 		F202E2DC1917140C00EDDCEC /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/CreeveyWindow.strings; sourceTree = "<group>"; };
 		F202E2DD1917140E00EDDCEC /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/CreeveyWindow.strings; sourceTree = "<group>"; };
 		F2097598081F3C4400AD4E00 /* en */ = {isa = PBXFileReference; lastKnownFileType = folder; name = en; path = "en.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
-		F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSStringDYBasePathExtension.h; sourceTree = "<group>"; };
-		F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSStringDYBasePathExtension.m; sourceTree = "<group>"; };
 		F20A7A4A0A85E1E300F4221C /* UKPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UKPrefsPanel.h; sourceTree = "<group>"; };
 		F20A7A4B0A85E1E300F4221C /* UKPrefsPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UKPrefsPanel.m; sourceTree = "<group>"; };
 		F20ACC0C088E011A004CFE14 /* DYJpegtranPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYJpegtranPanel.h; sourceTree = "<group>"; };
@@ -340,15 +334,12 @@
 				F20A7A4A0A85E1E300F4221C /* UKPrefsPanel.h */,
 				F20A7A4B0A85E1E300F4221C /* UKPrefsPanel.m */,
 				F2FE503508848C8400550533 /* exiftags */,
-				F2097629081F51A300AD4E00 /* NSStringDYBasePathExtension.h */,
-				F209762A081F51A300AD4E00 /* NSStringDYBasePathExtension.m */,
 				F28CA6AF085DF4590045386B /* NSIndexSetSymDiffExtension.h */,
 				F28CA6B0085DF4590045386B /* NSIndexSetSymDiffExtension.m */,
 				F2F5418E080A3846008AE60F /* DYCreeveyBrowser.h */,
 				F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */,
 				F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */,
 				F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */,
-				32CA4F630368D1EE00C91783 /* creevey_Prefix.pch */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);
 			name = "Other Sources";
@@ -472,7 +463,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D1107280486CEB800E47090 /* creevey_Prefix.pch in Headers */,
 				F2AE88E907EB877D008F2193 /* DirBrowserDelegate.h in Headers */,
 				F2AE890E07EB9BB7008F2193 /* CreeveyController.h in Headers */,
 				F2F2641507EEA114006164BF /* SlideshowWindow.h in Headers */,
@@ -482,7 +472,6 @@
 				F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */,
 				F2F54190080A3846008AE60F /* DYCreeveyBrowser.h in Headers */,
 				F234C0170810E9B700175D50 /* DYImageCache.h in Headers */,
-				F209762B081F51A300AD4E00 /* NSStringDYBasePathExtension.h in Headers */,
 				F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */,
 				F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */,
 				F25EA2830867329C003728C2 /* epeg_private.h in Headers */,
@@ -619,7 +608,6 @@
 				F2F54191080A3846008AE60F /* DYCreeveyBrowser.m in Sources */,
 				F2FFD7C92B2805C100036217 /* dcraw.c in Sources */,
 				F234C0180810E9B700175D50 /* DYImageCache.m in Sources */,
-				F209762C081F51A300AD4E00 /* NSStringDYBasePathExtension.m in Sources */,
 				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,
 				F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */,
 				F25EA2850867329C003728C2 /* epeg_main.c in Sources */,
@@ -768,8 +756,6 @@
 				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_TEAM = 9436CS8LQX;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = creevey_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libjpeg";
@@ -799,8 +785,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9436CS8LQX;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = creevey_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libjpeg";
@@ -824,6 +808,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -866,6 +851,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;

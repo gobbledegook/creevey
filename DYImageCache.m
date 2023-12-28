@@ -80,14 +80,13 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSCache<NSString *, DYImageInfo *> *images;
 	NSMutableSet<NSString *> *pending;
 	
-	NSSize boundingSize;
-	NSUInteger maxImages;
 	volatile BOOL cachingShouldStop;
 }
 - (instancetype)init NS_UNAVAILABLE;
 @end
 
 @implementation DYImageCache
+@synthesize boundingSize;
 - (instancetype)initWithCapacity:(NSUInteger)n {
 	if (self = [super init]) {
 		images = [[NSCache alloc] init];
@@ -108,12 +107,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	[[images objectForKey:key] endContentAccess];
 }
 
-- (void)setBoundingSize:(NSSize)aSize {
-	boundingSize = aSize;
-}
 - (float)boundingWidth { return boundingSize.width; }
-- (NSSize)boundingSize { return boundingSize; }
-
 
 static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYImageInfo *imgInfo) {
 	NSImage *result;
@@ -179,6 +173,7 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 // see usage note in the .h file.
 #define CacheContains(x)	([images objectForKey:x] != nil)
 #define PendingContains(x)  ([pending containsObject:x])
+//#define LOGCACHING 1
 - (void)cacheFile:(NSString *)s {
 	if (![self attemptLockOnFile:s]) return;
 	
@@ -205,12 +200,28 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 	}
 	if (PendingContains(s)) {
 		[cacheLock unlock];
-		//NSLog(@"waiting for pending %@", idx);
-		[pendingLock lockWhenCondition:s.hash];
-		// this lock doesn't do anything, but is useful for communication purposes
-		//NSLog(@"%@ not pending.", idx);
-		[pendingLock unlockWithCondition:s.hash];
-		return NO;
+#if LOGCACHING
+		NSLog(@"waiting for pending %@", s.lastPathComponent);
+#endif
+		for (;;) {
+			[pendingLock lockWhenCondition:s.hash];
+			[pendingLock unlock];
+			// in case of hash collisions, make sure the file has actually been removed from the pending set
+			[cacheLock lock];
+			if (!PendingContains(s)) {
+				[cacheLock unlock];
+#if LOGCACHING
+				NSLog(@"done waiting for %@", s.lastPathComponent);
+#endif
+				[pendingLock lock];
+				[pendingLock unlockWithCondition:s.hash];
+				return NO;
+			}
+			[cacheLock unlock];
+#if LOGCACHING
+			NSLog(@"hash collision for %@, waiting again...", s.lastPathComponent);
+#endif
+		}
 	}
 	[pending addObject:s]; // so no one else caches it simultaneously
 	[cacheLock unlock];
@@ -225,7 +236,7 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 	}
 	[cacheLock unlock];
 	[pendingLock lock];
-	[pendingLock unlockWithCondition:s.hash]; // unlocking w/o locking, i guess it's OK
+	[pendingLock unlockWithCondition:s.hash]; // signal to any waiting threads
 }
 
 - (void)dontAddFile:(NSString *)s {

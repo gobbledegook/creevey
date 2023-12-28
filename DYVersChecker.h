@@ -7,6 +7,6 @@
 
 //  Created by d on 2005.07.29.
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 void DYVersCheckForUpdateAndNotify(BOOL notify);

@@ -44,13 +44,7 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 		[self stop];
 	if ([s.stringByDeletingLastPathComponent isEqualToString:@"/"])
 		return; // just refuse to watch top level directories for now
-	FSEventStreamContext o;
-	o.version = 0;
-	o.info = (__bridge void *)self;
-	o.retain = NULL;
-	o.release = NULL;
-	o.copyDescription = NULL;
-	stream = FSEventStreamCreate(NULL, &fseventCallback, &o, (__bridge CFArrayRef)@[s], kFSEventStreamEventIdSinceNow, 2.0, kFSEventStreamCreateFlagFileEvents|kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagIgnoreSelf|kFSEventStreamCreateFlagMarkSelf);
+	stream = FSEventStreamCreate(NULL, &fseventCallback, &(FSEventStreamContext){0,(__bridge void *)self,NULL,NULL,NULL}, (__bridge CFArrayRef)@[s], kFSEventStreamEventIdSinceNow, 2.0, kFSEventStreamCreateFlagFileEvents|kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagIgnoreSelf|kFSEventStreamCreateFlagMarkSelf);
 	FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 	if (!FSEventStreamStart(stream)) {
 		FSEventStreamInvalidate(stream);

@@ -6,7 +6,7 @@
 //California 94305, USA.
 
 #import "DirBrowserDelegate.h"
-#import "DYCarbonGoodies.h"
+#import "DYCreeveyBrowser.h"
 #import "VDKQueue.h"
 
 static NSString * const _Volumes = @"/Volumes";
@@ -20,7 +20,7 @@ static NSString *defaultPath(void) {
 	return path;
 }
 
-@interface DirBrowserDelegate () <VDKQueueDelegate>
+@interface DirBrowserDelegate () <VDKQueueDelegate, DYCreeveyBrowserDelegate>
 @property (nonatomic, strong) NSString *rootVolumeName;
 @property (strong) NSString *currPath;
 @property (nonatomic, strong) NSURL *currFileRef;

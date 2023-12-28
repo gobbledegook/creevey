@@ -7,7 +7,7 @@
 
 //  Created by d on 2005.04.15.
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 NSString *FileSize2String(unsigned long long fileSize);
 

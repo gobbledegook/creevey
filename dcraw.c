@@ -1388,7 +1388,7 @@ void CLASS rollei_load_raw()
   maximum = 0x3ff;
 }
 
-int CLASS raw (unsigned row, unsigned col)
+int CLASS raww(unsigned row, unsigned col)
 {
   return (row < raw_height && col < raw_width) ? RAW(row,col) : 0;
 }
@@ -1497,7 +1497,7 @@ void CLASS phase_one_correct()
           for (row=0; row < raw_height; row++)
             if (FC(row-top_margin,col-left_margin) == 1) {
               for (sum=i=0; i < 4; i++)
-                sum += val[i] = raw (row+dir[i][0], col+dir[i][1]);
+                sum += val[i] = raww(row+dir[i][0], col+dir[i][1]);
               for (max=i=0; i < 4; i++) {
                 dev[i] = abs((val[i] << 2) - sum);
                 if (dev[max] < dev[i]) max = i;
@@ -1505,15 +1505,15 @@ void CLASS phase_one_correct()
               RAW(row,col) = (sum - val[max])/3.0 + 0.5;
             } else {
               for (sum=0, i=8; i < 12; i++)
-                sum += raw (row+dir[i][0], col+dir[i][1]);
+                sum += raww(row+dir[i][0], col+dir[i][1]);
               RAW(row,col) = 0.5 + sum * 0.0732233 +
-                (raw(row,col-2) + raw(row,col+2)) * 0.3535534;
+                (raww(row,col-2) + raww(row,col+2)) * 0.3535534;
             }
         else if (type == 129) {                        /* Bad pixel */
           if (row >= raw_height) continue;
           j = (FC(row-top_margin,col-left_margin) != 1) * 4;
           for (sum=0, i=j; i < j+8; i++)
-            sum += raw (row+dir[i][0], col+dir[i][1]);
+            sum += raww(row+dir[i][0], col+dir[i][1]);
           RAW(row,col) = (sum + 4) >> 3;
         }
       }

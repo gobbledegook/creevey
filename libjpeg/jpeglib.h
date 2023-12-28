@@ -12,6 +12,7 @@
 
 #ifndef JPEGLIB_H
 #define JPEGLIB_H
+#include <stdio.h>
 
 /*
  * First we include the configuration files that record how this

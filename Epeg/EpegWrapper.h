@@ -6,7 +6,7 @@
 //  Modified by Dominic Yu 2005 April 27
 //
 
-#import <Foundation/Foundation.h>
+@import Cocoa;
 #include "Epeg.h"
 
 @interface EpegWrapper : NSObject 

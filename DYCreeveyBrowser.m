@@ -77,7 +77,11 @@
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
+// I don't think there's an easy way to catch events/messages to first responder without using a custom matrix class
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 		[self setMatrixClass:[DYCreeveyBrowserMatrix class]];
+#pragma GCC diagnostic pop
 		self.titled = NO;
 		self.hasHorizontalScroller = YES;
 		[self setCellClass:[DYBrowserCell class]];

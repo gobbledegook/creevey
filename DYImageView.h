@@ -7,7 +7,7 @@
 
 //  Created by d on 2005.04.01.
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 @interface DYImageViewZoomInfo : NSObject {
 	@public

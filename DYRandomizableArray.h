@@ -2,7 +2,7 @@
 // You can randomize it and it will let you pick out indices corresponding to
 // the original order when desired.
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 @interface DYRandomizableArray<T> : NSObject
 
