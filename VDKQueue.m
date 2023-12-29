@@ -65,7 +65,7 @@
 	int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
 	NSMutableDictionary<NSString *, VDKQueuePathEntry *> *_watchedPathEntries; // path -> path entry
 	NSMutableDictionary<NSNumber *, VDKQueuePathEntry *> *_pathMap; // unique id -> path entry (for thread safety)
-	BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
+	BOOL                    _isWatcherThreadRunning;
 }
 
 #pragma mark - INIT/DEALLOC
@@ -118,8 +118,8 @@
 		kevent(_coreQueueFD, &ev, 1, NULL, 0, &(struct timespec){0,0});
 
 		// Start the thread that fetches and processes our events if it's not already running.
-		if (!_keepWatcherThreadRunning) {
-			_keepWatcherThreadRunning = YES;
+		if (!_isWatcherThreadRunning) {
+			_isWatcherThreadRunning = YES;
 			[NSThread detachNewThreadSelector:@selector(watcherThread:) toTarget:self withObject:nil];
 		}
     }
@@ -130,16 +130,15 @@
 {
     int					n;
     struct kevent		ev;
-    struct timespec     timeout = { 1, 0 };     // 1 second timeout. Should be longer, but we need this thread to exit when a kqueue is dealloced, so 1 second timeout is quite a while to wait.
 	const int			theFD = _coreQueueFD;	// So we don't have to risk accessing iVars when the thread is terminated.
 	NSThread.currentThread.name = @"VDKQueue";
 #if DEBUG_LOG_THREAD_LIFETIME
 	NSLog(@"watcherThread started.");
 #endif
 	
-    while(_keepWatcherThreadRunning) {
+	for (;;) {
 		@autoreleasepool {
-			n = kevent(theFD, NULL, 0, &ev, 1, &timeout);
+			n = kevent(theFD, NULL, 0, &ev, 1, NULL);
 			if (n > 0 && ev.filter == EVFILT_VNODE && ev.fflags) {
 				uintptr_t uid = (uintptr_t)ev.udata;
 				VDKQueuePathEntry *pe;
@@ -152,6 +151,11 @@
 						[_delegate VDKQueue:self receivedNotification:ev.fflags forPath:pe.path];
 					});
 				}
+			} else if (ev.filter == EVFILT_USER) {
+				@synchronized (self) {
+					_isWatcherThreadRunning = NO;
+				}
+				break;
 			}
 		}
 	}
@@ -199,7 +203,7 @@
 	@synchronized(self)
 	{
 		// Shut down the thread that's scanning for kQueue events
-		_keepWatcherThreadRunning = NO;
+		kevent(_coreQueueFD, &(struct kevent){0, EVFILT_USER, EV_ADD|EV_ONESHOT, NOTE_TRIGGER, 0, NULL}, 1, NULL, 0, &(struct timespec){0,0});
 
 		// Do this to close all the open file descriptors for files we're watching
 		[_pathMap removeAllObjects];
