@@ -908,6 +908,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[self setNeedsDisplayInRect:[self cellnum2rect:fromIdx]];
 	} while (++fromIdx <= toIdx);
 }
+- (void)changeBase:(NSString *)basePath toPath:(NSString *)newBase {
+	[filenames changeBase:basePath toPath:newBase];
+}
 
 
 #pragma mark more dragging stuff

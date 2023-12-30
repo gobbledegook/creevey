@@ -13,6 +13,7 @@
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
 #import "DYFileWatcher.h"
+#import "NSMutableArray+DYMovable.h"
 
 static BOOL UsingMagicMouse(NSEvent *e) {
 	return e.phase != NSEventPhaseNone || e.momentumPhase != NSEventPhaseNone;
@@ -390,6 +391,19 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 	if (needUpdate)
 		[self updateForAddedFiles];
+}
+
+- (void)watcherRootChanged:(NSURL *)fileRef {
+	NSString *s = _fileWatcher.path, *newPath = fileRef.path;
+	if (newPath == nil) {
+		// directory no longer exists!
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self endSlideshow];
+		});
+		return;
+	}
+	basePath = newPath.length == 1 ? newPath : [newPath stringByAppendingString:@"/"];
+	[filenames changeBase:s toPath:newPath];
 }
 
 #pragma mark timer stuff

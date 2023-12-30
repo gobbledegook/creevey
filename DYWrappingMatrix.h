@@ -42,6 +42,7 @@
 - (void)removeAllImages;
 - (void)removeImageAtIndex:(NSUInteger)i;
 - (void)moveImageAtIndex:(NSUInteger)fromIdx toIndex:(NSUInteger)toIdx;
+- (void)changeBase:(NSString *)basePath toPath:(NSString *)newBase;
 
 @property (nonatomic, readonly) NSArray *filenames;
 @property (nonatomic, readonly) NSMutableIndexSet *selectedIndexes;

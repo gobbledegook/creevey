@@ -31,4 +31,7 @@
 // these return NSNotFound if the index would be out of bounds
 - (NSUInteger)orderedIndexOfObjectAfterIndex:(NSUInteger)index;
 - (NSUInteger)orderedIndexOfObjectBeforeIndex:(NSUInteger)index;
+
+// path utilities
+- (void)changeBase:(NSString *)basePath toPath:(NSString *)newBase;
 @end

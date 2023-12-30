@@ -413,6 +413,15 @@ static time_t ExifDateFromFile(NSString *s) {
 	if (sortByModTime) time(&matrixModTime);
 }
 
+- (void)watcherRootChanged:(NSURL *)fileRef {
+	NSString *s = _fileWatcher.path, *newPath = fileRef.path;
+	if (newPath == nil) return;
+	[self.window setTitleWithRepresentedFilename:newPath];
+	[filenames changeBase:s toPath:newPath];
+	[displayedFilenames changeBase:s toPath:newPath];
+	[imgMatrix changeBase:s toPath:newPath];
+}
+
 - (void)addFile:(NSString *)s atIndex:(NSUInteger)idx {
 	if (displayedFilenames.count == filenames.count) {
 		[displayedFilenames insertObject:s atIndex:idx];

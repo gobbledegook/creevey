@@ -1,4 +1,5 @@
 #import "DYRandomizableArray.h"
+#import "NSMutableArray+DYMovable.h"
 
 @implementation DYRandomizableArray
 {
@@ -194,5 +195,11 @@
 	NSUInteger i = randomToOrdered[index].unsignedIntegerValue;
 	if (i == 0) return NSNotFound;
 	return (orderedToRandom[i-1]).unsignedIntegerValue;
+}
+
+- (void)changeBase:(NSString *)basePath toPath:(NSString *)newBase {
+	if (orderedArray.count)
+		[orderedArray changeBase:basePath toPath:newBase];
+	[array changeBase:basePath toPath:newBase];
 }
 @end

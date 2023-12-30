@@ -15,4 +15,13 @@
 	[self insertObject:obj atIndex:idx];
 	return idx;
 }
+
+- (void)changeBase:(NSString *)basePath toPath:(NSString *)newBase {
+	NSUInteger i, n = self.count;
+	NSRange r = {0, basePath.length};
+	for (i=0; i<n; ++i) {
+		NSString *s = self[i];
+		self[i] = [s stringByReplacingCharactersInRange:r withString:newBase];
+	}
+}
 @end
