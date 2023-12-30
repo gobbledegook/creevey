@@ -8,6 +8,7 @@
 #import "CreeveyMainWindowController.h"
 #import "EpegWrapper.h"
 #import "DYCarbonGoodies.h"
+#import "NSMutableArray+DYMovable.h"
 #import "DirBrowserDelegate.h"
 #import "DYFileWatcher.h"
 
@@ -20,6 +21,10 @@
 #import "DYExiftags.h"
 
 @implementation NSString (DateModifiedCompare)
+
+/* Using file attributes to sort file paths and then rely on the sort order staying the same
+ * is somewhat dangerous because the file might have been modified (changing the modification date)
+ * or moved (making the path invalid). We try to mitigate this by watching for changes to the filesystem. */
 
 - (NSComparisonResult)dateModifiedCompare:(NSString *)other
 {
@@ -118,6 +123,7 @@ static time_t ExifDateFromFile(NSString *s) {
 	startSlideshowWhenReady;
 	NSMutableSet *filesBeingOpened; // to be selected
 	short int sortOrder;
+	time_t matrixModTime;
 	
 	short int currCat;
 	
@@ -278,13 +284,13 @@ static time_t ExifDateFromFile(NSString *s) {
 
 - (BOOL)pathIsCurrentDirectory:(NSString *)filename {
 	NSString *browserPath = [dirBrowserDelegate path];
-	if (self.wantsSubfolders) return [filename hasPrefix:browserPath];
+	if (self.wantsSubfolders) return [filename hasPrefix:[browserPath stringByAppendingString:@"/"]];
 	return [filename.stringByDeletingLastPathComponent isEqualToString:browserPath];
 }
 
 - (BOOL)pathIsVisibleThreaded:(NSString *)filename {
 	NSString *browserPath = dirBrowserDelegate.currPath;
-	if (self.wantsSubfolders) return [filename hasPrefix:browserPath];
+	if (self.wantsSubfolders) return [filename hasPrefix:[browserPath stringByAppendingString:@"/"]];
 	return [filename.stringByDeletingLastPathComponent isEqualToString:browserPath];
 }
 
@@ -376,9 +382,23 @@ static time_t ExifDateFromFile(NSString *s) {
 - (void)watcherFiles:(NSArray *)files {
 	if (!filenamesDone) return;
 	NSFileManager *fm = NSFileManager.defaultManager;
+	BOOL sortByModTime = abs(self.sortOrder) == 2;
 	for (NSString *s in files) {
 		NSUInteger count = filenames.count;
 		BOOL fileExists = [fm fileExistsAtPath:s];
+		struct stat buf;
+		if (fileExists && sortByModTime && !stat(s.fileSystemRepresentation, &buf) && buf.st_mtimespec.tv_sec > matrixModTime) {
+			// when sorting by mod time, file list needs to be adjusted if the file's mod time has changed!
+			NSUInteger oldIdx, idx = [filenames updateIndexOfObject:s usingComparator:self.comparator oldIndex:&oldIdx];
+			if (idx != NSNotFound) {
+				if (displayedFilenames.count != filenames.count)
+					idx = [displayedFilenames updateIndexOfObject:s usingComparator:self.comparator oldIndex:&oldIdx];
+				if (idx != NSNotFound)
+					[imgMatrix moveImageAtIndex:oldIdx toIndex:idx];
+				[self fileWasChanged:s];
+				continue;
+			}
+		}
 		NSUInteger idx = [filenames indexOfObject:s inSortedRange:NSMakeRange(0, count) options:NSBinarySearchingInsertionIndex usingComparator:self.comparator];
 		if (idx < count && [filenames[idx] isEqualToString:s]) {
 			if (fileExists)
@@ -390,6 +410,7 @@ static time_t ExifDateFromFile(NSString *s) {
 				[self addFile:s atIndex:idx];
 		}
 	}
+	if (sortByModTime) time(&matrixModTime);
 }
 
 - (void)addFile:(NSString *)s atIndex:(NSUInteger)idx {
@@ -464,13 +485,15 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 - (void)fileWasDeleted:(NSString *)s atIndex:(NSUInteger)i {
 	if (![self pathIsCurrentDirectory:s]) return;
+	BOOL linearSearch = abs(self.sortOrder) != 1;
 	NSUInteger mtrxIdx;
-	if (i == NSNotFound)
-		i = [filenames indexOfObject:s inSortedRange:NSMakeRange(0, filenames.count) options:0 usingComparator:self.comparator];
+	if (i == NSNotFound) {
+		i = linearSearch ? [filenames indexOfObject:s] : [filenames indexOfObject:s inSortedRange:NSMakeRange(0, filenames.count) options:0 usingComparator:self.comparator];
+	}
 	if (i != NSNotFound) {
 		stopCaching = 1;
 		[loadImageLock lock];
-		if ((mtrxIdx = [imgMatrix.filenames indexOfObject:s inSortedRange:NSMakeRange(0, imgMatrix.filenames.count) options:0 usingComparator:self.comparator]) != NSNotFound) {
+		if ((mtrxIdx = linearSearch ? [imgMatrix.filenames indexOfObject:s] : [imgMatrix.filenames indexOfObject:s inSortedRange:NSMakeRange(0, imgMatrix.filenames.count) options:0 usingComparator:self.comparator]) != NSNotFound) {
 			[imgMatrix removeImageAtIndex:mtrxIdx];
 			[displayedFilenames removeObjectAtIndex:mtrxIdx];
 		}
@@ -566,7 +589,6 @@ static time_t ExifDateFromFile(NSString *s) {
 				[_fileWatcher stop];
 			});
 			[filenames removeAllObjects];
-			[displayedFilenames removeAllObjects];
 			[imageCacheQueueLock lock];
 			[imageCacheQueue removeAllObjects];
 			[secondaryImageCacheQueue removeAllObjects];
@@ -606,8 +628,12 @@ static time_t ExifDateFromFile(NSString *s) {
 					break;
 				}
 			}
-			[displayedFilenames addObjectsFromArray:filenames];
-		} else if (currCat) { // currCat > 0 whenever cat changes (see keydown)
+		}
+		[self updateStatusOnMainThread:^NSString *{
+			return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), filenames.count];
+		}];
+		[filenames sortUsingComparator:self.comparator];
+		if (currCat) { // currCat > 0 whenever cat changes (see keydown)
 			// this means deleting when a cat is displayed will cause unsightly flashing
 			// but we can live with that for now. maybe temp set currcat to 0?
 			[imageCacheQueueLock lock];
@@ -624,16 +650,10 @@ static time_t ExifDateFromFile(NSString *s) {
 						[displayedFilenames addObject:path];
 				}
 			}
-		} else { // if we got here, that means the sort order changed and currCat == 0
-			[imageCacheQueueLock lock];
-			[imageCacheQueue removeAllObjects];
-			[secondaryImageCacheQueue removeAllObjects];
-			[imageCacheQueueLock unlockWithCondition:0];
+		} else {
+			[displayedFilenames setArray:filenames];
 		}
-		[self updateStatusOnMainThread:^NSString *{
-			return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), filenames.count];
-		}];
-		[displayedFilenames sortUsingComparator:self.comparator];
+		time(&matrixModTime);
 		if (startSlideshowWhenReady) {
 			startSlideshowWhenReady = NO;
 			// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
@@ -642,8 +662,6 @@ static time_t ExifDateFromFile(NSString *s) {
 				[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:) withObject:files waitUntilDone:NO]; // this must be called after displayedFilenames is sorted in case it calls back for indexOfFilename:
 			}
 		}
-		if (thePath)
-			[filenames setArray:displayedFilenames]; // save the sorted list
 		filenamesDone = YES;
 		//NSLog(@"got %d files.", [filenames count]);
 	}

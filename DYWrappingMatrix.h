@@ -41,6 +41,7 @@
 @property (nonatomic, readonly) DYMatrixState *currentState;
 - (void)removeAllImages;
 - (void)removeImageAtIndex:(NSUInteger)i;
+- (void)moveImageAtIndex:(NSUInteger)fromIdx toIndex:(NSUInteger)toIdx;
 
 @property (nonatomic, readonly) NSArray *filenames;
 @property (nonatomic, readonly) NSMutableIndexSet *selectedIndexes;

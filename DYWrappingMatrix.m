@@ -9,6 +9,7 @@
 #import "NSIndexSetSymDiffExtension.h"
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
+#import "NSMutableArray+DYMovable.h"
 
 #define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
@@ -889,6 +890,23 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	} while (++i<=numCells);
 	// use <=, not <, because we need to redraw the last cell, which has shifted
 	[self notifySelectionDidChange];
+}
+- (void)moveImageAtIndex:(NSUInteger)fromIdx toIndex:(NSUInteger)toIdx {
+	if (fromIdx == toIdx) return;
+	[images moveObjectAtIndex:fromIdx toIndex:toIdx];
+	[filenames moveObjectAtIndex:fromIdx toIndex:toIdx];
+	BOOL selected = [selectedIndexes containsIndex:fromIdx];
+	[selectedIndexes shiftIndexesStartingAtIndex:fromIdx+1 by:-1];
+	[selectedIndexes shiftIndexesStartingAtIndex:toIdx by:1];
+	if (selected) [selectedIndexes addIndex:toIdx];
+	if (fromIdx > toIdx) {
+		NSUInteger tmp = fromIdx;
+		fromIdx = toIdx;
+		toIdx = tmp;
+	}
+	do {
+		[self setNeedsDisplayInRect:[self cellnum2rect:fromIdx]];
+	} while (++fromIdx <= toIdx);
 }
 
 

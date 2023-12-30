@@ -59,7 +59,7 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 	for (size_t i=0; i<n; ++i) {
 		NSString *s = eventPaths[i];
 		FSEventStreamEventFlags f = eventFlags[i];
-		if (f & (kFSEventStreamEventFlagItemCreated|kFSEventStreamEventFlagItemModified|kFSEventStreamEventFlagItemRemoved|kFSEventStreamEventFlagItemRenamed)) {
+		if (f & (kFSEventStreamEventFlagItemCreated|kFSEventStreamEventFlagItemModified|kFSEventStreamEventFlagItemRemoved|kFSEventStreamEventFlagItemRenamed|kFSEventStreamEventFlagItemInodeMetaMod)) {
 			if (f & kFSEventStreamEventFlagItemIsDir) continue;
 			if (_wantsSubfolders ? [s hasPrefix:_path] : [s.stringByDeletingLastPathComponent isEqualToString:_path]) {
 				NSString *theFile = ResolveAliasToPath(s);

@@ -51,6 +51,8 @@
 		F299B06307FDF5F7006028C1 /* DYImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F299B06107FDF5F7006028C1 /* DYImageView.m */; };
 		F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */ = {isa = PBXBuildFile; fileRef = F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */; };
 		F29CD2370800C372000B0F91 /* DYCarbonGoodies.m in Sources */ = {isa = PBXBuildFile; fileRef = F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */; };
+		F2A6DA5E2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h in Headers */ = {isa = PBXBuildFile; fileRef = F2A6DA5C2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h */; };
+		F2A6DA5F2B3F7E01009D0B31 /* NSMutableArray+DYMovable.m in Sources */ = {isa = PBXBuildFile; fileRef = F2A6DA5D2B3F7E01009D0B31 /* NSMutableArray+DYMovable.m */; };
 		F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */ = {isa = PBXBuildFile; fileRef = F2AC5BEA0819F61700E5E5E6 /* creeveyhelp.rtf */; };
 		F2AE88E907EB877D008F2193 /* DirBrowserDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = F2AE88E707EB877D008F2193 /* DirBrowserDelegate.h */; };
 		F2AE88EA07EB877D008F2193 /* DirBrowserDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */; };
@@ -176,6 +178,8 @@
 		F299B06107FDF5F7006028C1 /* DYImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageView.m; sourceTree = "<group>"; };
 		F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYCarbonGoodies.h; sourceTree = "<group>"; };
 		F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYCarbonGoodies.m; sourceTree = "<group>"; };
+		F2A6DA5C2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSMutableArray+DYMovable.h"; sourceTree = "<group>"; };
+		F2A6DA5D2B3F7E01009D0B31 /* NSMutableArray+DYMovable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSMutableArray+DYMovable.m"; sourceTree = "<group>"; };
 		F2AC5BEB0819F61700E5E5E6 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "zh-Hant.lproj/creeveyhelp.rtf"; sourceTree = "<group>"; };
 		F2AC5BEF0819F62C00E5E5E6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/creeveyhelp.rtf; sourceTree = "<group>"; };
 		F2AE88E707EB877D008F2193 /* DirBrowserDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirBrowserDelegate.h; sourceTree = "<group>"; };
@@ -340,6 +344,8 @@
 				F2F5418F080A3846008AE60F /* DYCreeveyBrowser.m */,
 				F29CD2340800C372000B0F91 /* DYCarbonGoodies.h */,
 				F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */,
+				F2A6DA5C2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h */,
+				F2A6DA5D2B3F7E01009D0B31 /* NSMutableArray+DYMovable.m */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);
 			name = "Other Sources";
@@ -471,6 +477,7 @@
 				F2711712182AADE6008F97E1 /* DYRandomizableArray.h in Headers */,
 				F29CD2360800C372000B0F91 /* DYCarbonGoodies.h in Headers */,
 				F2F54190080A3846008AE60F /* DYCreeveyBrowser.h in Headers */,
+				F2A6DA5E2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h in Headers */,
 				F234C0170810E9B700175D50 /* DYImageCache.h in Headers */,
 				F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */,
 				F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */,
@@ -625,6 +632,7 @@
 				F2FE508308848C9400550533 /* exifgps.c in Sources */,
 				F2FE508408848C9400550533 /* canon.c in Sources */,
 				F2711713182AADE6008F97E1 /* DYRandomizableArray.m in Sources */,
+				F2A6DA5F2B3F7E01009D0B31 /* NSMutableArray+DYMovable.m in Sources */,
 				F2FE508508848C9400550533 /* exifutil.c in Sources */,
 				F2FE508608848C9400550533 /* DYExiftags.m in Sources */,
 				F2FE508808848C9400550533 /* sanyo.c in Sources */,
