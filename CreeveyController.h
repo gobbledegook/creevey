@@ -39,6 +39,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (IBAction)openSelectedFiles:(id)sender;
 - (IBAction)revealSelectedFilesInFinder:(id)sender;
 - (IBAction)setDesktopPicture:(id)sender;
+- (IBAction)moveSelectedFiles:(id)sender;
+- (IBAction)moveSelectedFilesAgain:(id)sender;
 - (IBAction)moveToTrash:(id)sender;
 - (IBAction)transformJpeg:(id)sender;
 - (IBAction)sortThumbnails:(id)sender;

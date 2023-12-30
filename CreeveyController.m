@@ -109,6 +109,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	
 	id localeChangeObserver;
 	id screenChangeObserver;
+	
+	NSArray<NSURL*> *_movedUrls;
+	NSArray<NSString*> *_originalPaths;
 }
 @synthesize slidesWindow, jpegProgressBar, exifTextView, exifThumbnailDiscloseBtn, prefsWin, startupDirFld, startupOptionMatrix, slideshowApplyBtn;
 
@@ -220,6 +223,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	for (NSString *type in disabledFiletypes) {
 		[filetypes removeObject:type];
 	}
+	[self updateMoveToMenuItem];
 
 	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
 															  forKeyPath:@"values.slideshowAutoadvanceTime"
@@ -472,6 +476,65 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[NSApp stopModal];
 }
 
+- (void)updateMoveToMenuItem {
+	NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedMoveToFolder"];
+	if (path == nil) return;
+	NSMenu *m = [NSApp.mainMenu itemWithTag:FILE_MENU].submenu;
+	NSMenuItem *item = [m itemWithTag:MOVE_TO_AGAIN];
+	NSString *name = [NSFileManager.defaultManager displayNameAtPath:path];
+	item.title = [NSString stringWithFormat:NSLocalizedString(@"Move to “%@” Again", @"File menu"), name];
+}
+
+- (void)moveSelectedFilesTo:(NSURL *)dest {
+	NSString *curr = slidesWindow.isMainWindow ? slidesWindow.basePath : frontWindow.path;
+	if ([dest isEqual:[NSURL fileURLWithPath:curr]]) return;
+
+	NSArray *files = slidesWindow.isMainWindow ? @[slidesWindow.currentFile] : frontWindow.currentSelection;
+	NSMutableArray<NSString*> *paths = [NSMutableArray array];
+	NSMutableArray<NSURL*> *moved = [NSMutableArray arrayWithCapacity:files.count];
+	NSMutableArray<NSString*> *notMoved = [NSMutableArray array];
+
+	NSError * __autoreleasing err;
+	for (NSString *f in files) {
+		NSURL *destUrl = [dest URLByAppendingPathComponent:f.lastPathComponent];
+		if ([NSFileManager.defaultManager moveItemAtPath:f toPath:destUrl.path error:&err]) {
+			[paths addObject:f];
+			[moved addObject:destUrl];
+		} else {
+			[notMoved addObject:f];
+		}
+	}
+	if (notMoved.count) {
+		NSAlert *alert = [[NSAlert alloc] init];
+		if (notMoved.count == 1) {
+			alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file “%@” could not be moved because of an error: %@", @""), notMoved[0].lastPathComponent, err.localizedDescription];
+		} else {
+			alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu files could not be moved because of an error.",@""), notMoved.count];
+		}
+		[alert runModal];
+	}
+	_originalPaths = [paths copy];
+	_movedUrls = [moved copy];
+	[self removePicsAndTrash:NO];
+	[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:[moved valueForKey:@"path"]];
+}
+
+- (IBAction)moveSelectedFiles:(id)sender {
+	NSOpenPanel *op = [NSOpenPanel openPanel];
+	op.canChooseFiles = NO;
+	op.canChooseDirectories = YES;
+	if ([op runModal] != NSModalResponseOK) return;
+	NSURL *dest = op.URL;
+	[self moveSelectedFilesTo:dest];
+	[NSUserDefaults.standardUserDefaults setObject:dest.path forKey:@"lastUsedMoveToFolder"];
+	[self updateMoveToMenuItem];
+}
+
+- (IBAction)moveSelectedFilesAgain:(id)sender {
+	NSString *folder = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedMoveToFolder"];
+	NSURL *dest = [NSURL fileURLWithPath:folder isDirectory:YES];
+	[self moveSelectedFilesTo:dest];
+}
 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
@@ -496,10 +559,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (void)removePicsAndTrash:(BOOL)doTrash {
 	// *** to be more efficient, we should change the path in the cache instead of deleting it
 	if (slidesWindow.isMainWindow) {
-		// doTrash should always be YES in this case
 		NSString *s = slidesWindow.currentFile;
 		NSURL *u;
-		if ([self trashFile:s numLeft:1 resultingURL:&u]) {
+		if (doTrash ? [self trashFile:s numLeft:1 resultingURL:&u] : (u = _movedUrls[0]) != nil) {
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:s];
 			[thumbsCache removeImageForKey:s];
 			[slidesWindow removeImageForFile:s];
@@ -511,13 +573,18 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 					if (slidesWindow.isMainWindow)
 						[slidesWindow insertFile:s atIndex:idx];
 					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:@[s]];
+					if (!doTrash) {
+						[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:u.path];
+						if (slidesWindow.isMainWindow)
+							[slidesWindow removeImageForFile:u.path];
+					}
 				} else {
 					NSAlert *alert = [[NSAlert alloc] init];
-					alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file \"%@\" could not be restored from the trash because of an error: %@", @""), s.lastPathComponent, err.localizedDescription];
+					alert.informativeText = [NSString stringWithFormat:doTrash ? NSLocalizedString(@"The file \"%@\" could not be restored from the trash because of an error: %@", @"") : NSLocalizedString(@"The file “%@” could not be moved because of an error: %@", @""), s.lastPathComponent, err.localizedDescription];
 					[alert runModal];
 				}
 			}];
-			[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move to Trash",@"")]];
+			[um setActionName:[NSString stringWithFormat:doTrash ? NSLocalizedString(@"Move to Trash",@"") : NSLocalizedString(@"Move File",@"for undo")]];
 		}
 	} else {
 		NSUInteger oldIndex = frontWindow.selectedIndexes.firstIndex;
@@ -558,16 +625,21 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			}];
 			[um setActionName:[NSString stringWithFormat:NSLocalizedString(@"Move to Trash (%lu File(s))",@"for undo"), n]];
 		} else if (!doTrash) {
-			NSArray<NSURL *> *urls = frontWindow.imageMatrix.movedUrls; // nonmutable copy, suitable to be captured by block below
+			NSArray<NSURL *> *urls = _movedUrls; // nonmutable copy, suitable to be captured by block below
 			// these are file reference URLs so we will be able to resolve the new paths
 			n = urls.count;
 			if (n) {
-				NSArray *paths = frontWindow.imageMatrix.originPaths;
+				NSArray *paths = _originalPaths;
 				[um registerUndoWithTarget:self handler:^(id target) {
 					NSMutableArray *moved = [NSMutableArray arrayWithCapacity:n];
 					for (NSUInteger i=0; i<n; ++i) {
-						if ([NSFileManager.defaultManager moveItemAtPath:urls[i].path toPath:paths[i] error:NULL])
+						NSString *fromPath = urls[i].path;
+						if ([NSFileManager.defaultManager moveItemAtPath:fromPath toPath:paths[i] error:NULL]) {
 							[moved addObject:paths[i]];
+							[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fromPath];
+							if (slidesWindow.visible)
+								[slidesWindow removeImageForFile:fromPath];
+						}
 					}
 					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:moved];
 					if (slidesWindow.visible)
@@ -596,6 +668,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 #pragma mark matrix view methods
 
 - (void)moveElsewhere {
+	_movedUrls = frontWindow.imageMatrix.movedUrls;
+	_originalPaths = frontWindow.imageMatrix.originPaths;
 	[self removePicsAndTrash:NO];
 }
 
@@ -700,6 +774,8 @@ enum {
 	SLIDESHOW_ACTUAL_SIZE,
 	NEW_TAB,
 	BEGIN_SLIDESHOW_IN_WINDOW,
+	MOVE_TO,
+	MOVE_TO_AGAIN,
 	JPEG_OP = 100,
 	ROTATE_L = 107,
 	ROTATE_R = 105,
@@ -713,7 +789,8 @@ enum {
 	SHOW_FILE_NAMES = 251,
 	AUTO_ROTATE = 261,
 	SLIDESHOW_MENU = 1001,
-	VIEW_MENU = 200
+	VIEW_MENU = 200,
+	FILE_MENU = 300,
 };
 
 
@@ -735,10 +812,15 @@ enum {
 	if (!creeveyWindows.count) frontWindow = nil;
 	NSUInteger numSelected = frontWindow ? frontWindow.selectedIndexes.count : 0;
 	BOOL writable, isjpeg;
+	NSString *moveTo;
 	
 	switch (test_t) {
 		case NEW_TAB:
 			return frontWindow.window.isMainWindow;
+		case MOVE_TO_AGAIN:
+			moveTo = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedMoveToFolder"];
+			// fall through
+		case MOVE_TO:
 		case MOVE_TO_TRASH:
 		case JPEG_OP:
 			// only when slides isn't loading cache!
@@ -749,13 +831,12 @@ enum {
 					[NSFileManager.defaultManager isDeletableFileAtPath:
 					 slidesWindow.currentFile]
 				: numSelected > 0 && frontWindow && frontWindow.currentFilesDeletable;
-			if (t == MOVE_TO_TRASH) return writable;
+			if (t != JPEG_OP) return writable && (t == MOVE_TO_AGAIN ? moveTo != nil : YES);
 			
 			isjpeg = slidesWindow.isMainWindow
 				? slidesWindow.currentFile && FileIsJPEG(slidesWindow.currentFile)
 				: numSelected > 0 && frontWindow && FilesContainJPEG(frontWindow.currentSelection);
 			
-			//if (t == JPEG_OP) return writable && isjpeg;
 			if (t == ROTATE_SAVE) { // only allow saving rotations during the slideshow
 				return writable && isjpeg && slidesWindow.isMainWindow
 				&& slidesWindow.currentOrientation > 1;
@@ -764,8 +845,6 @@ enum {
 				return writable && isjpeg && slidesWindow.currentFileExifOrientation > 1;
 			}
 			return writable && isjpeg;
-			// I don't like the idea of accessing the disk every time the menu
-			// is accessed
 		case REVEAL_IN_FINDER:
 			return YES;
 		case BEGIN_SLIDESHOW:

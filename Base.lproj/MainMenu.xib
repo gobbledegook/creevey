@@ -68,7 +68,7 @@
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="File" id="83">
+                <menuItem title="File" tag="300" id="83">
                     <menu key="submenu" title="File" id="81">
                         <items>
                             <menuItem title="New Window" keyEquivalent="n" id="494">
@@ -108,6 +108,18 @@
                             <menuItem title="Reveal In Finder" tag="1" keyEquivalent="r" id="341">
                                 <connections>
                                     <action selector="revealSelectedFilesInFinder:" target="207" id="344"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Move To..." tag="12" id="SpE-qb-DUd">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="moveSelectedFiles:" target="207" id="1cb-Eq-3Ik"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Move To Folder Again" tag="13" keyEquivalent="m" id="c0g-qO-OVm">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                <connections>
+                                    <action selector="moveSelectedFilesAgain:" target="207" id="cVY-9b-EDj"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Move To Trash" tag="2" id="343">

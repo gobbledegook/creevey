@@ -1105,6 +1105,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (BOOL)currentImageLoaded {
 	NSString *s = self.currentFile;
+	if (s == nil) return NO;
 	return [imgCache infoForKey:s] != nil;
 }
 

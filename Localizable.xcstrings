@@ -349,6 +349,40 @@
         }
       }
     },
+    "%lu files could not be moved because of an error." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu Dateien können aufgrund eines Fehlers nicht verschoben!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu archivos no se pudieron trasladar debido a un error."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu fichiers n'ont pas pu être déplacés en raison d'une erreur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile spostare %lu file a causa di un errore."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu 個檔案不能搬移，因為發生了錯誤。"
+          }
+        }
+      }
+    },
     "%u image(s) updated for Group %i" : {
       "localizations" : {
         "de" : {
@@ -1321,6 +1355,41 @@
         }
       }
     },
+    "Move File" : {
+      "comment" : "for undo",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trasladar archivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer fichier"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spostare file"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搬移檔案"
+          }
+        }
+      }
+    },
     "Move Files (%lu File(s))" : {
       "comment" : "for undo",
       "localizations" : {
@@ -1406,6 +1475,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搬移檔案（%lu 個檔案）"
+          }
+        }
+      }
+    },
+    "Move to “%@” Again" : {
+      "comment" : "File menu",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ebenfalls in „%@“ verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a trasladar “%@”"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer à nouveau dans «%@»"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sposta di nuovo in “%@”"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再次搬移到「%@」"
           }
         }
       }
@@ -1847,6 +1951,46 @@
         }
       }
     },
+    "The file “%@” could not be moved because of an error: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ kann nicht verschoben werden! Fehler: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file “%@” could not be moved because of an error: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo %@ no se pudo trasladar debido a un error: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier %@ n'a pas pu être déplacé à cause d'une erreur %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile spostare il file %@ a causa di un errore: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案 %@ 不能搬移，因為發生了錯誤：%@"
+          }
+        }
+      }
+    },
     "The file \"%@\" could not be restored from the trash because of an error: %@" : {
       "localizations" : {
         "de" : {
@@ -1951,41 +2095,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此動作不能還原。確定要繼續?"
-          }
-        }
-      }
-    },
-    "Unable to read file" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kann Datei nicht lesen/öffnen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Imposible leer el archivo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de lire le fichier"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non posso leggere il file"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "讀取檔案時發生錯誤"
           }
         }
       }
