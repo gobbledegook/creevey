@@ -80,7 +80,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSCache<NSString *, DYImageInfo *> *images;
 	NSMutableSet<NSString *> *pending;
 	
-	volatile BOOL cachingShouldStop;
+	_Atomic BOOL cachingShouldStop;
 }
 - (instancetype)init NS_UNAVAILABLE;
 @end

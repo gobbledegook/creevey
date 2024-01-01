@@ -137,7 +137,7 @@ extern char *finddescr(struct descrip *table, u_int16_t val);
 extern int catdescr(char *c, struct descrip *table, u_int16_t val, int len);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
-extern void exifstralloc(char **str, int len);
+extern void exifstralloc(char **str, size_t len);
 extern void hexprint(unsigned char *b, int len);
 extern void dumpprop(struct exifprop *prop, struct field *afield);
 extern struct ifd *readifds(u_int32_t offset, struct exiftag *tagset,

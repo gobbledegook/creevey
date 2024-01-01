@@ -43,7 +43,7 @@ extern "C" {
    void          epeg_quality_set               (Epeg_Image *im, int quality);
    void          epeg_thumbnail_comments_enable (Epeg_Image *im, int onoff);
    void          epeg_file_output_set           (Epeg_Image *im, const char *file);
-   void          epeg_memory_output_set         (Epeg_Image *im, unsigned char **data, int *size);
+   void          epeg_memory_output_set         (Epeg_Image *im, unsigned char **data, size_t *size);
    int           epeg_encode                    (Epeg_Image *im);
    int           epeg_trim                      (Epeg_Image *im);
    void          epeg_close                     (Epeg_Image *im);

@@ -1242,24 +1242,25 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (IBAction)toggleLoopMode:(id)sender {
-	BOOL b = ![sender state];
-	[sender setState:b];
-	loopMode = b;
+	NSMenuItem *item = sender;
+	item.state = loopMode = !item.state;
 }
 - (IBAction)toggleCheatSheet:(id)sender {
 	[self toggleHelp];
 }
 - (IBAction)toggleScalesUp:(id)sender {
-	BOOL b = ![sender state];
-	[sender setState:b];
+	NSMenuItem *item = sender;
+	BOOL b = !item.state;
+	item.state = b;
 	imgView.scalesUp = b;
 	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound)
 		[self updateInfoFld];
 }
 - (IBAction)toggleRandom:(id)sender {
-	BOOL b = ![sender state];
-	[sender setState:b];
+	NSMenuItem *item = sender;
+	BOOL b = !item.state;
+	item.state = b;
 	BOOL oldRandomMode = randomMode;
 	randomMode = b;
 	if (currentIndex == NSNotFound)
@@ -1281,14 +1282,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[self displayImage];
 }
 - (IBAction)toggleShowActualSize:(id)sender {
-	BOOL b = ![sender state];
+	NSMenuItem *item = sender;
+	BOOL b = !item.state;
 	// save zoomInfo, if any, BEFORE changing the vars
 	if (currentIndex != NSNotFound) {
 		[self killTimer]; // ** why?
 		[self saveZoomInfo];
 	}
 	// then change vars and re-display
-	[sender setState:b];
+	item.state = b;
 	imgView.showActualSize = b;
 	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound) [self displayImage];

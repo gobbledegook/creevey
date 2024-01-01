@@ -110,12 +110,12 @@ static time_t ExifDateFromFile(NSString *s) {
 	NSLock *loadImageLock; NSTimeInterval lastThreadTime;
 	CreeveyController * __weak appDelegate;
 	DirBrowserDelegate * __weak dirBrowserDelegate;
-	volatile char stopCaching;
+	_Atomic char stopCaching;
 	
 	NSConditionLock *imageCacheQueueLock;
 	NSMutableArray *imageCacheQueue, *secondaryImageCacheQueue;
-	volatile BOOL imageCacheQueueRunning;
-	volatile NSInteger _maxCellWidth;
+	_Atomic BOOL imageCacheQueueRunning;
+	_Atomic NSInteger _maxCellWidth;
 	BOOL exifWindowNeedsUpdate;
 	
 	BOOL currentFilesDeletable;
@@ -127,7 +127,7 @@ static time_t ExifDateFromFile(NSString *s) {
 	
 	short int currCat;
 	
-	volatile BOOL _background;
+	_Atomic BOOL _background;
 	BOOL _wantsSubfolders;
 	NSImage *_brokenDoc, *_loadingImage;
 	NSMutableSet *_accessedFiles;
@@ -157,7 +157,7 @@ static time_t ExifDateFromFile(NSString *s) {
     return self;
 }
 
-- (void)awakeFromNib {
+- (void)windowDidLoad {
 	[self.window setFrameUsingName:@"MainWindowLoc"];
 	// otherwise it uses the frame in the nib
 	
@@ -638,10 +638,12 @@ static time_t ExifDateFromFile(NSString *s) {
 				}
 			}
 		}
-		[self updateStatusOnMainThread:^NSString *{
-			return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), filenames.count];
-		}];
-		[filenames sortUsingComparator:self.comparator];
+		if (filenames.count) {
+			[self updateStatusOnMainThread:^NSString *{
+				return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), filenames.count];
+			}];
+			[filenames sortUsingComparator:self.comparator];
+		}
 		if (currCat) { // currCat > 0 whenever cat changes (see keydown)
 			// this means deleting when a cat is displayed will cause unsightly flashing
 			// but we can live with that for now. maybe temp set currcat to 0?
@@ -774,7 +776,8 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 - (IBAction)setRecurseSubfolders:(id)sender {
-	self.wantsSubfolders = ([sender state] == NSOnState);
+	NSButton *button = sender;
+	self.wantsSubfolders = (button.state == NSOnState);
 	// remember where we started recursing subfolders
 	if (self.wantsSubfolders) {
 		NSString *path = [dirBrowserDelegate path];
@@ -939,12 +942,11 @@ static time_t ExifDateFromFile(NSString *s) {
 	if (count == 0) {
 		s = @"";
 	} else {
-		NSString *path, *theFile;
 		DYImageInfo *info;
 		DYImageCache *thumbsCache = appDelegate.thumbsCache;
 		if (count == 1) {
-			path = imgMatrix.firstSelectedFilename;
-			theFile = ResolveAliasToPath(path);
+			NSString *path = imgMatrix.firstSelectedFilename;
+			NSString *theFile = ResolveAliasToPath(path);
 			info = [thumbsCache infoForKey:theFile];
 			NSSize pixelSize;
 			off_t fileSize;
@@ -1112,9 +1114,9 @@ static time_t ExifDateFromFile(NSString *s) {
 				[self updateStatusOnMainThread:^NSString *{
 					if (imgMatrix.numCells == 0) return nil; // don't set status string if there are no thumbs (could happen if a file is in the queue when the path changes)
 					[_accessedLock lock];
-					NSUInteger i = _accessedFiles.count;
+					NSUInteger k = _accessedFiles.count;
 					[_accessedLock unlock];
-					return [NSString stringWithFormat:loadingMsg, i+1, imgMatrix.numCells];
+					return [NSString stringWithFormat:loadingMsg, k+1, imgMatrix.numCells];
 				}];
 				if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
 					char *data;

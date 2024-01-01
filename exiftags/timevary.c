@@ -58,7 +58,7 @@ static struct trans trans_wday[] = {
 static char digits[] = "0123456789";
 static int adjhour(struct tm *, char, int, int);
 
-static int
+static time_t
 domktime(struct tm *t, char type)
 {
   time_t ret;

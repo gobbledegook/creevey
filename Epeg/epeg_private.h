@@ -52,7 +52,7 @@ struct _Epeg_Image
       char                        *file;
       struct {
 	 unsigned char           **data;
-	 int                      *size;
+	 size_t                   *size;
       } mem;
       int                          x, y;
       int                          w, h;

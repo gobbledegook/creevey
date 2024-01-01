@@ -542,7 +542,7 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 			aprop->str = valbuf;
 			valbuf = NULL;
 			d = (double)pow(2,
-			    ((double)abs(48 - aprop->value)) / 8);
+			    ((double)abs(48 - (int)aprop->value)) / 8); // the compiler is apparently too stupid to know that 48 - (unsigned) might be negative
 
 			/* 1 sec limit. */
 			if (aprop->value < 56)
@@ -652,12 +652,12 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
  * Make sure meaningless values are meaningless.
  */
 static void
-minolta_naval(struct exifprop *props, struct exiftag *tags, int16_t tag)
+minolta_naval(struct exifprop *props, struct exiftag *t, int16_t tag)
 {
 	struct exifprop *prop;
 	const char *na = "n/a";
 
-	if (!(prop = findprop(props, tags, tag)))
+	if (!(prop = findprop(props, t, tag)))
 		return;
 
 	free(prop->str);

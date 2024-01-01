@@ -689,7 +689,7 @@ epeg_file_output_set(Epeg_Image *im, const char *file)
  * 
  */
 void
-epeg_memory_output_set(Epeg_Image *im, unsigned char **data, int *size)
+epeg_memory_output_set(Epeg_Image *im, unsigned char **data, size_t *size)
 {
    im->out.mem.data = data;
    im->out.mem.size = size;
@@ -1216,25 +1216,26 @@ _epeg_encode(Epeg_Image *im)
    jpeg_start_compress(&(im->out.jinfo), TRUE);
 
    if (im->out.comment)
-     jpeg_write_marker(&(im->out.jinfo), JPEG_COM, im->out.comment, strlen(im->out.comment));
+     jpeg_write_marker(&(im->out.jinfo), JPEG_COM, (JOCTET *)im->out.comment, (unsigned)strlen(im->out.comment));
    
    if (im->out.thumbnail_info)
      {
 	char buf[8192];
+	JOCTET * const jbuf = (JOCTET *)buf;
 	
 	if (im->in.file)
 	  {
 	     snprintf(buf, sizeof(buf), "Thumb::URI\nfile://%s", im->in.file);
-	     jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, buf, strlen(buf));
+	     jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, jbuf, (unsigned)strlen(buf));
 	     snprintf(buf, sizeof(buf), "Thumb::MTime\n%llu", (unsigned long long int)im->stat_info.st_mtime);
 	  }
-	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, buf, strlen(buf));
+	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, jbuf, (unsigned)strlen(buf));
 	snprintf(buf, sizeof(buf), "Thumb::Image::Width\n%i", im->in.w);
-	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, buf, strlen(buf));
+	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, jbuf, (unsigned)strlen(buf));
 	snprintf(buf, sizeof(buf), "Thumb::Image::Height\n%i", im->in.h);
-	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, buf, strlen(buf));
+	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, jbuf, (unsigned)strlen(buf));
 	snprintf(buf, sizeof(buf), "Thumb::Mimetype\nimage/jpeg");
-	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, buf, strlen(buf));
+	jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 7, jbuf, (unsigned)strlen(buf));
      }
    
    while (im->out.jinfo.next_scanline < im->out.h)

@@ -210,8 +210,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
     return self;
 }
 
-
-- (void)awakeFromNib { // ** warning: this gets called when loading nibs too!
+- (void)applicationWillFinishLaunching:(NSNotification *)notification {
 	[(NSPanel *)exifTextView.window setBecomesKeyOnlyIfNeeded:YES];
 	//[[exifTextView window] setHidesOnDeactivate:NO];
 	// this causes problems b/c the window can be foregrounded without the app
@@ -588,11 +587,11 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		}
 	} else {
 		NSUInteger oldIndex = frontWindow.selectedIndexes.firstIndex;
-		NSArray *a = frontWindow.currentSelection;
-		NSUInteger i, n = a.count;
+		NSArray *selectedPaths = frontWindow.currentSelection;
+		NSUInteger n = selectedPaths.count;
 		NSMutableArray<NSArray *> *trashedFiles = [NSMutableArray arrayWithCapacity:n];
-		for (i=0; i < n; ++i) {
-			NSString *fullpath = a[i];
+		for (NSUInteger i=0; i < n; ++i) {
+			NSString *fullpath = selectedPaths[i];
 			NSURL * __autoreleasing newURL;
 			char result = (doTrash ? [self trashFile:fullpath numLeft:n-i resultingURL:&newURL] : 1);
 			if (result == 1) {
@@ -679,20 +678,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 #pragma mark app delegate methods
-//int col = [dirBrowser selectedColumn];
-// it's "selected" but not actually first responder
-// hence the following convolutions
-//	//NSLog(@"setting firstresponder");
-//	NSWindow *w = [dirBrowser window];
-//	id r = [w firstResponder];
-//	do {
-//		if (r == dirBrowser) {
-//			[w makeFirstResponder:dirBrowser];
-//			break;
-//		}
-//	} while ((r = [r nextResponder]) != w);
-//	// i hate NSBrowser
-//	//NSLog(@"DONE setting firstresponder");
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
@@ -899,7 +884,8 @@ enum {
 
 - (IBAction)doShowFilenames:(id)sender {
 	BOOL b = !frontWindow.imageMatrix.showFilenames;
-	[sender setState:b ? NSOnState : NSOffState];
+	NSMenuItem *item = sender;
+	item.state = b;
 	frontWindow.imageMatrix.showFilenames = b;
 	if (creeveyWindows.count == 1) // save as default if this is the only window
 		[NSUserDefaults.standardUserDefaults setBool:b forKey:@"showFilenames"];
@@ -907,7 +893,8 @@ enum {
 
 - (IBAction)doAutoRotateDisplayedImage:(id)sender {
 	BOOL b = slidesWindow.isMainWindow ? !slidesWindow.autoRotate : !frontWindow.imageMatrix.autoRotate;
-	[sender setState:b ? NSOnState : NSOffState];
+	NSMenuItem *item = sender;
+	item.state = b;
 	frontWindow.imageMatrix.autoRotate = b;
 	slidesWindow.autoRotate = b;
 	if (creeveyWindows.count == 1 || slidesWindow.isMainWindow)

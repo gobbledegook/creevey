@@ -102,9 +102,7 @@ static struct exiftag sigma_tags[] = {
 static void
 sigma_deprefix(char *str, const char *prefix)
 {
-	int l;
-
-	l = strlen(prefix);
+	size_t l = strlen(prefix);
 	if (!strncmp(str, prefix, l))
 		memmove(str, str + l, strlen(str + l) + 1);
 }

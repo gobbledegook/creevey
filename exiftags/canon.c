@@ -1104,7 +1104,7 @@ canon_propA0(struct exifprop *aprop, struct exifprop *prop,
  */
 static int
 canon_subval(struct exifprop *prop, struct exiftags *t,
-    struct exiftag *subtags, int (*valfun)())
+    struct exiftag *subtags, int (*valfun)(struct exifprop *, struct exifprop *, unsigned char *, struct exiftags *))
 {
 	int i, j;
 	u_int16_t v;

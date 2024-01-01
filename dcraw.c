@@ -6055,9 +6055,7 @@ guess_cfa_pc:
     fread (buf, sony_length, 1, ifp);
     sony_decrypt (buf, sony_length/4, 1, sony_key);
     sfp = ifp;
-    if ((ifp = tmpfile())) {
-      fwrite (buf, sony_length, 1, ifp);
-      fseek (ifp, 0, SEEK_SET);
+    if ((ifp = fmemopen(buf, sony_length, "rb"))) {
       parse_tiff_ifd (-sony_offset);
       fclose (ifp);
     }
@@ -9927,7 +9925,7 @@ char *ExtractThumbnailFromRawFile(const char *path, size_t *outSize, unsigned sh
 		pthread_mutex_unlock(&mutex);
 		return 0;
 	}
-	status = (identify(),!is_raw);
+	identify();
 	write_fun = &CLASS write_ppm_tiff;
 	if ((status = !thumb_offset)) {
 		goto next;

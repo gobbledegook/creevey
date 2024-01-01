@@ -736,7 +736,10 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			un = exif4byte(btiff + prop->value, o);
 			ud = exif4byte(btiff + prop->value + 4, o);
 			denom = gcd(un, ud);
+// fixfract macro calls abs, which is not necessary for this line since un, id, denom are all unsigned
+#define abs
 			fixfract(prop->str, un, ud, denom);
+#undef abs
 		} else {
 			sn = exif4sbyte(btiff + prop->value, o);
 			sd = exif4sbyte(btiff + prop->value + 4, o);

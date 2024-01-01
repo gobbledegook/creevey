@@ -65,7 +65,7 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 			if (locString == internalKey && list->descr) // fall back to exiftag's English desc, if available
 				locString = [NSString stringWithCString:list->descr encoding:NSISOLatin1StringEncoding];
 			
-			for (i=0;lvl>>=1;i++); // convert the flag to an index
+			i = __builtin_ctz(lvl); // convert the flag to an index
 			[section[i] appendFormat:@"\t%@:\t", locString];
 			if (list->str)
 				[section[i] appendFormat:@"%s\n", list->str];
