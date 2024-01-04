@@ -165,6 +165,10 @@ static time_t ExifDateFromFile(NSString *s) {
 	NSSplitView *splitView = self.splitView;
 	float height = [u floatForKey:@"MainWindowSplitViewTopHeight"];
 	if (height > 0.0) [splitView setPosition:height ofDividerAtIndex:0];
+	else dispatch_async(dispatch_get_main_queue(), ^{
+		// apparently the splitview can't be collapsed until after windowDidLoad returns
+		[splitView setPosition:0 ofDividerAtIndex:0];
+	});
 	splitView.delegate = self; // must set delegate after restoring position so the didResize notification doesn't save the height from the nib
 
 	[imgMatrix setFrameSize:imgMatrix.superview.frame.size];
@@ -195,7 +199,8 @@ static time_t ExifDateFromFile(NSString *s) {
 
 - (void)window:(NSWindow *)window willEncodeRestorableState:(NSCoder *)state
 {
-	NSDictionary *data = @{@"path":self.path, @"split1":@(statusFld.superview.frame.size.height)};
+	BOOL collapsed = statusFld.superview.hidden;
+	NSDictionary *data = @{@"path":self.path, @"split1":@(collapsed ? 0.0 : statusFld.superview.frame.size.height)};
 	[state encodeObject:data forKey:@"creeveyWindowState"];
 }
 
@@ -211,14 +216,10 @@ static time_t ExifDateFromFile(NSString *s) {
 		if (![self setPath:[NSUserDefaults.standardUserDefaults stringForKey:@"picturesFolderPath"]])
 			[self setPath:NSHomeDirectory()];
 	NSNumber *heightObj = data[@"split1"];
-	float height;
 	if ([heightObj isKindOfClass:[NSNumber class]]) {
-		height = heightObj.floatValue;
-	} else {
-		height = 0;
-	}
-	if (height > 0.0)
+		float height = heightObj.floatValue;
 		[self.splitView setPosition:height ofDividerAtIndex:0];
+	}
 }
 
 - (NSSplitView *)splitView
@@ -299,6 +300,8 @@ static time_t ExifDateFromFile(NSString *s) {
 	if ([u integerForKey:@"startupOption"] == 0)
 		[u setObject:[dirBrowserDelegate path] forKey:@"lastFolderPath"];
 	[u setFloat:imgMatrix.cellWidth forKey:@"thumbCellWidth"];
+	float height = statusFld.superview.hidden ? 0 : statusFld.superview.frame.size.height;
+	[u setFloat:height forKey:@"MainWindowSplitViewTopHeight"];
 	[self.window saveFrameUsingName:@"MainWindowLoc"];
 }
 
@@ -932,7 +935,12 @@ static time_t ExifDateFromFile(NSString *s) {
 
 - (void)splitViewDidResizeSubviews:(NSNotification *)notification
 {
-	[NSUserDefaults.standardUserDefaults setFloat:statusFld.superview.frame.size.height forKey:@"MainWindowSplitViewTopHeight"];
+	float height = statusFld.superview.hidden ? 0 : statusFld.superview.frame.size.height;
+	[NSUserDefaults.standardUserDefaults setFloat:height forKey:@"MainWindowSplitViewTopHeight"];
+}
+
+-(BOOL)splitView:(NSSplitView *)splitView canCollapseSubview:(NSView *)subview {
+	return subview == dirBrowser.superview;
 }
 
 #pragma mark wrapping matrix methods

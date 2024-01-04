@@ -317,6 +317,10 @@ CA
                     <menu key="submenu" title="Slideshow" id="318">
                         <items>
                             <menuItem title="Begin Slideshow" tag="4" id="319">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="slideshow:" target="207" id="332"/>
                                 </connections>
