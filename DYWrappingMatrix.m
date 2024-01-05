@@ -793,12 +793,28 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (IBAction)selectNone:(id)sender {
-	[selectedIndexes removeAllIndexes];
-	NSUInteger i;
-	for (i=0; i<numCells; ++i) {
+	[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger i, BOOL *stop) {
 		[self selectionNeedsDisplay:i];
-	}
+	}];
+	[selectedIndexes removeAllIndexes];
 	[self notifySelectionDidChange];
+}
+
+- (void)selectFilenames:(NSArray *)arr comparator:(NSComparator)cmp {
+	NSMutableIndexSet *newIdxs = [[NSMutableIndexSet alloc] init];
+	NSRange r = {0,filenames.count};
+	for (NSString *s in arr) {
+		NSUInteger idx = [filenames indexOfObject:s inSortedRange:r options:0 usingComparator:cmp];
+		if (idx != NSNotFound)
+			[newIdxs addIndex:idx];
+	}
+	if (newIdxs.count) {
+		[selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger i, BOOL *stop) {
+			[self selectionNeedsDisplay:i];
+		}];
+		[selectedIndexes removeAllIndexes];
+		[self scrollToFirstSelected:newIdxs];
+	}
 }
 
 - (NSUInteger)numCells {
@@ -865,9 +881,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[images removeAllObjects];
 	[filenames removeAllObjects];
 	[requestedFilenames removeAllObjects];
+	[selectedIndexes removeAllIndexes];
 	[self resize:nil];
 	[self setNeedsDisplay:YES];
-	[self selectNone:nil];
 	// manually set to 0 to avoid animation (which you get if you call [self scrollPoint:]
 	[self.enclosingScrollView.contentView scrollToPoint:NSZeroPoint];
 	self.enclosingScrollView.verticalScroller.doubleValue = 0;

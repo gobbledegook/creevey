@@ -353,18 +353,23 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 - (void)openFiles:(NSArray *)a withSlideshow:(BOOL)doSlides{
-	if (doSlides) {
-		startSlideshowWhenReady = YES;
-		for (NSString *theFile in a) {
-			if ([appDelegate shouldShowFile:ResolveAliasToPath(theFile)])
-				[filesBeingOpened addObject:theFile];
-		}
+	startSlideshowWhenReady = doSlides;
+	[filesBeingOpened addObjectsFromArray:a];
+	BOOL isDir;
+	NSString *aPath = a[0];
+	if ([NSFileManager.defaultManager fileExistsAtPath:aPath isDirectory:&isDir] && !isDir)
+		aPath = aPath.stringByDeletingLastPathComponent;
+	if ([aPath isEqualToString:self.path]) {
+		// special case where the path is the same. Don't reload, just change the selection
+		[imgMatrix selectFilenames:a comparator:self.comparator];
+		if (doSlides)
+			dispatch_async(dispatch_get_main_queue(), ^{
+				// need to dispatch this otherwise the slideshow comes up behind this window
+				[appDelegate slideshowFromAppOpen:imgMatrix.selectedFilenames];
+			});
 	} else {
-		startSlideshowWhenReady = NO;
-		[filesBeingOpened addObjectsFromArray:a];
+		[self setPath:aPath];
 	}
-
-	[self setPath:a[0]];
 }
 
 #pragma mark FSEvents stuff
@@ -596,6 +601,7 @@ static time_t ExifDateFromFile(NSString *s) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[imgMatrix removeAllImages];
 		});
+		NSMutableSet *filesForSlideshow = startSlideshowWhenReady ? [NSMutableSet setWithCapacity:filesBeingOpened.count] : nil;
 		if (thePath) {
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[_fileWatcher stop];
@@ -630,6 +636,8 @@ static time_t ExifDateFromFile(NSString *s) {
 				if ([appDelegate shouldShowFile:theFile])
 				{
 					[filenames addObject:aPath];
+					if (startSlideshowWhenReady && [filesBeingOpened containsObject:aPath])
+						[filesForSlideshow addObject:aPath];
 					if (++i % 100 == 0)
 						[self updateStatusOnMainThread:^NSString *{
 							return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i];
@@ -671,8 +679,8 @@ static time_t ExifDateFromFile(NSString *s) {
 		if (startSlideshowWhenReady) {
 			startSlideshowWhenReady = NO;
 			// set this back to NO so we don't get infinite slideshow looping if a category is selected (initiated by windowDidBecomeMain:)
-			if (filesBeingOpened.count) {
-				NSArray *files = [filesBeingOpened.allObjects sortedArrayUsingComparator:self.comparator];
+			if (filesForSlideshow.count) {
+				NSArray *files = [filesForSlideshow.allObjects sortedArrayUsingComparator:self.comparator];
 				[appDelegate performSelectorOnMainThread:@selector(slideshowFromAppOpen:) withObject:files waitUntilDone:NO]; // this must be called after displayedFilenames is sorted in case it calls back for indexOfFilename:
 			}
 		}

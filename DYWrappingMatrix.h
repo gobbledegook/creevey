@@ -50,6 +50,7 @@
 @property (nonatomic, readonly) NSString *firstSelectedFilename;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
+- (void)selectFilenames:(NSArray *)arr comparator:(NSComparator)cmp;
 - (void)selectIndex:(NSUInteger)i;
 - (void)scrollToFirstSelected:(NSIndexSet *)x;
 

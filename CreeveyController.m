@@ -113,6 +113,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	
 	NSArray<NSURL*> *_movedUrls;
 	NSArray<NSString*> *_originalPaths;
+
+	NSMutableArray *_coalescedFilesToOpen;
 }
 @synthesize slidesWindow, jpegProgressBar, exifTextView, exifThumbnailDiscloseBtn, prefsWin, slideshowApplyBtn;
 
@@ -145,6 +147,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"Slideshow:RerandomizeOnLoop": @YES,
 		@"maxThumbsToLoad": @100,
 		@"autoRotateByOrientationTag": @YES,
+		@"openFilesDoSlideshow": @YES,
+		@"openFilesIgnoreAutoadvance": @NO,
 	}];
 
 	// migrate old RBSplitView pref
@@ -197,6 +201,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		_revealedDirectories = [[NSMutableSet alloc] initWithObjects:[NSURL fileURLWithPath:(@"~/Desktop/").stringByResolvingSymlinksInPath isDirectory:YES], nil];
 		fileextensions = [filetypes.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
 		creeveyWindows = [[NSMutableArray alloc] initWithCapacity:5];
+		_coalescedFilesToOpen = [[NSMutableArray alloc] init];
 		
 		thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
 		thumbsCache.boundingSize = DYWrappingMatrix.maxCellSize;
@@ -258,7 +263,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[self startSlideshowFullscreen:flag withFiles:nil];
 }
 
-- (void)startSlideshowFullscreen:(BOOL)flag withFiles:(NSArray *)files{
+- (void)startSlideshowFullscreen:(BOOL)flag withFiles:(nullable NSArray *)files {
 	slidesWindow.fullscreenMode = flag;
 	BOOL wantsUpdates;
 	NSUInteger startIdx = NSNotFound;
@@ -284,7 +289,13 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	slidesWindow.autoRotate = frontWindow.imageMatrix.autoRotate;
-	slidesWindow.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
+	// if files != nil these files are being opened from the finder, so check the relevant pref
+	float aaInterval;
+	if ([u boolForKey:@"slideshowAutoadvance"] && (files == nil || ![u boolForKey:@"openFilesIgnoreAutoadvance"]))
+		aaInterval = [u floatForKey:@"slideshowAutoadvanceTime"];
+	else
+		aaInterval = 0;
+	slidesWindow.autoadvanceTime = aaInterval;
 	[slidesWindow startSlideshowAtIndex:startIdx];
 }
 
@@ -707,29 +718,32 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[u synchronize];
 }
 
+- (void)openFilesCoalesced {
+	BOOL doSlideshow = [NSUserDefaults.standardUserDefaults boolForKey:@"openFilesDoSlideshow"];
+	[frontWindow openFiles:_coalescedFilesToOpen withSlideshow:doSlideshow];
+	[_coalescedFilesToOpen removeAllObjects];
+}
+
+- (void)openFiles:(NSArray *)files {
+	if (!creeveyWindows.count) [self newWindow:nil];
+	[frontWindow.window makeKeyAndOrderFront:nil];
+	if (!_appDidFinishLaunching)
+		_filesWereOpenedAtLaunch = YES;
+	[_coalescedFilesToOpen addObjectsFromArray:files];
+	[NSObject cancelPreviousPerformRequestsWithTarget:self];
+	[self performSelector:@selector(openFilesCoalesced) withObject:nil afterDelay:0.5];
+}
 
 - (BOOL)application:(NSApplication *)sender
 		   openFile:(NSString *)filename {
-	if (!creeveyWindows.count) [self newWindow:nil];
-	[frontWindow openFiles:@[filename] withSlideshow:YES];
-	if (sender) {
-		[frontWindow.window makeKeyAndOrderFront:nil];
-		//[sender activateIgnoringOtherApps:YES]; // for expose'
-	}
+	[self openFiles:@[filename]];
 	return YES;
 }
 
 - (void)application:(NSApplication *)sender
 		  openFiles:(NSArray *)files {
-	if (!creeveyWindows.count) [self newWindow:nil];
-	[frontWindow openFiles:files withSlideshow:YES];
-	if (sender) {
-		[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
-		[frontWindow.window makeKeyAndOrderFront:nil];
-	}
-	if (!_appDidFinishLaunching) {
-		_filesWereOpenedAtLaunch = YES;
-	}
+	[self openFiles:files];
+	[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {
