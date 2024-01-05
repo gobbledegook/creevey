@@ -21,6 +21,7 @@
 		F20DC2910886240400986105 /* CreeveyMainWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = F20DC28F0886240400986105 /* CreeveyMainWindowController.h */; };
 		F20DC2920886240400986105 /* CreeveyMainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = F20DC2900886240400986105 /* CreeveyMainWindowController.m */; };
 		F21AD0D40892B49F0054EA35 /* Phoenix Slides Help in Resources */ = {isa = PBXBuildFile; fileRef = F21AD0D30892B49F0054EA35 /* Phoenix Slides Help */; };
+		F22BDC162B435F3900F53E37 /* PrefsWin.xib in Resources */ = {isa = PBXBuildFile; fileRef = F22BDC142B435F3900F53E37 /* PrefsWin.xib */; };
 		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
 		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
 		F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */ = {isa = PBXBuildFile; fileRef = F23DC5120A86CEF7005E49FD /* slideshow.tif */; };
@@ -142,6 +143,8 @@
 		F221AA6109608C31002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = folder; name = es; path = "es.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
 		F221AA6409608C70002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F221AAAB0960A924002B38F5 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F22BDC152B435F3900F53E37 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefsWin.xib; sourceTree = "<group>"; };
+		F22BDC1A2B43632200F53E37 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/PrefsWin.xcstrings; sourceTree = "<group>"; };
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
 		F23DC5120A86CEF7005E49FD /* slideshow.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = slideshow.tif; sourceTree = "<group>"; };
@@ -371,6 +374,7 @@
 				F254E9930891A7FB00DE9C38 /* EXIF.strings */,
 				F202E2C919170E4900EDDCEC /* MainMenu.xib */,
 				F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */,
+				F22BDC142B435F3900F53E37 /* PrefsWin.xib */,
 				F276A7481B4095F50045E67A /* ThumbnailContextMenu.xib */,
 				F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */,
 			);
@@ -594,6 +598,7 @@
 				F276A7461B4095F50045E67A /* ThumbnailContextMenu.xib in Resources */,
 				F2E6CAAF1CF6BCC3002C5CC4 /* loop_forward.tiff in Resources */,
 				F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */,
+				F22BDC162B435F3900F53E37 /* PrefsWin.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -708,6 +713,15 @@
 				F2B13C050BCEE73500CF252E /* it */,
 			);
 			name = "Phoenix Slides Help";
+			sourceTree = "<group>";
+		};
+		F22BDC142B435F3900F53E37 /* PrefsWin.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F22BDC152B435F3900F53E37 /* Base */,
+				F22BDC1A2B43632200F53E37 /* mul */,
+			);
+			name = PrefsWin.xib;
 			sourceTree = "<group>";
 		};
 		F254E9930891A7FB00DE9C38 /* EXIF.strings */ = {

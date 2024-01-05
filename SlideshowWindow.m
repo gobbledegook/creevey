@@ -50,7 +50,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	
 	DYImageCache *imgCache;
 	
-	NSTimeInterval timerIntvl; BOOL timerPaused;
+	BOOL timerPaused;
 	NSTimer *autoTimer;
 	
 	NSMutableDictionary *rotations, *zooms, *flips;
@@ -63,7 +63,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	NSTextView *helpFld;
 	NSImageView *loopImageView;
 	
-	BOOL loopMode, randomMode, rerandomizeOnLoop, autoRotate;
+	BOOL loopMode, randomMode;
 	unsigned char keyIsRepeating;
 	
 	BOOL mouseDragged;
@@ -72,6 +72,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	NSOperationQueue *_upcomingQueue;
 	DYFileWatcher *_fileWatcher;
 }
+@synthesize rerandomizeOnLoop, autoRotate, autoadvanceTime = timerIntvl;
 
 + (void)initialize {
 	if (self != [SlideshowWindow class]) return;
@@ -171,10 +172,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 }
 
-- (void)setRerandomizeOnLoop:(BOOL)b {
-	rerandomizeOnLoop = b;
-}
-
 - (void)setAutoRotate:(BOOL)b {
 	autoRotate = b;
 	[rotations removeAllObjects];
@@ -182,10 +179,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	if (currentIndex != NSNotFound) {
 		[self displayImage];
 	}
-}
-
-- (BOOL)autoRotate {
-	return autoRotate;
 }
 
 - (void)setCats:(NSMutableSet * __strong *)newCats {
@@ -412,20 +405,15 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // set to 0 to stop.
 - (void)setTimer:(NSTimeInterval)s {
 	timerIntvl = s;
-	if (s)
+	[self updateTimer];
+}
+
+- (void)updateTimer {
+	if (timerIntvl > 0.0)
 		[self runTimer];
 	else
 		[self killTimer];
 }
-
-// a method for the public to call; added for the pref panel
-- (void)setAutoadvanceTime:(NSTimeInterval)s {
-	if (currentIndex == NSNotFound)
-		timerIntvl = s;
-	else
-		[self setTimer:s];
-}
-
 
 - (void)runTimer {
 	[self killTimer]; // always remove the old timer

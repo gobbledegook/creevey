@@ -121,10 +121,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		@"thumbPadding": @(PADDING),
 	}];
 	
-    static BOOL initialized = NO;
-    /* Make sure code only gets executed once. */
-    if (initialized) return;
-    initialized = YES;
     id sendTypes = @[NSFilenamesPboardType];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:@[]];
 }

@@ -25,8 +25,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @property (weak) IBOutlet NSButton *exifThumbnailDiscloseBtn;
 
 @property (weak) IBOutlet NSPanel *prefsWin;
-@property (weak) IBOutlet NSTextField *startupDirFld;
-@property (weak) IBOutlet NSMatrix *startupOptionMatrix;
 @property (weak) IBOutlet NSButton *slideshowApplyBtn;
 
 // accessors
@@ -52,10 +50,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // prefs stuff
 - (IBAction)openPrefWin:(id)sender;
 - (IBAction)chooseStartupDir:(id)sender;
-- (IBAction)changeStartupOption:(id)sender;
 - (IBAction)applySlideshowPrefs:(id)sender;
 - (IBAction)slideshowDefaultsChanged:(id)sender;
-@property (nonatomic, copy) NSColor *slideshowBgColor;
 
 // info window
 - (IBAction)openGetInfoPanel:(id)sender;

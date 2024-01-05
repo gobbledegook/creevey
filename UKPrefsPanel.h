@@ -37,7 +37,7 @@
 @import Cocoa;
 
 @interface UKPrefsPanel : NSObject <NSToolbarDelegate>
-@property (nonatomic, weak) NSTabView *tabView; ///< The tabless tab-view containing the different pref panes. (you should just hook this up in IB)
+@property (nonatomic, weak) IBOutlet NSTabView *tabView; ///< The tabless tab-view containing the different pref panes. (you should just hook this up in IB)
 
 // Action for hooking up this object and the menu item:
 -(IBAction) orderFrontPrefsPanel: (id)sender;

@@ -21,8 +21,6 @@
 - (void)endSlideshow;
 - (void)resetScreen;
 
-- (void)setAutoadvanceTime:(NSTimeInterval)s; // 0 to turn off
-
 @property (nonatomic, readonly) NSUInteger currentIndex;
 @property (nonatomic, readonly) NSString *currentFile;
 @property (nonatomic, readonly) NSString *basePath;
@@ -36,8 +34,10 @@
 - (void)filesWereUndeleted:(NSArray *)a;
 - (void)uncacheImage:(NSString *)s; // when an image is modified, remove it from cache
 
-- (void)setRerandomizeOnLoop:(BOOL)b;
+@property (nonatomic) BOOL rerandomizeOnLoop;
 @property (nonatomic) BOOL autoRotate;
+@property (nonatomic) NSTimeInterval autoadvanceTime;
+- (void)updateTimer;
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;

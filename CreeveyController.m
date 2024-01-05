@@ -104,6 +104,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 	NSMutableArray *creeveyWindows;
 	CreeveyMainWindowController * __weak frontWindow;
+	NSArray *_prefWinNibItems;
 	
 	DYImageCache *thumbsCache;
 	
@@ -113,7 +114,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSArray<NSURL*> *_movedUrls;
 	NSArray<NSString*> *_originalPaths;
 }
-@synthesize slidesWindow, jpegProgressBar, exifTextView, exifThumbnailDiscloseBtn, prefsWin, startupDirFld, startupOptionMatrix, slideshowApplyBtn;
+@synthesize slidesWindow, jpegProgressBar, exifTextView, exifThumbnailDiscloseBtn, prefsWin, slideshowApplyBtn;
 
 +(void)initialize
 {
@@ -132,12 +133,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"autoVersCheck": @YES,
 		@"jpegPreserveModDate": @NO,
 		@"slideshowAutoadvance": @NO,
-		@"slideshowAutoadvanceTime": @5.25f,
+		@"slideshowAutoadvanceTime": @5.5f,
 		@"slideshowLoop": @NO,
 		@"slideshowRandom": @NO,
 		@"slideshowScaleUp": @NO,
 		@"slideshowActualSize": @NO,
-		@"slideshowBgColor": [NSKeyedArchiver archivedDataWithRootObject:NSColor.blackColor],
+		@"slideshowBgColor": [NSKeyedArchiver archivedDataWithRootObject:NSColor.blackColor requiringSecureCoding:YES error:NULL],
 		@"exifThumbnailShow": @NO,
 		@"showFilenames": @YES,
 		@"sortBy": @1, // sort by filename, ascending
@@ -224,14 +225,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	}
 	[self updateMoveToMenuItem];
 
-	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
-															  forKeyPath:@"values.slideshowAutoadvanceTime"
-																 options:NSKeyValueObservingOptionNew
-																 context:NULL];
-	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
-															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
-																 options:0
-																 context:NULL];
+	NSUserDefaultsController *ud = NSUserDefaultsController.sharedUserDefaultsController;
+	[ud addObserver:self forKeyPath:@"values.slideshowBgColor" options:0 context:NULL];
+	[ud addObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth" options:0 context:NULL];
 	localeChangeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSCurrentLocaleDidChangeNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
 		NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 		[u setDouble:[u doubleForKey:@"lastVersCheckTime"] forKey:@"lastVersCheckTime"];
@@ -241,13 +237,11 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			[slidesWindow resetScreen];
 		}
 	}];
-
-	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES]; // show color picker w/ opacity/transparency
 }
 
 - (void)dealloc {
 	NSUserDefaultsController *u = NSUserDefaultsController.sharedUserDefaultsController;
-	[u removeObserver:self forKeyPath:@"values.slideshowAutoadvanceTime"];
+	[u removeObserver:self forKeyPath:@"values.slideshowBgColor"];
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
 	[NSNotificationCenter.defaultCenter removeObserver:localeChangeObserver];
 	[NSNotificationCenter.defaultCenter removeObserver:screenChangeObserver];
@@ -288,11 +282,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[slidesWindow setFilenames:files basePath:frontWindow.path comparator:frontWindow.comparator];
 	}
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
-	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
-		? [u floatForKey:@"slideshowAutoadvanceTime"]
-		: 0]; // see prefs section for more notes
 	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
 	slidesWindow.autoRotate = frontWindow.imageMatrix.autoRotate;
+	slidesWindow.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
 	[slidesWindow startSlideshowAtIndex:startIdx];
 }
 
@@ -697,7 +689,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[self newWindow:self];
 
 	[self applySlideshowPrefs:nil];
-	
+	[self updateSlideshowBgColor];
+
 	NSTimeInterval t = NSDate.timeIntervalSinceReferenceDate;
 	if ([u boolForKey:@"autoVersCheck"]
 		&& (t - [u doubleForKey:@"lastVersCheckTime"] > DYVERSCHECKINTERVAL)) // one week
@@ -903,6 +896,11 @@ enum {
 
 #pragma mark prefs stuff
 - (IBAction)openPrefWin:(id)sender; {
+	if (!prefsWin) {
+		NSArray * __autoreleasing arr;
+		if (![NSBundle.mainBundle loadNibNamed:@"PrefsWin" owner:self topLevelObjects:&arr]) return;
+		_prefWinNibItems = arr;
+	}
     [prefsWin makeKeyAndOrderFront:nil];
 }
 - (IBAction)chooseStartupDir:(id)sender; {
@@ -920,11 +918,6 @@ enum {
 	}];
 }
 
-- (IBAction)changeStartupOption:(id)sender; {
-	
-}
-
-
 - (IBAction)openAboutPanel:(id)sender {
 	[NSApp orderFrontStandardAboutPanelWithOptions:@{@"ApplicationIcon": [NSImage imageNamed:@"logo"]}];
 }
@@ -940,8 +933,10 @@ static void SendAction(NSMenuItem *sender) {
 	}
 }
 
+// This gets called in three circumstances: (1) at startup, to set up our menu/slideshow window,
+// (2) always, when the slideshow window is closed and a setting is changed, and
+// (3) when the "Apply" button is clicked (only enabled when the slideshow window is visible)
 - (IBAction)applySlideshowPrefs:(id)sender {
-	// TODO: can we get rid of the "Apply Prefs" button completely?
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	NSMenu *m = [NSApp.mainMenu itemWithTag:SLIDESHOW_MENU].submenu;
 	NSMenuItem *i;
@@ -961,22 +956,23 @@ static void SendAction(NSMenuItem *sender) {
 	i.state = ![u boolForKey:@"slideshowActualSize"];
 	SendAction(i);
 
-	// auto-advance, since it can only be set during slideshow (and not in menu)
-	// is automagically applied when slideshow starts
-	[slidesWindow setAutoadvanceTime:[u boolForKey:@"slideshowAutoadvance"]
-		? [u floatForKey:@"slideshowAutoadvanceTime"]
-		: 0];
+	if (slidesWindow.visible) {
+		slidesWindow.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
+		[slidesWindow updateTimer];
+	}
 	
-	// bg color is continuously set. it's cooler that way.
-	// but we still need this for inital setup
-	slidesWindow.backgroundColor = [NSKeyedUnarchiver unarchiveObjectWithData:[u dataForKey:@"slideshowBgColor"]];
-
-
 	[slideshowApplyBtn setEnabled:NO];
 }
 
+- (void)updateSlideshowBgColor {
+	slidesWindow.backgroundColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"slideshowBgColor"] error:NULL];
+}
+
 - (IBAction)slideshowDefaultsChanged:(id)sender; {
-	[slideshowApplyBtn setEnabled:YES];
+	if (slidesWindow.visible)
+		[slideshowApplyBtn setEnabled:YES];
+	else
+		[self applySlideshowPrefs:nil];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -984,29 +980,16 @@ static void SendAction(NSMenuItem *sender) {
                         change:(NSDictionary *)c
                        context:(void *)context
 {
-    if ([keyPath isEqual:@"values.slideshowAutoadvanceTime"]) {
-		[NSUserDefaults.standardUserDefaults setBool:YES forKey:@"slideshowAutoadvance"];
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[slideshowApplyBtn setEnabled:YES];
-		});
-    } else if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
+    if ([keyPath isEqual:@"values.DYWrappingMatrixMaxCellWidth"]) {
 		if (thumbsCache.boundingWidth
 			< [NSUserDefaults.standardUserDefaults integerForKey:@"DYWrappingMatrixMaxCellWidth"]) {
 			[thumbsCache removeAllImages];
 			thumbsCache.boundingSize = [DYWrappingMatrix maxCellSize];
 		}
-    }
-}
-
-// bound to the prefs panel; just pass through to defaults
-- (NSColor *)slideshowBgColor {
-    return [NSKeyedUnarchiver unarchiveObjectWithData:[NSUserDefaults.standardUserDefaults dataForKey:@"slideshowBgColor"]];
-}
-- (void)setSlideshowBgColor:(NSColor *)value {
-	slidesWindow.backgroundColor = value;
-	[slidesWindow.contentView setNeedsDisplay:YES];
-	[NSUserDefaults.standardUserDefaults setObject:[NSKeyedArchiver archivedDataWithRootObject:value]
-											  forKey:@"slideshowBgColor"];
+	} else if ([keyPath isEqualToString:@"values.slideshowBgColor"]) {
+		[self updateSlideshowBgColor];
+		[slidesWindow.contentView setNeedsDisplay:YES];
+	}
 }
 
 
