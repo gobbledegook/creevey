@@ -1637,6 +1637,41 @@
         }
       }
     },
+    "No image files found: " : {
+      "comment" : "long filepath appended here",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Bilddateien gefunden: "
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontraron archivos de imagen: "
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun fichier image trouvé: "
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun file immagine trovato: "
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到任何圖片檔案："
+          }
+        }
+      }
+    },
     "No images selected." : {
       "localizations" : {
         "de" : {

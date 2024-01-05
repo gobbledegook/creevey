@@ -149,6 +149,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"autoRotateByOrientationTag": @YES,
 		@"openFilesDoSlideshow": @YES,
 		@"openFilesIgnoreAutoadvance": @NO,
+		@"startupSlideshowFromFolder":@NO,
+		@"startupSlideshowSubfolders":@NO,
+		@"startupSlideshowSuppressNewWindows":@NO,
 	}];
 
 	// migrate old RBSplitView pref
@@ -682,6 +685,17 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 #pragma mark app delegate methods
 
+- (BOOL)slideshowFromStartupPreference {
+	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
+	NSString *path = [u integerForKey:@"startupOption"] == 0 ? [u stringForKey:@"lastFolderPath"] : [u stringForKey:@"picturesFolderPath"];
+	BOOL isDir;
+	if ([NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDir] && isDir) {
+		[slidesWindow loadFilenamesFromPath:path wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder([u integerForKey:@"sortBy"])];
+		return YES;
+	}
+	return NO;
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	[self showExifThumbnail:[u boolForKey:@"exifThumbnailShow"]
@@ -695,12 +709,21 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[slidesWindow orderFront:nil];
 		if (!wasVisible) [slidesWindow orderOut:nil];
 	}
-	// open a new window if there isn't one (either from dropping icons onto app at launch, or from restoring saved state)
-	if (!frontWindow && !_windowsWereRestoredAtLaunch)
-		[self newWindow:self];
 
 	[self applySlideshowPrefs:nil];
 	[self updateSlideshowBgColor];
+	BOOL doSlideshow = [u boolForKey:@"startupSlideshowFromFolder"];
+	BOOL suppressNewWindow = doSlideshow && [u boolForKey:@"startupSlideshowSuppressNewWindows"];
+	if (doSlideshow) {
+		if (![self slideshowFromStartupPreference]) {
+			// fail silently and open a new window if necessary
+			suppressNewWindow = NO;
+		}
+	}
+
+	// open a new window if there isn't one (either from dropping icons onto app at launch, or from restoring saved state)
+	if (!frontWindow && !_windowsWereRestoredAtLaunch && !suppressNewWindow)
+		[self newWindow:self];
 
 	NSTimeInterval t = NSDate.timeIntervalSinceReferenceDate;
 	if ([u boolForKey:@"autoVersCheck"]
@@ -748,6 +771,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {
 	if (!creeveyWindows.count) {
+		NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
+		if ([u boolForKey:@"startupSlideshowFromFolder"]) {
+			if ([self slideshowFromStartupPreference])
+				if ([u boolForKey:@"startupSlideshowSuppressNewWindows"])
+					return NO;
+		}
 		[self newWindow:self];
 		return NO;
 	}
@@ -1190,10 +1219,39 @@ static void SendAction(NSMenuItem *sender) {
 - (DYImageCache *)thumbsCache { return thumbsCache; }
 - (NSMutableSet * __strong *)cats { return cats; }
 
-- (BOOL)shouldShowFile:(NSString *)path {
-	NSString *pathExtension = path.pathExtension;
+NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders) {
+	return [NSFileManager.defaultManager
+			enumeratorAtURL:[NSURL fileURLWithPath:path isDirectory:YES]
+			includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsAliasFileKey,NSURLIsHiddenKey]
+			options:recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants
+			errorHandler:nil];
+}
+
+#define IS_URL_DIRECTORY ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue)
+#define IS_URL_HIDDEN    ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue)
+#define IS_URL_ALIAS     ([url getResourceValue:&val forKey:NSURLIsAliasFileKey error:NULL] && val.boolValue)
+
+- (BOOL)handledDirectory:(NSURL *)url subfolders:(BOOL)recurse e:(NSDirectoryEnumerator *)e {
+	NSNumber * __autoreleasing val;
+	if (IS_URL_DIRECTORY) {
+		if (recurse && ((IS_URL_HIDDEN && ![_revealedDirectories containsObject:url]) || [url.lastPathComponent isEqualToString:@"Thumbs"]))
+			[e skipDescendents]; // special addition for mbatch
+		return YES;
+	}
+	return NO;
+}
+
+- (BOOL)shouldShowFile:(NSURL *)url {
+	NSNumber * __autoreleasing val;
+	if (IS_URL_HIDDEN) return NO;
+	if (IS_URL_ALIAS) {
+		NSURL *resolved = ResolveAliasURL(url);
+		if (resolved) url = resolved;
+	}
+	NSString *path = url.path;
+	NSString *pathExtension = url.pathExtension.lowercaseString;
 	if (pathExtension.length == 0) return [fileostypes containsObject:NSHFSTypeOfFile(path)];
-	return [filetypes containsObject:pathExtension] || [filetypes containsObject:pathExtension.lowercaseString] || ([fileostypes containsObject:NSHFSTypeOfFile(path)] && ![disabledFiletypes containsObject:pathExtension]);
+	return [filetypes containsObject:pathExtension] || ([fileostypes containsObject:NSHFSTypeOfFile(path)] && ![disabledFiletypes containsObject:pathExtension]);
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {

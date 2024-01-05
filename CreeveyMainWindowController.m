@@ -312,7 +312,7 @@ static time_t ExifDateFromFile(NSString *s) {
 - (NSUInteger)indexOfFilename:(NSString *)s {
 	return [displayedFilenames indexOfObject:s inSortedRange:NSMakeRange(0, displayedFilenames.count) options:0 usingComparator:self.comparator];
 }
-- (NSComparator)comparator {
+NSComparator ComparatorForSortOrder(short sortOrder) {
 	switch (sortOrder) {
 		case 1:
 		default:
@@ -340,6 +340,9 @@ static time_t ExifDateFromFile(NSString *s) {
 				return [b exifDateCompare:a];
 			};
 	}
+}
+- (NSComparator)comparator {
+	return ComparatorForSortOrder(sortOrder);
 }
 
 - (NSArray *)currentSelection {
@@ -612,40 +615,25 @@ static time_t ExifDateFromFile(NSString *s) {
 			[secondaryImageCacheQueue removeAllObjects];
 			[imageCacheQueueLock unlockWithCondition:0];
 			BOOL recurseSubfolders = self.wantsSubfolders;
-			NSDirectoryEnumerationOptions options = recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
-			options |= NSDirectoryEnumerationSkipsHiddenFiles;
-			NSFileManager *fm = NSFileManager.defaultManager;
-			NSDirectoryEnumerator *e = [fm enumeratorAtURL:[NSURL fileURLWithPath:thePath isDirectory:YES]
-								includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsAliasFileKey]
-												   options:options errorHandler:nil];
-			//NSLog(@"getting filenames...");
+			NSDirectoryEnumerator *e = CreeveyEnumerator(thePath, recurseSubfolders);
 			for (NSURL *url in e) {
-				NSString *aPath = url.path;
-				NSNumber *val;
-				if ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue) {
-					if (recurseSubfolders && [aPath.lastPathComponent isEqualToString:@"Thumbs"])
-						[e skipDescendents]; // special addition for mbatch
-					continue;
-				}
-
-				NSString *theFile = aPath;
-				if ([url getResourceValue:&val forKey:NSURLIsAliasFileKey error:NULL] && val.boolValue) {
-					NSString *resolved = ResolveAliasURLToPath(url);
-					if (resolved) theFile = resolved;
-				}
-				if ([appDelegate shouldShowFile:theFile])
-				{
-					[filenames addObject:aPath];
-					if (startSlideshowWhenReady && [filesBeingOpened containsObject:aPath])
-						[filesForSlideshow addObject:aPath];
-					if (++i % 100 == 0)
-						[self updateStatusOnMainThread:^NSString *{
-							return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i];
-						}];
-				}
-				if (stopCaching) {
-					[filenames removeAllObjects]; // so it fails count > 0 test below
-					break;
+				@autoreleasepool {
+					if ([appDelegate handledDirectory:url subfolders:recurseSubfolders e:e])
+						continue;
+					if ([appDelegate shouldShowFile:url]) {
+						NSString *aPath = url.path;
+						[filenames addObject:aPath];
+						if (startSlideshowWhenReady && [filesBeingOpened containsObject:aPath])
+							[filesForSlideshow addObject:aPath];
+						if (++i % 100 == 0)
+							[self updateStatusOnMainThread:^NSString *{
+								return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i];
+							}];
+					}
+					if (stopCaching) {
+						[filenames removeAllObjects]; // so it fails count > 0 test below
+						break;
+					}
 				}
 			}
 		}

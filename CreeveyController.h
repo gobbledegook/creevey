@@ -30,7 +30,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 // accessors
 @property (nonatomic, readonly) NSMutableSet * __strong *cats;
 @property (nonatomic, readonly) DYImageCache *thumbsCache;
-- (BOOL)shouldShowFile:(NSString *)path;
+NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders);
+- (BOOL)handledDirectory:(NSURL *)url subfolders:(BOOL)recurse e:(NSDirectoryEnumerator *)e;
+- (BOOL)shouldShowFile:(NSURL *)path;
 
 - (IBAction)slideshow:(id)sender;
 - (IBAction)slideshowInWindow:(id)sender;

@@ -8,10 +8,11 @@
 //  Created by d on 2005.04.03.
 
 @import Cocoa;
+NS_ASSUME_NONNULL_BEGIN
 
 // returns path if it's not an alias, or if not resolvable
 NSString *ResolveAliasToPath(NSString *path);
-NSString *ResolveAliasURLToPath(NSURL *url);
+NSURL * _Nullable ResolveAliasURL(NSURL *url);
 
 // for extensions
 BOOL IsJPEG(NSString *x);
@@ -25,3 +26,4 @@ BOOL FileIsJPEG(NSString *s);
 + (instancetype)imageByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName;
 - (instancetype)initByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName;
 @end
+NS_ASSUME_NONNULL_END

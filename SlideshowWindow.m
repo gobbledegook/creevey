@@ -71,6 +71,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	DYRandomizableArray<NSString *> *filenames;
 	NSOperationQueue *_upcomingQueue;
 	DYFileWatcher *_fileWatcher;
+
+	_Atomic BOOL _stopLoading;
 }
 @synthesize rerandomizeOnLoop, autoRotate, autoadvanceTime = timerIntvl;
 
@@ -99,7 +101,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
  		self.backgroundColor = NSColor.blackColor;
 		[self setOpaque:NO];
 		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
-		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = NSNotFound;
    }
@@ -163,13 +165,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	_fullscreenMode = b;
 	if (b) {
 		self.styleMask = NSWindowStyleMaskBorderless;
-		self.collectionBehavior = NSWindowCollectionBehaviorTransient|NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
-		if (self.visible)
-			[self configureScreen];
+		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
 	} else {
 		self.styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
 		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
 	}
+	if (self.visible)
+		[self configureScreen];
 }
 
 - (void)setAutoRotate:(BOOL)b {
@@ -197,9 +199,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block {
-	[_fileWatcher stop];
 	if (currentIndex != NSNotFound)
-		[self saveZoomInfo]; // in case we're called without endSlideshow being called
+		[self cleanUp];
 	
 	if (s != basePath) {
 		if ([s characterAtIndex:s.length-1] != '/')
@@ -209,6 +210,30 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 	[filenames setArray:files];
 	self.comparator = block;
+}
+
+- (void)loadFilenamesFromPath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block {
+	static dispatch_queue_t _loadQueue;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		_loadQueue = dispatch_queue_create("phoenixslides.slideshow.load", NULL);
+	});
+	self.fullscreenMode = YES;
+	[self configureScreen];
+	currentIndex = NSNotFound;
+	imgView.image = nil;
+	infoFld.hidden = NO;
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self makeKeyAndOrderFront:nil];
+	});
+	self.comparator = block;
+	_stopLoading = YES;
+	static _Atomic uint64_t blockTime;
+	uint64_t timeStamp = blockTime = mach_absolute_time();
+	dispatch_async(_loadQueue, ^{
+		if (timeStamp == blockTime)
+			[self loadImages:s subfolders:b];
+	});
 }
 
 - (NSString *)currentShortFilename {
@@ -262,22 +287,15 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 }
 
-- (void)endSlideshow {
-	[self orderOut:nil];
-}
-
-- (void)orderOut:(id)sender {
+- (void)cleanUp {
 	[_fileWatcher stop];
-	[self saveZoomInfo];
-
 	lastIndex = currentIndex;
-	currentIndex = NSNotFound;
-	[self killTimer];
-	if (!_fullscreenMode) {
-		[NSUserDefaults.standardUserDefaults setObject:NSStringFromRect(self.frame) forKey:@"DYSlideshowWindowFrame"];
+	if (currentIndex != NSNotFound) {
+		[self saveZoomInfo];
+		currentIndex = NSNotFound;
 	}
-	[super orderOut:sender];
-	
+	_stopLoading = YES;
+	[self killTimer];
 	[imgCache abortCaching];
 	[self.undoManager removeAllActions];
 
@@ -286,6 +304,17 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	for (NSUInteger i=0; i<n; ++i) {
 		[imgCache endAccess:filenames[i]];
 	}
+}
+
+- (void)endSlideshow {
+	[self orderOut:nil];
+}
+
+- (void)orderOut:(id)sender {
+	[self cleanUp];
+	if (!_fullscreenMode)
+		[NSUserDefaults.standardUserDefaults setObject:NSStringFromRect(self.frame) forKey:@"DYSlideshowWindowFrame"];
+	[super orderOut:sender];
 }
 
 - (void)startSlideshow {
@@ -471,7 +500,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)updateExifFld {
-	if (currentIndex == filenames.count) return;
+	if (currentIndex >= filenames.count) return;
 	NSMutableAttributedString *attStr;
 	attStr = Fileinfo2EXIFString(filenames[currentIndex],
 								 imgCache,moreExif);
@@ -670,7 +699,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)jump:(int)n ordered:(BOOL)ordered { // if ordered is YES, jump to the next/previous slide in the ordered sequence
 	if (ordered && randomMode) {
 		[self setTimer:0]; // always stop auto-advance here
-		if (currentIndex == filenames.count) {
+		if (currentIndex >= filenames.count) {
 			// stop if we just deleted the last file
 			NSBeep();
 			return;
@@ -698,7 +727,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)saveZoomInfo {
-	if (currentIndex == filenames.count) return;
+	if (currentIndex >= filenames.count) return;
 	if (imgView.zoomInfoNeedsSaving)
 		zooms[filenames[currentIndex]] = imgView.zoomInfo;
 }
@@ -781,6 +810,39 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)keyDown:(NSEvent *)e {
 	if (e.characters.length == 0) return; // avoid exception on deadkeys
 	unichar c = [e.characters characterAtIndex:0];
+	if (currentIndex == NSNotFound) {
+		// loading filenames
+		switch(c) {
+			case 'q':
+			case '\x1b':
+				[self endSlideshow];
+				return;
+			default:
+				NSBeep();
+				return;
+		}
+	}
+	if (currentIndex == filenames.count) {
+		switch(c) {
+			case ' ': // only allow shift-space to go back
+				if ((e.modifierFlags & NSEventModifierFlagShift) == 0) return;
+				// fallthrough
+			case NSLeftArrowFunctionKey:
+			case NSUpArrowFunctionKey:
+			case NSHomeFunctionKey:
+			case NSEndFunctionKey:
+			case NSPageUpFunctionKey:
+			case 'q':
+			case '\x1b': // escape
+			case 'h':
+			case '?':
+			case '/':
+				break;
+			default:
+				NSBeep();
+				return;
+		}
+	}
 	if (c >= '1' && c <= '9') {
 		if ((e.modifierFlags & NSEventModifierFlagNumericPad) != 0 && imgView.zoomMode) {
 			if (c == '5') {
@@ -805,7 +867,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 		return;
 	}
 	if (c >= NSF1FunctionKey && c <= NSF12FunctionKey) {
-		if (currentIndex == filenames.count) { NSBeep(); return; }
 		[self assignCat:c - NSF1FunctionKey + 1
 				 toggle:(e.modifierFlags & NSEventModifierFlagCommand) != 0];
 		//NSLog(@"got cat %i", c - NSF1FunctionKey + 1);
@@ -892,15 +953,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[NSUserDefaults.standardUserDefaults setInteger:2 forKey:@"DYSlideshowWindowVisibleFields"];
 			break;
 		case 'l':
-			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self setRotation:90];
 			break;
 		case 'r':
-			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self setRotation:-90];
 			break;
 		case 'f':
-			if (currentIndex == filenames.count) { NSBeep(); return; }
 			[self toggleFlip];
 			break;
 		case '=':
@@ -911,7 +969,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// intentional fall-through to next cases
 		case '+':
 		case '-':
-			if (currentIndex == filenames.count) { NSBeep(); return; }
 			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
 				if (obj.image == imgView.image
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) { // cached image smaller than orig
@@ -928,7 +985,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// for important comments
 			break;
 		case '*':
-			if (currentIndex == filenames.count) { NSBeep(); return; }
 			//[imgView zoomOff];
 			//if (![imgView showActualSize])
 			//	[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
@@ -954,7 +1010,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// intentional fall-through
 		case '+':
 		case '-':
-			if (currentIndex == filenames.count) { NSBeep(); return YES; }
+			if (currentIndex >= filenames.count) { NSBeep(); return YES; }
 			// ** code copied from keyDown
 			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
 				if (obj.image == imgView.image
@@ -1036,7 +1092,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)magnifyWithEvent:(NSEvent *)event
 {
-	if (currentIndex == filenames.count) { return; }
+	if (currentIndex >= filenames.count) return;
 	NSString *filename = filenames[currentIndex];
 	DYImageInfo *info = [imgCache infoForKey:filename];
 	if (info) {
@@ -1088,7 +1144,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	return currentIndex == NSNotFound ? lastIndex : currentIndex;
 }
 - (NSString *)currentFile {
-	if (currentIndex == filenames.count) { // if showing "last file was deleted" screen
+	if (currentIndex >= filenames.count) { // if showing "last file was deleted" screen
 		return nil;
 	}
 	return filenames[self.currentIndex];
@@ -1241,7 +1297,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	BOOL b = !item.state;
 	item.state = b;
 	imgView.scalesUp = b;
-	if (currentIndex == filenames.count) return;
+	if (currentIndex >= filenames.count) return;
 	if (currentIndex != NSNotFound)
 		[self updateInfoFld];
 }
@@ -1282,6 +1338,60 @@ scheduledTimerWithTimeInterval:timerIntvl
 	imgView.showActualSize = b;
 	if (currentIndex == filenames.count) return;
 	if (currentIndex != NSNotFound) [self displayImage];
+}
+
+- (void)updateStatusOnMainThread:(NSString * (^)(void))f {
+	static _Atomic uint64_t statusTime;
+	uint64_t timeStamp = statusTime = mach_absolute_time();
+	dispatch_async(dispatch_get_main_queue(), ^{
+		if (statusTime == timeStamp) {
+			infoFld.stringValue = f() ?: @"";
+			[infoFld sizeToFit];
+		}
+	});
+}
+
+- (void)loadImages:(NSString *)path subfolders:(BOOL)recurseSubfolders {
+	_stopLoading = NO;
+	@autoreleasepool {
+		CreeveyController *appDelegate = (CreeveyController *)NSApp.delegate;
+		NSUInteger i = 0;
+		NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
+		[self updateStatusOnMainThread:^NSString *{ return loadingMsg; }];
+		NSMutableArray *files = [NSMutableArray array];
+		NSDirectoryEnumerator *e = CreeveyEnumerator(path, recurseSubfolders);
+		for (NSURL *url in e) {
+			@autoreleasepool {
+				if ([appDelegate handledDirectory:url subfolders:recurseSubfolders e:e])
+					continue;
+				if ([appDelegate shouldShowFile:url]) {
+					[files addObject:url.path];
+					if (++i % 100 == 0) [self updateStatusOnMainThread:^NSString *{ return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i]; }];
+				}
+				if (_stopLoading)
+					return;
+			}
+		}
+		if (files.count) {
+			[self updateStatusOnMainThread:^NSString *{
+				return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), files.count];
+			}];
+			[files sortUsingComparator:self.comparator];
+			if (_stopLoading) return;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
+				[self setFilenames:files basePath:path wantsSubfolders:recurseSubfolders comparator:_comparator];
+				self.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
+				self.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
+				self.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
+				[self startSlideshowAtIndex:NSNotFound];
+			});
+		} else {
+			[self updateStatusOnMainThread:^NSString *{
+				return [NSLocalizedString(@"No image files found: ", @"long filepath appended here") stringByAppendingString:path];
+			}];
+		}
+	}
 }
 
 @end

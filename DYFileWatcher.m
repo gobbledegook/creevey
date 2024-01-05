@@ -71,11 +71,8 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 		if (f & (kFSEventStreamEventFlagItemCreated|kFSEventStreamEventFlagItemModified|kFSEventStreamEventFlagItemRemoved|kFSEventStreamEventFlagItemRenamed|kFSEventStreamEventFlagItemInodeMetaMod)) {
 			if (f & kFSEventStreamEventFlagItemIsDir) continue;
 			if (_wantsSubfolders ? [s hasPrefix:_path] : [s.stringByDeletingLastPathComponent isEqualToString:_path]) {
-				NSString *theFile = ResolveAliasToPath(s);
-				NSURL *url = [NSURL fileURLWithPath:theFile isDirectory:NO];
-				NSNumber *val;
-				if ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue) continue;
-				if (![appDelegate shouldShowFile:theFile]) continue;
+				NSURL *url = [NSURL fileURLWithPath:s isDirectory:NO];
+				if (![appDelegate shouldShowFile:url]) continue;
 				[files addObject:s];
 			}
 		} else if (f & kFSEventStreamEventFlagRootChanged) {

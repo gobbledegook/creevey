@@ -47,3 +47,5 @@
 - (void)updateExifInfo;
 
 @end
+
+NSComparator ComparatorForSortOrder(short sortOrder);

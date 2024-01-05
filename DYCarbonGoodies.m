@@ -10,7 +10,7 @@
 #import "DYCarbonGoodies.h"
 
 NSString *ResolveAliasToPath(NSString *path) {
-	NSString *resolvedPath = nil;
+	NSURL *resolved;
 	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
 	if (url == NULL) return path;
 	// unlike FSResolveAliasFile, CFURLCreateBookMarkDataFromFile and its NSURL counterpart do not check
@@ -23,23 +23,22 @@ NSString *ResolveAliasToPath(NSString *path) {
 		CFRelease(b);
 	}
 	if (isAlias)
-		resolvedPath = ResolveAliasURLToPath((__bridge NSURL *)url);
+		resolved = ResolveAliasURL((__bridge NSURL *)url);
 	CFRelease(url);
-	return resolvedPath ?: path;
+	return resolved ? resolved.path : path;
 }
 
-NSString *ResolveAliasURLToPath(NSURL *url) {
-	NSString *path = nil;
+NSURL * _Nullable ResolveAliasURL(NSURL *url) {
+	NSURL *result;
 	CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, (__bridge CFURLRef)url, NULL);
 	if (dataRef) {
 		CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
 		if (resolvedUrl) {
-			path = (NSString *)CFBridgingRelease(CFURLCopyFileSystemPath(resolvedUrl, kCFURLPOSIXPathStyle));
-			CFRelease(resolvedUrl);
+			result = (NSURL *)CFBridgingRelease(resolvedUrl);
 		}
 		CFRelease(dataRef);
 	}
-	return path;
+	return result;
 }
 
 BOOL IsJPEG(NSString *x) {
