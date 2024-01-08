@@ -228,14 +228,7 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
-	[_accessedLock lock];
-	DYImageCache *thumbsCache = appDelegate.thumbsCache;
-	for (NSString *s in _accessedFiles) {
-		[thumbsCache endAccess:ResolveAliasToPath(s)];
-	}
-	[_accessedFiles removeAllObjects];
-	[_accessedLock unlock];
-
+	[self removeAllPathsFromAccessedFilesArray];
 	imageCacheQueueRunning = NO;
 	[imageCacheQueueLock lock];
 	[imageCacheQueueLock unlockWithCondition:1];
@@ -425,6 +418,9 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 }
 
 - (void)watcherRootChanged:(NSURL *)fileRef {
+	if (!filenamesDone) return;
+	[self removeAllPathsFromAccessedFilesArray];
+	[self clearImageCacheQueue];
 	NSString *s = _fileWatcher.path, *newPath = fileRef.path;
 	if (newPath == nil) return;
 	[self.window setTitleWithRepresentedFilename:newPath];
@@ -534,7 +530,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		// must check filenamesDone in case interrupted
 		[self updateStatusFld];
 		if (imgMatrix.numCells == 0)
-			[slidesBtn setEnabled:NO]; // **
+			slidesBtn.enabled = NO; // **
 	}
 }
 
@@ -577,6 +573,23 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 	});
 }
 
+- (void)clearImageCacheQueue {
+	[imageCacheQueueLock lock];
+	[imageCacheQueue removeAllObjects];
+	[secondaryImageCacheQueue removeAllObjects];
+	[imageCacheQueueLock unlockWithCondition:0];
+}
+
+- (void)removeAllPathsFromAccessedFilesArray {
+	DYImageCache *thumbsCache = appDelegate.thumbsCache;
+	[_accessedLock lock];
+	for (NSString *s in _accessedFiles) {
+		[thumbsCache endAccess:ResolveAliasToPath(s)];
+	}
+	[_accessedFiles removeAllObjects];
+	[_accessedLock unlock];
+}
+
 #pragma mark load thread
 - (void)loadImages:(NSString *)thePath { // called in a separate thread
 										 //NSLog(@"loadImages thread started for %@", thePath);
@@ -610,10 +623,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 				[_fileWatcher stop];
 			});
 			[filenames removeAllObjects];
-			[imageCacheQueueLock lock];
-			[imageCacheQueue removeAllObjects];
-			[secondaryImageCacheQueue removeAllObjects];
-			[imageCacheQueueLock unlockWithCondition:0];
+			[self clearImageCacheQueue];
 			BOOL recurseSubfolders = self.wantsSubfolders;
 			NSDirectoryEnumerator *e = CreeveyEnumerator(thePath, recurseSubfolders);
 			for (NSURL *url in e) {
@@ -646,10 +656,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		if (currCat) { // currCat > 0 whenever cat changes (see keydown)
 			// this means deleting when a cat is displayed will cause unsightly flashing
 			// but we can live with that for now. maybe temp set currcat to 0?
-			[imageCacheQueueLock lock];
-			[imageCacheQueue removeAllObjects];
-			[secondaryImageCacheQueue removeAllObjects];
-			[imageCacheQueueLock unlockWithCondition:0];
+			[self clearImageCacheQueue];
 			[displayedFilenames removeAllObjects];
 			if (currCat == 1) {
 				currCat = 0;
@@ -678,19 +685,14 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 #pragma mark populate matrix
 	@autoreleasepool {
 		DYImageCache *thumbsCache = appDelegate.thumbsCache;
-		[_accessedLock lock];
-		for (NSString *s in _accessedFiles) {
-			[thumbsCache endAccess:ResolveAliasToPath(s)];
-		}
-		[_accessedFiles removeAllObjects];
-		[_accessedLock unlock];
+		[self removeAllPathsFromAccessedFilesArray];
 
 		NSUInteger i = 0;
 		NSMutableIndexSet *selectedIndexes = [NSMutableIndexSet indexSet];
 		if (displayedFilenames.count > 0) {
 			loadingDone = NO;
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[slidesBtn setEnabled:YES];
+				slidesBtn.enabled = YES;
 			});
 			currentFilesDeletable = [NSFileManager.defaultManager isDeletableFileAtPath:displayedFilenames[0]];
 		
@@ -759,7 +761,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 	currentFilesDeletable = NO;
 	filenamesDone = NO;
 	currCat = 0;
-	[slidesBtn setEnabled:NO];
+	slidesBtn.enabled = NO;
 	NSString *currentPath = [dirBrowserDelegate path];
 	_subfoldersButton.enabled = ![currentPath isEqualToString:@"/"]; // let's not ever load up the entire file system
 	if (self.wantsSubfolders && sender) { // sender is dirBrowserDelegate when non-nil
@@ -857,7 +859,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		stopCaching = 1; // don't need to lock, not changing anything
 		currentFilesDeletable = NO; // dup code from displayDir?
 		filenamesDone = NO;
-		[slidesBtn setEnabled:NO];
+		slidesBtn.enabled = NO;
 		[NSThread detachNewThreadSelector:@selector(loadImages:)
 								 toTarget:self
 							   withObject:nil];
@@ -916,10 +918,10 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		   (unsigned int)selectedIndexes.count]
 		: NSLocalizedString(@"No images selected.", @"");
 		attStr = [[NSMutableAttributedString alloc] initWithString:s attributes:@{NSFontAttributeName:[NSFont userFontOfSize:12]}];
-		[thumbView setImage:nil];
+		thumbView.image = nil;
 		exifWindowNeedsUpdate = NO;
 	}
-	[attStr addAttribute:NSForegroundColorAttributeName value:[NSColor labelColor] range:NSMakeRange(0,attStr.length)];
+	[attStr addAttribute:NSForegroundColorAttributeName value:NSColor.labelColor range:NSMakeRange(0,attStr.length)];
 	[exifTextView.textStorage setAttributedString:attStr];
 }
 

@@ -13,7 +13,7 @@
 
 - (void)symmetricDifference:(NSIndexSet *)setB
 {
-	NSUInteger *a, *b, aCount, bCount, i, j;
+	NSUInteger * restrict a, * restrict b, aCount, bCount, i, j;
 	aCount = self.count; i = 0;
 	bCount = setB.count; j = 0;
 	

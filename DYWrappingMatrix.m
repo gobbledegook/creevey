@@ -192,11 +192,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		[udf setObject:migratedData forKey:@"DYWrappingMatrixBgColor"];
 	}
 	bgColor = aColor;
-	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
+	[NSUserDefaultsController.sharedUserDefaultsController addObserver:self
 															  forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"
 																 options:NSKeyValueObservingOptionNew
 																 context:NULL];
-	[[NSUserDefaultsController sharedUserDefaultsController] addObserver:self
+	[NSUserDefaultsController.sharedUserDefaultsController addObserver:self
 															  forKeyPath:@"values.DYWrappingMatrixBgColor"
 																 options:NSKeyValueObservingOptionNew
 																 context:NULL];
@@ -532,7 +532,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)drawRect:(NSRect)rect {
-	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
+	NSGraphicsContext *cg = NSGraphicsContext.currentContext;
 	NSImageInterpolation oldInterp = cg.imageInterpolation;
 	cg.imageInterpolation = NSImageInterpolationNone;
 	
@@ -985,7 +985,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	for (NSString *path in paths) {
 		[urls addObject:[NSURL fileURLWithPath:path isDirectory:NO]];
 	}
-	[[NSWorkspace sharedWorkspace] openURLs:urls withAppBundleIdentifier:appIdentifier options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
+	[NSWorkspace.sharedWorkspace openURLs:urls withAppBundleIdentifier:appIdentifier options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
 	self.openWithAppIdentifiers = nil;
 }
 
@@ -1016,7 +1016,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSArray *allApplications = (NSArray *)CFBridgingRelease(LSCopyApplicationURLsForURL((__bridge CFURLRef)firstFile, kLSRolesViewer|kLSRolesEditor));
 	NSMutableArray *filteredApplications = [NSMutableArray array];
 	NSString *selfIdentifier = NSBundle.mainBundle.bundleIdentifier;
-	NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+	NSWorkspace *ws = NSWorkspace.sharedWorkspace;
 	NSURL *defaultAppURL = [ws URLForApplicationToOpenURL:firstFile];
 	if (allApplications == nil || defaultAppURL == nil) {
 		// fail gracefully if the file is not openable

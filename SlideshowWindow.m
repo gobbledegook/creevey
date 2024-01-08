@@ -99,7 +99,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 		
  		self.backgroundColor = NSColor.blackColor;
-		[self setOpaque:NO];
+		self.opaque = NO;
 		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
 		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
@@ -118,16 +118,16 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[imgView addSubview:infoFld];
 	infoFld.autoresizingMask = NSViewMaxXMargin|NSViewMaxYMargin;
 	infoFld.backgroundColor = NSColor.grayColor;
-	[infoFld setBezeled:NO];
-	[infoFld setEditable:NO];
+	infoFld.bezeled = NO;
+	infoFld.editable = NO;
 	
 	catsFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,imgView.bounds.size.height-20,300,20)];
 	[imgView addSubview:catsFld];
 	catsFld.autoresizingMask = NSViewMaxXMargin|NSViewMinYMargin;
 	catsFld.backgroundColor = NSColor.grayColor;
-	[catsFld setBezeled:NO];
-	[catsFld setEditable:NO]; // **
-	[catsFld setHidden:YES];
+	catsFld.bezeled = NO;
+	catsFld.editable = NO; // **
+	catsFld.hidden = YES;
 	
 	NSSize s = imgView.bounds.size;
 	NSScrollView *sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(s.width-360,0,360,s.height-20)];
@@ -138,23 +138,23 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	sv.documentView = exifFld;
 	exifFld.autoresizingMask = NSViewHeightSizable | NSViewWidthSizable | NSViewMinXMargin;
 
-	[sv setDrawsBackground:NO];
-	[sv setHasVerticalScroller:YES];
+	sv.drawsBackground = NO;
+	sv.hasVerticalScroller = YES;
 	sv.verticalScroller = [[NSScroller alloc] init];
 	sv.verticalScroller.controlSize = NSControlSizeSmall;
-	[sv setAutohidesScrollers:YES];
+	sv.autohidesScrollers = YES;
 	//[exifFld setEditable:NO];
-	[exifFld setDrawsBackground:NO];
-	[exifFld setSelectable:NO];
+	exifFld.drawsBackground = NO;
+	exifFld.selectable = NO;
 	//[exifFld setVerticallyResizable:NO];
-	[sv setHidden:YES];
+	sv.hidden = YES;
 	
 	switch ([NSUserDefaults.standardUserDefaults integerForKey:@"DYSlideshowWindowVisibleFields"]) {
 		case 0:
 			hideInfoFld = YES;
 			break;
 		case 2:
-			[sv setHidden:NO];
+			sv.hidden = NO;
 			break;
 		default:
 			break;
@@ -338,7 +338,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 	currentIndex = startIndex;
 	[self setTimer:timerIntvl]; // reset the timer, in case running
-	if (helpFld) [helpFld setHidden:YES];
+	if (helpFld) helpFld.hidden = YES;
 	exifFld.string = @"";
 	[imgCache beginCaching];
 	imgView.image = nil;
@@ -464,7 +464,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)pauseTimer {
 	[self killTimer];
 	timerPaused = YES;
-	if (hideInfoFld) [infoFld setHidden:NO];
+	if (hideInfoFld) infoFld.hidden = NO;
 	[self updateInfoFld];
 }
 
@@ -580,9 +580,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (currentIndex == NSNotFound) return; // in case called after slideshow ended
 									// not necessary if s/isActive/isKeyWindow/
 	if (currentIndex == filenames.count) { // if the last image was deleted, show a blank screen
-		[catsFld setHidden:YES];
-		[infoFld setHidden:NO];
-		[infoFld setStringValue:NSLocalizedString(@"End of slideshow (last file was deleted)", @"")];
+		catsFld.hidden = YES;
+		infoFld.hidden = NO;
+		infoFld.stringValue = NSLocalizedString(@"End of slideshow (last file was deleted)", @"");
 		[infoFld sizeToFit];
 		exifFld.string = @"";
 		imgView.image = nil;
@@ -598,7 +598,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		int r = rot ? rot.intValue : 0;
 		BOOL imgFlipped = [flips[theFile] boolValue];
 		
-		if (hideInfoFld) [infoFld setHidden:YES]; // this must happen before setImage, for redraw purposes
+		if (hideInfoFld) infoFld.hidden = YES; // this must happen before setImage, for redraw purposes
 		imgView.image = img;
 		if (r) imgView.rotation = r;
 		if (imgFlipped) imgView.imageFlipped = YES;
@@ -625,7 +625,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (!exifFld.enclosingScrollView.hidden) [self updateExifFld];
 		if (timerIntvl) [self runTimer];
 	} else {
-		if (hideInfoFld) [infoFld setHidden:NO];
+		if (hideInfoFld) infoFld.hidden = NO;
 		infoFld.stringValue = [NSString stringWithFormat:NSLocalizedString(@"Loading [%i/%i] %@...", @""),
 			(unsigned int)currentIndex+1, (unsigned int)filenames.count, [self currentShortFilename]];
 		[infoFld sizeToFit];
@@ -660,7 +660,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[self.contentView addSubview:loopImageView];
 		loopImageView.image = loopImage;
 	}
-	[loopImageView setHidden:NO];
+	loopImageView.hidden = NO;
 
 	NSDictionary *viewDict = @{ NSViewAnimationTargetKey: loopImageView, NSViewAnimationEffectKey: NSViewAnimationFadeOutEffect };
     NSViewAnimation *theAnim = [[NSViewAnimation alloc] initWithViewAnimations:@[viewDict]];
@@ -765,7 +765,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[NSBundle.mainBundle pathForResource:@"creeveyhelp" ofType:@"rtf"]])
 			NSLog(@"couldn't load cheat sheet!");
 		helpFld.backgroundColor = NSColor.lightGrayColor;
-		[helpFld setSelectable:NO];
+		helpFld.selectable = NO;
 //		NSLayoutManager *lm = [helpFld layoutManager];
 //		NSRange rnge = [lm glyphRangeForCharacterRange:NSMakeRange(0,[[helpFld textStorage] length])
 //								  actualCharacterRange:NULL];
@@ -945,7 +945,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				moreExif = YES;
 				hideInfoFld = NO;
 				[self toggleExif];
-				[infoFld setHidden:NO];
+				infoFld.hidden = NO;
 			} else {
 				moreExif = !moreExif;
 				[self updateExifFld];
@@ -1242,9 +1242,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (labels.count) {
 		catsFld.stringValue = [labels componentsJoinedByString:@", "];
 		[catsFld sizeToFit];
-		[catsFld setHidden:NO];
+		catsFld.hidden = NO;
 	} else {
-		[catsFld setHidden:YES];
+		catsFld.hidden = YES;
 	}
 }
 

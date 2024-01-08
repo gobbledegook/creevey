@@ -53,7 +53,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		}
 	} else {
 		unsigned long long fsize;
-		fsize = [[NSFileManager.defaultManager attributesOfItemAtPath:[path stringByResolvingSymlinksInPath] error:NULL] fileSize];
+		fsize = [[NSFileManager.defaultManager attributesOfItemAtPath:path.stringByResolvingSymlinksInPath error:NULL] fileSize];
 		// fsize will be 0 on error
 		[s appendFormat:@"\n%@ (%qu bytes)",
 			FileSize2String(fsize), fsize];
@@ -109,7 +109,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	DYImageCache *thumbsCache;
 	
 	id localeChangeObserver;
-	id screenChangeObserver;
 	
 	NSArray<NSURL*> *_movedUrls;
 	NSArray<NSString*> *_originalPaths;
@@ -225,9 +224,10 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	// this causes problems b/c the window can be foregrounded without the app
 	// coming to the front (oops)
 	[slidesWindow setCats:cats];
-	[slidesWindow setRerandomizeOnLoop:[NSUserDefaults.standardUserDefaults boolForKey:@"Slideshow:RerandomizeOnLoop"]];
-	slidesWindow.autoRotate = [NSUserDefaults.standardUserDefaults boolForKey:@"autoRotateByOrientationTag"];
-	[disabledFiletypes addObjectsFromArray:[NSUserDefaults.standardUserDefaults stringArrayForKey:@"ignoredFileTypes"]];
+	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
+	slidesWindow.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
+	slidesWindow.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
+	[disabledFiletypes addObjectsFromArray:[u stringArrayForKey:@"ignoredFileTypes"]];
 	for (NSString *type in disabledFiletypes) {
 		[filetypes removeObject:type];
 	}
@@ -237,13 +237,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[ud addObserver:self forKeyPath:@"values.slideshowBgColor" options:0 context:NULL];
 	[ud addObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth" options:0 context:NULL];
 	localeChangeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSCurrentLocaleDidChangeNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
-		NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 		[u setDouble:[u doubleForKey:@"lastVersCheckTime"] forKey:@"lastVersCheckTime"];
-	}];
-	screenChangeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSApplicationDidChangeScreenParametersNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
-		if (slidesWindow.visible) {
-			[slidesWindow resetScreen];
-		}
 	}];
 }
 
@@ -252,7 +246,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[u removeObserver:self forKeyPath:@"values.slideshowBgColor"];
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
 	[NSNotificationCenter.defaultCenter removeObserver:localeChangeObserver];
-	[NSNotificationCenter.defaultCenter removeObserver:screenChangeObserver];
 	short int i;
 	for (i=0; i<NUM_FNKEY_CATS; ++i)
 		cats[i] = nil;
@@ -290,7 +283,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[slidesWindow setFilenames:files basePath:frontWindow.path comparator:frontWindow.comparator];
 	}
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
-	[slidesWindow setRerandomizeOnLoop:[u boolForKey:@"Slideshow:RerandomizeOnLoop"]];
+	slidesWindow.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
 	slidesWindow.autoRotate = frontWindow.imageMatrix.autoRotate;
 	// if files != nil these files are being opened from the finder, so check the relevant pref
 	float aaInterval;
@@ -320,9 +313,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	if (slidesWindow.isMainWindow) {
 		if (slidesWindow.currentFile) {
 			NSString *s = slidesWindow.currentFile;
-			[[NSWorkspace sharedWorkspace] selectFile:s inFileViewerRootedAtPath:s.stringByDeletingLastPathComponent];
+			[NSWorkspace.sharedWorkspace selectFile:s inFileViewerRootedAtPath:s.stringByDeletingLastPathComponent];
 		} else {
-			[[NSWorkspace sharedWorkspace] openFile:slidesWindow.basePath];
+			[NSWorkspace.sharedWorkspace openFile:slidesWindow.basePath];
 		}
 	} else {
 		NSArray *a = frontWindow.currentSelection;
@@ -331,9 +324,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			for (NSString *s in a) {
 				[b addObject:[NSURL fileURLWithPath:s isDirectory:NO]];
 			}
-			[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:b];
+			[NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:b];
 		} else {
-			[[NSWorkspace sharedWorkspace] openFile:frontWindow.path];
+			[NSWorkspace.sharedWorkspace openFile:frontWindow.path];
 		}
 	}
 }
@@ -344,7 +337,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		? slidesWindow.currentFile
 		: frontWindow.currentSelection[0];
 	NSError * __autoreleasing error = nil;
-	[[NSWorkspace sharedWorkspace] setDesktopImageURL:[NSURL fileURLWithPath:s isDirectory:NO]
+	[NSWorkspace.sharedWorkspace setDesktopImageURL:[NSURL fileURLWithPath:s isDirectory:NO]
 											forScreen:NSScreen.mainScreen
 											  options:@{}
 												error:&error];
@@ -782,6 +775,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	}
 	return YES;
 }
+
+-(void)applicationDidChangeScreenParameters:(NSNotification *)notification {
+	if (slidesWindow.visible)
+		[slidesWindow resetScreen];
+}
+
 #pragma mark menu methods
 enum {
 	REVEAL_IN_FINDER = 1,
@@ -950,8 +949,8 @@ enum {
     NSOpenPanel *op=[NSOpenPanel openPanel];
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	
-    [op setCanChooseDirectories:YES];
-    [op setCanChooseFiles:NO];
+    op.canChooseDirectories = YES;
+    op.canChooseFiles = NO;
 	op.directoryURL = [NSURL fileURLWithPath:[u stringForKey:@"picturesFolderPath"] isDirectory:YES];
 	[op beginSheetModalForWindow:prefsWin completionHandler:^(NSInteger result) {
 		if (result == NSModalResponseOK) {
@@ -1004,7 +1003,7 @@ static void SendAction(NSMenuItem *sender) {
 		[slidesWindow updateTimer];
 	}
 	
-	[slideshowApplyBtn setEnabled:NO];
+	slideshowApplyBtn.enabled = NO;
 }
 
 - (void)updateSlideshowBgColor {
@@ -1013,7 +1012,7 @@ static void SendAction(NSMenuItem *sender) {
 
 - (IBAction)slideshowDefaultsChanged:(id)sender; {
 	if (slidesWindow.visible)
-		[slideshowApplyBtn setEnabled:YES];
+		slideshowApplyBtn.enabled = YES;
 	else
 		[self applySlideshowPrefs:nil];
 }
@@ -1192,7 +1191,7 @@ static void SendAction(NSMenuItem *sender) {
 	DYVersCheckForUpdateAndNotify(YES);
 }
 - (IBAction)sendFeedback:(id)sender {
-	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://blyt.net/phxslides/feedback.html"]];
+	[NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:@"http://blyt.net/phxslides/feedback.html"]];
 }
 
 #pragma mark slideshow window delegate method

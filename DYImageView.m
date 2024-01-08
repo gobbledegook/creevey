@@ -120,7 +120,7 @@
 		destinationRect = [self convertRect:destinationRect fromView:nil];
 		[NSBezierPath fillRect:destinationRect];
 	}
-	NSGraphicsContext *cg = [NSGraphicsContext currentContext];
+	NSGraphicsContext *cg = NSGraphicsContext.currentContext;
 	NSImageInterpolation oldInterp = cg.imageInterpolation;
 	cg.imageInterpolation = zoom > 1 ? NSImageInterpolationNone : NSImageInterpolationHigh;
 	[image drawInRect:destinationRect fromRect:srcRect operation:NSCompositingOperationSourceOver fraction:1.0];

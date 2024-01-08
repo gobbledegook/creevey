@@ -25,7 +25,7 @@
 }
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
-	id myStringValue = self.stringValue;
+	NSString *myStringValue = self.stringValue;
 	self.stringValue = title ?: @"";
 	[super drawInteriorWithFrame:cellFrame inView:controlView];
 	self.stringValue = myStringValue;
@@ -85,7 +85,7 @@
 		self.titled = NO;
 		self.hasHorizontalScroller = YES;
 		[self setCellClass:[DYBrowserCell class]];
-		[self.cellPrototype setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]-1]];
+		[self.cellPrototype setFont:[NSFont systemFontOfSize:NSFont.smallSystemFontSize-1]];
 		self.allowsEmptySelection = NO;
 		self.columnResizingType = NSBrowserUserColumnResizing;
 		self.prefersAllColumnUserResizing = NO;

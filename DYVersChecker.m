@@ -13,7 +13,7 @@ void DYVersCheckForUpdateAndNotify(BOOL notify) {
 	NSString *bundleVersion = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleVersion"];
 	NSString *url = @"https://blyt.net/phxslides/vers.txt";
 	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration ephemeralSessionConfiguration] delegate:nil delegateQueue:NSOperationQueue.mainQueue];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.ephemeralSessionConfiguration delegate:nil delegateQueue:NSOperationQueue.mainQueue];
 	[[session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
 		NSAlert *alert = [[NSAlert alloc] init];
 		BOOL newVersion = NO;
@@ -40,7 +40,7 @@ void DYVersCheckForUpdateAndNotify(BOOL notify) {
 					w.majorVersion = [responseText substringWithRange:[result rangeAtIndex:1]].integerValue;
 					w.minorVersion = [responseText substringWithRange:[result rangeAtIndex:2]].integerValue;
 					w.patchVersion = [responseText substringWithRange:[result rangeAtIndex:3]].integerValue;
-					if (![[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:w]) {
+					if (![NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:w]) {
 						latestBuild = [responseText substringWithRange:[result rangeAtIndex:4]].integerValue;
 					}
 				}];
@@ -51,7 +51,7 @@ void DYVersCheckForUpdateAndNotify(BOOL notify) {
 					[alert addButtonWithTitle:NSLocalizedString(@"More Info", @"")];
 					[alert addButtonWithTitle:NSLocalizedString(@"Not Now", @"")];
 					if ([alert runModal] == NSAlertFirstButtonReturn)
-						[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://blyt.net/phxslides/"]];
+						[NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:@"https://blyt.net/phxslides/"]];
 				} else if (notify) {
 					alert.messageText = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleName"];
 					alert.informativeText = NSLocalizedString(@"You have the latest version of Phoenix Slides.",@"");
