@@ -94,6 +94,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @implementation CreeveyController
 {
 	NSMutableSet *cats[NUM_FNKEY_CATS];
+	NSUserDefaults *catDefaults;
 	BOOL exifWasVisible;
 
 	NSMutableSet *filetypes;
@@ -212,6 +213,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		for (i=0; i<NUM_FNKEY_CATS; ++i) {
 			cats[i] = [[NSMutableSet alloc] initWithCapacity:0];
 		}
+		catDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"net.blyt.phoenixslides.categories"];
 		
 		exifWasVisible = [NSUserDefaults.standardUserDefaults boolForKey:@"getInfoVisible"];
 	}
@@ -695,7 +697,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[self showExifThumbnail:[u boolForKey:@"exifThumbnailShow"]
 			   shrinkWindow:NO];
 	
-	//NSLog(@"appdidfinlaunch called");
 	_appDidFinishLaunching = YES;
 	if (_windowsWereRestoredAtLaunch && _filesWereOpenedAtLaunch) {
 		// ugly hack to force the slideshow window to be on top of the restored windows
@@ -723,6 +724,23 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	if ([u boolForKey:@"autoVersCheck"]
 		&& (t - [u doubleForKey:@"lastVersCheckTime"] > DYVERSCHECKINTERVAL)) // one week
 		DYVersCheckForUpdateAndNotify(NO);
+
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		// because screw thread safety
+		@autoreleasepool {
+			NSArray<NSArray *> *savedCats = [catDefaults arrayForKey:@"cats"];
+			short i = 0;
+			for (NSArray *a in savedCats) {
+				NSMutableArray *readable = [NSMutableArray arrayWithCapacity:a.count];
+				for (NSString *path in a) {
+					if (0 == access(path.fileSystemRepresentation, R_OK))
+						[readable addObject:path];
+				}
+				[cats[i++] addObjectsFromArray:readable];
+			}
+			[self updateCats];
+		}
+	});
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification
@@ -1218,6 +1236,12 @@ static void SendAction(NSMenuItem *sender) {
 
 - (DYImageCache *)thumbsCache { return thumbsCache; }
 - (NSMutableSet * __strong *)cats { return cats; }
+- (void)updateCats {
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:NUM_FNKEY_CATS];
+	for (short i=0; i<NUM_FNKEY_CATS; ++i)
+		[result addObject:cats[i].allObjects];
+	[catDefaults setObject:result forKey:@"cats"];
+}
 
 NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders) {
 	return [NSFileManager.defaultManager

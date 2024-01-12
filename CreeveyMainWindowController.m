@@ -840,6 +840,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 						[cats[c-2] addObject:fname];
 				}
 			}
+			[appDelegate updateCats];
 			if (!currCat || (c && c != currCat)) {
 				[self updateStatusString:[NSString stringWithFormat:
 					NSLocalizedString(@"%u image(s) updated for Group %i", @""),

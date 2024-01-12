@@ -1264,6 +1264,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[imgView setNeedsDisplayInRect:catsFld.frame]; // in case the field shrinks
 	}
 	[self displayCats];
+	[(CreeveyController *)NSApp.delegate updateCats];
 }
 
 

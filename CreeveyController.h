@@ -29,6 +29,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 // accessors
 @property (nonatomic, readonly) NSMutableSet * __strong *cats;
+- (void)updateCats;
 @property (nonatomic, readonly) DYImageCache *thumbsCache;
 NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders);
 - (BOOL)handledDirectory:(NSURL *)url subfolders:(BOOL)recurse e:(NSDirectoryEnumerator *)e;
