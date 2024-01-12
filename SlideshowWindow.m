@@ -1141,13 +1141,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	return currentIndex != NSNotFound;
 }
 - (NSUInteger)currentIndex {
-	return currentIndex == NSNotFound ? lastIndex : currentIndex;
+	return self.visible ? currentIndex : lastIndex;
 }
 - (NSString *)currentFile {
-	if (currentIndex >= filenames.count) { // if showing "last file was deleted" screen
+	NSUInteger idx = self.currentIndex;
+	if (idx >= filenames.count) { // if showing "last file was deleted" screen
 		return nil;
 	}
-	return filenames[self.currentIndex];
+	return filenames[idx];
 }
 - (NSString *)basePath {
 	return basePath;
