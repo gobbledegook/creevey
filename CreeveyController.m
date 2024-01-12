@@ -683,7 +683,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSString *path = [u integerForKey:@"startupOption"] == 0 ? [u stringForKey:@"lastFolderPath"] : [u stringForKey:@"picturesFolderPath"];
 	BOOL isDir;
 	if ([NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDir] && isDir) {
-		[slidesWindow loadFilenamesFromPath:path wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder([u integerForKey:@"sortBy"])];
+		BOOL fullScreen = ![u boolForKey:@"startupSlideshowInWindow"];
+		[slidesWindow loadFilenamesFromPath:path fullScreen:fullScreen wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder([u integerForKey:@"sortBy"])];
 		return YES;
 	}
 	return NO;

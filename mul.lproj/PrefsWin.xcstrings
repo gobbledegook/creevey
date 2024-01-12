@@ -1831,6 +1831,48 @@
         }
       }
     },
+    "VEe-zg-ZMw.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Begin Slideshow In Window\"; ObjectID = \"VEe-zg-ZMw\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diaschau im Fenster starten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Begin Slideshow In Window"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar pase de diapositivas en ventana"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer le diaporama dans fenêtre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia la Presentazione nella finestra"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在視窗裡播放幻燈片"
+          }
+        }
+      }
+    },
     "xc7-Kr-Met.headerCell.title" : {
       "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"file type\"; ObjectID = \"xc7-Kr-Met\";",
       "extractionState" : "extracted_with_value",

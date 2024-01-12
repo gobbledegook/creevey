@@ -212,13 +212,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	self.comparator = block;
 }
 
-- (void)loadFilenamesFromPath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block {
+- (void)loadFilenamesFromPath:(NSString *)s fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block {
 	static dispatch_queue_t _loadQueue;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		_loadQueue = dispatch_queue_create("phoenixslides.slideshow.load", NULL);
 	});
-	self.fullscreenMode = YES;
+	self.fullscreenMode = fullScreen;
 	[self configureScreen];
 	currentIndex = NSNotFound;
 	imgView.image = nil;
