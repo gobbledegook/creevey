@@ -1411,6 +1411,48 @@
         }
       }
     },
+    "Aib-pp-yTk.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Rerandomize on Loop\"; ObjectID = \"Aib-pp-yTk\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Schleife neu randomisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rerandomize on Loop"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a aleatorizar cada bucle"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rerandomiser chaque boucle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ri-randomizzare all'avvio di un\nnuovo ciclo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "循環時再次隨機化"
+          }
+        }
+      }
+    },
     "aJb-t8-xXx.title" : {
       "comment" : "Class = \"NSTextFieldCell\"; title = \"On startup:\"; ObjectID = \"aJb-t8-xXx\";",
       "extractionState" : "extracted_with_value",

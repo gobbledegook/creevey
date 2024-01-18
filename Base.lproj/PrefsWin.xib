@@ -21,11 +21,11 @@
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="213" height="107"/>
             <view key="contentView" id="395">
-                <rect key="frame" x="0.0" y="0.0" width="493" height="454"/>
+                <rect key="frame" x="0.0" y="0.0" width="493" height="430"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <tabView drawsBackground="NO" translatesAutoresizingMaskIntoConstraints="NO" id="587">
-                        <rect key="frame" x="-7" y="-10" width="507" height="470"/>
+                        <rect key="frame" x="-7" y="-10" width="507" height="446"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="General" identifier="general" id="588">
@@ -322,11 +322,11 @@
                             </tabViewItem>
                             <tabViewItem label="Slideshow" identifier="slideshow" id="589">
                                 <view key="view" id="591">
-                                    <rect key="frame" x="10" y="33" width="487" height="402"/>
+                                    <rect key="frame" x="10" y="33" width="487" height="400"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="595">
-                                            <rect key="frame" x="18" y="366" width="124" height="16"/>
+                                            <rect key="frame" x="18" y="364" width="124" height="16"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="Slideshow Defaults:" id="826">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -334,7 +334,7 @@
                                             </textFieldCell>
                                         </textField>
                                         <button translatesAutoresizingMaskIntoConstraints="NO" id="594">
-                                            <rect key="frame" x="18" y="341" width="148" height="18"/>
+                                            <rect key="frame" x="18" y="339" width="148" height="18"/>
                                             <buttonCell key="cell" type="check" title="Auto-advance every" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="825">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -345,7 +345,7 @@
                                             </connections>
                                         </button>
                                         <textField focusRingType="none" verticalHuggingPriority="750" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="596">
-                                            <rect key="frame" x="174" y="339" width="53" height="21"/>
+                                            <rect key="frame" x="174" y="337" width="53" height="21"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="53" id="y03-Fh-OJ7"/>
                                             </constraints>
@@ -362,7 +362,7 @@
                                             </connections>
                                         </textField>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="597">
-                                            <rect key="frame" x="233" y="342" width="56" height="16"/>
+                                            <rect key="frame" x="233" y="340" width="56" height="16"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="seconds" id="828">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -370,7 +370,7 @@
                                             </textFieldCell>
                                         </textField>
                                         <button translatesAutoresizingMaskIntoConstraints="NO" id="598">
-                                            <rect key="frame" x="18" y="319" width="57" height="18"/>
+                                            <rect key="frame" x="18" y="317" width="57" height="18"/>
                                             <buttonCell key="cell" type="check" title="Loop" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="829">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -381,7 +381,7 @@
                                             </connections>
                                         </button>
                                         <button translatesAutoresizingMaskIntoConstraints="NO" id="599">
-                                            <rect key="frame" x="18" y="297" width="76" height="18"/>
+                                            <rect key="frame" x="18" y="295" width="76" height="18"/>
                                             <buttonCell key="cell" type="check" title="Random" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="830">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -391,8 +391,18 @@
                                                 <binding destination="551" name="value" keyPath="values.slideshowRandom" id="605"/>
                                             </connections>
                                         </button>
+                                        <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jcw-DN-1OM">
+                                            <rect key="frame" x="42" y="273" width="158" height="18"/>
+                                            <buttonCell key="cell" type="check" title="Rerandomize on Loop" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="Aib-pp-yTk">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <binding destination="551" name="value" keyPath="values.Slideshow:RerandomizeOnLoop" id="Pxg-qw-ZSe"/>
+                                            </connections>
+                                        </button>
                                         <button translatesAutoresizingMaskIntoConstraints="NO" id="600">
-                                            <rect key="frame" x="18" y="275" width="164" height="18"/>
+                                            <rect key="frame" x="18" y="251" width="164" height="18"/>
                                             <buttonCell key="cell" type="check" title="Scale Up Small Images" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="831">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -403,7 +413,7 @@
                                             </connections>
                                         </button>
                                         <button translatesAutoresizingMaskIntoConstraints="NO" id="601">
-                                            <rect key="frame" x="18" y="253" width="231" height="18"/>
+                                            <rect key="frame" x="18" y="229" width="231" height="18"/>
                                             <buttonCell key="cell" type="check" title="Show Large Images at Actual Size" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="832">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -414,7 +424,7 @@
                                             </connections>
                                         </button>
                                         <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="612">
-                                            <rect key="frame" x="351" y="244" width="123" height="32"/>
+                                            <rect key="frame" x="351" y="220" width="123" height="32"/>
                                             <buttonCell key="cell" type="push" title="Apply Settings" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" inset="2" id="833">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -424,10 +434,10 @@
                                             </connections>
                                         </button>
                                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="690">
-                                            <rect key="frame" x="20" y="228" width="447" height="5"/>
+                                            <rect key="frame" x="20" y="204" width="447" height="5"/>
                                         </box>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="DNh-gR-EyJ">
-                                            <rect key="frame" x="18" y="206" width="221" height="16"/>
+                                            <rect key="frame" x="18" y="182" width="221" height="16"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="When opening files from the Finder:" id="PhQ-fN-PXx">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -435,7 +445,7 @@
                                             </textFieldCell>
                                         </textField>
                                         <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="tyf-tl-nlP">
-                                            <rect key="frame" x="18" y="181" width="120" height="18"/>
+                                            <rect key="frame" x="18" y="157" width="120" height="18"/>
                                             <buttonCell key="cell" type="check" title="Start slideshow" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="7dv-LU-HAv">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -445,7 +455,7 @@
                                             </connections>
                                         </button>
                                         <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yDF-PQ-Kdz">
-                                            <rect key="frame" x="42" y="159" width="147" height="18"/>
+                                            <rect key="frame" x="42" y="135" width="147" height="18"/>
                                             <buttonCell key="cell" type="check" title="Don't auto-advance" bezelStyle="regularSquare" imagePosition="left" inset="2" id="54e-kR-iPH">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
@@ -456,10 +466,10 @@
                                             </connections>
                                         </button>
                                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="633">
-                                            <rect key="frame" x="20" y="149" width="447" height="5"/>
+                                            <rect key="frame" x="20" y="125" width="447" height="5"/>
                                         </box>
                                         <colorWell translatesAutoresizingMaskIntoConstraints="NO" id="624">
-                                            <rect key="frame" x="17" y="112" width="48" height="33"/>
+                                            <rect key="frame" x="17" y="88" width="48" height="33"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="42" id="J7H-Zz-lWj"/>
                                                 <constraint firstAttribute="height" constant="29" id="SYe-GM-dN9"/>
@@ -474,7 +484,7 @@
                                             </connections>
                                         </colorWell>
                                         <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="626">
-                                            <rect key="frame" x="68" y="121" width="199" height="16"/>
+                                            <rect key="frame" x="68" y="97" width="199" height="16"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Background Color/Transparency" id="834">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -490,10 +500,11 @@
                                         <constraint firstItem="599" firstAttribute="top" secondItem="598" secondAttribute="bottom" constant="6" symbolic="YES" id="38a-Tq-72B"/>
                                         <constraint firstItem="597" firstAttribute="leading" secondItem="596" secondAttribute="trailing" constant="8" symbolic="YES" id="3Du-Ht-THw"/>
                                         <constraint firstItem="626" firstAttribute="leading" secondItem="624" secondAttribute="trailing" constant="8" symbolic="YES" id="3Qm-VJ-ngp"/>
+                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Jcw-DN-1OM" secondAttribute="trailing" priority="750" constant="20" symbolic="YES" id="9P2-lo-w1s"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="tyf-tl-nlP" secondAttribute="trailing" priority="250" constant="20" symbolic="YES" id="AnU-3Q-H0N"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="DNh-gR-EyJ" secondAttribute="trailing" priority="250" constant="253" id="Bwe-Um-sYO"/>
                                         <constraint firstAttribute="trailing" secondItem="612" secondAttribute="trailing" constant="20" symbolic="YES" id="IM9-Oc-Ob8"/>
-                                        <constraint firstItem="600" firstAttribute="top" secondItem="599" secondAttribute="bottom" constant="6" symbolic="YES" id="IMw-yx-xFu"/>
+                                        <constraint firstItem="600" firstAttribute="top" secondItem="Jcw-DN-1OM" secondAttribute="bottom" constant="6" symbolic="YES" id="IMw-yx-xFu"/>
                                         <constraint firstItem="633" firstAttribute="top" secondItem="yDF-PQ-Kdz" secondAttribute="bottom" constant="8" symbolic="YES" id="J3h-PM-CJN"/>
                                         <constraint firstItem="yDF-PQ-Kdz" firstAttribute="top" secondItem="tyf-tl-nlP" secondAttribute="bottom" constant="6" symbolic="YES" id="JAN-N0-3cJ"/>
                                         <constraint firstItem="624" firstAttribute="centerY" secondItem="626" secondAttribute="centerY" id="NIZ-C4-WYy"/>
@@ -510,6 +521,7 @@
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="600" secondAttribute="trailing" priority="250" constant="20" symbolic="YES" id="dlH-gS-QSZ"/>
                                         <constraint firstItem="624" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="eJc-nX-2LV"/>
                                         <constraint firstItem="596" firstAttribute="baseline" secondItem="594" secondAttribute="baseline" id="eoX-Cb-5s5"/>
+                                        <constraint firstItem="yDF-PQ-Kdz" firstAttribute="leading" secondItem="Jcw-DN-1OM" secondAttribute="leading" id="euf-eP-ZBk"/>
                                         <constraint firstItem="596" firstAttribute="baseline" secondItem="597" secondAttribute="baseline" id="gjN-o7-86s"/>
                                         <constraint firstItem="598" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="hB6-kh-Mdc"/>
                                         <constraint firstItem="599" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="iAg-cb-74f"/>
@@ -522,6 +534,7 @@
                                         <constraint firstItem="601" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="pnf-YF-qxT"/>
                                         <constraint firstItem="595" firstAttribute="top" secondItem="591" secondAttribute="top" constant="20" symbolic="YES" id="qJj-Tb-BNN"/>
                                         <constraint firstItem="594" firstAttribute="top" secondItem="595" secondAttribute="bottom" constant="8" symbolic="YES" id="rAo-8d-q0k"/>
+                                        <constraint firstItem="Jcw-DN-1OM" firstAttribute="top" secondItem="599" secondAttribute="bottom" constant="6" symbolic="YES" id="rbA-cS-E7g"/>
                                         <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="624" secondAttribute="bottom" priority="750" constant="20" symbolic="YES" id="svp-nX-6jG"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="598" secondAttribute="trailing" constant="20" symbolic="YES" id="tNu-rY-YS9"/>
                                         <constraint firstItem="612" firstAttribute="baseline" secondItem="601" secondAttribute="baseline" id="vGz-ta-aCc"/>
