@@ -23,6 +23,7 @@ static uint16_t read2byte(FILE * f, char o);
 static BOOL SeekExifInJpeg(FILE * infile);
 static int SeekExifInHeif(FILE * f);
 static BOOL SeekExifIFD0(FILE * f, char *oo);
+unsigned char *exif_jpegthumb(FILE * f, unsigned long *outsize);
 
 struct my_error_mgr {
 	struct jpeg_error_mgr pub;	/* "public" fields */
@@ -162,7 +163,7 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 	return result;
 }
 
-unsigned short ExifOrientationForFile(FILE * f) {
+static unsigned short ExifOrientationForJpegFile(FILE * f) {
 	unsigned short z = 0;
 	if (SeekExifInJpeg(f)) {
 		char o;
@@ -184,13 +185,40 @@ unsigned short ExifOrientationForFile(FILE * f) {
 }
 
 + (unsigned short)orientationForFile:(NSString *)aPath {
-	FILE * f = fopen(aPath.fileSystemRepresentation, "rb");
-	if (f == NULL) return 0;
-	unsigned short z = ExifOrientationForFile(f);
-	fclose(f);
+	unsigned short z = 0;
+	NSString *ext = aPath.pathExtension.lowercaseString;
+	if (IsJPEG(ext)) {
+		FILE * f = fopen(aPath.fileSystemRepresentation, "rb");
+		if (f == NULL) return 0;
+		z = ExifOrientationForJpegFile(f);
+		fclose(f);
+	} else if (IsRaw(ext)) {
+		z = ExifOrientationFromRawFile(aPath.fileSystemRepresentation);
+	}
 	return z;
 }
 
++ (NSImage *)exifThumbForPath:(NSString *)path {
+	FILE * f = fopen(path.fileSystemRepresentation, "rb");
+	if (!f) return nil;
+	NSImage *image;
+	const void *pixels;
+	unsigned long outsize;
+	if ((pixels = exif_jpegthumb(f, &outsize))) {
+		NSData *data = [[NSData alloc] initWithBytesNoCopy:(void *)pixels length:outsize]; //outbuffer will be freed by NSData
+		CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)data, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceTypeIdentifierHint: @"public.jpeg"});
+		if (src) {
+			CGImageRef ref = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+			if (ref) {
+				image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
+				CFRelease(ref);
+			}
+			CFRelease(src);
+		}
+	}
+	fclose(f);
+	return image;
+}
 @end
 
 // let's just assume any values we want are non-zero
@@ -399,6 +427,55 @@ static BOOL SeekExifSubIFD(FILE * f, char *oo) {
 	return YES;
 }
 
+unsigned char *exif_jpegthumb(FILE * f, unsigned long *outsize) {
+	if (SeekExifInJpeg(f)) {
+		long b0 = ftell(f);
+		char o;
+		if (SeekExifIFD0(f, &o)) {
+			fseek(f, 12*read2byte(f,o), SEEK_CUR); // skip the 0th IFD
+			uint32_t n = read4byte(f,o); // offset of next IFD
+			if (n == 0) return NULL; // non-standard EXIF will not have offset to next IFD!
+			fseek(f, b0+n, SEEK_SET);
+			n = read2byte(f,o); // num tags
+			unsigned long thumbStart = 0, thumbLength = 0;
+			while (n--) {
+				uint16_t tag = read2byte(f,o);
+				fseek(f, 6, SEEK_CUR);
+				uint16_t val;
+				switch (tag) {
+					case 0x0103:
+						val = read2byte(f,o);
+						fseek(f, 2, SEEK_CUR);
+						if (val != 6)
+							return NULL; // not a JPEG thumb, we're done.
+						break;
+					case 0x0201:
+						thumbStart = read4byte(f,o);
+						break;
+					case 0x0202:
+						thumbLength = read4byte(f,o);
+						break;
+					case 0:
+						return NULL; // EOF or tag 0x0000
+						break;
+					default:
+						fseek(f, 4, SEEK_CUR);
+						break;
+				}
+			}
+			// sanity check on thumbLength, a 160x120 jpeg should take no more than 8.25 bits/pixel
+			if (thumbStart == 0 || thumbLength == 0 || thumbLength > 32000) return NULL;
+			unsigned char *buf = malloc(thumbLength);
+			if (!buf) return NULL;
+			*outsize = thumbLength;
+			fseek(f, b0+thumbStart, SEEK_SET);
+			if (fread(buf, thumbLength, 1, f))
+				return buf;
+		}
+	}
+	return NULL;
+}
+
 static BOOL exif_datetimeoriginal(FILE * f, unsigned char *outBuf) {
 	long b0 = ftell(f);
 	char o;
@@ -567,7 +644,6 @@ u_int32_t bytesTo0thIFD(unsigned char *b, unsigned len, enum byteorder *o) {
 	return exif4byte(b, *o);
 }
 
-// n.b. code sort of duplicated in (actually copied from) my modified copy of epeg.c
 // pass NULL,1 to just fetch jpeg data
 // pass NULL,0 to delete thumb
 // pass new jpeg data + len to replace it
@@ -603,20 +679,17 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned newthumblen,
 	unsigned thumbStart = 0;
 	unsigned thumbLength = 0;
 	
-	u_int32_t tmp;
 	while (n--) {
-		tmp = exif4byte(b+8,o);
-		//printf("#%u in IFD1 is tag %x, value %u\n", n,exif2byte(b,o),tmp);
 		switch (exif2byte(b,o)) {
 			case 0x0103:
-				if (tmp != 6)
+				if (exif2byte(b+8,o) != 6)
 					return NULL; // not a JPEG thumb, we're done.
 				break;
 			case 0x0201:
-				thumbStart = tmp;
+				thumbStart = exif4byte(b+8,o);
 				break;
 			case 0x0202:
-				thumbLength = tmp;
+				thumbLength = exif4byte(b+8,o);
 				break;
 			default:
 				break;
@@ -624,7 +697,6 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned newthumblen,
 		b += 12;
 	}
 	if (thumbStart == 0 /*|| thumbLength == 0*/) return NULL; // if uninitialized
-	//printf("found an EXIF thumb! len: %lu, lim: %u\n", thumbStart + thumbLength, len);
 	if (thumbStart + thumbLength > len) return NULL; // make sure it's contained in our APP1 marker
 	if (newthumblen != 1) {
 		// Hopefully no one ever accidentally passes in a 1-byte data block to this function,
@@ -647,17 +719,18 @@ unsigned char *replace_exif_thumb(unsigned char *newthumb, unsigned newthumblen,
 		b = newapp1 + ifd1offset;
 		n = exif2byte(b,o); // number of tags in IFD1
 		b += 2;
+		JDIMENSION tmp;
 		while (n--) {
 			// width x100, length x10x, bytecount x202
-			switch (exif2byte(b,o)) {
+			uint16_t tag = exif2byte(b,o);
+			switch (tag) {
 				case 0x0100: // width
 				case 0x0101: // height
-					tmp =  exif2byte(b,o) == 0x0100 ? newWidth : newHeight;
+					tmp = tag == 0x0100 ? newWidth : newHeight;
 					if (exif2byte(b+2,o) == 3) {
 						// short
 						byte2exif(tmp,b+8,o);
 						byte2exif(0,b+10,o);
-						//NSLog(@"just wrote a short!");
 					} else {
 						// long
 						byte4exif(tmp,b+8,o);

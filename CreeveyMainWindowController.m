@@ -6,7 +6,6 @@
 //California 94305, USA.
 
 #import "CreeveyMainWindowController.h"
-#import "EpegWrapper.h"
 #import "DYCarbonGoodies.h"
 #import "NSMutableArray+DYMovable.h"
 #import "DirBrowserDelegate.h"
@@ -16,7 +15,6 @@
 #import "DYCreeveyBrowser.h"
 #import "DYImageCache.h"
 #import "DYWrappingMatrix.h"
-#import "dcraw.h"
 #import <sys/stat.h>
 #import "DYExiftags.h"
 
@@ -458,15 +456,8 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		addedToCache = YES;
 	} else { // ** dup
 		if ([thumbsCache attemptLockOnFile:theFile]) {
-			DYImageInfo *result;
-			result = [[DYImageInfo alloc] initWithPath:theFile];
-			result.image =
-				[EpegWrapper imageWithPath:theFile
-							   boundingBox:[DYWrappingMatrix maxCellSize]
-								   getSize:&result->pixelSize
-								 exifThumb:NO
-							getOrientation:&result->exifOrientation];
-			if (!result.image) [thumbsCache createScaledImage:result];
+			DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
+			[thumbsCache createScaledImage:result];
 			if (result.image) {
 				[thumbsCache addImage:result forFile:theFile];
 				addedToCache = YES;
@@ -912,7 +903,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		NSString *resolvedPath = ResolveAliasToPath(path);
 		exifWindowNeedsUpdate = [cache infoForKey:resolvedPath] == nil;
 		if (!exifWindowNeedsUpdate)
-			thumbView.image = [EpegWrapper exifThumbForPath:resolvedPath];
+			thumbView.image = [DYExiftags exifThumbForPath:resolvedPath];
 	} else {
 		id s = selectedIndexes.count
 		? [NSString stringWithFormat:NSLocalizedString(@"%d images selected.", @""),
@@ -966,15 +957,23 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 					fileSize = buf.st_size;
 				else
 					fileSize = 0;
-				CGImageSourceRef imgSrc = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:theFile isDirectory:NO], NULL);
-				if (imgSrc) {
-					NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceShouldCache: @NO};
-					NSDictionary *props = (NSDictionary *)CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(imgSrc, 0, (__bridge CFDictionaryRef)opts));
-					pixelSize.width = [props[(__bridge NSString *)kCGImagePropertyPixelWidth] floatValue];
-					pixelSize.height = [props[(__bridge NSString *)kCGImagePropertyPixelHeight] floatValue];
-					CFRelease(imgSrc);
-				} else
-					pixelSize = NSZeroSize;
+				if (IsNotCGImage(theFile.pathExtension.lowercaseString)) {
+					NSImage *img = [[NSImage alloc] initByReferencingFile:theFile];
+					pixelSize = img ? img.size : NSZeroSize;
+				} else {
+					CGImageSourceRef imgSrc = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:theFile isDirectory:NO], NULL);
+					if (imgSrc) {
+						NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceShouldCache: @NO};
+						CGImageRef ref = CGImageSourceCreateImageAtIndex(imgSrc, 0, (__bridge CFDictionaryRef)opts);
+						if (ref) {
+							pixelSize.width = CGImageGetWidth(ref);
+							pixelSize.height = CGImageGetHeight(ref);
+							CFRelease(ref);
+						}
+						CFRelease(imgSrc);
+					} else
+						pixelSize = NSZeroSize;
+				}
 			}
 			NSUInteger idx = [dirBrowserDelegate path].length+1;
 			NSString *fileName = idx > path.length ? path : [path substringFromIndex:idx];
@@ -1109,7 +1108,6 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 			[imageCacheQueueLock unlockWithCondition:workToDo ? 1 : 0]; // keep the condition as 1 (more work needs to be done) if there's still stuff in the array
 			
 			NSString *theFile = ResolveAliasToPath(origPath);
-			NSSize cellSize = [DYWrappingMatrix maxCellSize];
 			NSImage *thumb = [thumbsCache imageForKey:theFile];
 			BOOL addedToCache = NO;
 			if (thumb) {
@@ -1128,28 +1126,15 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 				if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
 					char *data;
 					size_t len;
-					unsigned short thumbW, thumbH, rawW, rawH;
+					unsigned short thumbW, thumbH, rawW, rawH, orientation;
 					enum dcraw_type thumbType;
-					BOOL useExifThumbs = _maxCellWidth == 160;
 					DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
-					if (FileIsJPEG(theFile)) {
-						result.image =
-						[EpegWrapper imageWithPath:theFile
-									   boundingBox:cellSize
-										   getSize:&result->pixelSize
-										 exifThumb:useExifThumbs
-									getOrientation:&result->exifOrientation];
-						//	NSLog(@"Epeg error: %@", [EpegWrapper jpegErrorMessage]); // ** this isn't cleared between invocations
-					} else if (IsRaw(theFile.pathExtension.lowercaseString) &&
-							   (data = ExtractThumbnailFromRawFile(theFile.fileSystemRepresentation, &len, &thumbW, &thumbH, &thumbType, &rawW, &rawH))) {
+					if (IsRaw(theFile.pathExtension.lowercaseString) &&
+							   (data = ExtractThumbnailFromRawFile(theFile.fileSystemRepresentation, &len, &thumbW, &thumbH, &thumbType, &rawW, &rawH, &orientation))) {
 						result->pixelSize.width = rawW;
 						result->pixelSize.height = rawH;
-						if (thumbType == dc_jpeg) {
-							result.image = [EpegWrapper imageWithData:data len:(int)len boundingBox:cellSize exifThumb:useExifThumbs getOrientation:&result->exifOrientation];
-						}
-						if (!result.image) {
-							[thumbsCache createScaledImage:result fromImage:[[NSImage alloc] initWithData:[NSData dataWithBytesNoCopy:data length:len freeWhenDone:NO]]];
-						}
+						result->exifOrientation = orientation;
+						[thumbsCache createScaledImage:result fromData:[NSData dataWithBytesNoCopy:data length:len freeWhenDone:NO] ofType:thumbType];
 						free(data);
 					}
 					if (!result.image)

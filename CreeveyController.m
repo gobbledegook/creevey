@@ -6,7 +6,6 @@
 //California 94305, USA.
 
 #import "CreeveyController.h"
-#import "EpegWrapper.h"
 #import "DYJpegtran.h"
 #import "DYCarbonGoodies.h"
 
@@ -17,7 +16,6 @@
 #import "DYJpegtranPanel.h"
 #import "DYVersChecker.h"
 #import "DYExiftags.h"
-#import "dcraw.h"
 
 #define MAX_THUMBS 2000
 #define DYVERSCHECKINTERVAL 604800
@@ -420,23 +418,14 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[NSApp runModalSession:session];
 	[jpegProgressBar startAnimation:self];
 
-	NSSize maxThumbSize = NSMakeSize(160,160);
 	for (NSString *s in a) {
 		NSString *resolvedPath = ResolveAliasToPath(s);
 		if (FileIsJPEG(resolvedPath)) {
 			if (jinfo.replaceThumb) {
 				NSSize tmpSize;
-				NSImage *i = [EpegWrapper imageWithPath:resolvedPath
-											boundingBox:maxThumbSize
-												getSize:&tmpSize
-											  exifThumb:NO
-										 getOrientation:NULL];
+				NSData *i = [DYImageCache createNewThumbFromFile:resolvedPath getSize:&tmpSize];
 				if (i) {
-					// assuming EpegWrapper always gives us a bitmap imagerep
-					jinfo.newThumb = [(NSBitmapImageRep *)i.representations[0]
-						representationUsingType:NSJPEGFileType
-									 properties:@{NSImageCompressionFactor: @0.0f}
-						];
+					jinfo.newThumb = i;
 					jinfo.newThumbSize = tmpSize;
 				} else {
 					jinfo.newThumb = NULL;
@@ -674,8 +663,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 - (unsigned short)exifOrientationForFile:(NSString *)s {
-	DYImageInfo *i = [thumbsCache infoForKey:ResolveAliasToPath(s)];
-	return i ? i->exifOrientation : 0;
+	NSString *path = ResolveAliasToPath(s);
+	DYImageInfo *i = [thumbsCache infoForKey:path];
+	return i ? i->exifOrientation : [DYExiftags orientationForFile:path];
 }
 
 #pragma mark app delegate methods

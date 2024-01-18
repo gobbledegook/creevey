@@ -9905,7 +9905,7 @@ void CLASS write_ppm_tiff()
   free (ppm);
 }
 
-char *ExtractThumbnailFromRawFile(const char *path, size_t *outSize, unsigned short *tw, unsigned short *th, enum dcraw_type *tType, unsigned short *rw, unsigned short *rh) {
+char *ExtractThumbnailFromRawFile(const char *path, size_t *outSize, unsigned short *tw, unsigned short *th, enum dcraw_type *tType, unsigned short *rw, unsigned short *rh, unsigned short *orientation) {
 	int status = 1;
 	pthread_mutex_lock(&mutex);
 	raw_image = 0;
@@ -10037,6 +10037,7 @@ thumbnail:
 		*tType = dc_tiff;
 	else
 		*tType = dc_ppm;
+	*orientation = "12435867"[flip&7]-'0';
 	fclose(ifp);
 	fclose(ofp);
 cleanup:
@@ -10098,6 +10099,27 @@ time_t ExifDateFromRawFile(const char *path) {
 	pthread_mutex_unlock(&mutex);
 	if (!is_raw) return -1;
 	return timestamp;
+}
+
+unsigned short ExifOrientationFromRawFile(const char *path) {
+	pthread_mutex_lock(&mutex);
+	if (setjmp(failure)) {
+	  fclose(ifp);
+	  pthread_mutex_unlock(&mutex);
+	  return -1;
+	}
+	ifname = path;
+	if (!(ifp = fopen(ifname, "rb"))) {
+	  perror(ifname);
+	  pthread_mutex_unlock(&mutex);
+	  return -1;
+	}
+	identify();
+	unsigned short orientation = "12435867"[flip&7]-'0'; // convert internal "flip" value back to a exif orientation (the &7 is just to be paranoid about keeping the index within 0-7)
+	fclose(ifp);
+	pthread_mutex_unlock(&mutex);
+	if (!is_raw) return 0;
+	return orientation;
 }
 
 // because of the global variables, calling functions in here is not thread safe

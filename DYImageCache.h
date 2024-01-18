@@ -8,6 +8,7 @@
 //  Created by d on 2005.04.15.
 
 @import Cocoa;
+#include "dcraw.h"
 
 NSString *FileSize2String(unsigned long long fileSize);
 
@@ -21,6 +22,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 @property (strong, nonatomic) NSImage *image;
 @property (readonly, nonatomic) NSString *path;
 - (instancetype)initWithPath:(NSString *)s NS_DESIGNATED_INITIALIZER;
+- (NSImage *)loadFullSizeImage;
 @property (nonatomic, readonly, copy) NSString *pixelSizeAsString;
 @end
 
@@ -32,6 +34,8 @@ NSString *FileSize2String(unsigned long long fileSize);
 @property (nonatomic, readonly) float boundingWidth;
 @property (nonatomic) NSSize boundingSize;
 
++ (NSData *)createNewThumbFromFile:(NSString *)path getSize:(NSSize *)outSize;
+
 - (void)cacheFile:(NSString *)s;
 
 // cacheFile consists of the following three steps
@@ -39,7 +43,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 // you MUST call addImage or dontAdd if attemptLock returns YES
 - (BOOL)attemptLockOnFile:(NSString *)s; // will sleep if s is pending, then return NO
 - (void)createScaledImage:(DYImageInfo *)imgInfo; // if i->image is nil, you must replace with dummy image
-- (void)createScaledImage:(DYImageInfo *)imgInfo fromImage:(NSImage *)orig;
+- (void)createScaledImage:(DYImageInfo *)imgInfo fromData:(NSData *)data ofType:(enum dcraw_type)dataType;
 - (void)addImage:(DYImageInfo *)img forFile:(NSString *)s;
 - (void)dontAddFile:(NSString *)s; // simply remove from pending
 

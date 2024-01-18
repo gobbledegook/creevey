@@ -549,8 +549,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSLocalizedString(@"PAUSED", @"")]
 								  : @""];
 	[infoFld sizeToFit];
-//	[infoFld setNeedsDisplay:YES];
-	[imgView setNeedsDisplay:YES]; // **
 }
 
 - (void)updateInfoFld {
@@ -560,7 +558,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)redisplayImage {
 	if (currentIndex == NSNotFound) return;
 	NSString *theFile = filenames[currentIndex];
-	[imgCache removeImageForKey:theFile];
 	[zooms removeObjectForKey:theFile]; // don't forget to reset the zoom/rotation!
 	[rotations removeObjectForKey:theFile];
 	[flips removeObjectForKey:theFile];
@@ -592,7 +589,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSImage *img = [self loadFromCache:theFile];
 	[self displayCats];
 	if (img) {
-		//NSLog(@"displaying %d", currentIndex);
 		NSNumber *rot = rotations[theFile];
 		DYImageViewZoomInfo *zoomInfo = zooms[theFile];
 		int r = rot ? rot.intValue : 0;
@@ -614,12 +610,12 @@ scheduledTimerWithTimeInterval:timerIntvl
 			imgView.rotation = r;
 			imgView.imageFlipped = imgFlipped;
 		}
-		if (zoomInfo || (imgView.showActualSize &&
-						 !(info->pixelSize.width < imgView.bounds.size.width &&
-						   info->pixelSize.height < imgView.bounds.size.height))) {
-			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(theFile)]
+		if ((zoomInfo || imgView.showActualSize) && !NSEqualSizes(info->pixelSize, info.image.size)) {
+			[imgView setImage:[info loadFullSizeImage]
 					  zooming:zoomInfo ? DYImageViewZoomModeManual : DYImageViewZoomModeActualSize];
 			if (zoomInfo) imgView.zoomInfo = zoomInfo;
+		} else if (zoomInfo) {
+			imgView.zoomInfo = zoomInfo;
 		}
 		[self updateInfoFldWithRotation:r];
 		if (!exifFld.enclosingScrollView.hidden) [self updateExifFld];
@@ -636,6 +632,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (self.isMainWindow && !imgView.dragMode)
 		[NSCursor setHiddenUntilMouseMoves:YES];
 
+	if (imgView.showActualSize) return; // don't bother caching scaled down images if user wants full size images
 	short int i;
 	for (i=1; i<=2; i++) {
 		if (currentIndex+i >= filenames.count)
@@ -972,7 +969,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
 				if (obj.image == imgView.image
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) { // cached image smaller than orig
-					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filenames[currentIndex])]
+					[imgView setImage:[obj loadFullSizeImage]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
 					if (c == '+') [imgView zoomIn];
@@ -1015,7 +1012,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
 				if (obj.image == imgView.image
 					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) {  // cached image smaller than orig
-					[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filenames[currentIndex])]
+					[imgView setImage:[obj loadFullSizeImage]
 							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
 				} else {
 					if (c == '+') [imgView zoomIn];
@@ -1099,7 +1096,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
 		if (info.image == imgView.image
 			&& !NSEqualSizes(info->pixelSize, info.image.size)) { // cached image smaller than orig
-			[imgView setImage:[NSImage imageByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(filename)]
+			[imgView setImage:[info loadFullSizeImage]
 					  zooming:DYImageViewZoomModeManual];
 		}
 		[imgView setZoomF:zoom * (1.0 + event.magnification)];

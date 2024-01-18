@@ -18,12 +18,9 @@ NSURL * _Nullable ResolveAliasURL(NSURL *url);
 BOOL IsJPEG(NSString *x);
 BOOL IsRaw(NSString *x);
 BOOL IsHeif(NSString *x);
+BOOL IsNotCGImage(NSString *x);
 
 // for paths
 BOOL FileIsJPEG(NSString *s);
 
-@interface NSImage (DYCarbonGoodies)
-+ (instancetype)imageByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName;
-- (instancetype)initByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName;
-@end
 NS_ASSUME_NONNULL_END

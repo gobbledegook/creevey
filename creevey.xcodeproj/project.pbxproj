@@ -29,11 +29,6 @@
 		F254E96F08919E2B00DE9C38 /* makers.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E96D08919E2B00DE9C38 /* makers.h */; };
 		F254E97008919E2B00DE9C38 /* makers.c in Sources */ = {isa = PBXBuildFile; fileRef = F254E96E08919E2B00DE9C38 /* makers.c */; };
 		F254E9940891A7FB00DE9C38 /* EXIF.strings in Resources */ = {isa = PBXBuildFile; fileRef = F254E9930891A7FB00DE9C38 /* EXIF.strings */; };
-		F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = F25EA2760867329C003728C2 /* EpegWrapper.m */; };
-		F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2770867329C003728C2 /* EpegWrapper.h */; };
-		F25EA2830867329C003728C2 /* epeg_private.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA2780867329C003728C2 /* epeg_private.h */; };
-		F25EA2850867329C003728C2 /* epeg_main.c in Sources */ = {isa = PBXBuildFile; fileRef = F25EA27A0867329C003728C2 /* epeg_main.c */; };
-		F25EA2860867329C003728C2 /* Epeg.h in Headers */ = {isa = PBXBuildFile; fileRef = F25EA27B0867329C003728C2 /* Epeg.h */; };
 		F261A049182B5ED4001D9336 /* loading.png in Resources */ = {isa = PBXBuildFile; fileRef = F261A048182B5ED4001D9336 /* loading.png */; };
 		F262D802089AE58200CD3701 /* DYVersChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = F262D800089AE58200CD3701 /* DYVersChecker.h */; };
 		F262D803089AE58200CD3701 /* DYVersChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = F262D801089AE58200CD3701 /* DYVersChecker.m */; };
@@ -155,11 +150,6 @@
 		F254E98F0891A7E100DE9C38 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F254E9950891A80400DE9C38 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/EXIF.strings"; sourceTree = "<group>"; };
 		F25C834D0895D35D009C0A03 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "zh-Hant"; path = "zh-Hant.lproj/Phoenix Slides Help"; sourceTree = "<group>"; };
-		F25EA2760867329C003728C2 /* EpegWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EpegWrapper.m; path = Epeg/EpegWrapper.m; sourceTree = "<group>"; };
-		F25EA2770867329C003728C2 /* EpegWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EpegWrapper.h; path = Epeg/EpegWrapper.h; sourceTree = "<group>"; };
-		F25EA2780867329C003728C2 /* epeg_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = epeg_private.h; path = Epeg/epeg_private.h; sourceTree = "<group>"; };
-		F25EA27A0867329C003728C2 /* epeg_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epeg_main.c; path = Epeg/epeg_main.c; sourceTree = "<group>"; };
-		F25EA27B0867329C003728C2 /* Epeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Epeg.h; path = Epeg/Epeg.h; sourceTree = "<group>"; };
 		F261A048182B5ED4001D9336 /* loading.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = loading.png; sourceTree = "<group>"; };
 		F26268BA08987A500045DEFC /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		F262D800089AE58200CD3701 /* DYVersChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYVersChecker.h; sourceTree = "<group>"; };
@@ -333,7 +323,6 @@
 				F2FE4FA808842F2600550533 /* libjpeg */,
 				F2FFD7C62B2805C100036217 /* dcraw.h */,
 				F2FFD7C72B2805C100036217 /* dcraw.c */,
-				F25EA26E08673274003728C2 /* Epeg */,
 				F2FE4F9E08842EF400550533 /* jpegtran */,
 				F2047B7308576D2D00D6103F /* kqueue */,
 				F2FE507008848C9400550533 /* DYExiftags.h */,
@@ -397,18 +386,6 @@
 				F2FA6DEA2AF8CF4700F3A28B /* VDKQueue.m */,
 			);
 			name = kqueue;
-			sourceTree = "<group>";
-		};
-		F25EA26E08673274003728C2 /* Epeg */ = {
-			isa = PBXGroup;
-			children = (
-				F25EA2770867329C003728C2 /* EpegWrapper.h */,
-				F25EA2760867329C003728C2 /* EpegWrapper.m */,
-				F25EA2780867329C003728C2 /* epeg_private.h */,
-				F25EA27A0867329C003728C2 /* epeg_main.c */,
-				F25EA27B0867329C003728C2 /* Epeg.h */,
-			);
-			name = Epeg;
 			sourceTree = "<group>";
 		};
 		F2FE4F9E08842EF400550533 /* jpegtran */ = {
@@ -484,9 +461,6 @@
 				F2A6DA5E2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h in Headers */,
 				F234C0170810E9B700175D50 /* DYImageCache.h in Headers */,
 				F28CA6B1085DF4590045386B /* NSIndexSetSymDiffExtension.h in Headers */,
-				F25EA2820867329C003728C2 /* EpegWrapper.h in Headers */,
-				F25EA2830867329C003728C2 /* epeg_private.h in Headers */,
-				F25EA2860867329C003728C2 /* Epeg.h in Headers */,
 				F2FE4FB808842F3500550533 /* jpeglib.h in Headers */,
 				F2FE4FB908842F3500550533 /* jmorecfg.h in Headers */,
 				F2FFD7C82B2805C100036217 /* dcraw.h in Headers */,
@@ -621,8 +595,6 @@
 				F2FFD7C92B2805C100036217 /* dcraw.c in Sources */,
 				F234C0180810E9B700175D50 /* DYImageCache.m in Sources */,
 				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,
-				F25EA2810867329C003728C2 /* EpegWrapper.m in Sources */,
-				F25EA2850867329C003728C2 /* epeg_main.c in Sources */,
 				F2FE4FCA08842F5500550533 /* DYJpegtran.m in Sources */,
 				F2FE4FCC08842F5500550533 /* transupp.c in Sources */,
 				F2FE507308848C9400550533 /* leica.c in Sources */,

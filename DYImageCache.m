@@ -51,6 +51,23 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	return [NSString stringWithFormat:@"%dx%d", (int)pixelSize.width, (int)pixelSize.height];
 }
 
+- (NSImage *)loadFullSizeImage {
+	CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:path], NULL);
+	if (src) {
+		size_t idx;
+		if (@available(macOS 10.14, *))
+			idx = CGImageSourceGetPrimaryImageIndex(src);
+		else idx = 0;
+		CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, NULL);
+		if (ref) {
+			image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
+			CFRelease(ref);
+		}
+		CFRelease(src);
+	}
+	return image;
+}
+
 #pragma mark NSDiscardableContent
 - (BOOL)beginContentAccess {
 	self.counter = self.counter + 1;
@@ -109,14 +126,13 @@ NSString *FileSize2String(unsigned long long fileSize) {
 
 - (float)boundingWidth { return boundingSize.width; }
 
+// Image I/O does not support PDF or SVG, so use NSImage for these
 static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYImageInfo *imgInfo) {
 	NSImage *result;
 	NSSize maxSize = boundingSize;
-	if (orig && orig.representations.count) { // why doesn't it return nil for corrupt jpegs?
+	if (orig && orig.representations.count) {
 		NSImageRep *oldRep = orig.representations[0];
-		NSSize oldSize, newSize;
-		oldSize = NSMakeSize(oldRep.pixelsWide, oldRep.pixelsHigh);
-		
+		NSSize oldSize = NSMakeSize(oldRep.pixelsWide, oldRep.pixelsHigh);
 		if (oldSize.width == 0 || oldSize.height == 0) // PDF's don't have pixels
 			oldSize = orig.size;
 		
@@ -127,15 +143,12 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 				maxSize.width = boundingSize.height;
 			}
 			
-			if ((oldSize.width <= maxSize.width && oldSize.height <= maxSize.height)
-				|| ([oldRep isKindOfClass:[NSBitmapImageRep class]]
-					&& [((NSBitmapImageRep*)oldRep) valueForProperty:NSImageFrameCount])) {
-				// special case for animated gifs
+			if (oldSize.width <= maxSize.width && oldSize.height <= maxSize.height) {
 				result = orig;
 				if (!NSEqualSizes(oldSize,orig.size))
 					orig.size = oldSize;
-				// in which case, don't set nevercache for returned images?
 			} else {
+				NSSize newSize;
 				float w_ratio, h_ratio;
 				w_ratio = maxSize.width/oldSize.width;
 				h_ratio = maxSize.height/oldSize.height;
@@ -151,7 +164,7 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 				orig.size = newSize;
 				result = [[NSImage alloc] initWithSize:newSize];
 				[result lockFocus];
-				[orig drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositingOperationSourceOver fraction:1.0];
+				[orig drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositingOperationCopy fraction:1.0];
 				[result unlockFocus];
 			}
 		}
@@ -159,15 +172,159 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 	imgInfo.image = result;
 }
 
++ (NSData *)createNewThumbFromFile:(NSString *)path getSize:(NSSize *)outSize {
+	NSData *result;
+	CGImageSourceRef orig = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:path], NULL);
+	if (orig) {
+		CGImageRef thumb = CGImageSourceCreateThumbnailAtIndex(orig, 0, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceThumbnailMaxPixelSize:@(160), (__bridge NSString *)kCGImageSourceCreateThumbnailFromImageAlways:@YES});
+		if (thumb) {
+			NSMutableData *data = [[NSMutableData alloc] init];
+			CGImageDestinationRef ref = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)data, (__bridge CFStringRef)@"public.jpeg", 1, NULL);
+			if (ref) {
+				CGImageDestinationAddImage(ref, thumb, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageDestinationLossyCompressionQuality:@0.0});
+				if (CGImageDestinationFinalize(ref)) {
+					result = data;
+					outSize->width = CGImageGetWidth(thumb);
+					outSize->height = CGImageGetHeight(thumb);
+				}
+				CFRelease(ref);
+			}
+			CFRelease(thumb);
+		}
+		CFRelease(orig);
+	}
+	return result;
+}
+
+static void ScaleCGImage(CGImageSourceRef orig, CGFloat boundingWidth, DYImageInfo *imgInfo) {
+	size_t idx;
+	if (@available(macOS 10.14, *))
+		idx = CGImageSourceGetPrimaryImageIndex(orig);
+	else idx = 0;
+	CGImageRef full = CGImageSourceCreateImageAtIndex(orig, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCache:@NO});
+	if (full) {
+		imgInfo->pixelSize.width = CGImageGetWidth(full);
+		imgInfo->pixelSize.height = CGImageGetHeight(full);
+		CFRelease(full);
+	}
+	NSString *type = (__bridge NSString *)CGImageSourceGetType(orig);
+	// special case for animated gifs
+	if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(orig) > 1) {
+		imgInfo.image = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo.path)];
+		return;
+	}
+	BOOL isJpeg = [type isEqualToString:@"public.jpeg"];
+	BOOL isHeic = [type isEqualToString:@"public.heic"];
+	NSMutableDictionary *options = [NSMutableDictionary dictionary];
+	options[(__bridge NSString *)kCGImageSourceThumbnailMaxPixelSize] = @(boundingWidth);
+	if (imgInfo->exifOrientation == 0) {
+		options[(__bridge NSString *)kCGImageSourceCreateThumbnailWithTransform] = @YES;
+	}
+	int embeddedThumbSize = isJpeg ? 160 : isHeic ? 320 : 0;
+	CFStringRef key = boundingWidth > embeddedThumbSize ? kCGImageSourceCreateThumbnailFromImageAlways : kCGImageSourceCreateThumbnailFromImageIfAbsent;
+	options[(__bridge NSString *)key] = @YES;
+	CGImageRef thumb = CGImageSourceCreateThumbnailAtIndex(orig, idx, (__bridge CFDictionaryRef)options);
+	if (thumb) {
+		if (isJpeg) {
+			size_t thumbW = CGImageGetWidth(thumb), thumbH = CGImageGetHeight(thumb);
+			BOOL isPortrait = NO;
+			if (thumbH > thumbW) {
+				// check and swap dimensions in case the thumb is nonstandard
+				size_t tmp = thumbW;
+				thumbW = thumbH;
+				thumbH = tmp;
+				isPortrait = YES;
+			}
+			if (isPortrait != (imgInfo->pixelSize.width < imgInfo->pixelSize.height)) {
+				// If for some bizarre reason the image and its thumb are different orientations, just make a new thumb from scratch.
+				[options removeObjectForKey:(__bridge NSString *)kCGImageSourceCreateThumbnailFromImageIfAbsent];
+				options[(__bridge NSString *)kCGImageSourceCreateThumbnailFromImageAlways] = @YES;
+				CGImageRef newThumb = CGImageSourceCreateThumbnailAtIndex(orig, idx, (__bridge CFDictionaryRef)options);
+				if (newThumb) {
+					CFRelease(thumb);
+					thumb = newThumb;
+				}
+			} else if (thumbW == 160 && thumbH == 120) {
+				// EXIF thumb is normally 160x120 (4:3 ratio)
+				// If the image is not the same proportion, we need to crop out the black areas in the thumbnail
+				int w, h;
+				if (isPortrait) {
+					w = imgInfo->pixelSize.height;
+					h = imgInfo->pixelSize.width;
+				} else {
+					w = imgInfo->pixelSize.width;
+					h = imgInfo->pixelSize.height;
+				}
+				int w3 = w*3, h4 = h*4;
+				if (w3 != h4) {
+					CGRect thumbRect;
+					if (h4 < w3) {
+						thumbRect.size.width = 160;
+						thumbRect.size.height = 160*h/w;
+						thumbRect.origin.x = 0;
+						thumbRect.origin.y = (120-thumbRect.size.height)/2;
+					} else {
+						thumbRect.size.width = 120*w/h;
+						thumbRect.size.height = 120;
+						thumbRect.origin.x = (160-thumbRect.size.width)/2;
+						thumbRect.origin.y = 0;
+					}
+					if (isPortrait) {
+						CGFloat tmp = thumbRect.size.width;
+						thumbRect.size.width = thumbRect.size.height;
+						thumbRect.size.height = tmp;
+						tmp = thumbRect.origin.x;
+						thumbRect.origin.x = thumbRect.origin.y;
+						thumbRect.origin.y = tmp;
+					}
+					CGImageRef cropped = CGImageCreateWithImageInRect(thumb, thumbRect);
+					if (cropped) {
+						CFRelease(thumb); // cropped retains thumb, so it's safe to release here
+						thumb = cropped;
+					}
+				}
+			}
+		}
+		imgInfo.image = [[NSImage alloc] initWithCGImage:thumb size:NSZeroSize];
+		CFRelease(thumb);
+	}
+}
+
 - (void)createScaledImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0)
 		return;  // nsimage crashes on zero-length files
-	NSImage *orig = [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:ResolveAliasToPath(imgInfo.path)];
-	ScaleImage(orig, boundingSize, _rotatable, imgInfo);
+	NSString *path = ResolveAliasToPath(imgInfo.path);
+	NSString *ext = path.pathExtension.lowercaseString;
+	if (IsNotCGImage(ext)) {
+		ScaleImage([[NSImage alloc] initByReferencingFile:path], boundingSize, _rotatable, imgInfo);
+	} else {
+		NSURL *url = [NSURL fileURLWithPath:ResolveAliasToPath(imgInfo.path)];
+		CGImageSourceRef orig = CGImageSourceCreateWithURL((__bridge CFURLRef)url, NULL);
+		if (orig) {
+			// get the orientation first; it will determine if ScaleCGImage needs to auto-rotate
+			imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
+			ScaleCGImage(orig, boundingSize.width, imgInfo);
+			CFRelease(orig);
+		}
+	}
 }
 
-- (void)createScaledImage:(DYImageInfo *)imgInfo fromImage:(NSImage *)orig {
-	ScaleImage(orig, boundingSize, _rotatable, imgInfo);
+- (void)createScaledImage:(DYImageInfo *)imgInfo fromData:(NSData *)data ofType:(enum dcraw_type)dataType {
+	NSString *hint;
+	switch (dataType) {
+		case dc_jpeg:
+			hint = @"public.jpeg"; break;
+		case dc_tiff:
+			hint = @"public.tiff"; break;
+		default:
+			hint = @"public.camera-raw-image"; break;
+	}
+	NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceTypeIdentifierHint: hint};
+	CGImageSourceRef orig = CGImageSourceCreateWithData((__bridge CFDataRef)data, (__bridge CFDictionaryRef)opts);
+	if (orig) {
+		ScaleCGImage(orig, boundingSize.width, imgInfo);
+		CFRelease(orig);
+	}
 }
 
 // see usage note in the .h file.
@@ -177,18 +334,12 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 - (void)cacheFile:(NSString *)s {
 	if (![self attemptLockOnFile:s]) return;
 	
-	// make image objects
-	//NSLog(@"caching %@", idx);
 	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
 	[self createScaledImage:result];
 	if (result.image == nil)
 		result.image = [NSImage imageNamed:@"brokendoc.tif"];
-	else
-		result->exifOrientation = [DYExiftags orientationForFile:ResolveAliasToPath(s)];
 
-	// now add it to cache
 	[self addImage:result forFile:s];
-	//NSLog(@"caching %@ done!", idx);
 }
 
 - (BOOL)attemptLockOnFile:(NSString *)s { // add s to the "pending" array

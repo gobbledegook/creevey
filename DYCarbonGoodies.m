@@ -63,24 +63,12 @@ BOOL IsHeif(NSString *x) {
 	return [exts containsObject:x];
 }
 
+BOOL IsNotCGImage(NSString *x) {
+	return [x isEqualToString:@"pdf"] || [x hasPrefix:@"svg"];
+}
+
 BOOL FileIsJPEG(NSString *s) {
 	NSString *x = s.pathExtension.lowercaseString;
 	return [x isEqualToString:@"jpg"] || [x isEqualToString:@"jpeg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
-
-@implementation NSImage (DYCarbonGoodies)
-
-+ (instancetype)imageByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName
-{
-	return [[NSImage alloc] initByReferencingFileIgnoringJPEGOrientation:fileName];
-}
-
-- (instancetype)initByReferencingFileIgnoringJPEGOrientation:(NSString *)fileName
-{
-	if (FileIsJPEG(fileName)) return [self initWithDataIgnoringOrientation:[NSData dataWithContentsOfFile:fileName]];
-	// initWithDataIgnoringOrientation: doesn't seem to create image representations for some (raw?) files
-	return [self initByReferencingFile:fileName];
-}
-
-@end

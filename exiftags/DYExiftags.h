@@ -18,10 +18,10 @@ typedef NS_ENUM(char, DYExiftagsFileType) {
 @interface DYExiftags : NSObject
 + (NSString *)tagsForFile:(NSString *)aPath moreTags:(BOOL)showMore;
 + (unsigned short)orientationForFile:(NSString *)aPath;
++ (NSImage *)exifThumbForPath:(NSString *)path;
 @end
 
 time_t ExifDatetimeForFile(const char *path, DYExiftagsFileType type);
-unsigned short ExifOrientationForFile(FILE * f);
 
 // after some false starts, i've decided the following are best here.
 // perhaps even better, we could make a pure C file with these instead.
