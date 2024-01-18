@@ -17,6 +17,7 @@
 {
 	NSImage *image;
 	NSTimer *gifTimer;
+	NSArray *_webpFrameInfo; int _webpCurrentFrame; NSUInteger _webpFrameCount;
 	int rotation;
 	BOOL scalesUp, showActualSize, isImageFlipped;
 	NSRect sourceRect;
@@ -122,12 +123,28 @@
 	}
 	NSGraphicsContext *cg = NSGraphicsContext.currentContext;
 	NSImageInterpolation oldInterp = cg.imageInterpolation;
-	cg.imageInterpolation = zoom > 1 ? NSImageInterpolationNone : NSImageInterpolationHigh;
-	[image drawInRect:destinationRect fromRect:srcRect operation:NSCompositingOperationSourceOver fraction:1.0];
+	cg.imageInterpolation = zoom >= 4 ? NSImageInterpolationNone : NSImageInterpolationHigh;
+	NSImage *toDraw = image;
+	if (_webpImageSource) {
+		CGImageRef webpFrame = CGImageSourceCreateImageAtIndex((CGImageSourceRef)_webpImageSource, _webpCurrentFrame, NULL);
+		if (webpFrame) {
+			toDraw = [[NSImage alloc] initWithCGImage:webpFrame size:NSZeroSize];
+			if (!gifTimer || gifTimer.userInfo != _webpImageSource) {
+				float frameDuration = [_webpFrameInfo[_webpCurrentFrame][@"DelayTime"] floatValue];
+				if (frameDuration < .01) frameDuration = .01; // minimum of 10ms is apparently standard
+				gifTimer = [NSTimer scheduledTimerWithTimeInterval:frameDuration target:self selector:@selector(animateWebp:) userInfo:_webpImageSource repeats:NO];
+				gifTimer.tolerance = frameDuration*0.1;
+			}
+		}
+		CFRelease(webpFrame);
+	}
+	[toDraw drawInRect:destinationRect fromRect:srcRect operation:NSCompositingOperationSourceOver fraction:1.0];
 	cg.imageInterpolation = oldInterp;
 	
 	[transform invert];
 	[transform concat];
+
+	if (image != toDraw) return; // animating webp, so no need to check if animating gif
 	id rep = image.representations[0];
 	if ([rep isKindOfClass:[NSBitmapImageRep class]]
 		&& [rep valueForProperty:NSImageFrameCount]) {
@@ -153,9 +170,31 @@
 	[self setNeedsDisplay:YES];
 }
 
+- (void)setWebpImageSource:(id)src {
+	_webpImageSource = nil;
+	CFDictionaryRef props = CGImageSourceCopyProperties((CGImageSourceRef)src, NULL);
+	if (props) {
+		NSArray *frameInfo = ((__bridge NSDictionary *)props)[@"{WebP}"][@"FrameInfo"];
+		if (frameInfo && (_webpFrameCount = frameInfo.count) > 1) {
+			_webpImageSource = src;
+			_webpFrameInfo = frameInfo;
+		}
+		CFRelease(props);
+	}
+}
+
+- (void)animateWebp:(NSTimer *)t {
+	gifTimer = nil;
+	if (_webpImageSource != t.userInfo) return;
+	if (++_webpCurrentFrame == _webpFrameCount) _webpCurrentFrame = 0;
+	[self setNeedsDisplay:YES];
+}
+
 - (void)setImage:(NSImage *)anImage {
 	if (anImage != image) {
 		image = anImage;
+		_webpImageSource = nil;
+		_webpCurrentFrame = 0;
 	}
 	zoomF = 0;
 	rotation = 0;

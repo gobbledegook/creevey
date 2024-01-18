@@ -26,6 +26,7 @@ typedef NS_ENUM(char, DYImageViewZoomMode) {
 
 @interface DYImageView : NSView
 @property (nonatomic) NSImage *image;
+@property (nonatomic) id webpImageSource; // CGImageSourceRef
 @property (nonatomic) int rotation;
 @property (nonatomic) BOOL scalesUp;
 @property (nonatomic) BOOL showActualSize;

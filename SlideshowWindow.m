@@ -596,6 +596,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 		
 		if (hideInfoFld) infoFld.hidden = YES; // this must happen before setImage, for redraw purposes
 		imgView.image = img;
+		if ([theFile.pathExtension.lowercaseString isEqualToString:@"webp"]) {
+			// check for animated webp
+			CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:theFile isDirectory:NO], NULL);
+			if (src) {
+				if (CGImageSourceGetCount(src) > 1)
+					imgView.webpImageSource = CFBridgingRelease(src);
+				else
+					CFRelease(src);
+			}
+		}
 		if (r) imgView.rotation = r;
 		if (imgFlipped) imgView.imageFlipped = YES;
 		// ** see keyDown for specifics
