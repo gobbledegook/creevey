@@ -500,12 +500,38 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			// contrary to the documentation, the imageComponentsProvider is a block that returns an array, not an array of blocks
 			NSRect imageRect = [self imageRectForIndex:idx];
 			NSImage *image = images[idx]; // the block should capture a ref to the image, not to our images array
+			unsigned short eo = [self exifOrientationForIndex:idx];
 			item.draggingFrame = imageRect;
 			imageRect.origin = NSZeroPoint; // origin must be zero for the block to work correctly
 			item.imageComponentsProvider = ^NSArray<NSDraggingImageComponent *> * _Nonnull {
 				NSDraggingImageComponent *c = [NSDraggingImageComponent draggingImageComponentWithKey:NSDraggingImageComponentIconKey];
 				c.frame = imageRect;
-				c.contents = image;
+				NSImage *contents;
+				if (eo > 1) {
+					CGFloat r = 0; BOOL imgFlipped = NO;
+					switch (eo) {
+						case 5: imgFlipped = YES; case 8: r = 90; break;
+						case 7: imgFlipped = YES; case 6: r = -90; break;
+						case 3: r = 180; break;
+						case 4: r = 180; case 2: imgFlipped = YES; break;
+					}
+					NSSize oldSize = image.size;
+					NSSize newSize = eo >= 5 ? (NSSize){oldSize.height, oldSize.width} : oldSize;
+					// think of this transform in the new image's coordinates
+					NSAffineTransform *transform = [NSAffineTransform transform];
+					[transform translateXBy:newSize.width/2 yBy:newSize.height/2]; // move origin to center of new rect
+					[transform rotateByDegrees:r]; // rotate our coordinate system
+					if (imgFlipped) [transform scaleXBy:-1 yBy:1];
+					[transform translateXBy:-oldSize.width/2 yBy:-oldSize.height/2]; // set origin to where the image will be drawn
+					contents = [[NSImage alloc] initWithSize:newSize];
+					[contents lockFocus];
+					[transform concat];
+					[image drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:1.0];
+					[contents unlockFocus];
+				} else {
+					contents = image;
+				}
+				c.contents = contents;
 				return @[c];
 			};
 			[draggingItems addObject:item];
