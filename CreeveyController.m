@@ -17,6 +17,10 @@
 #import "DYVersChecker.h"
 #import "DYExiftags.h"
 
+// The thumbs cache should always store images using the resolved filename as the key.
+// This prevents duplication somewhat, but it means when you look things up
+// you need to make a call to ResolveAliasToPath.
+
 #define MAX_THUMBS 2000
 #define DYVERSCHECKINTERVAL 604800
 #define MAX_FILES_TO_CHECK_FOR_JPEG 100

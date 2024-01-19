@@ -36,17 +36,21 @@ by clicking on the "Slideshow" button, hitting the return key,
 or double-clicking an image's thumbnail.
 </p>
 
+<p>You can start a slideshow in a window (vs. full screen)
+by holding down option when starting the slideshow, or by
+choosing "Begin Slideshow in Window" from the Slideshow menu.</p>
+
 <h3>Using the directory listing</h3>
 <p>In addition to the usual clicking, you can also type in
 directory names to jump directly to them.</p>
 
 <p>The first column of the directory listing contains a list of
-mounted volumes. This list is updated automatically when disks
-are inserted or ejected. The list is also updated if the current
-folder is moved, renamed, or deleted. To refresh the listing
-for all other file system changes (new files, renaming of
-other folders, etc.), click on a folder name and its contents will
+mounted volumes. Currently only volumes mounted at /Volumes are shown.
+This list is updated automatically when disks are inserted or ejected.
+To refresh the listing for other file system changes (renaming of
+folders, etc.), click on a folder name and its contents will
 be updated.
+Files in folders that you are viewing should be updated automatically.
 </p>
 
 <p>Check "Subfolders" to have the program search all
@@ -66,6 +70,8 @@ files (based on the file extension (like .jpg) and the four-letter
 type code (like 'PICT')). Phoenix Slides supports all image types
 that Mac OS X supports (i.e., everything NSImage can read).</p>
 
+<p>You can completely collapse the folder browser by dragging the divider all the way up.</p>
+
 <h3>Thumbnails</h3>
 <p>After getting the list of filenames, the program starts generating
 thumbnails of each of the images. Thumbnails are cached in memory
@@ -75,12 +81,8 @@ and discarded when you quit the program.</p>
 about the currently
 selected file(s) in the status bar at the bottom of the window.</p>
 
-<p>You can resize the thumbnails to display anywhere from 40 to 160
-pixels wide. (They're stored 160 pixels wide internally.)</p>
-
-<p>For those who care: Phoenix Slides uses the Epeg library for fast
-thumbnailing of JPEGs. Non-JPEG files, on the other hand,
-will be thumbnailed slowly. =P</p>
+<p>You can resize the thumbnails to display anywhere from 40 to the maximum thumbnail width
+that you choose in the Preferences. For fastest thumbnail generation, choose 160 pixels.</p>
 
 <h3>Selecting images</h3>
 <p>You can select images to start a slideshow with them,
@@ -98,9 +100,14 @@ around them (in the whitespace).
 Drag images to another program to open them with
 that program, or to the Finder to copy the files.
 
+<h3>Moving files</h3>
+You can choose a folder to quickly move selected files to with the "Move To..." item in the File menu.
+Phoenix Slides will remember this folder and you can quickly move files to this folder again
+with a keyboard shortcut.
+
 <h3>Reveal in Finder</h3>
-<p>The "Reveal in Finder" menu item can be handy for file operations
-that are beyond the limits of drag and drop. If one or more files are selected,
+<p>The "Reveal in Finder" menu item can be handy for other file operations.
+If one or more files are selected,
 Phoenix Slides tells the Finder to show those files. If you have "Subfolders"
 checked and your files are from different directories, the specific behavior
 will be up to the Finder. If no files are selected, the Phoenix Slides will
@@ -240,8 +247,7 @@ the F9-F12 defaults for Expos&eacute; and Dashboard being the most
 notable examples. However, you can usually work around this by
 holding down either the control or option key when pressing F1-F12.</p>
 
-<p>Categories are temporary and will be lost when Phoenix Slides quits.
-You should think of this functionality as a sort of fancy selection mechanism.</p>
+<p>As of version 1.5.4, categories are saved across launches.</p>
 
 
 
@@ -273,11 +279,6 @@ C&eacute;sar Pi&ntilde;era - Spanish;
 Laurent Bovet - French;
 Silvano Dotti - Italian.</p>
 
-<p>Thanks to all those who make their source code available to
-learn from/adapt to other purposes, including rasterman (Epeg),
-Allan Hsu (Magic Lantern), and Marc Liyanage (EpegWrapper).
-</p>
-
 <p>
 Thanks to Takeshi Gondo for an icon that's been better received than mine.
 </p>
@@ -292,13 +293,6 @@ of unemployment.
 Phoenix Slides to your language please
 <a href="http://blyt.net/Contact.html">contact me</a>.</p>
 
-<p>
-You can also contribute by offering
-programming help or making a donation along the lines of books
-(Cocoa, perl, linguistics), money, or skateboarding stuff.
-</p>
-
-
 <h2><a name="contact"></a>Contact/License</h2>
 <p>Official web site:
 <a href="https://blyt.net/phxslides/">https://blyt.net/phxslides/</a>
@@ -307,7 +301,7 @@ programming help or making a donation along the lines of books
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
 
 <p>
-Copyright 2005-2021 by Dominic Yu. This software is free and open source.
+Copyright 2005-2024 by Dominic Yu. This software is free and open source.
 You are free to use it for non-commercial
 purposes. Derivative works must give proper credit to me and be shared under
 the same license, unless I give written permission stating otherwise.</p>
