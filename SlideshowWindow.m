@@ -101,7 +101,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
  		self.backgroundColor = NSColor.blackColor;
 		self.opaque = NO;
 		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
-		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = NSNotFound;
    }
@@ -165,10 +165,10 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	_fullscreenMode = b;
 	if (b) {
 		self.styleMask = NSWindowStyleMaskBorderless;
-		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
 	} else {
 		self.styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
-		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone;
+		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
 	}
 	if (self.visible)
 		[self configureScreen];
