@@ -282,9 +282,9 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		}
 	}
 	if (wantsUpdates) {
-		[slidesWindow setFilenames:files basePath:frontWindow.path wantsSubfolders:frontWindow.wantsSubfolders comparator:frontWindow.comparator];
+		[slidesWindow setFilenames:files basePath:frontWindow.path wantsSubfolders:frontWindow.wantsSubfolders comparator:frontWindow.comparator sortOrder:frontWindow.sortOrder];
 	} else {
-		[slidesWindow setFilenames:files basePath:frontWindow.path comparator:frontWindow.comparator];
+		[slidesWindow setFilenames:files basePath:frontWindow.path comparator:frontWindow.comparator sortOrder:frontWindow.sortOrder];
 	}
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	slidesWindow.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
@@ -680,7 +680,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	BOOL isDir;
 	if ([NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDir] && isDir) {
 		BOOL fullScreen = ![u boolForKey:@"startupSlideshowInWindow"];
-		[slidesWindow loadFilenamesFromPath:path fullScreen:fullScreen wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder([u integerForKey:@"sortBy"])];
+		short int sortOrder = [u integerForKey:@"sortBy"];
+		[slidesWindow loadFilenamesFromPath:path fullScreen:fullScreen wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder(sortOrder) sortOrder:sortOrder];
 		return YES;
 	}
 	return NO;
@@ -893,6 +894,7 @@ enum {
 		case GET_INFO:
 		case SORT_NAME:
 		case SORT_DATE_MODIFIED:
+		case SORT_EXIF_DATE:
 		case SHOW_FILE_NAMES:
 			return !slidesWindow.isMainWindow;
 		default:

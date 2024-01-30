@@ -64,6 +64,7 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 
 - (void)gotEventPaths:(NSArray *)eventPaths flags:(const FSEventStreamEventFlags *)eventFlags count:(size_t)n	 {
 	NSMutableSet *files = [[NSMutableSet alloc] init];
+	NSMutableSet *deleted = [[NSMutableSet alloc] init];
 	BOOL rootChanged = NO;
 	for (size_t i=0; i<n; ++i) {
 		NSString *s = eventPaths[i];
@@ -73,14 +74,17 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 			if (_wantsSubfolders ? [s hasPrefix:_path] : [s.stringByDeletingLastPathComponent isEqualToString:_path]) {
 				NSURL *url = [NSURL fileURLWithPath:s isDirectory:NO];
 				if (![appDelegate shouldShowFile:url]) continue;
-				[files addObject:s];
+				if (0 == access(s.fileSystemRepresentation, R_OK))
+					[files addObject:s];
+				else
+					[deleted addObject:s];
 			}
 		} else if (f & kFSEventStreamEventFlagRootChanged) {
 			rootChanged = YES;
 		}
 	}
-	if (files.count)
-		[_delegate watcherFiles:files.allObjects];
+	if (files.count || deleted.count)
+		[_delegate watcherFiles:files.allObjects deleted:deleted.allObjects];
 	if (rootChanged) {
 		[_delegate watcherRootChanged:_fileRef];
 		if (_fileRef.path != nil) {

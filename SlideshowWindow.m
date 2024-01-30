@@ -73,6 +73,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	DYFileWatcher *_fileWatcher;
 
 	_Atomic BOOL _stopLoading;
+	unsigned short int _sortType;
 }
 @synthesize rerandomizeOnLoop, autoRotate, autoadvanceTime = timerIntvl;
 
@@ -192,13 +193,13 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (BOOL)canBecomeMainWindow { return YES; }
 
 #pragma mark start/end stuff
-- (void)setFilenames:(NSArray *)files basePath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block {
-	[self setFilenames:files basePath:s comparator:block];
+- (void)setFilenames:(NSArray *)files basePath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder {
+	[self setFilenames:files basePath:s comparator:block sortOrder:sortOrder];
 	_fileWatcher.wantsSubfolders = b;
 	[_fileWatcher watchDirectory:s];
 }
 
-- (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block {
+- (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block sortOrder:(short int)sortOrder {
 	if (currentIndex != NSNotFound)
 		[self cleanUp];
 	
@@ -210,9 +211,10 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	}
 	[filenames setArray:files];
 	self.comparator = block;
+	_sortType = abs(sortOrder);
 }
 
-- (void)loadFilenamesFromPath:(NSString *)s fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block {
+- (void)loadFilenamesFromPath:(NSString *)s fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder {
 	static dispatch_queue_t _loadQueue;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
@@ -227,6 +229,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[self makeKeyAndOrderFront:nil];
 	});
 	self.comparator = block;
+	_sortType = abs(sortOrder);
 	_stopLoading = YES;
 	static _Atomic uint64_t blockTime;
 	uint64_t timeStamp = blockTime = mach_absolute_time();
@@ -383,33 +386,36 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	return [super constrainFrameRect:frameRect toScreen:screen];
 }
 
-- (void)watcherFiles:(NSArray *)files {
+- (void)watcherFiles:(NSArray *)files deleted:(NSArray *)deleted {
 	if (currentIndex == NSNotFound) return;
-	NSFileManager *fm = NSFileManager.defaultManager;
 	BOOL needUpdate = NO;
+	BOOL sortByModTime = _sortType == 2;
 	for (NSString *s in files) {
-		BOOL fileExists = [fm fileExistsAtPath:s];
-		if (currentIndex < filenames.count && [filenames[currentIndex] isEqualToString:s]) {
-			if (fileExists)
-				[self redisplayImage];
-			else
-				[self removeImageForFile:s atIndex:currentIndex];
+		if (!sortByModTime && [self.currentFile isEqualToString:s]) {
+			[self redisplayImage];
 			continue;
 		}
-		NSUInteger insertIdx;
-		NSUInteger idx = [filenames indexOfObject:s usingComparator:self.comparator insertIndex:&insertIdx];
-		if (idx == NSNotFound) {
-			if (fileExists) {
-				[filenames insertObject:s usingOrderedIndex:insertIdx atIndex:filenames.count]; // appends to end if in random mode
-				if (!randomMode && insertIdx <= currentIndex) {
-					currentIndex++;
-				}
-				needUpdate = YES;
-			}
-		} else {
-			if (!fileExists)
+		if (sortByModTime) {
+			// modification time has changed, so it needs to be re-sorted
+			NSUInteger idx = [filenames indexOfObject:s];
+			if (idx != NSNotFound)
 				[self removeImageForFile:s atIndex:idx];
 		}
+		NSUInteger insertIdx;
+		if (NSNotFound == [filenames indexOfObject:s usingComparator:self.comparator insertIndex:&insertIdx]) {
+			[filenames insertObject:s usingOrderedIndex:insertIdx atIndex:filenames.count]; // appends to end if in random mode
+			if (!randomMode && insertIdx <= currentIndex) {
+				currentIndex++;
+			}
+			needUpdate = YES;
+		}
+		// if the file is already in the list, we can ignore it
+		// since any cached image will be auto-invalidated when the slideshow gets to it
+	}
+	for (NSString *s in deleted) {
+		NSUInteger idx = (_sortType == 1) ? [filenames indexOfObject:s usingComparator:self.comparator] : [filenames indexOfObject:s];
+		if (idx != NSNotFound)
+			[self removeImageForFile:s atIndex:idx];
 	}
 	if (needUpdate)
 		[self updateForAddedFiles];
@@ -1181,8 +1187,19 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (void)removeImageForFile:(NSString *)s atIndex:(NSUInteger)n {
 	BOOL trashMode = (n == NSNotFound);
 	if (trashMode) {
-		n = [filenames indexOfObject:s usingComparator:_comparator];
-		if (n == NSNotFound) return;
+		// first, check the expected case
+		if ([self.currentFile isEqualToString:s]) {
+			n = currentIndex;
+		} else {
+			if (_sortType == 1) {
+				// safe to use _comparator if sorting by filename
+				n = [filenames indexOfObject:s usingComparator:_comparator];
+			} else {
+				// but not if _comparator is trying to find metadata about a non-existent file
+				n = [filenames indexOfObject:s];
+			}
+			if (n == NSNotFound) return;
+		}
 	}
 	BOOL current = (currentIndex == n);
 	[filenames removeObjectAtIndex:n];
@@ -1389,7 +1406,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			if (_stopLoading) return;
 			dispatch_async(dispatch_get_main_queue(), ^{
 				NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
-				[self setFilenames:files basePath:path wantsSubfolders:recurseSubfolders comparator:_comparator];
+				[self setFilenames:files basePath:path wantsSubfolders:recurseSubfolders comparator:_comparator sortOrder:_sortType];
 				self.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
 				self.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
 				self.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;

@@ -41,6 +41,7 @@
 - (NSUInteger)indexOfObject:(id)anObject usingComparator:(NSComparator)cmp {
 	NSArray *a = orderedArray.count ? orderedArray : array;
 	NSUInteger idx = [a indexOfObject:anObject inSortedRange:NSMakeRange(0, array.count) options:0 usingComparator:cmp];
+	if (idx == NSNotFound) return NSNotFound;
 	return orderedArray.count ? orderedToRandom[idx].unsignedIntegerValue : idx;
 }
 

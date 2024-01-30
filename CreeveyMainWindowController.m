@@ -381,15 +381,13 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 	[_internalLock unlock];
 }
 
-- (void)watcherFiles:(NSArray *)files {
+- (void)watcherFiles:(NSArray *)files deleted:(NSArray *)deleted {
 	if (!filenamesDone) return;
-	NSFileManager *fm = NSFileManager.defaultManager;
 	BOOL sortByModTime = abs(self.sortOrder) == 2;
 	for (NSString *s in files) {
 		NSUInteger count = filenames.count;
-		BOOL fileExists = [fm fileExistsAtPath:s];
 		struct stat buf;
-		if (fileExists && sortByModTime && !stat(s.fileSystemRepresentation, &buf) && buf.st_mtimespec.tv_sec > matrixModTime) {
+		if (sortByModTime && !stat(s.fileSystemRepresentation, &buf) && buf.st_mtimespec.tv_sec > matrixModTime) {
 			// when sorting by mod time, file list needs to be adjusted if the file's mod time has changed!
 			NSUInteger oldIdx, idx = [filenames updateIndexOfObject:s usingComparator:self.comparator oldIndex:&oldIdx];
 			if (idx != NSNotFound) {
@@ -403,14 +401,15 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		}
 		NSUInteger idx = [filenames indexOfObject:s inSortedRange:NSMakeRange(0, count) options:NSBinarySearchingInsertionIndex usingComparator:self.comparator];
 		if (idx < count && [filenames[idx] isEqualToString:s]) {
-			if (fileExists)
-				[self fileWasChanged:s];
-			else
-				[self fileWasDeleted:s atIndex:idx];
+			[self fileWasChanged:s];
 		} else {
-			if (fileExists)
-				[self addFile:s atIndex:idx];
+			[self addFile:s atIndex:idx];
 		}
+	}
+	for (NSString *s in deleted) {
+		NSUInteger idx = (sortOrder == 1 || sortOrder == -1) ? [filenames indexOfObject:s inSortedRange:NSMakeRange(0, filenames.count) options:0 usingComparator:self.comparator] : [filenames indexOfObject:s];
+		if (idx != NSNotFound)
+			[self fileWasDeleted:s atIndex:idx];
 	}
 	if (sortByModTime) time(&matrixModTime);
 }

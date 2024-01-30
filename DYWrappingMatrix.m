@@ -899,7 +899,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[filenames insertObject:s atIndex:i];
 	numCells++;
 	[self resize:nil];
-	[self setNeedsDisplayInRect:[self cellnum2rect:numCells-1]];
+	do {
+		[self setNeedsDisplayInRect:[self cellnum2rect:i]];
+	} while (++i<numCells);
 }
 
 - (void)removeAllImages {

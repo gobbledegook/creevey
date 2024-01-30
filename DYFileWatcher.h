@@ -10,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol DYFileWatcherDelegate <NSObject>
-- (void)watcherFiles:(NSArray *)files;
+- (void)watcherFiles:(NSArray *)files deleted:(NSArray *)deleted;
 - (void)watcherRootChanged:(NSURL *)fileRef;
 @end
 
