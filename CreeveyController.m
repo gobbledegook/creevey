@@ -147,6 +147,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"showFilenames": @YES,
 		@"sortBy": @1, // sort by filename, ascending
 		@"Slideshow:RerandomizeOnLoop": @YES,
+		@"SlideshowSuppressLoopIndicator": @NO,
 		@"maxThumbsToLoad": @100,
 		@"autoRotateByOrientationTag": @YES,
 		@"openFilesDoSlideshow": @YES,
@@ -229,7 +230,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	// coming to the front (oops)
 	[slidesWindow setCats:cats];
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
-	slidesWindow.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
 	slidesWindow.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
 	[disabledFiletypes addObjectsFromArray:[u stringArrayForKey:@"ignoredFileTypes"]];
 	for (NSString *type in disabledFiletypes) {
@@ -287,7 +287,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[slidesWindow setFilenames:files basePath:frontWindow.path comparator:frontWindow.comparator sortOrder:frontWindow.sortOrder];
 	}
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
-	slidesWindow.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
 	slidesWindow.autoRotate = frontWindow.imageMatrix.autoRotate;
 	// if files != nil these files are being opened from the finder, so check the relevant pref
 	float aaInterval;

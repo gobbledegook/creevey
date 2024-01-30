@@ -35,7 +35,6 @@
 - (void)filesWereUndeleted:(NSArray *)a;
 - (void)uncacheImage:(NSString *)s; // when an image is modified, remove it from cache
 
-@property (nonatomic) BOOL rerandomizeOnLoop;
 @property (nonatomic) BOOL autoRotate;
 @property (nonatomic) NSTimeInterval autoadvanceTime;
 - (void)updateTimer;

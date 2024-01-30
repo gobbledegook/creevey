@@ -75,7 +75,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	_Atomic BOOL _stopLoading;
 	unsigned short int _sortType;
 }
-@synthesize rerandomizeOnLoop, autoRotate, autoadvanceTime = timerIntvl;
+@synthesize autoRotate, autoadvanceTime = timerIntvl;
 
 + (void)initialize {
 	if (self != [SlideshowWindow class]) return;
@@ -660,19 +660,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)showLoopAnimation {
+	if ([NSUserDefaults.standardUserDefaults boolForKey:@"SlideshowSuppressLoopIndicator"]) return;
 	if (!loopImageView) {
 		NSImage *loopImage = [NSImage imageNamed:@"loop_forward.tiff"];
-		NSSize s = loopImage.size;
-		NSRect r;
-		r.size = s;
-		s = self.contentView.frame.size;
-		r.origin.x = (s.width - r.size.width)/2;
-		r.origin.y = (s.height - r.size.height)/2;
-
-		loopImageView = [[NSImageView alloc] initWithFrame:NSIntegralRect(r)];
+		loopImageView = [[NSImageView alloc] initWithFrame:(NSRect){NSZeroPoint, loopImage.size}];
 		[self.contentView addSubview:loopImageView];
 		loopImageView.image = loopImage;
 	}
+	NSRect r = loopImageView.frame;
+	NSSize s = self.frame.size;
+	r.origin.x = (int)(s.width-r.size.width)/2;
+	r.origin.y = (int)(s.height-r.size.height)/2;
+	loopImageView.frame = r;
 	loopImageView.hidden = NO;
 
 	NSDictionary *viewDict = @{ NSViewAnimationTargetKey: loopImageView, NSViewAnimationEffectKey: NSViewAnimationFadeOutEffect };
@@ -690,7 +689,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		timerPaused = NO; // going forward unpauses auto-advance
 	if ((n > 0 && currentIndex+1 >= filenames.count) || (n < 0 && currentIndex == 0)){
 		if (loopMode) {
-			if (randomMode && n > 0 && rerandomizeOnLoop) {
+			if (randomMode && n > 0 && [NSUserDefaults.standardUserDefaults boolForKey:@"Slideshow:RerandomizeOnLoop"]) {
 				// reshuffle whenever you loop through to the beginning
 				[filenames randomize];
 			}
@@ -1407,7 +1406,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 			dispatch_async(dispatch_get_main_queue(), ^{
 				NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 				[self setFilenames:files basePath:path wantsSubfolders:recurseSubfolders comparator:_comparator sortOrder:_sortType];
-				self.rerandomizeOnLoop = [u boolForKey:@"Slideshow:RerandomizeOnLoop"];
 				self.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
 				self.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
 				[self startSlideshowAtIndex:NSNotFound];
