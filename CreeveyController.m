@@ -211,6 +211,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		
 		thumbsCache = [[DYImageCache alloc] initWithCapacity:MAX_THUMBS];
 		thumbsCache.boundingSize = DYWrappingMatrix.maxCellSize;
+		thumbsCache.fastThumbnails = YES;
 		
 		short int i;
 		for (i=0; i<NUM_FNKEY_CATS; ++i) {
@@ -1226,6 +1227,10 @@ static void SendAction(NSMenuItem *sender) {
 			&& [a[i] isEqualToString:slidesWindow.currentFile])
 			[frontWindow selectIndex:i];
 	}
+}
+- (void)windowDidChangeBackingProperties:(NSNotification *)notification {
+	if (slidesWindow.visible)
+		[slidesWindow configureBacking];
 }
 
 

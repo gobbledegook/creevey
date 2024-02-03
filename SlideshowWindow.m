@@ -244,25 +244,14 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	return s.length <= basePath.length ? s : [s substringFromIndex:basePath.length];
 }
 
-- (void)configureScreen
+- (void)configureScreen // or rather, configure the window *for* the screen
 {
 	NSScreen *myScreen = self.visible ? self.screen : NSScreen.mainScreen;
 	NSRect screenRect = myScreen.frame;
-	NSRect boundingRect = screenRect;
-	if (@available(macOS 12.0, *)) {
-		CGFloat inset = myScreen.safeAreaInsets.top;
-		if (inset) {
-			boundingRect.size.height -= inset;
-		}
-	}
-	oldScreen = myScreen;
-	NSSize oldSize = imgCache.boundingSize;
-	if (oldSize.width < boundingRect.size.width
-		|| oldSize.height < boundingRect.size.height) {
-		[imgCache removeAllImages];
-	}
-	imgCache.boundingSize = boundingRect.size;
 	if (_fullscreenMode) {
+		NSRect boundingRect = screenRect;
+		if (@available(macOS 12.0, *))
+			boundingRect.size.height -= myScreen.safeAreaInsets.top;
 		[self setFrame:screenRect display:NO];
 		boundingRect.origin = imgView.frame.origin;
 		imgView.frame = boundingRect;
@@ -272,6 +261,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		if (v) {
 			r = NSRectFromString(v);
 		} else {
+			// if no saved frame, put it in the top left of the screen
 			r = screenRect;
 			r.size.width = r.size.width/2;
 			r.size.height = r.size.height/2;
@@ -280,6 +270,20 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[self setFrame:r display:NO];
 		imgView.frame = self.contentLayoutRect;
 	}
+}
+
+- (void)configureBacking {
+	// this should only be called when the window is visible (when the backing scale factor has been updated)
+	NSScreen *screen = self.screen;
+	NSSize boundingSize = screen.frame.size;
+	if (@available(macOS 12.0, *))
+		boundingSize.height -= screen.safeAreaInsets.top;
+	NSSize backingSize = [imgView convertSizeToBacking:boundingSize];
+	NSSize oldSize = imgCache.boundingSize;
+	if (oldSize.width < backingSize.width || oldSize.height < backingSize.height)
+		[imgCache removeAllImages];
+	imgCache.boundingSize = backingSize;
+	oldScreen = screen;
 }
 
 - (void)resetScreen
@@ -345,8 +349,9 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	exifFld.string = @"";
 	[imgCache beginCaching];
 	imgView.image = nil;
-	[self displayImage];
 	[self makeKeyAndOrderFront:nil];
+	[self configureBacking];
+	[self displayImage];
 
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	BOOL seenIntro = [u boolForKey:@"seenSlideshowIntro"];
@@ -483,11 +488,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 #pragma mark display stuff
 - (float)calcZoom:(NSSize)sourceSize {
 	// calc here b/c larger images have already been cached & shrunk!
-	NSRect boundsRect = [imgView convertRect:imgView.bounds toView:nil]; // get pixels, not points
+	NSRect boundsRect = imgView.bounds;
 	int rotation = imgView.rotation;
-	float tmp;
 	if (rotation == 90 || rotation == -90) {
-		tmp = boundsRect.size.width;
+		CGFloat tmp = boundsRect.size.width;
 		boundsRect.size.width = boundsRect.size.height;
 		boundsRect.size.height = tmp;
 	}

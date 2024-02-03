@@ -29,6 +29,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 @interface DYImageCache : NSObject
 @property (nonatomic) BOOL rotatable; // default is NO
+@property (nonatomic) BOOL fastThumbnails; // faster but lower quality rendering. default is NO
 - (instancetype)initWithCapacity:(NSUInteger)n NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, readonly) float boundingWidth;

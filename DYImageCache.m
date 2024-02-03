@@ -196,32 +196,66 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 	return result;
 }
 
-static void ScaleCGImage(CGImageSourceRef orig, CGFloat boundingWidth, DYImageInfo *imgInfo) {
+static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo *imgInfo, BOOL fastThumbnails) {
 	size_t idx;
 	if (@available(macOS 10.14, *))
 		idx = CGImageSourceGetPrimaryImageIndex(orig);
 	else idx = 0;
-	CGImageRef full = CGImageSourceCreateImageAtIndex(orig, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCache:@NO});
-	if (full) {
-		imgInfo->pixelSize.width = CGImageGetWidth(full);
-		imgInfo->pixelSize.height = CGImageGetHeight(full);
-		CFRelease(full);
-	}
 	NSString *type = (__bridge NSString *)CGImageSourceGetType(orig);
-	// special case for animated gifs
-	if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(orig) > 1) {
-		imgInfo.image = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo.path)];
-		return;
+	CGImageRef full = CGImageSourceCreateImageAtIndex(orig, idx, fastThumbnails ? (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCache:@NO} : NULL);
+	if (full) {
+		CGSize fullSize = {CGImageGetWidth(full),CGImageGetHeight(full)};
+		imgInfo->pixelSize = fullSize;
+
+		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(orig) > 1) {
+			// special case for animated gifs
+			imgInfo.image = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo.path)];
+			fastThumbnails = NO;
+		} else if (!fastThumbnails) {
+			CGFloat maxLen = 1.5*boundingSize.width;
+			if (imgInfo->pixelSize.width < maxLen && imgInfo->pixelSize.height < maxLen) {
+				imgInfo.image = [[NSImage alloc] initWithCGImage:full size:NSZeroSize];
+			} else {
+				// if the image is significantly bigger than the bounding size, we should scale it down for speed/memory
+				CGColorSpaceRef colorSpace = CGImageGetColorSpace(full);
+				if (colorSpace) {
+					CGSize newSize = boundingSize;
+					if ((newSize.height > newSize.width) != (imgInfo->pixelSize.height > imgInfo->pixelSize.width)) {
+						newSize.width = boundingSize.height;
+						newSize.height = boundingSize.width;
+					}
+					CGFloat w_ratio = newSize.width/fullSize.width, h_ratio = newSize.height/fullSize.height;
+					if (w_ratio < h_ratio) {
+						newSize.height = (int)(fullSize.height*w_ratio);
+					} else {
+						newSize.width = (int)(fullSize.width*h_ratio);
+					}
+					CGContextRef ctx = CGBitmapContextCreate(NULL, newSize.width, newSize.height, CGImageGetBitsPerComponent(full), 0, colorSpace, CGImageGetBitmapInfo(full));
+					if (ctx) {
+						CGContextSetInterpolationQuality(ctx, kCGInterpolationHigh);
+						CGContextDrawImage(ctx, (CGRect){CGPointZero,newSize}, full);
+						CGImageRef ref = CGBitmapContextCreateImage(ctx);
+						if (ref) {
+							imgInfo.image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
+							CFRelease(ref);
+						}
+						CFRelease(ctx);
+					}
+				}
+			}
+		}
+		CFRelease(full);
+		if (!fastThumbnails && imgInfo.image != nil) return;
 	}
 	BOOL isJpeg = [type isEqualToString:@"public.jpeg"];
 	BOOL isHeic = [type isEqualToString:@"public.heic"];
 	NSMutableDictionary *options = [NSMutableDictionary dictionary];
-	options[(__bridge NSString *)kCGImageSourceThumbnailMaxPixelSize] = @(boundingWidth);
+	options[(__bridge NSString *)kCGImageSourceThumbnailMaxPixelSize] = @(boundingSize.width);
 	if (imgInfo->exifOrientation == 0) {
 		options[(__bridge NSString *)kCGImageSourceCreateThumbnailWithTransform] = @YES;
 	}
 	int embeddedThumbSize = isJpeg ? 160 : isHeic ? 320 : 0;
-	CFStringRef key = boundingWidth > embeddedThumbSize ? kCGImageSourceCreateThumbnailFromImageAlways : kCGImageSourceCreateThumbnailFromImageIfAbsent;
+	CFStringRef key = boundingSize.width > embeddedThumbSize ? kCGImageSourceCreateThumbnailFromImageAlways : kCGImageSourceCreateThumbnailFromImageIfAbsent;
 	options[(__bridge NSString *)key] = @YES;
 	CGImageRef thumb = CGImageSourceCreateThumbnailAtIndex(orig, idx, (__bridge CFDictionaryRef)options);
 	if (thumb) {
@@ -296,14 +330,21 @@ static void ScaleCGImage(CGImageSourceRef orig, CGFloat boundingWidth, DYImageIn
 	NSString *path = ResolveAliasToPath(imgInfo.path);
 	NSString *ext = path.pathExtension.lowercaseString;
 	if (IsNotCGImage(ext)) {
-		ScaleImage([[NSImage alloc] initByReferencingFile:path], boundingSize, _rotatable, imgInfo);
+		NSImage *img = [[NSImage alloc] initByReferencingFile:path];
+		if (_fastThumbnails) {
+			ScaleImage(img, boundingSize, _rotatable, imgInfo);
+		} else {
+			// return vector graphics in their non-pixelated glory
+			imgInfo.image = img;
+			imgInfo->pixelSize = img.size;
+		}
 	} else {
 		NSURL *url = [NSURL fileURLWithPath:ResolveAliasToPath(imgInfo.path)];
 		CGImageSourceRef orig = CGImageSourceCreateWithURL((__bridge CFURLRef)url, NULL);
 		if (orig) {
 			// get the orientation first; it will determine if ScaleCGImage needs to auto-rotate
 			imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
-			ScaleCGImage(orig, boundingSize.width, imgInfo);
+			ScaleCGImage(orig, boundingSize, imgInfo, _fastThumbnails);
 			CFRelease(orig);
 		}
 	}
@@ -322,7 +363,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGFloat boundingWidth, DYImageIn
 	NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceTypeIdentifierHint: hint};
 	CGImageSourceRef orig = CGImageSourceCreateWithData((__bridge CFDataRef)data, (__bridge CFDictionaryRef)opts);
 	if (orig) {
-		ScaleCGImage(orig, boundingSize.width, imgInfo);
+		ScaleCGImage(orig, boundingSize, imgInfo, YES);
 		CFRelease(orig);
 	}
 }

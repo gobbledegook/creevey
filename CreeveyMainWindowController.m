@@ -1130,10 +1130,10 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 					DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
 					if (IsRaw(theFile.pathExtension.lowercaseString) &&
 							   (data = ExtractThumbnailFromRawFile(theFile.fileSystemRepresentation, &len, &thumbW, &thumbH, &thumbType, &rawW, &rawH, &orientation))) {
-						result->pixelSize.width = rawW;
-						result->pixelSize.height = rawH;
-						result->exifOrientation = orientation;
+						result->exifOrientation = orientation; // this needs to be set before
 						[thumbsCache createScaledImage:result fromData:[NSData dataWithBytesNoCopy:data length:len freeWhenDone:NO] ofType:thumbType];
+						result->pixelSize.width = rawW; // these need to be set after (otherwise the width/height are for the thumb)
+						result->pixelSize.height = rawH;
 						free(data);
 					}
 					if (!result.image)
