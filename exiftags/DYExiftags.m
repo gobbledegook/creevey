@@ -85,7 +85,7 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 		}
 		if (i==0) i=4;
 	}
-	free(t);
+	exiffree(t);
 	if (result.length) [result deleteCharactersInRange:NSMakeRange(result.length-2,2)]; // trailing newlines
 }
 
