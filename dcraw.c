@@ -247,7 +247,10 @@ void CLASS derror()
   if (!data_error) {
     fprintf (stderr, "%s: ", ifname);
     if (feof(ifp))
+	{
       fprintf (stderr,_("Unexpected end of file\n"));
+	  longjmp(failure, 1);
+	}
     else
       fprintf (stderr,_("Corrupt data near 0x%llx\n"), (INT64) ftello(ifp));
   }
@@ -841,6 +844,9 @@ int CLASS ljpeg_diff (ushort *huff)
 {
   int len, diff;
 
+  if (!huff)
+	longjmp(failure, 2);
+
   len = gethuff(huff);
   if (len == 16 && (!dng_version || dng_version >= 0x1010000))
     return -32768;
@@ -896,6 +902,8 @@ void CLASS lossless_jpeg_load_raw()
   ushort *rp;
 
   if (!ljpeg_start (&jh, 0)) return;
+  if (jh.wide<1 || jh.high<1 || jh.clrs<1 || jh.bits<1)
+	longjmp(failure, 2);
   jwide = jh.wide * jh.clrs;
 
   for (jrow=0; jrow < jh.high; jrow++) {
@@ -915,6 +923,8 @@ void CLASS lossless_jpeg_load_raw()
       }
       if (raw_width == 3984 && (col -= 2) < 0)
         col += (row--,raw_width);
+	  if (row>raw_height)
+		longjmp(failure, 3);
       if ((unsigned) row < raw_height) RAW(row,col) = val;
       if (++col >= raw_width)
         col = (row++,0);
@@ -1307,10 +1317,11 @@ void CLASS jpeg_thumb();
 void CLASS ppm_thumb()
 {
   char *thumb;
-  thumb_length = thumb_width*thumb_height*3;
+  colors = thumb_misc >> 5;
+  thumb_length = thumb_width*thumb_height*colors;
   thumb = (char *) malloc (thumb_length);
   merror (thumb, "ppm_thumb()");
-  fprintf (ofp, "P6\n%d %d\n255\n", thumb_width, thumb_height);
+  fprintf (ofp, "P%d\n%d %d\n255\n", 5 + (colors >> 1), thumb_width, thumb_height);
   fread  (thumb, 1, thumb_length, ifp);
   fwrite (thumb, 1, thumb_length, ofp);
   free (thumb);
@@ -1320,13 +1331,14 @@ void CLASS ppm16_thumb()
 {
   int i;
   char *thumb;
-  thumb_length = thumb_width*thumb_height*3;
+  colors = thumb_misc >> 5;
+  thumb_length = thumb_width*thumb_height*colors;
   thumb = (char *) calloc (thumb_length, 2);
   merror (thumb, "ppm16_thumb()");
   read_shorts ((ushort *) thumb, thumb_length);
   for (i=0; i < thumb_length; i++)
     thumb[i] = ((ushort *) thumb)[i] >> 8;
-  fprintf (ofp, "P6\n%d %d\n255\n", thumb_width, thumb_height);
+  fprintf (ofp, "P%d\n%d %d\n255\n", 5 + (colors >> 1), thumb_width, thumb_height);
   fwrite (thumb, 1, thumb_length, ofp);
   free (thumb);
 }
@@ -2876,6 +2888,8 @@ void CLASS smal_decode_segment (unsigned seg[2][2], int holes)
       diff = diff ? -diff : 0x80;
     if (ftell(ifp) + 12 >= seg[1][1])
       diff = 0;
+	if(pix>=raw_width*raw_height)
+		longjmp (failure, 2);
     raw_image[pix] = pred[pix & 1] += diff;
     if (!(pix & 1) && HOLE(pix / raw_width)) pix += 2;
   }
@@ -5747,6 +5761,7 @@ int CLASS parse_tiff_ifd (int base)
           data_offset = get4()+base;
           ifd++;  break;
         }
+		if (len>1000) len=1000;
         while (len--) {
           i = ftell(ifp);
           fseek (ifp, get4()+base, SEEK_SET);
@@ -6102,7 +6117,8 @@ void CLASS apply_tiff()
   thumb_misc = 16;
   if (thumb_offset) {
     fseek (ifp, thumb_offset, SEEK_SET);
-    if (ljpeg_start (&jh, 1)) {
+    if (ljpeg_start (&jh, 1)
+		&& (unsigned)jh.bits<17 && (unsigned)jh.wide<0x10000 && (unsigned)jh.high<0x10000) {
       thumb_misc   = jh.bits;
       thumb_width  = jh.wide;
       thumb_height = jh.high;
@@ -6114,9 +6130,6 @@ void CLASS apply_tiff()
     tiff_ifd[i].shutter = shutter;
   }
   for (i=0; i < tiff_nifds; i++) {
-    if (max_samp < tiff_ifd[i].samples)
-        max_samp = tiff_ifd[i].samples;
-    if (max_samp > 3) max_samp = 3;
     os = raw_width*raw_height;
     ns = tiff_ifd[i].width*tiff_ifd[i].height;
     if (tiff_bps) {
@@ -6124,7 +6137,8 @@ void CLASS apply_tiff()
       ns *= tiff_ifd[i].bps;
     }
     if ((tiff_ifd[i].comp != 6 || tiff_ifd[i].samples != 3) &&
-        (tiff_ifd[i].width | tiff_ifd[i].height) < 0x10000 &&
+        ((unsigned)tiff_ifd[i].width | (unsigned)tiff_ifd[i].height) < 0x10000 &&
+		(unsigned)tiff_ifd[i].bps < 33 && (unsigned)tiff_ifd[i].samples < 13 &&
          ns && ((ns > os && (ties = 1)) ||
                 (ns == os && shot_select == ties++))) {
       raw_width     = tiff_ifd[i].width;
@@ -6229,9 +6243,18 @@ void CLASS apply_tiff()
           !strcasestr(make,"Kodak") && !strstr(model2,"DEBUG RAW")))
       is_raw = 0;
   for (i=0; i < tiff_nifds; i++)
+	  if (i != raw) {
+		  if (max_samp < tiff_ifd[i].samples && tiff_ifd[i].comp != 34892)
+			  max_samp = tiff_ifd[i].samples;
+		  if (max_samp > 3) max_samp = 3;
+	  }
+  for (i=0; i < tiff_nifds; i++)
     if (i != raw && tiff_ifd[i].samples == max_samp &&
+		tiff_ifd[i].bps>0 && tiff_ifd[i].bps < 33 &&
+		((unsigned)tiff_ifd[i].width | (unsigned)tiff_ifd[i].height) < 0x10000 &&
         tiff_ifd[i].width * tiff_ifd[i].height / (SQR(tiff_ifd[i].bps)+1) >
               thumb_width *       thumb_height / (SQR(thumb_misc)+1)
+		&& tiff_ifd[i].bytes // DY: avoid crash trying to create thumbnails from DNG files if "bytes" is 0
         && tiff_ifd[i].comp != 34892) {
       thumb_width  = tiff_ifd[i].width;
       thumb_height = tiff_ifd[i].height;
@@ -8220,8 +8243,14 @@ float CLASS find_green (int bps, int bite, int off0, int off1)
 {
   UINT64 bitbuf=0;
   int vbits, col, i, c;
-  ushort img[2][2064];
+  ushort *img;
   double sum[]={0,0};
+
+#define IMG2D(row,col) \
+  img[(row)*width+(col)]
+
+  img = (ushort *)malloc(2*width*sizeof(ushort));
+  merror(img, "find_green()");
 
   FORC(2) {
     fseek (ifp, c ? off1:off0, SEEK_SET);
@@ -8231,13 +8260,14 @@ float CLASS find_green (int bps, int bite, int off0, int off1)
         for (i=0; i < bite; i+=8)
           bitbuf |= (unsigned) (fgetc(ifp) << i);
       }
-      img[c][col] = bitbuf << (64-bps-vbits) >> (64-bps);
+		IMG2D(c,col) = bitbuf << (64-bps-vbits) >> (64-bps);
     }
   }
   FORC(width-1) {
-    sum[ c & 1] += ABS(img[0][c]-img[1][c+1]);
-    sum[~c & 1] += ABS(img[1][c]-img[0][c+1]);
+    sum[ c & 1] += ABS(IMG2D(0,c)-IMG2D(1,c+1));
+    sum[~c & 1] += ABS(IMG2D(1,c)-IMG2D(0,c+1));
   }
+  free(img);
   return 100 * log(sum[0]/sum[1]);
 }
 
