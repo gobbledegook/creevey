@@ -52,13 +52,13 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 
 - (NSImage *)loadFullSizeImage {
-	CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:path], NULL);
+	CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:ResolveAliasToPath(path)], NULL);
 	if (src) {
 		size_t idx;
 		if (@available(macOS 10.14, *))
 			idx = CGImageSourceGetPrimaryImageIndex(src);
 		else idx = 0;
-		CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, NULL);
+		CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCacheImmediately:@YES});
 		if (ref) {
 			image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
 			CFRelease(ref);
@@ -358,7 +358,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 		case dc_tiff:
 			hint = @"public.tiff"; break;
 		default:
-			hint = @"public.camera-raw-image"; break;
+			hint = @"public.pbm"; break;
 	}
 	NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceTypeIdentifierHint: hint};
 	CGImageSourceRef orig = CGImageSourceCreateWithData((__bridge CFDataRef)data, (__bridge CFDictionaryRef)opts);
@@ -368,15 +368,36 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	}
 }
 
+- (void)createFullsizeImage:(DYImageInfo *)imgInfo {
+	if (imgInfo->fileSize == 0) return;
+	NSString *path = ResolveAliasToPath(imgInfo.path);
+	if (IsNotCGImage(path.pathExtension.lowercaseString)) {
+		NSImage *img = [[NSImage alloc] initByReferencingFile:path];
+		imgInfo.image = img;
+		imgInfo->pixelSize = img.size;
+	} else {
+		imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
+		[imgInfo loadFullSizeImage];
+		imgInfo->pixelSize = imgInfo.image.size;
+	}
+}
+
+
 // see usage note in the .h file.
 #define CacheContains(x)	([images objectForKey:x] != nil)
 #define PendingContains(x)  ([pending containsObject:x])
 //#define LOGCACHING 1
 - (void)cacheFile:(NSString *)s {
+	[self cacheFile:s fullSize:NO];
+}
+- (void)cacheFile:(NSString *)s fullSize:(BOOL)fullSize {
 	if (![self attemptLockOnFile:s]) return;
 	
 	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
-	[self createScaledImage:result];
+	if (fullSize)
+		[self createFullsizeImage:result];
+	else
+		[self createScaledImage:result];
 	if (result.image == nil)
 		result.image = [NSImage imageNamed:@"brokendoc.tif"];
 

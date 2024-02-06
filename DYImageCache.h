@@ -38,6 +38,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 + (NSData *)createNewThumbFromFile:(NSString *)path getSize:(NSSize *)outSize;
 
 - (void)cacheFile:(NSString *)s;
+- (void)cacheFile:(NSString *)s fullSize:(BOOL)fullSize;
 
 // cacheFile consists of the following three steps
 // exposed here for doing your own caching (e.g., Epeg)

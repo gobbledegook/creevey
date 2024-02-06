@@ -35,10 +35,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // cat methods
 - (void)displayCats;
 - (void)assignCat:(short int)n toggle:(BOOL)toggle;
-
-// cache methods
-- (NSImage *)loadFromCache:(NSString *)s;
-- (void)cacheAndDisplay:(NSString *)s;
 @end
 
 @implementation SlideshowWindow
@@ -630,12 +626,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 			imgView.rotation = r;
 			imgView.imageFlipped = imgFlipped;
 		}
-		if ((zoomInfo || imgView.showActualSize) && !NSEqualSizes(info->pixelSize, info.image.size)) {
-			[imgView setImage:[info loadFullSizeImage]
+		// if zoom has been manually set, or if the the image size is larger than the view size, we need to set the zoom to something other than fit-to-view
+		if (zoomInfo || (imgView.showActualSize && !(info->pixelSize.width <= imgView.bounds.size.width && info->pixelSize.height <= imgView.bounds.size.height))) {
+			if (!NSEqualSizes(info->pixelSize, info.image.size))
+				[info loadFullSizeImage];
+			[imgView setImage:info.image
 					  zooming:zoomInfo ? DYImageViewZoomModeManual : DYImageViewZoomModeActualSize];
 			if (zoomInfo) imgView.zoomInfo = zoomInfo;
-		} else if (zoomInfo) {
-			imgView.zoomInfo = zoomInfo;
 		}
 		[self updateInfoFldWithRotation:r];
 		if (!exifFld.enclosingScrollView.hidden) [self updateExifFld];
@@ -652,13 +649,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (self.isMainWindow && !imgView.dragMode)
 		[NSCursor setHiddenUntilMouseMoves:YES];
 
-	if (imgView.showActualSize) return; // don't bother caching scaled down images if user wants full size images
-	short int i;
-	for (i=1; i<=2; i++) {
+	BOOL fullSize = imgView.showActualSize;
+	for (short i=1; i<=2; i++) {
 		if (currentIndex+i >= filenames.count)
 			break;
+		NSString *aPath = filenames[currentIndex+i];
 		[_upcomingQueue addOperationWithBlock:^{
-			[imgCache cacheFile:filenames[currentIndex+i]];
+			[imgCache cacheFile:aPath fullSize:fullSize];
 		}];
 	}
 }
@@ -1130,25 +1127,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSImage *img = [imgCache imageForKeyInvalidatingCacheIfNecessary:s];
 	if (img)
 		return img;
-	//NSLog(@"%d not cached yet, now loading", n);
-	if (keyIsRepeating < MAX_REPEATING_CACHED || currentIndex == 0 || currentIndex == filenames.count-1)
-		[NSThread detachNewThreadSelector:@selector(cacheAndDisplay:)
-								 toTarget:self withObject:s];
-	return nil;
-}
-
-- (void)cacheAndDisplay:(NSString *)s {
-	if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
-	@autoreleasepool {
-		[imgCache cacheFile:s]; // this operation takes time...
-		if (currentIndex != NSNotFound && [filenames[currentIndex] isEqualToString:s]) {
-			//NSLog(@"cacheAndDisplay now displaying %@", idx);
-			[self performSelectorOnMainThread:@selector(displayImage) withObject:nil waitUntilDone:NO];
-		} /*else {
-		NSLog(@"cacheAndDisplay aborted %@", idx);
-		// the user hit next or something, we don't need this anymore
-		} */
+	if (keyIsRepeating < MAX_REPEATING_CACHED || currentIndex == 0 || currentIndex == filenames.count-1) {
+		BOOL fullSize = imgView.showActualSize;
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			@autoreleasepool {
+				if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
+				[imgCache cacheFile:s fullSize:fullSize]; // this operation takes time...
+				if (currentIndex < filenames.count && [filenames[currentIndex] isEqualToString:s])
+					[self performSelectorOnMainThread:@selector(displayImage) withObject:nil waitUntilDone:NO];
+			}
+		});
 	}
+	return nil;
 }
 
 #pragma mark accessors
