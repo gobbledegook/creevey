@@ -269,7 +269,8 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 				thumbH = tmp;
 				isPortrait = YES;
 			}
-			if (isPortrait != (imgInfo->pixelSize.width < imgInfo->pixelSize.height)) {
+			if (isPortrait != (imgInfo->pixelSize.width < imgInfo->pixelSize.height)
+				|| (thumbW < 160 && 160 < (int)imgInfo->pixelSize.width)) {
 				// If for some bizarre reason the image and its thumb are different orientations, just make a new thumb from scratch.
 				[options removeObjectForKey:(__bridge NSString *)kCGImageSourceCreateThumbnailFromImageIfAbsent];
 				options[(__bridge NSString *)kCGImageSourceCreateThumbnailFromImageAlways] = @YES;
