@@ -163,9 +163,9 @@ static void appendprops(NSMutableString *result, unsigned char *data, int len, B
 	return result;
 }
 
-static unsigned short ExifOrientationForJpegFile(FILE * f) {
+static unsigned short ExifOrientationForFile(FILE * f, BOOL isJpeg) {
 	unsigned short z = 0;
-	if (SeekExifInJpeg(f)) {
+	if (isJpeg ? SeekExifInJpeg(f) : SeekExifInHeif(f)) {
 		char o;
 		if (SeekExifIFD0(f, &o)) {
 			uint16_t n = read2byte(f,o);
@@ -187,10 +187,11 @@ static unsigned short ExifOrientationForJpegFile(FILE * f) {
 + (unsigned short)orientationForFile:(NSString *)aPath {
 	unsigned short z = 0;
 	NSString *ext = aPath.pathExtension.lowercaseString;
-	if (IsJPEG(ext)) {
+	BOOL isJpeg = IsJPEG(ext);
+	if (isJpeg || IsHeif(ext)) {
 		FILE * f = fopen(aPath.fileSystemRepresentation, "rb");
 		if (f == NULL) return 0;
-		z = ExifOrientationForJpegFile(f);
+		z = ExifOrientationForFile(f, isJpeg);
 		fclose(f);
 	} else if (IsRaw(ext)) {
 		z = ExifOrientationFromRawFile(aPath.fileSystemRepresentation);
