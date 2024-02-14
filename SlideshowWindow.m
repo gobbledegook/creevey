@@ -172,6 +172,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)setAutoRotate:(BOOL)b {
+	if (b == autoRotate) return;
 	autoRotate = b;
 	[rotations removeAllObjects];
 	[flips removeAllObjects];
