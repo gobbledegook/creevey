@@ -132,6 +132,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"picturesFolderPath": s,
 		@"lastFolderPath": s,
 		@"startupOption": @0,
+		@"appearance": @0,
 		@"thumbCellWidth": @120.0f,
 		@"getInfoVisible": @NO,
 		@"autoVersCheck": @YES,
@@ -237,19 +238,24 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[filetypes removeObject:type];
 	}
 	[self updateMoveToMenuItem];
+	[self updateAppearance];
 
 	NSUserDefaultsController *ud = NSUserDefaultsController.sharedUserDefaultsController;
 	[ud addObserver:self forKeyPath:@"values.slideshowBgColor" options:0 context:NULL];
 	[ud addObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth" options:0 context:NULL];
+	[ud addObserver:self forKeyPath:@"values.appearance" options:0 context:NULL];
 	localeChangeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSCurrentLocaleDidChangeNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
 		[u setDouble:[u doubleForKey:@"lastVersCheckTime"] forKey:@"lastVersCheckTime"];
 	}];
 }
 
+- (BOOL)macos1014available { if (@available(macOS 10.14, *)) return YES; return NO; }
+
 - (void)dealloc {
 	NSUserDefaultsController *u = NSUserDefaultsController.sharedUserDefaultsController;
 	[u removeObserver:self forKeyPath:@"values.slideshowBgColor"];
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
+	[u removeObserver:self forKeyPath:@"values.appearance"];
 	[NSNotificationCenter.defaultCenter removeObserver:localeChangeObserver];
 	short int i;
 	for (i=0; i<NUM_FNKEY_CATS; ++i)
@@ -1025,6 +1031,16 @@ static void SendAction(NSMenuItem *sender) {
 	slidesWindow.backgroundColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"slideshowBgColor"] error:NULL];
 }
 
+- (void)updateAppearance {
+	if (@available(macOS 10.14, *)) {
+		switch ([NSUserDefaults.standardUserDefaults integerForKey:@"appearance"]) {
+			case 1: NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua]; break;
+			case 2: NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua]; break;
+			default: NSApp.appearance = nil; break;
+		}
+	}
+}
+
 - (IBAction)slideshowDefaultsChanged:(id)sender; {
 	if (slidesWindow.visible)
 		slideshowApplyBtn.enabled = YES;
@@ -1046,6 +1062,8 @@ static void SendAction(NSMenuItem *sender) {
 	} else if ([keyPath isEqualToString:@"values.slideshowBgColor"]) {
 		[self updateSlideshowBgColor];
 		[slidesWindow.contentView setNeedsDisplay:YES];
+	} else if ([keyPath isEqualToString:@"values.appearance"]) {
+		[self updateAppearance];
 	}
 }
 
