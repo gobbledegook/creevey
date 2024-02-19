@@ -10,6 +10,7 @@
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
 #import "NSMutableArray+DYMovable.h"
+#import "NSColor+TextColor.h"
 
 #define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
@@ -82,7 +83,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSColor *bgColor;
 	BOOL autoRotate;
 	NSImageCell *myCell;           // one cell, reused for efficiency
-	NSCell *myTextCell; // for drawing the file name
+	NSTextFieldCell *myTextCell; // for drawing the file name
 	NSMutableArray *images;
 	NSMutableArray *filenames;
 	NSMutableSet *requestedFilenames; // keep track of which files we've requested images for
@@ -153,7 +154,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 {
 	if ((self = [super initWithFrame:frameRect]) != nil) {
 		myCell = [[NSImageCell alloc] initImageCell:nil];
-		myTextCell = [[NSCell alloc] init];
+		myTextCell = [[NSTextFieldCell alloc] init];
 		myTextCell.alignment = NSTextAlignmentCenter;
 		images = [[NSMutableArray alloc] initWithCapacity:100];
 		filenames = [[NSMutableArray alloc] initWithCapacity:100];
@@ -564,13 +565,13 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	
 	[bgColor set];
 	[NSBezierPath fillRect:rect];
-	//NSLog(@"---------------------------");
 	NSUInteger i, row, col;
 	NSRect areaRect = NSMakeRect(0, 0, area_w, area_h);
 	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + _vPadding/2);
 	NSRect cellRect;
 	NSWindow *myWindow = self.window;
 	myTextCell.font = [NSFont systemFontOfSize:cellWidth >= 160 ? 12 : 4+cellWidth/20]; // ranges from 6 to 12: 6 + 6*(cellWidth-40)/(160-40)
+	myTextCell.textColor = bgColor.bestTextColor;
 	for (i=0; i<numCells; ++i) {
 		row = i/numCols;
 		col = i%numCols;

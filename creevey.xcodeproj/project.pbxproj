@@ -25,6 +25,8 @@
 		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
 		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
 		F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */ = {isa = PBXBuildFile; fileRef = F23DC5120A86CEF7005E49FD /* slideshow.tif */; };
+		F23F405A2B81979E0048E5A4 /* NSColor+TextColor.h in Headers */ = {isa = PBXBuildFile; fileRef = F23F40582B81979E0048E5A4 /* NSColor+TextColor.h */; };
+		F23F405B2B81979E0048E5A4 /* NSColor+TextColor.m in Sources */ = {isa = PBXBuildFile; fileRef = F23F40592B81979E0048E5A4 /* NSColor+TextColor.m */; };
 		F23F80962B30F15C0094F9C1 /* version.html in Resources */ = {isa = PBXBuildFile; fileRef = F23F80952B30F0390094F9C1 /* version.html */; };
 		F254E96F08919E2B00DE9C38 /* makers.h in Headers */ = {isa = PBXBuildFile; fileRef = F254E96D08919E2B00DE9C38 /* makers.h */; };
 		F254E97008919E2B00DE9C38 /* makers.c in Sources */ = {isa = PBXBuildFile; fileRef = F254E96E08919E2B00DE9C38 /* makers.c */; };
@@ -143,6 +145,8 @@
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
 		F23DC5120A86CEF7005E49FD /* slideshow.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = slideshow.tif; sourceTree = "<group>"; };
+		F23F40582B81979E0048E5A4 /* NSColor+TextColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSColor+TextColor.h"; sourceTree = "<group>"; };
+		F23F40592B81979E0048E5A4 /* NSColor+TextColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSColor+TextColor.m"; sourceTree = "<group>"; };
 		F23F80952B30F0390094F9C1 /* version.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = version.html; sourceTree = "<group>"; };
 		F254E11F0BD30DD80053F673 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/EXIF.strings; sourceTree = "<group>"; };
 		F254E96D08919E2B00DE9C38 /* makers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = makers.h; path = exiftags/makers.h; sourceTree = "<group>"; };
@@ -336,6 +340,8 @@
 				F29CD2350800C372000B0F91 /* DYCarbonGoodies.m */,
 				F2A6DA5C2B3F7E01009D0B31 /* NSMutableArray+DYMovable.h */,
 				F2A6DA5D2B3F7E01009D0B31 /* NSMutableArray+DYMovable.m */,
+				F23F40582B81979E0048E5A4 /* NSColor+TextColor.h */,
+				F23F40592B81979E0048E5A4 /* NSColor+TextColor.m */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);
 			name = "Other Sources";
@@ -472,6 +478,7 @@
 				F2FA6DED2AF8CF4700F3A28B /* VDKQueue.h in Headers */,
 				F2FE507208848C9400550533 /* exifint.h in Headers */,
 				F2FE507908848C9400550533 /* exif.h in Headers */,
+				F23F405A2B81979E0048E5A4 /* NSColor+TextColor.h in Headers */,
 				F2FE507A08848C9400550533 /* timevary.h in Headers */,
 				F2FE508B08848C9400550533 /* DYExiftags.h in Headers */,
 				F20DC2910886240400986105 /* CreeveyMainWindowController.h in Headers */,
@@ -594,6 +601,7 @@
 				F234C0180810E9B700175D50 /* DYImageCache.m in Sources */,
 				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,
 				F2FE4FCA08842F5500550533 /* DYJpegtran.m in Sources */,
+				F23F405B2B81979E0048E5A4 /* NSColor+TextColor.m in Sources */,
 				F2FE4FCC08842F5500550533 /* transupp.c in Sources */,
 				F2FE507308848C9400550533 /* leica.c in Sources */,
 				F2FE507508848C9400550533 /* minolta.c in Sources */,
