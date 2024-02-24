@@ -59,10 +59,16 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		if (@available(macOS 10.14, *))
 			idx = CGImageSourceGetPrimaryImageIndex(src);
 		else idx = 0;
-		CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCacheImmediately:@YES});
-		if (ref) {
-			image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
-			CFRelease(ref);
+		NSString *type = (__bridge NSString *)CGImageSourceGetType(src);
+		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(src) > 1) {
+			// special case for animated gifs
+			image = [[NSImage alloc] initWithContentsOfFile:myPath];
+		} else {
+			CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCacheImmediately:@YES});
+			if (ref) {
+				image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
+				CFRelease(ref);
+			}
 		}
 		CFRelease(src);
 	}
