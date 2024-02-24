@@ -52,7 +52,8 @@ NSString *FileSize2String(unsigned long long fileSize) {
 }
 
 - (NSImage *)loadFullSizeImage {
-	CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:ResolveAliasToPath(path)], NULL);
+	NSString *myPath = ResolveAliasToPath(path);
+	CGImageSourceRef src = CGImageSourceCreateFromPath(myPath);
 	if (src) {
 		size_t idx;
 		if (@available(macOS 10.14, *))
@@ -209,7 +210,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 
 		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(orig) > 1) {
 			// special case for animated gifs
-			imgInfo.image = [[NSImage alloc] initByReferencingFile:ResolveAliasToPath(imgInfo.path)];
+			imgInfo.image = [[NSImage alloc] initWithContentsOfFile:ResolveAliasToPath(imgInfo.path)];
 			fastThumbnails = NO;
 		} else if (!fastThumbnails) {
 			CGFloat maxLen = 1.5*boundingSize.width;
@@ -331,7 +332,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	NSString *path = ResolveAliasToPath(imgInfo.path);
 	NSString *ext = path.pathExtension.lowercaseString;
 	if (IsNotCGImage(ext)) {
-		NSImage *img = [[NSImage alloc] initByReferencingFile:path];
+		NSImage *img = [[NSImage alloc] initWithContentsOfFile:path];
 		if (_fastThumbnails) {
 			ScaleImage(img, boundingSize, _rotatable, imgInfo);
 		} else {
@@ -340,8 +341,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 			imgInfo->pixelSize = img.size;
 		}
 	} else {
-		NSURL *url = [NSURL fileURLWithPath:ResolveAliasToPath(imgInfo.path)];
-		CGImageSourceRef orig = CGImageSourceCreateWithURL((__bridge CFURLRef)url, NULL);
+		CGImageSourceRef orig = CGImageSourceCreateFromPath(path);
 		if (orig) {
 			// get the orientation first; it will determine if ScaleCGImage needs to auto-rotate
 			imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
@@ -373,7 +373,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	if (imgInfo->fileSize == 0) return;
 	NSString *path = ResolveAliasToPath(imgInfo.path);
 	if (IsNotCGImage(path.pathExtension.lowercaseString)) {
-		NSImage *img = [[NSImage alloc] initByReferencingFile:path];
+		NSImage *img = [[NSImage alloc] initWithContentsOfFile:path];
 		imgInfo.image = img;
 		imgInfo->pixelSize = img.size;
 	} else {

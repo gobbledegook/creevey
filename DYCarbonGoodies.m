@@ -72,3 +72,9 @@ BOOL FileIsJPEG(NSString *s) {
 	return [x isEqualToString:@"jpg"] || [x isEqualToString:@"jpeg"]
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
+
+CGImageSourceRef _Nullable CGImageSourceCreateFromPath(NSString *path) {
+	NSData *data = [NSData dataWithContentsOfFile:path];
+	if (data) return CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+	return NULL;
+}

@@ -23,4 +23,6 @@ BOOL IsNotCGImage(NSString *x);
 // for paths
 BOOL FileIsJPEG(NSString *s);
 
+CGImageSourceRef _Nullable CGImageSourceCreateFromPath(NSString *path);
+
 NS_ASSUME_NONNULL_END
