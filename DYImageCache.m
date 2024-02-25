@@ -105,6 +105,10 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSMutableSet<NSString *> *pending;
 	
 	_Atomic BOOL cachingShouldStop;
+
+	NSUInteger _maxCount;
+	NSMutableOrderedSet<NSString *> *stupidKeys;
+	NSMutableDictionary<NSString *, DYImageInfo *> *stupidCacheWorkaround;
 }
 - (instancetype)init NS_UNAVAILABLE;
 @end
@@ -117,6 +121,11 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		images.countLimit = n;
 		images.evictsObjectsWithDiscardedContent = YES;
 		pending = [[NSMutableSet alloc] init];
+		_maxCount = n;
+		if (_maxCount < 20) {
+			stupidKeys = [NSMutableOrderedSet orderedSetWithCapacity:n];
+			stupidCacheWorkaround = [NSMutableDictionary dictionaryWithCapacity:n];
+		}
 		
 		cacheLock = [[NSLock alloc] init];
 		pendingLock = [[NSConditionLock alloc] initWithCondition:0];
@@ -453,6 +462,15 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	[pending removeObject:s];
 	if (!cachingShouldStop) {
 		[images setObject:imgInfo forKey:s];
+		if (stupidKeys && [images objectForKey:s] == nil) {
+			// for some reason, very occasionally you can add an object to the cache but it doesn't stick. This results in sort of infinite looping in the slideshow as it creates a cached image which gets immediately discarded, over and over. The slideshow just shows a blank screen with the message "loading...". This should work around that.
+			if (stupidKeys.count == _maxCount) {
+				[stupidCacheWorkaround removeObjectForKey:stupidKeys[0]];
+				[stupidKeys removeObjectAtIndex:0];
+			}
+			[stupidKeys addObject:s];
+			stupidCacheWorkaround[s] = imgInfo;
+		}
 	}
 	[cacheLock unlock];
 	[pendingLock lock];
@@ -468,6 +486,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 }
 
 - (DYImageInfo *)infoForKey:(NSString *)s {
+	if (stupidKeys) return stupidCacheWorkaround[s] ?: [images objectForKey:s];
 	return [images objectForKey:s];
 }
 
@@ -487,6 +506,8 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 		if (modTime == imgInfo->modTime)
 			return imgInfo.image;
 		[self removeImageForKey:s];
+	} else if (stupidKeys && stupidCacheWorkaround[s]) {
+		return stupidCacheWorkaround[s].image;
 	}
 	return nil;
 }
@@ -503,6 +524,10 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 			[cacheLock lock];
 		}
 		[images removeObjectForKey:s];
+		if (stupidKeys) {
+			[stupidKeys removeObject:s];
+			[stupidCacheWorkaround removeObjectForKey:s];
+		}
 	}
 	[cacheLock unlock];
 }
