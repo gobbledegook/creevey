@@ -448,11 +448,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			if ([DYJpegtran transformImage:resolvedPath transform:jinfo]) {
 				[thumbsCache removeImageForKey:resolvedPath];
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasChanged:) withObject:s];
-				// slower, but easier code
-				if (slidesWasKey) // remember, progress window is now key
-					[slidesWindow redisplayImage];
-				else
-					[slidesWindow uncacheImage:s]; // when we have multiple slideshows, we can just use this method
+				[slidesWindow uncacheImage:s];
 			} else {
 				// ** fail silently
 				//NSLog(@"rot failed!");
