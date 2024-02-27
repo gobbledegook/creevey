@@ -393,6 +393,8 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 			if (idx != NSNotFound) {
 				if (displayedFilenames.count != filenames.count)
 					idx = [displayedFilenames updateIndexOfObject:s usingComparator:self.comparator oldIndex:&oldIdx];
+				else
+					[displayedFilenames moveObjectAtIndex:oldIdx toIndex:idx];
 				if (idx != NSNotFound)
 					[imgMatrix moveImageAtIndex:oldIdx toIndex:idx];
 				[self fileWasChanged:s];
