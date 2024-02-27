@@ -38,9 +38,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 	
 	// origin
-	destinationRect.origin.x = (int)(NSMidX(boundsRect) - destinationRect.size.width/2);
-	destinationRect.origin.y = (int)(NSMidY(boundsRect) - destinationRect.size.height/2);
-	//return NSIntegralRect(destinationRect);
+	destinationRect.origin.x = round(NSMidX(boundsRect) - destinationRect.size.width/2);
+	destinationRect.origin.y = round(NSMidY(boundsRect) - destinationRect.size.height/2);
 	return destinationRect;
 }
 
@@ -612,7 +611,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			continue;
 		}
 		[NSColor.whiteColor set]; // white bg for transparent imgs
-		NSRectFill(cellRect);
+		NSRectFill(NSInsetRect(NSIntegralRectWithOptions(cellRect, NSAlignAllEdgesNearest), 1.0, 1.0));
 		if (autoRotate) {
 			unsigned short orientation = [self exifOrientationForIndex:i];
 			int r = 0; BOOL imgFlipped = NO;
@@ -623,12 +622,11 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 				case 3: r = 180; break;
 			}
 			NSAffineTransform *transform = [NSAffineTransform transform];
-			[transform translateXBy:cellRect.origin.x+cellRect.size.width/2
-								yBy:cellRect.origin.y+cellRect.size.height/2];
+			CGFloat tx = cellRect.origin.x+cellRect.size.width/2, ty = cellRect.origin.y+cellRect.size.height/2;
+			[transform translateXBy:tx yBy:ty];
 			[transform rotateByDegrees:r];
 			if (imgFlipped) [transform scaleXBy:-1 yBy:1];
-			[transform translateXBy:-cellRect.origin.x-cellRect.size.width/2
-								yBy:-cellRect.origin.y-cellRect.size.height/2];
+			[transform translateXBy:-tx yBy:-ty];
 			[transform concat];
 			NSRect cellRect2 = cellRect;
 			if (orientation >= 5) {

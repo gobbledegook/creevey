@@ -60,8 +60,8 @@
 	float zoom = zoomF;
 	NSRect boundsRect = [self convertRect:self.bounds toView:nil];
 	float centerX, centerY; float tmp;
-	centerX = boundsRect.size.width/2;
-	centerY = boundsRect.size.height/2;
+	centerX = (int)(boundsRect.size.width/2);
+	centerY = (int)(boundsRect.size.height/2);
 	if (zoomF) {
 		srcRect = sourceRect;
 		destinationRect.size = destSize;
