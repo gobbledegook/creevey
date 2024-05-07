@@ -9869,6 +9869,7 @@ void CLASS jpeg_thumb()
   ushort exif[5];
   struct tiff_hdr th;
 
+  if (thumb_length == 0) longjmp(failure, 1); // CR3 crash; apparently exiftool can successfully extract thumbnails from CR3 files
   thumb = (char *) malloc (thumb_length);
   merror (thumb, "jpeg_thumb()");
   fread (thumb, 1, thumb_length, ifp);

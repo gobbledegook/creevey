@@ -226,7 +226,6 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(orig) > 1) {
 			// special case for animated gifs
 			imgInfo.image = [[NSImage alloc] initWithContentsOfFile:ResolveAliasToPath(imgInfo.path)];
-			fastThumbnails = NO;
 		} else if (!fastThumbnails) {
 			CGFloat maxLen = 1.5*boundingSize.width;
 			if (imgInfo->pixelSize.width < maxLen && imgInfo->pixelSize.height < maxLen) {
@@ -261,7 +260,21 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 			}
 		}
 		CFRelease(full);
-		if (!fastThumbnails && imgInfo.image != nil) return;
+		if ([type isEqualToString:@"public.tiff"]) {
+			NSImage *img = [[NSImage alloc] initByReferencingFile:imgInfo.path];
+			NSSize expectedSize = img.size;
+			// CGImageSourceCreateImageAtIndex returns tiny images for certain raw files (.NEF), so we work around it
+			if (abs((int)(expectedSize.width - fullSize.width)) > 1000)
+				imgInfo.image = nil;
+		}
+		if (imgInfo.image != nil) return;
+	}
+	if (!fastThumbnails) {
+		// certain raw images don't seem to play well with CGImageSourceCreateImageAtIndex
+		// so we fall back to NSImage
+		imgInfo->exifOrientation = 0; // except now we let NSImage auto-rotate. Curiously enough, trying NSImage's -initWithDataIgnoringOrientation: runs into the same problem as using CGImage (tiny images)
+		ScaleImage([[NSImage alloc] initByReferencingFile:imgInfo.path], boundingSize, YES, imgInfo);
+		return;
 	}
 	BOOL isJpeg = [type isEqualToString:@"public.jpeg"];
 	BOOL isHeic = [type isEqualToString:@"public.heic"];
