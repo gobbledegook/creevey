@@ -221,6 +221,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[self configureScreen];
 	currentIndex = NSNotFound;
 	imgView.image = nil;
+	self.title = NSProcessInfo.processInfo.processName;
 	infoFld.hidden = NO;
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self makeKeyAndOrderFront:nil];
@@ -346,6 +347,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	exifFld.string = @"";
 	[imgCache beginCaching];
 	imgView.image = nil;
+	self.title = NSProcessInfo.processInfo.processName;
 	[self makeKeyAndOrderFront:nil];
 	[self configureBacking];
 	[self displayImage];
@@ -590,9 +592,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[infoFld sizeToFit];
 		exifFld.string = @"";
 		imgView.image = nil;
+		self.title = NSProcessInfo.processInfo.processName;
 		return;
 	}
 	NSString *theFile = filenames[currentIndex];
+	[self setTitleWithRepresentedFilename:theFile];
 	NSImage *img = [self loadFromCache:theFile];
 	[self displayCats];
 	if (img) {
