@@ -110,7 +110,7 @@ static NSString *defaultPath(void) {
 		// if we get here, something was deleted (or worse, expelled)
 		newPath = fpath.stringByDeletingLastPathComponent;
 		while (![NSFileManager.defaultManager fileExistsAtPath:newPath] && newPath.length > 1) {
-			newPath = fpath.stringByDeletingLastPathComponent;
+			newPath = newPath.stringByDeletingLastPathComponent;
 		}
 		if (newPath.length == 1) newPath = defaultPath();
 	}
