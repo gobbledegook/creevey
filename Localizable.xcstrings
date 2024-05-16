@@ -736,6 +736,76 @@
         }
       }
     },
+    "Begin Slideshow (Full Screen)" : {
+      "comment" : "Slideshow menu",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diashow starten (Vollbild)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar pase de diapositivas (pantalla completa)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer le diaporama (plein écran)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia la Presentazione (tutto schermo)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放幻燈片（全螢幕）"
+          }
+        }
+      }
+    },
+    "Begin Slideshow In Window" : {
+      "comment" : "Slideshow menu",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diaschau im Fenster starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar pase de diapositivas en ventana"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer le diaporama dans fenêtre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia la Presentazione nella finestra"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在視窗裡播放幻燈片"
+          }
+        }
+      }
+    },
     "Camera-Specific Properties:\n" : {
       "localizations" : {
         "de" : {

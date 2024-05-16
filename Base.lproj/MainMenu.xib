@@ -331,7 +331,7 @@ DQ
 </string>
                                 <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
-                                    <action selector="slideshowInWindow:" target="207" id="pLp-k2-hup"/>
+                                    <action selector="slideshowAlternateMode:" target="207" id="pLp-k2-hup"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="End Slideshow" id="329">

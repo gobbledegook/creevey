@@ -127,6 +127,48 @@
         }
       }
     },
+    "9tJ-oS-0Hh.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Window\"; ObjectID = \"9tJ-oS-0Hh\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Window"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En una ventana"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans une fenêtre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In una finestra"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視窗裡"
+          }
+        }
+      }
+    },
     "54e-kR-iPH.title" : {
       "comment" : "Class = \"NSButtonCell\"; title = \"Don't auto-advance\"; ObjectID = \"54e-kR-iPH\";",
       "extractionState" : "extracted_with_value",
@@ -1789,6 +1831,48 @@
         }
       }
     },
+    "nvb-DG-NSv.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Default mode:\"; ObjectID = \"nvb-DG-NSv\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardmodus:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default mode:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo por defecto:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode par défaut:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modalità di default:"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預設模式："
+          }
+        }
+      }
+    },
     "O2C-aP-PUf.headerCell.title" : {
       "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"description\"; ObjectID = \"O2C-aP-PUf\";",
       "extractionState" : "extracted_with_value",
@@ -1953,6 +2037,48 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "次檔案夾"
+          }
+        }
+      }
+    },
+    "tJH-BZ-Qa4.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Full Screen\"; ObjectID = \"tJH-BZ-Qa4\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollbild"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Full Screen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantalla completa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plein écran"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tutto schermo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全螢幕"
           }
         }
       }

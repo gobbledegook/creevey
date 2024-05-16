@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="22505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22505"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22690"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -10,6 +10,7 @@
             <connections>
                 <outlet property="prefsWin" destination="394" id="eLk-Xg-N1V"/>
                 <outlet property="slideshowApplyBtn" destination="612" id="pBf-Jh-sue"/>
+                <outlet property="slideshowDefaultModeFullscreenBtn" destination="8PW-xM-c5f" id="4Fu-CX-WG6"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -21,11 +22,11 @@
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="213" height="107"/>
             <view key="contentView" id="395">
-                <rect key="frame" x="0.0" y="0.0" width="493" height="478"/>
+                <rect key="frame" x="0.0" y="0.0" width="493" height="476"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <tabView drawsBackground="NO" translatesAutoresizingMaskIntoConstraints="NO" id="587">
-                        <rect key="frame" x="-7" y="-10" width="507" height="494"/>
+                        <rect key="frame" x="-7" y="-10" width="507" height="492"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="General" identifier="general" id="588">
@@ -496,11 +497,52 @@
                                                 <binding destination="551" name="value" keyPath="values.openFilesIgnoreAutoadvance" id="P4Y-XT-0vt"/>
                                             </connections>
                                         </button>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="td6-Sw-9Hf">
+                                            <rect key="frame" x="18" y="158" width="90" height="16"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="Default mode:" id="nvb-DG-NSv">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <stackView distribution="fill" orientation="vertical" alignment="leading" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tDr-Qv-iYo">
+                                            <rect key="frame" x="20" y="110" width="447" height="40"/>
+                                            <subviews>
+                                                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8PW-xM-c5f">
+                                                    <rect key="frame" x="-2" y="23" width="94" height="18"/>
+                                                    <buttonCell key="cell" type="radio" title="Full Screen" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="tJH-BZ-Qa4">
+                                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="chooseDefaultSlideshowMode:" target="-2" id="88P-lb-9OA"/>
+                                                    </connections>
+                                                </button>
+                                                <button tag="1" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="QEU-yw-wZl">
+                                                    <rect key="frame" x="-2" y="-1" width="75" height="18"/>
+                                                    <buttonCell key="cell" type="radio" title="Window" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="9tJ-oS-0Hh">
+                                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="chooseDefaultSlideshowMode:" target="-2" id="AiY-3N-jx1"/>
+                                                    </connections>
+                                                </button>
+                                            </subviews>
+                                            <visibilityPriorities>
+                                                <integer value="1000"/>
+                                                <integer value="1000"/>
+                                            </visibilityPriorities>
+                                            <customSpacing>
+                                                <real value="3.4028234663852886e+38"/>
+                                                <real value="3.4028234663852886e+38"/>
+                                            </customSpacing>
+                                        </stackView>
                                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="633">
-                                            <rect key="frame" x="20" y="171" width="447" height="5"/>
+                                            <rect key="frame" x="20" y="99" width="447" height="5"/>
                                         </box>
                                         <colorWell translatesAutoresizingMaskIntoConstraints="NO" id="624">
-                                            <rect key="frame" x="17" y="134" width="48" height="33"/>
+                                            <rect key="frame" x="17" y="62" width="48" height="33"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="42" id="J7H-Zz-lWj"/>
                                                 <constraint firstAttribute="height" constant="29" id="SYe-GM-dN9"/>
@@ -515,7 +557,7 @@
                                             </connections>
                                         </colorWell>
                                         <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="626">
-                                            <rect key="frame" x="68" y="143" width="199" height="16"/>
+                                            <rect key="frame" x="68" y="71" width="199" height="16"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Background Color/Transparency" id="834">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -527,21 +569,25 @@
                                         <constraint firstItem="yDF-PQ-Kdz" firstAttribute="leading" secondItem="tyf-tl-nlP" secondAttribute="leading" constant="24" id="06z-BB-DNF"/>
                                         <constraint firstItem="DNh-gR-EyJ" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="18P-he-0qO"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="599" secondAttribute="trailing" constant="20" symbolic="YES" id="1bO-Kp-ZtV"/>
+                                        <constraint firstItem="633" firstAttribute="top" secondItem="tDr-Qv-iYo" secondAttribute="bottom" constant="8" symbolic="YES" id="2Tm-qC-o6a"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="626" secondAttribute="trailing" constant="20" symbolic="YES" id="2qP-G0-37r"/>
                                         <constraint firstItem="599" firstAttribute="top" secondItem="598" secondAttribute="bottom" constant="6" symbolic="YES" id="38a-Tq-72B"/>
                                         <constraint firstItem="597" firstAttribute="leading" secondItem="596" secondAttribute="trailing" constant="8" symbolic="YES" id="3Du-Ht-THw"/>
                                         <constraint firstItem="626" firstAttribute="leading" secondItem="624" secondAttribute="trailing" constant="8" symbolic="YES" id="3Qm-VJ-ngp"/>
+                                        <constraint firstItem="tDr-Qv-iYo" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="9CN-5g-iRx"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Jcw-DN-1OM" secondAttribute="trailing" priority="750" constant="20" symbolic="YES" id="9P2-lo-w1s"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="tyf-tl-nlP" secondAttribute="trailing" priority="250" constant="20" symbolic="YES" id="AnU-3Q-H0N"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="DNh-gR-EyJ" secondAttribute="trailing" priority="250" constant="253" id="Bwe-Um-sYO"/>
+                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="td6-Sw-9Hf" secondAttribute="trailing" constant="20" symbolic="YES" id="CFX-xD-4Ia"/>
                                         <constraint firstAttribute="trailing" secondItem="612" secondAttribute="trailing" constant="20" symbolic="YES" id="IM9-Oc-Ob8"/>
                                         <constraint firstItem="600" firstAttribute="top" secondItem="Jcw-DN-1OM" secondAttribute="bottom" constant="6" symbolic="YES" id="IMw-yx-xFu"/>
-                                        <constraint firstItem="633" firstAttribute="top" secondItem="yDF-PQ-Kdz" secondAttribute="bottom" constant="8" symbolic="YES" id="J3h-PM-CJN"/>
                                         <constraint firstItem="yDF-PQ-Kdz" firstAttribute="top" secondItem="tyf-tl-nlP" secondAttribute="bottom" constant="6" symbolic="YES" id="JAN-N0-3cJ"/>
                                         <constraint firstItem="624" firstAttribute="centerY" secondItem="626" secondAttribute="centerY" id="NIZ-C4-WYy"/>
                                         <constraint firstItem="598" firstAttribute="top" secondItem="594" secondAttribute="bottom" constant="6" symbolic="YES" id="OrT-Cv-npS"/>
                                         <constraint firstAttribute="trailing" secondItem="690" secondAttribute="trailing" constant="20" symbolic="YES" id="QeU-3a-9yS"/>
                                         <constraint firstItem="600" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="Ro4-o0-zjd"/>
+                                        <constraint firstItem="td6-Sw-9Hf" firstAttribute="top" secondItem="yDF-PQ-Kdz" secondAttribute="bottom" constant="8" symbolic="YES" id="UVn-ZB-dSR"/>
+                                        <constraint firstAttribute="trailing" secondItem="tDr-Qv-iYo" secondAttribute="trailing" constant="20" symbolic="YES" id="UgM-tE-kyA"/>
                                         <constraint firstItem="612" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="601" secondAttribute="trailing" constant="8" symbolic="YES" id="XaL-rJ-kzV"/>
                                         <constraint firstItem="633" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="YMD-6d-gZn"/>
                                         <constraint firstItem="DNh-gR-EyJ" firstAttribute="top" secondItem="690" secondAttribute="bottom" constant="8" symbolic="YES" id="bVS-Hm-hsg"/>
@@ -568,7 +614,9 @@
                                         <constraint firstItem="Jcw-DN-1OM" firstAttribute="top" secondItem="599" secondAttribute="bottom" constant="6" symbolic="YES" id="rbA-cS-E7g"/>
                                         <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="624" secondAttribute="bottom" priority="750" constant="20" symbolic="YES" id="svp-nX-6jG"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="598" secondAttribute="trailing" constant="20" symbolic="YES" id="tNu-rY-YS9"/>
+                                        <constraint firstItem="tDr-Qv-iYo" firstAttribute="top" secondItem="td6-Sw-9Hf" secondAttribute="bottom" constant="8" symbolic="YES" id="v48-YI-hIu"/>
                                         <constraint firstItem="612" firstAttribute="baseline" secondItem="601" secondAttribute="baseline" id="vGz-ta-aCc"/>
+                                        <constraint firstItem="td6-Sw-9Hf" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="wAw-NV-g3S"/>
                                         <constraint firstItem="601" firstAttribute="top" secondItem="600" secondAttribute="bottom" constant="6" symbolic="YES" id="wyJ-hU-UKM"/>
                                         <constraint firstItem="595" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="yEu-fV-4WF"/>
                                         <constraint firstItem="690" firstAttribute="leading" secondItem="591" secondAttribute="leading" constant="20" symbolic="YES" id="zuQ-9r-AmT"/>

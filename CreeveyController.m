@@ -156,6 +156,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"startupSlideshowFromFolder":@NO,
 		@"startupSlideshowSubfolders":@NO,
 		@"startupSlideshowSuppressNewWindows":@NO,
+		@"slideshowDefaultMode":@0,
 	}];
 
 	// migrate old RBSplitView pref
@@ -238,6 +239,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[filetypes removeObject:type];
 	}
 	[self updateMoveToMenuItem];
+	[self updateAlternateSlideshowMenuItem];
 	[self updateAppearance];
 
 	NSUserDefaultsController *ud = NSUserDefaultsController.sharedUserDefaultsController;
@@ -263,7 +265,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 - (void)slideshowFromAppOpen:(NSArray *)files {
-	[self startSlideshowFullscreen:slidesWindow.visible ? slidesWindow.fullscreenMode : YES withFiles:files];
+	BOOL fullscreen = slidesWindow.visible ? slidesWindow.fullscreenMode : [NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] == 0;
+	[self startSlideshowFullscreen:fullscreen withFiles:files];
 }
 
 - (void)startSlideshowFullscreen:(BOOL)flag {
@@ -307,16 +310,17 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (IBAction)slideshow:(id)sender
 {
-	[self startSlideshowFullscreen:YES];
+	[self startSlideshowFullscreen:[NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] == 0];
 }
 
-- (IBAction)slideshowInWindow:(id)sender {
-	[self startSlideshowFullscreen:NO];
+- (IBAction)slideshowAlternateMode:(id)sender {
+	[self startSlideshowFullscreen:[NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] != 0];
 }
 
 - (IBAction)openSelectedFiles:(id)sender {
-	NSEvent *e = NSApp.currentEvent;
-	[self startSlideshowFullscreen:!(e.modifierFlags & NSEventModifierFlagOption)];
+	BOOL fullscreen = [NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] == 0;
+	if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagOption) fullscreen = !fullscreen;
+	[self startSlideshowFullscreen:fullscreen];
 }
 
 - (IBAction)revealSelectedFilesInFinder:(id)sender {
@@ -478,6 +482,12 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSMenuItem *item = [m itemWithTag:MOVE_TO_AGAIN];
 	NSString *name = [NSFileManager.defaultManager displayNameAtPath:path];
 	item.title = [NSString stringWithFormat:NSLocalizedString(@"Move to “%@” Again", @"File menu"), name];
+}
+
+- (void)updateAlternateSlideshowMenuItem {
+	NSMenu *m = [NSApp.mainMenu itemWithTag:SLIDESHOW_MENU].submenu;
+	NSMenuItem *item = [m itemWithTag:BEGIN_SLIDESHOW_ALTERNATE];
+	item.title = [NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] == 0 ? NSLocalizedString(@"Begin Slideshow In Window", @"Slideshow menu") : NSLocalizedString(@"Begin Slideshow (Full Screen)", @"Slideshow menu");
 }
 
 - (void)moveSelectedFilesTo:(NSURL *)dest {
@@ -809,7 +819,7 @@ enum {
 	SLIDESHOW_SCALE_UP,
 	SLIDESHOW_ACTUAL_SIZE,
 	NEW_TAB,
-	BEGIN_SLIDESHOW_IN_WINDOW,
+	BEGIN_SLIDESHOW_ALTERNATE,
 	MOVE_TO,
 	MOVE_TO_AGAIN,
 	JPEG_OP = 100,
@@ -884,7 +894,7 @@ enum {
 		case REVEAL_IN_FINDER:
 			return YES;
 		case BEGIN_SLIDESHOW:
-		case BEGIN_SLIDESHOW_IN_WINDOW:
+		case BEGIN_SLIDESHOW_ALTERNATE:
 			if (slidesWindow.isMainWindow ) return NO;
 			return frontWindow && frontWindow.filenamesDone && frontWindow.displayedFilenames.count;
 		case SET_DESKTOP:
@@ -959,6 +969,9 @@ enum {
 		NSArray * __autoreleasing arr;
 		if (![NSBundle.mainBundle loadNibNamed:@"PrefsWin" owner:self topLevelObjects:&arr]) return;
 		_prefWinNibItems = arr;
+		// non-NSMatrix based radio buttons don't seem to have a way to bind values
+		NSButton *btn = [NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] ? [self.slideshowDefaultModeFullscreenBtn.superview viewWithTag:1] : self.slideshowDefaultModeFullscreenBtn;
+		btn.state = NSOnState;
 	}
     [prefsWin makeKeyAndOrderFront:nil];
 }
@@ -1042,6 +1055,11 @@ static void SendAction(NSMenuItem *sender) {
 		slideshowApplyBtn.enabled = YES;
 	else
 		[self applySlideshowPrefs:nil];
+}
+
+- (IBAction)chooseDefaultSlideshowMode:(id)sender {
+	[NSUserDefaults.standardUserDefaults setInteger:[sender tag] forKey:@"slideshowDefaultMode"];
+	[self updateAlternateSlideshowMenuItem];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath

@@ -27,6 +27,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @property (weak) IBOutlet NSPanel *prefsWin;
 @property (weak) IBOutlet NSButton *slideshowApplyBtn;
 
+@property (weak) IBOutlet NSButton *slideshowDefaultModeFullscreenBtn;
+
 // accessors
 @property (nonatomic, readonly) NSMutableSet * __strong *cats;
 - (void)updateCats;
@@ -37,7 +39,7 @@ NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders)
 - (BOOL)shouldShowFile:(NSURL *)path;
 
 - (IBAction)slideshow:(id)sender;
-- (IBAction)slideshowInWindow:(id)sender;
+- (IBAction)slideshowAlternateMode:(id)sender;
 - (IBAction)openSelectedFiles:(id)sender;
 - (IBAction)revealSelectedFilesInFinder:(id)sender;
 - (IBAction)setDesktopPicture:(id)sender;
@@ -56,6 +58,7 @@ NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders)
 - (IBAction)chooseStartupDir:(id)sender;
 - (IBAction)applySlideshowPrefs:(id)sender;
 - (IBAction)slideshowDefaultsChanged:(id)sender;
+- (IBAction)chooseDefaultSlideshowMode:(id)sender;
 
 // info window
 - (IBAction)openGetInfoPanel:(id)sender;
