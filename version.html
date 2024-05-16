@@ -7,6 +7,16 @@
 </head>
 <body>
 <h1>Phoenix Slides Version History</h1>
+2024.05.15 1.5.9
+<ul>
+	<li>by popular demand, add preference to default to slideshow-in-window</li>
+	<li>fix crash when generating thumbnails for cr3 files</li>
+	<li>fix arw and nef files showing up the wrong size (very small!) in slideshow mode (appears to be a bug in Apple's frameworks)</li>
+	<li>show (non-collapsed) file browser section of window for new users of the app (it was accidentally collapsed by default starting in version 1.5.3)</li>
+	<li>auto-advance is now paused when you go backwards (hit space or right arrow to resume; hit 0 to kill the timer completely)</li>
+	<li>add hidden preference to ignore the notch on macbook: run <tt>defaults write net.blyt.phoenixslides pretendNotchIsntThere -bool YES</tt> in Terminal</li>
+</ul>
+
 2024.05.07 1.5.8
 <ul>
 	<li>fix hang (and runaway memory usage) when a parent directory of the current directory is deleted</li>
