@@ -541,9 +541,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	if (r < 0) r = -r;
 	float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
-	infoFld.stringValue = [NSString stringWithFormat:@"[%lu/%lu] %@ - %@ - %@%@%@%@ %@",
+	infoFld.stringValue = [NSString stringWithFormat:@"[%lu/%lu] %@%@ - %@%@%@%@ %@",
 		currentIndex+1, (unsigned long)filenames.count,
-		[self currentShortFilename],
+		_fullscreenMode ? [[self currentShortFilename] stringByAppendingString:@" - "] : @"",
 		FileSize2String(info->fileSize),
 		info.pixelSizeAsString,
 		(zoom != 1.0 || imgView.zoomMode) ? [NSString stringWithFormat:
@@ -689,9 +689,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)jump:(NSInteger)n { // go forward n pics (negative numbers go backwards)
-	if (n < 0)
-		[self setTimer:0]; // going backwards stops auto-advance
-	else // could get rid of 'else' b/c going backwards makes timerPaused irrelevant
+	if (n > 0)
 		timerPaused = NO; // going forward unpauses auto-advance
 	if ((n > 0 && currentIndex+1 >= filenames.count) || (n < 0 && currentIndex == 0)){
 		if (loopMode) {
@@ -712,6 +710,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 		}
 		[self jumpTo:currentIndex+n];
 	}
+	if (n < 0 && timerIntvl && autoTimer)
+		[self pauseTimer];
 }
 
 - (void)jump:(int)n ordered:(BOOL)ordered { // if ordered is YES, jump to the next/previous slide in the ordered sequence
