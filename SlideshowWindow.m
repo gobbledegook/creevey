@@ -249,7 +249,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	if (_fullscreenMode) {
 		NSRect boundingRect = screenRect;
 		if (@available(macOS 12.0, *))
-			boundingRect.size.height -= myScreen.safeAreaInsets.top;
+			if (![NSUserDefaults.standardUserDefaults boolForKey:@"pretendNotchIsntThere"])
+				boundingRect.size.height -= myScreen.safeAreaInsets.top;
 		[self setFrame:screenRect display:NO];
 		boundingRect.origin = imgView.frame.origin;
 		imgView.frame = boundingRect;
