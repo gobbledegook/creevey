@@ -157,6 +157,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"startupSlideshowSubfolders":@NO,
 		@"startupSlideshowSuppressNewWindows":@NO,
 		@"slideshowDefaultMode":@0,
+		@"MainWindowSplitViewTopHeight":@151.0f,
 	}];
 
 	// migrate old RBSplitView pref
@@ -170,7 +171,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 					[defaults setFloat:(float)rbsplitviewheight forKey:@"MainWindowSplitViewTopHeight"];
 			}
 		}
-		[defaults removeObjectForKey:@"com.ulikusterer.prefspanel.recentpage"];
 	}
 
 	[NSValueTransformer setValueTransformer:[[TimeIntervalPlusWeekToStringTransformer alloc] init]
@@ -241,7 +241,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[self updateMoveToMenuItem];
 	[self updateAlternateSlideshowMenuItem];
 	[self updateAppearance];
-
+	
 	NSUserDefaultsController *ud = NSUserDefaultsController.sharedUserDefaultsController;
 	[ud addObserver:self forKeyPath:@"values.slideshowBgColor" options:0 context:NULL];
 	[ud addObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth" options:0 context:NULL];
@@ -721,6 +721,22 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			// fail silently and open a new window if necessary
 			suppressNewWindow = NO;
 		}
+	}
+
+	// between version 1.5.3 and 1.5.8, new users would get the splitview collapsed by default,
+	// which was unintentional and made certain features undiscoverable
+	if (0.0 == [u floatForKey:@"MainWindowSplitViewTopHeight"] && ![u integerForKey:@"zSplitViewZeroHeightFixed"]) {
+		if (creeveyWindows.count) {
+			// as a hint to the user, set the frontmost window's splitview position to something non-zero
+			NSSplitView *splitView = ((NSWindowController *)creeveyWindows.lastObject).window.contentView.subviews[0];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[splitView setPosition:151.0 ofDividerAtIndex:0];
+			});
+		} else {
+			[u setFloat:151.0 forKey:@"MainWindowSplitViewTopHeight"];
+		}
+		// only ever do this once
+		[u setInteger:1 forKey:@"zSplitViewZeroHeightFixed"];
 	}
 
 	// open a new window if there isn't one (either from dropping icons onto app at launch, or from restoring saved state)
