@@ -349,6 +349,9 @@
         }
       }
     },
+    "%lu files could not be copied because of an error." : {
+
+    },
     "%lu files could not be moved because of an error." : {
       "localizations" : {
         "de" : {
@@ -907,6 +910,9 @@
           }
         }
       }
+    },
+    "Copy to “%@” Again" : {
+      "comment" : "File menu"
     },
     "Could not check for update - an error occurred while connecting to the server." : {
       "localizations" : {
@@ -2052,6 +2058,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在排列 %lu 個檔案名稱⋯⋯"
+          }
+        }
+      }
+    },
+    "The file “%@” could not be copied because of an error: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The file “%1$@” could not be copied because of an error: %2$@"
           }
         }
       }

@@ -3847,6 +3847,18 @@
         }
       }
     },
+    "b2k-58-4mj.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Copy To Folder Again\"; ObjectID = \"b2k-58-4mj\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copy To Folder Again"
+          }
+        }
+      }
+    },
     "c0g-qO-OVm.title" : {
       "comment" : "Class = \"NSMenuItem\"; title = \"Move To Folder Again\"; ObjectID = \"c0g-qO-OVm\";",
       "extractionState" : "extracted_with_value",
@@ -3885,6 +3897,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "再次搬移"
+          }
+        }
+      }
+    },
+    "e4f-92-7kq.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Copy To...\"; ObjectID = \"e4f-92-7kq\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copy To..."
           }
         }
       }

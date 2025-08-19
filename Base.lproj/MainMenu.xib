@@ -122,6 +122,18 @@
                                     <action selector="moveSelectedFilesAgain:" target="207" id="cVY-9b-EDj"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Copy To..." tag="14" id="e4f-92-7kq">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="copySelectedFiles:" target="207" id="a1b-45-7c2"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Copy To Folder Again" tag="15" keyEquivalent="c" id="b2k-58-4mj">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                <connections>
+                                    <action selector="copySelectedFilesAgain:" target="207" id="e5p-33-1uv"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Move To Trash" tag="2" id="343">
                                 <string key="keyEquivalent" base64-UTF8="YES">
 CA

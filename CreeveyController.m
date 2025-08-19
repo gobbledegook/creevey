@@ -239,6 +239,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		[filetypes removeObject:type];
 	}
 	[self updateMoveToMenuItem];
+	[self updateCopyToMenuItem];
 	[self updateAlternateSlideshowMenuItem];
 	[self updateAppearance];
 	
@@ -484,6 +485,15 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	item.title = [NSString stringWithFormat:NSLocalizedString(@"Move to “%@” Again", @"File menu"), name];
 }
 
+- (void)updateCopyToMenuItem {
+	NSString *path = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedCopyToFolder"];
+	if (path == nil) return;
+	NSMenu *m = [NSApp.mainMenu itemWithTag:FILE_MENU].submenu;
+	NSMenuItem *item = [m itemWithTag:COPY_TO_AGAIN];
+	NSString *name = [NSFileManager.defaultManager displayNameAtPath:path];
+	item.title = [NSString stringWithFormat:NSLocalizedString(@"Copy to “%@” Again", @"File menu"), name];
+}
+
 - (void)updateAlternateSlideshowMenuItem {
 	NSMenu *m = [NSApp.mainMenu itemWithTag:SLIDESHOW_MENU].submenu;
 	NSMenuItem *item = [m itemWithTag:BEGIN_SLIDESHOW_ALTERNATE];
@@ -524,6 +534,36 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:[moved valueForKey:@"path"]];
 }
 
+- (void)copySelectedFilesTo:(NSURL *)dest {
+	NSString *curr = slidesWindow.isMainWindow ? slidesWindow.basePath : frontWindow.path;
+	if ([dest isEqual:[NSURL fileURLWithPath:curr]]) return;
+
+	NSArray *files = slidesWindow.isMainWindow ? @[slidesWindow.currentFile] : frontWindow.currentSelection;
+	NSMutableArray<NSString*> *paths = [NSMutableArray array];
+	NSMutableArray<NSURL*> *copied = [NSMutableArray arrayWithCapacity:files.count];
+	NSMutableArray<NSString*> *notCopied = [NSMutableArray array];
+
+	NSError * __autoreleasing err;
+	for (NSString *f in files) {
+		NSURL *destUrl = [dest URLByAppendingPathComponent:f.lastPathComponent];
+		if ([NSFileManager.defaultManager copyItemAtPath:f toPath:destUrl.path error:&err]) {
+			[paths addObject:f];
+			[copied addObject:destUrl];
+		} else {
+			[notCopied addObject:f];
+		}
+	}
+	if (notCopied.count) {
+		NSAlert *alert = [[NSAlert alloc] init];
+		if (notCopied.count == 1) {
+			alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file “%@” could not be copied because of an error: %@", @""), notCopied[0].lastPathComponent, err.localizedDescription];
+		} else {
+			alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"%lu files could not be copied because of an error.",@""), notCopied.count];
+		}
+		[alert runModal];
+	}
+}
+
 - (IBAction)moveSelectedFiles:(id)sender {
 	NSOpenPanel *op = [NSOpenPanel openPanel];
 	op.canChooseFiles = NO;
@@ -540,6 +580,24 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	NSURL *dest = [NSURL fileURLWithPath:folder isDirectory:YES];
 	[self moveSelectedFilesTo:dest];
 }
+
+- (IBAction)copySelectedFiles:(id)sender {
+	NSOpenPanel *op = [NSOpenPanel openPanel];
+	op.canChooseFiles = NO;
+	op.canChooseDirectories = YES;
+	if ([op runModal] != NSModalResponseOK) return;
+	NSURL *dest = op.URL;
+	[self copySelectedFilesTo:dest];
+	[NSUserDefaults.standardUserDefaults setObject:dest.path forKey:@"lastUsedCopyToFolder"];
+	[self updateCopyToMenuItem];
+}
+
+- (IBAction)copySelectedFilesAgain:(id)sender {
+	NSString *folder = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedCopyToFolder"];
+	NSURL *dest = [NSURL fileURLWithPath:folder isDirectory:YES];
+	[self copySelectedFilesTo:dest];
+}
+
 
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
@@ -838,6 +896,8 @@ enum {
 	BEGIN_SLIDESHOW_ALTERNATE,
 	MOVE_TO,
 	MOVE_TO_AGAIN,
+	COPY_TO,
+	COPY_TO_AGAIN,
 	JPEG_OP = 100,
 	ROTATE_L = 107,
 	ROTATE_R = 105,
@@ -875,6 +935,7 @@ enum {
 	NSUInteger numSelected = frontWindow ? frontWindow.selectedIndexes.count : 0;
 	BOOL writable, isjpeg;
 	NSString *moveTo;
+	NSString *copyTo;
 	
 	switch (test_t) {
 		case NEW_TAB:
@@ -883,6 +944,9 @@ enum {
 			moveTo = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedMoveToFolder"];
 			// fall through
 		case MOVE_TO:
+		case COPY_TO_AGAIN:
+			copyTo = [NSUserDefaults.standardUserDefaults stringForKey:@"lastUsedCopyToFolder"];
+		case COPY_TO:
 		case MOVE_TO_TRASH:
 		case JPEG_OP:
 			// only when slides isn't loading cache!
@@ -893,8 +957,15 @@ enum {
 					[NSFileManager.defaultManager isDeletableFileAtPath:
 					 slidesWindow.currentFile]
 				: numSelected > 0 && frontWindow && frontWindow.currentFilesDeletable;
-			if (t != JPEG_OP) return writable && (t == MOVE_TO_AGAIN ? moveTo != nil : YES);
-			
+			if (t != JPEG_OP) {
+				if (t == MOVE_TO_AGAIN) {
+					return writable && moveTo != nil;
+				} else if (t == COPY_TO_AGAIN) {
+					return writable && copyTo != nil;
+				} else {
+					return writable && YES;
+				}
+			}
 			isjpeg = slidesWindow.isMainWindow
 				? slidesWindow.currentFile && FileIsJPEG(slidesWindow.currentFile)
 				: numSelected > 0 && frontWindow && FilesContainJPEG(frontWindow.currentSelection);
