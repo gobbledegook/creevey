@@ -349,6 +349,40 @@
         }
       }
     },
+    "%lu files could not be copied because of an error." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu Dateien können aufgrund eines Fehlers nicht kopiert!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu archivos no se pudieron copiar debido a un error."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu fichiers n'ont pas pu être copiés en raison d'une erreur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile copiare %lu file a causa di un errore."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lu 個檔案不能拷貝，因為發生了錯誤。"
+          }
+        }
+      }
+    },
     "%lu files could not be moved because of an error." : {
       "localizations" : {
         "de" : {
@@ -528,7 +562,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已更改 %u 張圖片的組%2$i歸類"
+            "value" : "已更改 %1$u 張圖片的組%2$i歸類"
           }
         }
       }
@@ -904,6 +938,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "繼續"
+          }
+        }
+      }
+    },
+    "Copy to “%@” Again" : {
+      "comment" : "File menu",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ebenfalls in „%@“ kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a copiar a “%@”"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier à nouveau dans «%@»"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia di nuovo in “%@”"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再次拷貝到「%@」"
           }
         }
       }
@@ -1561,7 +1630,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Volver a trasladar “%@”"
+            "value" : "Volver a trasladar a “%@”"
           }
         },
         "fr" : {
@@ -2052,6 +2121,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在排列 %lu 個檔案名稱⋯⋯"
+          }
+        }
+      }
+    },
+    "The file “%@” could not be copied because of an error: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ kann nicht kopiert werden! Fehler: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo %@ no se pudo copiar debido a un error: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier %@ n'a pas pu être copié à cause d'une erreur %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile copiare il file %@ a causa di un errore: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案 %@ 不能拷貝，因為發生了錯誤：%@"
           }
         }
       }
