@@ -598,7 +598,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[self copySelectedFilesTo:dest];
 }
 
-
 // returns 1 if successful
 // unsuccessful: 0 user wants to continue; 2 cancel/abort
 - (char)trashFile:(NSString *)fullpath numLeft:(NSUInteger)numFiles resultingURL:(NSURL **)newURL {
@@ -966,6 +965,7 @@ enum {
 					return writable && YES;
 				}
 			}
+
 			isjpeg = slidesWindow.isMainWindow
 				? slidesWindow.currentFile && FileIsJPEG(slidesWindow.currentFile)
 				: numSelected > 0 && frontWindow && FilesContainJPEG(frontWindow.currentSelection);
