@@ -1121,7 +1121,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[imgView setImage:[info loadFullSizeImage]
 					  zooming:DYImageViewZoomModeManual];
 		}
-		[imgView setZoomF:zoom * (1.0 + event.magnification)];
+		NSPoint cursorLocInWindow = event.locationInWindow;
+		NSPoint cursorLocInView = [imgView convertPoint:cursorLocInWindow fromView:nil];
+		[imgView setZoomF:zoom * (1.0 + event.magnification)
+			  curLocation:cursorLocInView];
 		[self updateInfoFld];
 	}
 }

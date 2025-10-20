@@ -397,11 +397,11 @@
 		n++;
 		f = n%2 ? ldexpf(1.5,(n-1)/2) : ldexpf(1,n/2);
 	} while (f <= oldF);
-	[self setZoomF:f];
+	[self setZoomF:f curLocation:NSMakePoint(-1, -1)];
 }
 
-- (void)setZoomF:(float)f {
-	if (!image) return; 
+- (void)setZoomF:(float)f curLocation:(NSPoint)curLocation {
+	if (!image) return;
 	NSSize imgSize = image.size;
 
 	float tmp;
@@ -425,31 +425,73 @@
 		s.height = imgSize.height;
 		destSize.height = (int)(s.height*zoomF);
 	}
-	
-	// new x
-	if (s.width < imgSize.width) {
-		if (sourceRect.size.width == imgSize.width)
-			// special case for when smaller than screen becomes larger than screen
-			sourceRect.origin.x = (imgSize.width - s.width)/2;
-		else if (sourceRect.origin.x == imgSize.width - sourceRect.size.width) // must cast to int, for edge cases
-			sourceRect.origin.x = imgSize.width - s.width;
-		else if (sourceRect.origin.x > 0)
-			// leave 0 if 0
-			sourceRect.origin.x += (sourceRect.size.width - s.width)/2.0;
+
+	if (curLocation.x > 0 && curLocation.y > 0 &&
+		curLocation.x < self.frame.size.width &&
+		curLocation.y < self.frame.size.height) {
+
+		// curLocation is in view coordinates and inside the view.
+		// Compute normalized position within the destination (view) sized area.
+		// destSize was set above to the view size (possibly swapped for rotation).
+		float nx = destSize.width  > 0 ? (curLocation.x / destSize.width) : 0.5f;
+		float ny = destSize.height > 0 ? (curLocation.y / destSize.height) : 0.5f;
+		if (nx < 0)
+			nx = 0;
+		else if (nx > 1)
+			nx = 1;
+		if (ny < 0)
+			ny = 0;
+		else if (ny > 1)
+			ny = 1;
+
+		// Compute the image pixel that is currently under the cursor (before zoom)
+		float imgX = sourceRect.origin.x + nx * sourceRect.size.width;
+		float imgY = sourceRect.origin.y + ny * sourceRect.size.height;
+
+		// After changing the source rect size to 's' we want imgX/imgY to
+		// remain under the same normalized cursor position. Solve for new origin:
+		float newOriginX = imgX - nx * s.width;
+		float newOriginY = imgY - ny * s.height;
+
+		// Clamp to image bounds
+		if (newOriginX < 0)
+			newOriginX = 0;
+		if (newOriginY < 0)
+			newOriginY = 0;
+		if (newOriginX > imgSize.width - s.width)
+			newOriginX = imgSize.width - s.width;
+		if (newOriginY > imgSize.height - s.height)
+			newOriginY = imgSize.height - s.height;
+
+		sourceRect.origin.x = newOriginX;
+		sourceRect.origin.y = newOriginY;
+
 	} else {
-		sourceRect.origin.x = 0;
-	}
-	
-	// new y
-	if (s.height < imgSize.height) {
-		if (sourceRect.size.height == imgSize.height)
-			sourceRect.origin.y = (imgSize.height - s.height)/2;
-		else if (sourceRect.origin.y == imgSize.height - sourceRect.size.height)
-			sourceRect.origin.y = imgSize.height - s.height;
-		else if (sourceRect.origin.y > 0)
-			sourceRect.origin.y += (sourceRect.size.height - s.height)/2.0;
-	} else {
-		sourceRect.origin.y = 0;
+		// new x
+		if (s.width < imgSize.width) {
+			if (sourceRect.size.width == imgSize.width)
+				// special case for when smaller than screen becomes larger than screen
+				sourceRect.origin.x = (imgSize.width - s.width)/2;
+			else if (sourceRect.origin.x == imgSize.width - sourceRect.size.width) // must cast to int, for edge cases
+				sourceRect.origin.x = imgSize.width - s.width;
+			else if (sourceRect.origin.x > 0)
+				// leave 0 if 0
+				sourceRect.origin.x += (sourceRect.size.width - s.width)/2.0;
+		} else {
+			sourceRect.origin.x = 0;
+		}
+
+		// new y
+		if (s.height < imgSize.height) {
+			if (sourceRect.size.height == imgSize.height)
+				sourceRect.origin.y = (imgSize.height - s.height)/2;
+			else if (sourceRect.origin.y == imgSize.height - sourceRect.size.height)
+				sourceRect.origin.y = imgSize.height - s.height;
+			else if (sourceRect.origin.y > 0)
+				sourceRect.origin.y += (sourceRect.size.height - s.height)/2.0;
+		} else {
+			sourceRect.origin.y = 0;
+		}
 	}
 
 	sourceRect.size = s;
