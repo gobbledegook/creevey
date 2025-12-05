@@ -177,6 +177,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 											 selector:@selector(resize:)
 												 name:NSViewFrameDidChangeNotification
 											   object:self.enclosingScrollView];
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(resize:) name:NSApplicationDidChangeScreenParametersNotification object:nil];
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(resize:) name:NSWindowDidChangeScreenNotification object:self.window];
 	[self.enclosingScrollView.contentView setPostsBoundsChangedNotifications:YES];
 	NSUserDefaults *udf = NSUserDefaults.standardUserDefaults;
 	float padding = [udf floatForKey:@"thumbPadding"];
@@ -541,6 +543,15 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)resize:(id)anObject { // called by notification center
+	// ensure our width matches the clip view, otherwise we might not be using all available space
+	// (or worse, be wider than the clip view and have horizontal scrollbars)
+	NSRect frame = self.frame;
+	float w = self.superview.bounds.size.width;
+	if (fabs(frame.size.width - w) > 1.0) {
+		frame.size.width = w;
+		self.frame = frame;
+	}
+	
 	[self calculateCellSizes];
 	NSSize mySize = self.frame.size;
 	NSUInteger numRows = numCells == 0 ? 0 : (numCells-1)/numCols + 1;
