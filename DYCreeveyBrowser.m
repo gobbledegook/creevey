@@ -8,6 +8,7 @@
 #import "DYCreeveyBrowser.h"
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
+#import "CreeveyController.h"
 #import "DirBrowserDelegate.h"
 #import <objc/message.h>
 
@@ -52,7 +53,7 @@
 	NSPoint p = [self convertPoint:event.locationInWindow fromView:nil];
 	NSInteger row = -1;
 	NSInteger col = -1;
-	[self getRow:&row column:&col ofCellAtPoint:p];
+	[self getRow:&row column:&col forPoint:p];
 	if (row < 0) return nil;
 
 	DYCreeveyBrowser *browser = (DYCreeveyBrowser *)wc.dirBrowser;
@@ -81,13 +82,13 @@
 	NSString *sysPath = [dirDelegate browserpath2syspath:browserPath];
 	if (sysPath.length == 0) return nil;
 
-	id appDelegate = NSApp.delegate;
-	if (![appDelegate respondsToSelector:@selector(dirBrowserContextMenu)]) return nil;
-	if ([appDelegate dirBrowserContextMenu] == nil) {
+	CreeveyController *appDelegate = (CreeveyController *)NSApp.delegate;
+	if (appDelegate == nil) return nil;
+	if (appDelegate.dirBrowserContextMenu == nil) {
 		if (![NSBundle.mainBundle loadNibNamed:@"DirBrowserContextMenu" owner:appDelegate topLevelObjects:NULL]) return nil;
 	}
 	[appDelegate setValue:sysPath forKey:@"dirBrowserContextPath"];
-	return [appDelegate dirBrowserContextMenu];
+	return appDelegate.dirBrowserContextMenu;
 }
 
 - (void)selectAll:(id)sender {
