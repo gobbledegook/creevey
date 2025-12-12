@@ -99,7 +99,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @property (nonatomic) BOOL appDidFinishLaunching;
 @property (nonatomic) BOOL filesWereOpenedAtLaunch;
 @property (nonatomic) BOOL windowsWereRestoredAtLaunch;
-@property (nonatomic, copy) NSString *dirBrowserContextPath;
 @end
 
 @implementation CreeveyController
