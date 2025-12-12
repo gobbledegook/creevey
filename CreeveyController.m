@@ -95,7 +95,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 @end
 
-@interface CreeveyController () <NSMenuItemValidation>
+@interface CreeveyController () <NSMenuItemValidation, NSMenuDelegate>
 @property (nonatomic) BOOL appDidFinishLaunching;
 @property (nonatomic) BOOL filesWereOpenedAtLaunch;
 @property (nonatomic) BOOL windowsWereRestoredAtLaunch;
@@ -370,6 +370,14 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 	if (path.length)
 		[NSWorkspace.sharedWorkspace openFile:path];
 	self.dirBrowserContextPath = nil;
+}
+
+#pragma mark NSMenuDelegate
+- (void)menuDidClose:(NSMenu *)menu {
+	if (menu == self.dirBrowserContextMenu) {
+		// If the user dismissed the menu without choosing an item, avoid leaving stale state.
+		self.dirBrowserContextPath = nil;
+	}
 }
 
 - (IBAction)setDesktopPicture:(id)sender {

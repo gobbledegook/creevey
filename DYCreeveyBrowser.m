@@ -88,6 +88,12 @@
 	if (appDelegate.dirBrowserContextMenu == nil) {
 		if (![NSBundle.mainBundle loadNibNamed:@"DirBrowserContextMenu" owner:appDelegate topLevelObjects:NULL]) return nil;
 	}
+
+	// Ensure the context path doesn't go stale if the user dismisses the menu.
+	// The app delegate will clear dirBrowserContextPath in -menuDidClose:.
+	if (appDelegate.dirBrowserContextMenu.delegate != appDelegate)
+		appDelegate.dirBrowserContextMenu.delegate = (id<NSMenuDelegate>)appDelegate;
+
 	appDelegate.dirBrowserContextPath = sysPath;
 	return appDelegate.dirBrowserContextMenu;
 }
