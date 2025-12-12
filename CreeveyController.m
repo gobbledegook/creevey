@@ -365,45 +365,21 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 }
 
 - (IBAction)openDirectoryInFinderFromBrowser:(id)sender {
-#ifdef DEBUG
-	NSLog(@"[DirBrowserContext] openDirectoryInFinderFromBrowser: begin t=%.6f contextPath='%@' frontWindow.path='%@' appActive=%d winKey=%d winMain=%d",
-		  CFAbsoluteTimeGetCurrent(),
-		  self.dirBrowserContextPath,
-		  frontWindow.path,
-		  NSApp.isActive,
-		  NSApp.mainWindow.isKeyWindow,
-		  NSApp.mainWindow.isMainWindow);
-#endif
 	NSString *path = self.dirBrowserContextPath;
 	BOOL didFallbackToFrontWindow = NO;
 	if (path.length == 0) {
 		path = frontWindow.path;
 		didFallbackToFrontWindow = YES;
 	}
-#ifdef DEBUG
-	NSLog(@"[DirBrowserContext] openDirectoryInFinderFromBrowser: resolved path='%@' didFallback=%d (will open if non-empty)",
-		  path,
-		  didFallbackToFrontWindow);
-#endif
+	(void)didFallbackToFrontWindow; // keep for possible future diagnostics; avoid unused var warnings if it changes
 	if (path.length)
 		[NSWorkspace.sharedWorkspace openFile:path];
 	self.dirBrowserContextPath = nil;
-#ifdef DEBUG
-	NSLog(@"[DirBrowserContext] openDirectoryInFinderFromBrowser: end t=%.6f (context cleared)", CFAbsoluteTimeGetCurrent());
-#endif
 }
 
 #pragma mark NSMenuDelegate
 - (void)menuDidClose:(NSMenu *)menu {
 	if (menu == self.dirBrowserContextMenu) {
-#ifdef DEBUG
-		NSLog(@"[DirBrowserContext] menuDidClose: t=%.6f menu=%p dirMenu=%p schedulingClear contextPath='%@' appActive=%d",
-			  CFAbsoluteTimeGetCurrent(),
-			  menu,
-			  self.dirBrowserContextMenu,
-			  self.dirBrowserContextPath,
-			  NSApp.isActive);
-#endif
 		// If the user dismissed the menu without choosing an item, avoid leaving stale state.
 		// Important: in some AppKit menu-tracking sequences (notably when the window isn't key),
 		// -menuDidClose: can fire before the selected menu item's action is delivered.
@@ -412,15 +388,6 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if (self.dirBrowserContextPath == closingContext) {
 				self.dirBrowserContextPath = nil;
-#ifdef DEBUG
-				NSLog(@"[DirBrowserContext] menuDidClose(deferred): t=%.6f cleared", CFAbsoluteTimeGetCurrent());
-#endif
-			} else {
-#ifdef DEBUG
-				NSLog(@"[DirBrowserContext] menuDidClose(deferred): t=%.6f skipped (context changed to '%@')",
-					  CFAbsoluteTimeGetCurrent(),
-					  self.dirBrowserContextPath);
-#endif
 			}
 		});
 	}
