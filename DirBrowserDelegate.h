@@ -8,6 +8,7 @@
 @import Cocoa;
 
 @interface DirBrowserDelegate : NSObject
+- (NSString*)browserpath2syspath:(NSString *)s;
 - (NSString*)path;
 - (void)setPath:(NSString *)s;
 @property (weak) IBOutlet NSBrowser *b;

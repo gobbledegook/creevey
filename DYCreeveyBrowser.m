@@ -8,6 +8,8 @@
 #import "DYCreeveyBrowser.h"
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
+#import "DirBrowserDelegate.h"
+#import <objc/message.h>
 
 @interface DYBrowserCell : NSBrowserCell {
 	NSString *title;
@@ -41,6 +43,53 @@
 	if (menuItem.action == @selector(selectAll:)) return YES;
 	return [super validateMenuItem:menuItem];
 }
+
+- (NSMenu *)menuForEvent:(NSEvent *)event
+{
+	CreeveyMainWindowController *wc = (CreeveyMainWindowController *)self.window.delegate;
+	if (wc == nil) return nil;
+
+	NSPoint p = [self convertPoint:event.locationInWindow fromView:nil];
+	NSInteger row = -1;
+	NSInteger col = -1;
+	[self getRow:&row column:&col ofCellAtPoint:p];
+	if (row < 0) return nil;
+
+	DYCreeveyBrowser *browser = (DYCreeveyBrowser *)wc.dirBrowser;
+	if (browser == nil) return nil;
+
+	NSInteger browserColumn = -1;
+	SEL columnOfMatrixSel = @selector(columnOfMatrix:);
+	if ([browser respondsToSelector:columnOfMatrixSel]) {
+		browserColumn = ((NSInteger (*)(id, SEL, id))objc_msgSend)(browser, columnOfMatrixSel, self);
+	}
+	if (browserColumn < 0) browserColumn = browser.selectedColumn;
+	if (browserColumn < 0) browserColumn = 0;
+
+	NSCell *cell = [self cellAtRow:row column:0];
+	if (cell == nil) return nil;
+	NSString *component = cell.stringValue;
+	if (component.length == 0) return nil;
+
+	NSString *prefix = (browserColumn > 0) ? [browser pathToColumn:browserColumn] : @"";
+	NSString *browserPath;
+	if (browserColumn == 0 && ![component hasPrefix:@"/"])
+		browserPath = [@"/" stringByAppendingString:component];
+	else
+		browserPath = [component hasPrefix:@"/"] ? component : [prefix stringByAppendingPathComponent:component];
+	DirBrowserDelegate *dirDelegate = (DirBrowserDelegate *)browser.delegate;
+	NSString *sysPath = [dirDelegate browserpath2syspath:browserPath];
+	if (sysPath.length == 0) return nil;
+
+	id appDelegate = NSApp.delegate;
+	if (![appDelegate respondsToSelector:@selector(dirBrowserContextMenu)]) return nil;
+	if ([appDelegate dirBrowserContextMenu] == nil) {
+		if (![NSBundle.mainBundle loadNibNamed:@"DirBrowserContextMenu" owner:appDelegate topLevelObjects:NULL]) return nil;
+	}
+	[appDelegate setValue:sysPath forKey:@"dirBrowserContextPath"];
+	return [appDelegate dirBrowserContextMenu];
+}
+
 - (void)selectAll:(id)sender {
 	[(CreeveyMainWindowController *)self.window.delegate selectAll:sender]; // to pass it to image matrix
 }

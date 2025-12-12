@@ -17,6 +17,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @interface CreeveyController : NSObject <NSApplicationDelegate,NSTableViewDataSource,NSWindowRestoration>
 @property (strong) IBOutlet DYJpegtranPanel *jpegController;
 @property (strong) IBOutlet NSMenu *thumbnailContextMenu;
+@property (strong) IBOutlet NSMenu *dirBrowserContextMenu;
 @property (readonly) NSMutableSet *revealedDirectories; // set of invisible directories that should be shown in the browser
 
 @property (weak) IBOutlet SlideshowWindow *slidesWindow;
@@ -41,6 +42,7 @@ NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders)
 - (IBAction)slideshowAlternateMode:(id)sender;
 - (IBAction)openSelectedFiles:(id)sender;
 - (IBAction)revealSelectedFilesInFinder:(id)sender;
+- (IBAction)openDirectoryInFinderFromBrowser:(id)sender;
 - (IBAction)setDesktopPicture:(id)sender;
 - (IBAction)moveSelectedFiles:(id)sender;
 - (IBAction)moveSelectedFilesAgain:(id)sender;
