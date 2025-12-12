@@ -50,6 +50,16 @@
 	CreeveyMainWindowController *wc = (CreeveyMainWindowController *)self.window.delegate;
 	if (wc == nil) return nil;
 
+#ifdef DEBUG
+	NSLog(@"[DirBrowserContext] menuForEvent begin: appActive=%d winKey=%d winMain=%d eventType=%ld locInWin={%.1f,%.1f}",
+		  NSApp.isActive,
+		  self.window.isKeyWindow,
+		  self.window.isMainWindow,
+		  (long)event.type,
+		  event.locationInWindow.x,
+		  event.locationInWindow.y);
+#endif
+
 	NSPoint p = [self convertPoint:event.locationInWindow fromView:nil];
 	NSInteger row = -1;
 	NSInteger col = -1;
@@ -93,6 +103,16 @@
 	// The app delegate will clear dirBrowserContextPath in -menuDidClose:.
 	if (appDelegate.dirBrowserContextMenu.delegate != (id<NSMenuDelegate>)appDelegate)
 		appDelegate.dirBrowserContextMenu.delegate = (id<NSMenuDelegate>)appDelegate;
+
+#ifdef DEBUG
+	NSLog(@"[DirBrowserContext] menuForEvent set context: row=%ld browserCol=%ld component='%@' browserPath='%@' sysPath='%@' previousContext='%@'",
+		  (long)row,
+		  (long)browserColumn,
+		  component,
+		  browserPath,
+		  sysPath,
+		  appDelegate.dirBrowserContextPath);
+#endif
 
 	appDelegate.dirBrowserContextPath = sysPath;
 	return appDelegate.dirBrowserContextMenu;
