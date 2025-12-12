@@ -91,7 +91,7 @@
 
 	// Ensure the context path doesn't go stale if the user dismisses the menu.
 	// The app delegate will clear dirBrowserContextPath in -menuDidClose:.
-	if (appDelegate.dirBrowserContextMenu.delegate != appDelegate)
+	if (appDelegate.dirBrowserContextMenu.delegate != (id<NSMenuDelegate>)appDelegate)
 		appDelegate.dirBrowserContextMenu.delegate = (id<NSMenuDelegate>)appDelegate;
 
 	appDelegate.dirBrowserContextPath = sysPath;
