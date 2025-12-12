@@ -19,7 +19,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 @property (strong) IBOutlet NSMenu *thumbnailContextMenu;
 @property (strong) IBOutlet NSMenu *dirBrowserContextMenu;
 @property (readonly) NSMutableSet *revealedDirectories; // set of invisible directories that should be shown in the browser
-
+@property (nonatomic, copy) NSString *dirBrowserContextPath;
+ 
 @property (weak) IBOutlet SlideshowWindow *slidesWindow;
 @property (weak) IBOutlet NSProgressIndicator *jpegProgressBar;
 @property (weak) IBOutlet NSTextView *exifTextView;

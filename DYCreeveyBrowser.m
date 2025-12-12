@@ -79,6 +79,7 @@
 	else
 		browserPath = [component hasPrefix:@"/"] ? component : [prefix stringByAppendingPathComponent:component];
 	DirBrowserDelegate *dirDelegate = (DirBrowserDelegate *)browser.delegate;
+	if (dirDelegate == nil) return nil;
 	NSString *sysPath = [dirDelegate browserpath2syspath:browserPath];
 	if (sysPath.length == 0) return nil;
 
@@ -87,7 +88,7 @@
 	if (appDelegate.dirBrowserContextMenu == nil) {
 		if (![NSBundle.mainBundle loadNibNamed:@"DirBrowserContextMenu" owner:appDelegate topLevelObjects:NULL]) return nil;
 	}
-	[appDelegate setValue:sysPath forKey:@"dirBrowserContextPath"];
+	appDelegate.dirBrowserContextPath = sysPath;
 	return appDelegate.dirBrowserContextMenu;
 }
 
