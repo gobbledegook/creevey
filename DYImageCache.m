@@ -14,7 +14,7 @@
 
 #define N_StringFromFileSize_UNITS 3
 NSString *FileSize2String(unsigned long long fileSize) {
-	char * const units[N_StringFromFileSize_UNITS] = {"KB", "MB", "GB"};
+	char * const units[N_StringFromFileSize_UNITS+1] = {"KB", "MB", "GB", "TB"};
 	short i;
 	if (fileSize < 1024)
 		return [NSString stringWithFormat:@"%qu bytes", fileSize];
