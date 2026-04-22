@@ -6765,7 +6765,21 @@ void CLASS parse_crx (int end)
         break;
       case 0x75756964:                                /* uuid */
         switch (i=get4()) {
-          case 0xeaf42b5e: fseek (ifp,  8, SEEK_CUR);
+          case 0xeaf42b5e:
+			if (get4() == 0x1C984B88 && get4() == 0xB9FBB7DC && get4() == 0x406E4D16) {
+				// ok this should extract a thumb from CR3 files
+				fseek(ifp, 22, SEEK_CUR);
+				thumb_width = get2();
+				thumb_height = get2();
+				fseek(ifp, 2, SEEK_CUR);
+				thumb_length = get4();
+				thumb_offset = save+24+32;
+				write_thumb = &CLASS jpeg_thumb;
+			} else {
+				fseek(ifp, 8, SEEK_CUR);
+				parse_crx(save+size);
+			}
+			break;
           case 0x85c0b687: fseek (ifp, 12, SEEK_CUR);
             parse_crx (save+size);
         }
@@ -6810,6 +6824,8 @@ void CLASS parse_crx (int end)
     }
     fseek (ifp, save+size, SEEK_SET);
   }
+  for (i=tiff_nifds; i--; )
+	if (tiff_ifd[i].flip) tiff_flip = tiff_ifd[i].flip;
 }
 
 void CLASS parse_qt (int end)
