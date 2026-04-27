@@ -12,24 +12,31 @@
 
 NSString *FileSize2String(unsigned long long fileSize);
 
+typedef NS_ENUM(char, DYImageQuality) {
+	DYImageQualityLow,  // faster "thumbnail"
+	DYImageQualityHigh, // scaled with high quality interpolation
+	DYImageQualityFull, // the full size image
+};
+
 @interface DYImageInfo : NSObject {
 	@public // access these instance variables like a struct
 	time_t modTime;
 	off_t fileSize;
 	NSSize pixelSize;
 	unsigned short exifOrientation;
+	DYImageQuality quality;
 }
 @property (strong, nonatomic) NSImage *image;
 @property (readonly, nonatomic) NSString *path;
 - (instancetype)initWithPath:(NSString *)s NS_DESIGNATED_INITIALIZER;
-- (NSImage *)loadFullSizeImage;
+@property (nonatomic, readonly) BOOL hasFullSizeImage;
 @property (nonatomic, readonly, copy) NSString *pixelSizeAsString;
 @end
 
 
 @interface DYImageCache : NSObject
-@property (nonatomic) BOOL rotatable; // default is NO
 @property (nonatomic) BOOL fastThumbnails; // faster but lower quality rendering. default is NO
+@property (strong, nonatomic) NSImage *fallbackImage; // if set, store this image in the cache if a file does not load
 - (instancetype)initWithCapacity:(NSUInteger)n NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, readonly) float boundingWidth;
@@ -37,17 +44,9 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 + (NSData *)createNewThumbFromFile:(NSString *)path getSize:(NSSize *)outSize;
 
-- (void)cacheFile:(NSString *)s;
-- (void)cacheFile:(NSString *)s fullSize:(BOOL)fullSize;
-
-// cacheFile consists of the following three steps
-// exposed here for doing your own caching (e.g., Epeg)
-// you MUST call addImage or dontAdd if attemptLock returns YES
-- (BOOL)attemptLockOnFile:(NSString *)s; // will sleep if s is pending, then return NO
-- (void)createScaledImage:(DYImageInfo *)imgInfo; // if i->image is nil, you must replace with dummy image
-- (void)createScaledImage:(DYImageInfo *)imgInfo fromData:(NSData *)data ofType:(enum dcraw_type)dataType;
-- (void)addImage:(DYImageInfo *)img forFile:(NSString *)s;
-- (void)dontAddFile:(NSString *)s; // simply remove from pending
+- (BOOL)cacheFile:(NSString *)s fullSize:(BOOL)fullSize; // returns YES if an image info object was added to the cache (and caller should eventually call endAccess:)
+- (BOOL)loadFullSizeImageForCached:(DYImageInfo *)info;
+- (BOOL)loadHighInterpolationImageForCached:(DYImageInfo *)info;
 
 - (NSImage *)imageForKey:(NSString *)s;
 - (NSImage *)imageForKeyInvalidatingCacheIfNecessary:(NSString *)s;
@@ -58,7 +57,7 @@ NSString *FileSize2String(unsigned long long fileSize);
 
 // NSDiscardableContent accessors
 - (void)beginAccess:(NSString *)key; // you should call beginAcess if you retain the image (e.g., after calling imageForKey:)
-- (void)endAccess:(NSString *)key; // you should eventually call endAccess if you call (1) cacheFile: (2) addImage:forFile: or (3) beginAcess:
+- (void)endAccess:(NSString *)key; // you should eventually call endAccess if cacheFile: returns YES or you call beginAcess:
 
 - (void)abortCaching; // when set, ignore calls to cacheFile; pending files dropped when done
 - (void)beginCaching;

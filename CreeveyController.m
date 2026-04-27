@@ -570,7 +570,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		NSURL *u;
 		if (doTrash ? [self trashFile:s numLeft:1 resultingURL:&u] : (u = _movedUrls[0]) != nil) {
 			[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:s];
-			[thumbsCache removeImageForKey:s];
+			if (!IsAliasFilePath(s))
+				[thumbsCache removeImageForKey:s];
 			[slidesWindow removeImageForFile:s];
 			NSUInteger idx = slidesWindow.currentIndex;
 			NSUndoManager *um = slidesWindow.undoManager;
@@ -603,7 +604,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			NSURL * __autoreleasing newURL;
 			char result = (doTrash ? [self trashFile:fullpath numLeft:n-i resultingURL:&newURL] : 1);
 			if (result == 1) {
-				[thumbsCache removeImageForKey:fullpath]; // we don't resolve alias here, but that's OK
+				if (!IsAliasFilePath(fullpath))
+					[thumbsCache removeImageForKey:fullpath];
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fullpath];
 				if (slidesWindow.visible)
 					[slidesWindow removeImageForFile:fullpath];
@@ -821,8 +823,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 -(void)applicationDidChangeScreenParameters:(NSNotification *)notification {
-	if (slidesWindow.visible)
-		[slidesWindow resetScreen];
+	[slidesWindow resetScreen];
 }
 
 #pragma mark menu methods
@@ -1277,8 +1278,7 @@ static void SendAction(NSMenuItem *sender) {
 	}
 }
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification {
-	if (slidesWindow.visible)
-		[slidesWindow configureBacking];
+	[slidesWindow resetScreen];
 }
 
 

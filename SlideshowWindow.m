@@ -19,6 +19,32 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	return e.phase != NSEventPhaseNone || e.momentumPhase != NSEventPhaseNone;
 }
 
+@interface DYSlideshowContentView : NSView
+@property (nonatomic) CGFloat notchHeight;
+@property (nonatomic, readonly) NSRect imageRect;
+@end
+@implementation DYSlideshowContentView
+- (void)drawRect:(NSRect)rect {
+	// black rect under the notch spanning the width of the screen
+	[NSColor.blackColor set];
+	[NSBezierPath fillRect:NSIntersectionRect(self.notchRect, rect)];
+}
+
+- (NSRect)notchRect {
+	NSRect r = self.bounds;
+	r.origin.y = r.size.height - _notchHeight;
+	r.size.height = _notchHeight;
+	return r;
+}
+
+- (NSRect)imageRect {
+	NSRect r = self.bounds;
+	r.size.height -= _notchHeight;
+	return r;
+}
+@end
+
+
 @interface SlideshowWindow () <DYFileWatcherDelegate>
 @property (nonatomic, copy) NSComparator comparator;
 
@@ -29,8 +55,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (void)killTimer;
 - (void)updateInfoFld;
 - (void)updateExifFld;
-
-- (void)saveZoomInfo;
 
 // cat methods
 - (void)displayCats;
@@ -52,7 +76,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	NSMutableDictionary *rotations, *zooms, *flips;
 	
 	NSString *basePath;
-	NSScreen *oldScreen;
+	NSSize _oldBackingSize;
 	NSUInteger currentIndex;
 	NSUInteger lastIndex; // for outside access to last slide shown
 	
@@ -91,7 +115,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		flips = [[NSMutableDictionary alloc] init];
 		zooms = [[NSMutableDictionary alloc] init];
 		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
-		imgCache.rotatable = YES;
+		imgCache.fallbackImage = [NSImage imageNamed:@"brokendoc.tif"];
 		_upcomingQueue = [[NSOperationQueue alloc] init];
 		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
 		
@@ -106,6 +130,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 }
 
 - (void)awakeFromNib {
+	self.contentView = [[DYSlideshowContentView alloc] initWithFrame:NSZeroRect];
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
 	[self.contentView addSubview:imgView];
 	imgView.frame = self.contentView.frame;
@@ -248,14 +273,15 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 {
 	NSScreen *myScreen = self.visible ? self.screen : NSScreen.mainScreen;
 	NSRect screenRect = myScreen.frame;
+	DYSlideshowContentView *contentView = self.contentView;
 	if (_fullscreenMode) {
-		NSRect boundingRect = screenRect;
+		CGFloat notchHeight = 0;
 		if (@available(macOS 12.0, *))
 			if (![NSUserDefaults.standardUserDefaults boolForKey:@"pretendNotchIsntThere"])
-				boundingRect.size.height -= myScreen.safeAreaInsets.top;
+				notchHeight = myScreen.safeAreaInsets.top;
 		[self setFrame:screenRect display:NO];
-		boundingRect.origin = imgView.frame.origin;
-		imgView.frame = boundingRect;
+		contentView.notchHeight = notchHeight;
+		imgView.frame = contentView.imageRect;
 	} else {
 		NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:@"DYSlideshowWindowFrame"];
 		NSRect r;
@@ -269,28 +295,36 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 			r.origin.y = screenRect.size.height;
 		}
 		[self setFrame:r display:NO];
-		imgView.frame = self.contentLayoutRect;
+		contentView.notchHeight = 0;
+		imgView.frame = contentView.imageRect;
 	}
+}
+
+static NSSize BoundingSizeForScreen(NSScreen *screen) {
+	NSSize s = screen.frame.size;
+	if (@available(macOS 12.0, *))
+		if (![NSUserDefaults.standardUserDefaults boolForKey:@"pretendNotchIsntThere"])
+			s.height -= screen.safeAreaInsets.top;
+	return s;
 }
 
 - (void)configureBacking {
 	// this should only be called when the window is visible (when the backing scale factor has been updated)
 	NSScreen *screen = self.screen;
-	NSSize boundingSize = screen.frame.size;
-	if (@available(macOS 12.0, *))
-		boundingSize.height -= screen.safeAreaInsets.top;
+	NSSize boundingSize = BoundingSizeForScreen(screen);
 	NSSize backingSize = [imgView convertSizeToBacking:boundingSize];
 	NSSize oldSize = imgCache.boundingSize;
 	if (oldSize.width < backingSize.width || oldSize.height < backingSize.height)
 		[imgCache removeAllImages];
 	imgCache.boundingSize = backingSize;
-	oldScreen = screen;
+	_oldBackingSize = backingSize;
 }
 
 - (void)resetScreen
 {
-	if ([oldScreen.deviceDescription[@"NSScreenNumber"] isNotEqualTo:self.screen.deviceDescription[@"NSScreenNumber"]]) {
+	if ([self isVisible] && !NSEqualSizes(_oldBackingSize, [imgView convertSizeToBacking:BoundingSizeForScreen(self.screen)])) {
 		[self configureScreen];
+		[self configureBacking];
 		[self displayImage];
 	}
 }
@@ -299,7 +333,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[_fileWatcher stop];
 	lastIndex = currentIndex;
 	if (currentIndex != NSNotFound) {
-		[self saveZoomInfo];
 		currentIndex = NSNotFound;
 	}
 	_stopLoading = YES;
@@ -310,7 +343,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	// this is a half-hearted attempt to clean up. Really we just rely on the countLimit on the cache
 	NSUInteger n = MIN(filenames.count, MAX_CACHED);
 	for (NSUInteger i=0; i<n; ++i) {
-		[imgCache endAccess:filenames[i]];
+		[imgCache endAccess:ResolveAliasToPath(filenames[i])];
 	}
 }
 
@@ -530,13 +563,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 
-- (void)updateInfoFldWithRotation:(int)r {
-	DYImageInfo *info = [imgCache infoForKey:filenames[currentIndex]];
+- (void)updateInfoFld {
+	if (currentIndex > filenames.count) return;
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])];
 	if (info == nil) {
 		// avoid crash if user tries to rotate before the image has loaded
 		return;
 	}
 	id dir;
+	int r = imgView.rotation;
 	switch (r) {
 		case 90: dir = NSLocalizedString(@" left", @""); break;
 		case -90: dir = NSLocalizedString(@" right", @""); break;
@@ -563,10 +598,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[infoFld sizeToFit];
 }
 
-- (void)updateInfoFld {
-	[self updateInfoFldWithRotation:imgView.rotation];
-}
-
 - (void)redisplayImage {
 	if (currentIndex == NSNotFound) return;
 	NSString *theFile = filenames[currentIndex];
@@ -577,7 +608,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)uncacheImage:(NSString *)s {
-	[imgCache removeImageForKey:s];
+	[imgCache removeImageForKey:ResolveAliasToPath(s)];
 	[zooms removeObjectForKey:s];
 	[rotations removeObjectForKey:s];
 	[flips removeObjectForKey:s];
@@ -599,8 +630,9 @@ scheduledTimerWithTimeInterval:timerIntvl
 		return;
 	}
 	NSString *theFile = filenames[currentIndex];
+	NSString *resolvedPath = ResolveAliasToPath(theFile);
 	[self setTitleWithRepresentedFilename:theFile];
-	NSImage *img = [self loadFromCache:theFile];
+	NSImage *img = [self loadFromCache:resolvedPath];
 	[self displayCats];
 	if (img) {
 		NSNumber *rot = rotations[theFile];
@@ -622,11 +654,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 		}
 		if (r) imgView.rotation = r;
 		if (imgFlipped) imgView.imageFlipped = YES;
-		// ** see keyDown for specifics
-		// if zoomed in, we need to set a different image
-		// here, copy-pasted from keyDown
-		DYImageInfo *info = [imgCache infoForKey:filenames[currentIndex]];
-		if (autoRotate && !rot && !imgFlipped && info->exifOrientation) {
+		DYImageInfo *info = [imgCache infoForKey:resolvedPath];
+		if (autoRotate && !rot && !imgFlipped && info->exifOrientation > 1) {
 			// auto-rotate by exif orientation
 			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
 			rotations[theFile] = @(r);
@@ -636,13 +665,15 @@ scheduledTimerWithTimeInterval:timerIntvl
 		}
 		// if zoom has been manually set, or if the the image size is larger than the view size, we need to set the zoom to something other than fit-to-view
 		if (zoomInfo || (imgView.showActualSize && !(info->pixelSize.width <= imgView.bounds.size.width && info->pixelSize.height <= imgView.bounds.size.height))) {
-			if (!NSEqualSizes(info->pixelSize, info.image.size))
-				[info loadFullSizeImage];
+			if (!info.hasFullSizeImage)
+				[self loadFullSizeImage];
 			[imgView setImage:info.image
 					  zooming:zoomInfo ? DYImageViewZoomModeManual : DYImageViewZoomModeActualSize];
 			if (zoomInfo) imgView.zoomInfo = zoomInfo;
 		}
-		[self updateInfoFldWithRotation:r];
+		else if (info->quality == DYImageQualityLow)
+			[self loadNicerImage];
+		[self updateInfoFld];
 		if (!exifFld.enclosingScrollView.hidden) [self updateExifFld];
 		if (timerIntvl) [self runTimer];
 	} else {
@@ -661,7 +692,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	for (short i=1; i<=2; i++) {
 		if (currentIndex+i >= filenames.count)
 			break;
-		NSString *aPath = filenames[currentIndex+i];
+		NSString *aPath = ResolveAliasToPath(filenames[currentIndex+i]);
 		[_upcomingQueue addOperationWithBlock:^{
 			[imgCache cacheFile:aPath fullSize:fullSize];
 		}];
@@ -737,26 +768,23 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)jumpTo:(NSUInteger)n {
-	//NSLog(@"jumping to %d", n);
 	[self killTimer];
-	// we rely on this only being called when changing pics, not at startup
-	[self saveZoomInfo];
-	// above code is repeated in endSlideshow, setBasePath
-	
 	currentIndex = n >= filenames.count ? filenames.count - 1 : n;
 	[self displayImage];
 }
 
-- (void)saveZoomInfo {
-	if (currentIndex >= filenames.count) return;
+- (void)saveZoomAndLoadFullSize:(DYImageInfo *)info {
 	if (imgView.zoomInfoNeedsSaving)
 		zooms[filenames[currentIndex]] = imgView.zoomInfo;
+	[self updateInfoFld];
+	if (info.image == imgView.image && !info.hasFullSizeImage)
+		[self loadFullSizeImage];
 }
 
 - (void)setRotation:(int)n {
 	n = [imgView addRotation:n];
 	rotations[filenames[currentIndex]] = @(n);
-	[self updateInfoFldWithRotation:n];
+	[self updateInfoFld];
 }
 
 - (void)toggleFlip {
@@ -990,30 +1018,17 @@ scheduledTimerWithTimeInterval:timerIntvl
 			// intentional fall-through to next cases
 		case '+':
 		case '-':
-			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
-				if (obj.image == imgView.image
-					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) { // cached image smaller than orig
-					[imgView setImage:[obj loadFullSizeImage]
-							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
-				} else {
-					if (c == '+') [imgView zoomIn];
-					else if (c == '-') [imgView zoomOut];
-					else [imgView zoomActualSize];
-				}
-				[self updateInfoFld];
+			if ((obj = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])])) {
+				if (c == '+') [imgView zoomIn];
+				else if (c == '-') [imgView zoomOut];
+				else [imgView zoomActualSize];
+				[self saveZoomAndLoadFullSize:obj];
 			}
-			// can't save zooms here, save when leaving the pict; see jumpTo
-			// for important comments
 			break;
 		case '*':
-			//[imgView zoomOff];
-			//if (![imgView showActualSize])
-			//	[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
-			//[self updateInfoFld];
 			[self redisplayImage]; // this resets zoom, rotate, and flip
 			break;
 		default:
-			//NSLog(@"%x",c);
 			[super keyDown:e];
 	}
 }
@@ -1032,18 +1047,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case '+':
 		case '-':
 			if (currentIndex >= filenames.count) { NSBeep(); return YES; }
-			// ** code copied from keyDown
-			if ((obj = [imgCache infoForKey:filenames[currentIndex]])) {
-				if (obj.image == imgView.image
-					&& !NSEqualSizes(obj->pixelSize, obj.image.size)) {  // cached image smaller than orig
-					[imgView setImage:[obj loadFullSizeImage]
-							  zooming:c == '=' ? DYImageViewZoomModeActualSize : c == '+' ? DYImageViewZoomModeZoomIn : DYImageViewZoomModeZoomOut];
-				} else {
-					if (c == '+') [imgView zoomIn];
-					else if (c == '-') [imgView zoomOut];
-					else [imgView zoomActualSize];
-				}
-				[self updateInfoFld];
+			if ((obj = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])])) {
+				if (c == '+') [imgView zoomIn];
+				else if (c == '-') [imgView zoomOut];
+				else [imgView zoomActualSize];
+				[self saveZoomAndLoadFullSize:obj];
 			}
 			return YES;
 		default:
@@ -1115,16 +1123,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 {
 	if (currentIndex >= filenames.count) return;
 	NSString *filename = filenames[currentIndex];
-	DYImageInfo *info = [imgCache infoForKey:filename];
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filename)];
 	if (info) {
 		float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
-		if (info.image == imgView.image
-			&& !NSEqualSizes(info->pixelSize, info.image.size)) { // cached image smaller than orig
-			[imgView setImage:[info loadFullSizeImage]
-					  zooming:DYImageViewZoomModeManual];
-		}
 		[imgView setZoomF:zoom * (1.0 + event.magnification)];
-		[self updateInfoFld];
+		[self saveZoomAndLoadFullSize:info];
 	}
 }
 
@@ -1137,16 +1140,68 @@ scheduledTimerWithTimeInterval:timerIntvl
 		return img;
 	if (keyIsRepeating < MAX_REPEATING_CACHED || currentIndex == 0 || currentIndex == filenames.count-1) {
 		BOOL fullSize = imgView.showActualSize;
+		NSUInteger savedIndex = currentIndex;
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			@autoreleasepool {
 				if (currentIndex == NSNotFound) return; // in case slideshow ended before thread started (i.e., don't bother caching if the slideshow is over already)
 				[imgCache cacheFile:s fullSize:fullSize]; // this operation takes time...
-				if (currentIndex < filenames.count && [filenames[currentIndex] isEqualToString:s])
+				if (currentIndex == savedIndex)
 					[self performSelectorOnMainThread:@selector(displayImage) withObject:nil waitUntilDone:NO];
 			}
 		});
 	}
 	return nil;
+}
+
+- (void)loadFullSizeImage {
+	NSString *path = filenames[currentIndex];
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(path)];
+	unsigned short oldOrientation = info->exifOrientation;
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		@autoreleasepool {
+			if ([imgCache loadFullSizeImageForCached:info]) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					NSImage *image = info.image;
+					if (image == nil) info.image = imgCache.fallbackImage;
+					// This works around a bizarre case where when we created the scaled image,
+					// CGBitmapContextCreate failed and reset the exif orientation to zero.
+					// Now with the full size the exif orientation may be set (correctly) again.
+					unsigned short newOrientation = info->exifOrientation;
+					int rot = [rotations[path] intValue];
+					BOOL flipd = [flips[path] boolValue];
+					if (oldOrientation == 0 && newOrientation > 1
+						&& (rot || flipd)) {
+						// if the user had previously rotated or flipped the image,
+						// we'll need to do some math to adjust those values
+						int exifRot;
+						BOOL exifFlipd;
+						exiforientation_to_components(newOrientation, &exifRot, &exifFlipd);
+						rot += flipd ? -exifRot : exifRot;
+						if (rot < -90) rot += 360; else if (rot >= 180) rot -= 360;
+						flipd = (flipd != exifFlipd);
+						rotations[path] = @(rot);
+						flips[path] = @(flipd);
+					}
+					if (currentIndex < filenames.count && [filenames[currentIndex] isEqualToString:path])
+						[self displayImage];
+				});
+			}
+		}
+	});
+}
+
+- (void)loadNicerImage {
+	NSString *path = filenames[currentIndex];
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(path)];
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+		@autoreleasepool {
+			if ([imgCache loadHighInterpolationImageForCached:info])
+				dispatch_async(dispatch_get_main_queue(), ^{
+					if (currentIndex < filenames.count && [filenames[currentIndex] isEqualToString:path])
+						[self displayImage];
+				});
+		}
+	});
 }
 
 #pragma mark accessors
@@ -1173,13 +1228,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 	return components_to_exiforientation(rot ? rot.intValue : 0, [flips[theFile] boolValue]);
 }
 - (unsigned short)currentFileExifOrientation {
-	return [imgCache infoForKey:filenames[self.currentIndex]]->exifOrientation;
+	return [imgCache infoForKey:ResolveAliasToPath(filenames[self.currentIndex])]->exifOrientation;
 }
 
 - (BOOL)currentImageLoaded {
 	NSString *s = self.currentFile;
 	if (s == nil) return NO;
-	return [imgCache infoForKey:s] != nil;
+	return [imgCache infoForKey:ResolveAliasToPath(s)] != nil;
 }
 
 - (void)removeImageForFile:(NSString *)s {
@@ -1204,7 +1259,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	BOOL current = (currentIndex == n);
 	[filenames removeObjectAtIndex:n];
-	[imgCache removeImageForKey:s];
+	[imgCache removeImageForKey:ResolveAliasToPath(s)];
 	// if file before current file was deleted, shift index back one
 	if (n < currentIndex)
 		currentIndex--;
@@ -1355,16 +1410,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (IBAction)toggleShowActualSize:(id)sender {
 	NSMenuItem *item = sender;
 	BOOL b = !item.state;
-	// save zoomInfo, if any, BEFORE changing the vars
-	if (currentIndex != NSNotFound) {
-		[self killTimer]; // ** why?
-		[self saveZoomInfo];
-	}
-	// then change vars and re-display
 	item.state = b;
 	imgView.showActualSize = b;
-	if (currentIndex == filenames.count) return;
-	if (currentIndex != NSNotFound) [self displayImage];
+	if (b && currentIndex < filenames.count) {
+		DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])];
+		if (!info.hasFullSizeImage)
+			[self loadFullSizeImage];
+	}
 }
 
 - (void)updateStatusOnMainThread:(NSString * (^)(void))f {

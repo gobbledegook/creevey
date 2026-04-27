@@ -456,22 +456,12 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 	if (thumb) {
 		[thumbsCache beginAccess:theFile];
 		addedToCache = YES;
-	} else { // ** dup
-		if ([thumbsCache attemptLockOnFile:theFile]) {
-			DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
-			[thumbsCache createScaledImage:result];
-			if (result.image) {
-				[thumbsCache addImage:result forFile:theFile];
-				addedToCache = YES;
-			}
-			else [thumbsCache dontAddFile:theFile];
-			thumb = result.image;
-		} else {
-			thumb = [thumbsCache imageForKey:theFile];
-			if (thumb) {
-				[thumbsCache beginAccess:theFile];
-				addedToCache = YES;
-			}
+	} else {
+		addedToCache = [thumbsCache cacheFile:theFile fullSize:NO];
+		thumb = [thumbsCache imageForKey:theFile];
+		if (thumb && !addedToCache) {
+			[thumbsCache beginAccess:theFile];
+			addedToCache = YES;
 		}
 	}
 	if (!thumb) thumb = _brokenDoc;
@@ -512,7 +502,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 		[_accessedLock lock];
 		if ([_accessedFiles containsObject:s]) {
 			[_accessedFiles removeObject:s];
-			[appDelegate.thumbsCache endAccess:s];
+			[appDelegate.thumbsCache endAccess:ResolveAliasToPath(s)];
 		}
 		[_accessedLock unlock];
 
@@ -700,7 +690,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 				}
 				NSString *origPath = displayedFilenames[i];
 				NSString *resolvedPath = ResolveAliasToPath(origPath);
-				NSImage *cachedImage = [thumbsCache imageForKeyInvalidatingCacheIfNecessary:resolvedPath]; // remember the thumbsCache's key is the resolved path!
+				NSImage *cachedImage = [thumbsCache imageForKeyInvalidatingCacheIfNecessary:resolvedPath];
 				// what happens if another window happens to invalidate a thumb that we started "access" to?
 				// Actually it won't matter if we make too many calls to endAccess:, worst case is we'll have to recache it at some point.
 				dispatch_async(dispatch_get_main_queue(), ^{
@@ -1016,6 +1006,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 // this thread runs forever, waiting for objects to be added to its queue
 - (void)thumbLoader:(id)arg {
 	NSThread.currentThread.name = @"thumbLoader:";
+	NSThread.currentThread.qualityOfService = NSQualityOfServiceDefault;
 	DYImageCache *thumbsCache = appDelegate.thumbsCache;
 	// only use exif thumbs if we're at the smallest thumbnail  setting
 	NSUInteger i, lastCount = 0;
@@ -1125,41 +1116,17 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 					[_accessedLock unlock];
 					return [NSString stringWithFormat:loadingMsg, k+1, imgMatrix.numCells];
 				}];
-				if ([thumbsCache attemptLockOnFile:theFile]) { // will sleep if pending
-					char *data;
-					size_t len;
-					unsigned short thumbW, thumbH, rawW, rawH, orientation;
-					enum dcraw_type thumbType;
-					DYImageInfo *result = [[DYImageInfo alloc] initWithPath:theFile];
-					if (IsRaw(theFile.pathExtension.lowercaseString) &&
-							   (data = ExtractThumbnailFromRawFile(theFile.fileSystemRepresentation, &len, &thumbW, &thumbH, &thumbType, &rawW, &rawH, &orientation))) {
-						result->exifOrientation = orientation; // this needs to be set before
-						[thumbsCache createScaledImage:result fromData:[NSData dataWithBytesNoCopy:data length:len freeWhenDone:NO] ofType:thumbType];
-						result->pixelSize.width = rawW; // these need to be set after (otherwise the width/height are for the thumb)
-						result->pixelSize.height = rawH;
-						free(data);
-					}
-					if (!result.image)
-						[thumbsCache createScaledImage:result];
-
-					if (result.image) {
-						[thumbsCache addImage:result forFile:theFile];
-						addedToCache = YES;
-					}
-					else
-						[thumbsCache dontAddFile:theFile]; //NSLog(@"couldn't load image %@", origPath);
-					thumb = result.image;
-				} else {
+				addedToCache = [thumbsCache cacheFile:theFile fullSize:NO]; // will sleep if pending
+				thumb = [thumbsCache imageForKey:theFile];
+				if (thumb && !addedToCache) {
 					// someone beat us to it
-					thumb = [thumbsCache imageForKey:theFile];
-					if (thumb) {
-						[thumbsCache beginAccess:theFile];
-						addedToCache = YES;
-					}
+					[thumbsCache beginAccess:theFile];
+					addedToCache = YES;
 				}
 			}
 
-			if (!thumb) thumb = _brokenDoc;
+			if (!thumb)
+				thumb = _brokenDoc;
 			dispatch_async(dispatch_get_main_queue(), ^{
 				if ([imgMatrix setImage:thumb atIndex:[d[1] unsignedIntegerValue] forFilename:origPath]) {
 					if (addedToCache) {
@@ -1171,7 +1138,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 						}
 					}
 				} else if (addedToCache) {
-					[thumbsCache endAccess:origPath];
+					[thumbsCache endAccess:theFile];
 				}
 			});
 			if (_background)

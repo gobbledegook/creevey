@@ -41,6 +41,19 @@ NSURL * _Nullable ResolveAliasURL(NSURL *url) {
 	return result;
 }
 
+BOOL IsAliasFilePath(NSString *path) {
+	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (CFStringRef)path, kCFURLPOSIXPathStyle, NO);
+	if (url == NULL) return NO;
+	Boolean isAlias = NO;
+	CFBooleanRef b;
+	if (CFURLCopyResourcePropertyForKey(url, kCFURLIsAliasFileKey, &b, NULL)) {
+		isAlias = CFBooleanGetValue(b);
+		CFRelease(b);
+	}
+	CFRelease(url);
+	return isAlias;
+}
+
 BOOL IsJPEG(NSString *x) {
 	return [x isEqualToString:@"jpg"] || [x isEqualToString:@"jpeg"];
 }

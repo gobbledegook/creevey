@@ -21,7 +21,6 @@
 - (void)startSlideshowAtIndex:(NSUInteger)n;
 - (void)endSlideshow;
 - (void)resetScreen;
-- (void)configureBacking;
 
 @property (nonatomic, readonly) NSUInteger currentIndex;
 @property (nonatomic, readonly) NSString *currentFile;

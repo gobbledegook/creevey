@@ -27,6 +27,20 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	return [NSString stringWithFormat:@"%.1f %s", n, units[i]];
 }
 
+static unsigned short CGImageSourceOrientationAtIndex(CGImageSourceRef src, size_t idx) {
+	CFDictionaryRef props = CGImageSourceCopyPropertiesAtIndex(src, idx, NULL);
+	short result = 0;
+	if (props) {
+		CFNumberRef nRef = CFDictionaryGetValue(props, kCGImagePropertyOrientation);
+		if (nRef)
+			CFNumberGetValue(nRef, kCFNumberShortType, &result);
+		CFRelease(props);
+		return result;
+	}
+	return 0;
+}
+
+
 @interface DYImageInfo () <NSDiscardableContent>
 - (instancetype)init NS_UNAVAILABLE;
 @property NSUInteger counter;
@@ -40,7 +54,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		_counter = 1; // NSCache may try to evict us immediately!
 		
 		struct stat buf;
-		if (!stat(ResolveAliasToPath(s).fileSystemRepresentation, &buf)) {
+		if (!stat(s.fileSystemRepresentation, &buf)) {
 			modTime = buf.st_mtimespec.tv_sec;
 			fileSize = buf.st_size;
 		}
@@ -51,25 +65,84 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	return [NSString stringWithFormat:@"%dx%d", (int)pixelSize.width, (int)pixelSize.height];
 }
 
-- (NSImage *)loadFullSizeImage {
-	NSString *myPath = ResolveAliasToPath(path);
-	CGImageSourceRef src = CGImageSourceCreateFromPath(myPath);
+- (BOOL)hasFullSizeImage {
+	if (image == nil) return YES; // assuming all calls to loadFullSizeImage are guarded by this check, this should prevent a hypothetical scenario where loadFullSizeImage fails (and sets image to nil), then gets called again over and over
+	return NSEqualSizes(pixelSize, image.size);
+}
+
+- (void)loadFullSizeImage {
+	CGImageSourceRef src = CGImageSourceCreateFromPath(path);
 	if (src) {
 		size_t idx = CGImageSourceGetPrimaryImageIndex(src);
 		NSString *type = (__bridge NSString *)CGImageSourceGetType(src);
-		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(src) > 1) {
-			// special case for animated gifs
-			image = [[NSImage alloc] initWithContentsOfFile:myPath];
-		} else {
+		BOOL animatedGif = [type isEqualToString:@"com.compuserve.gif"] && CGImageSourceGetCount(src) > 1;
+		if (!animatedGif) {
 			CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCacheImmediately:@YES});
 			if (ref) {
 				image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
+				if ([type isEqualToString:@"public.tiff"] && (abs((int)(pixelSize.width - CGImageGetWidth(ref))) > 1000)) {
+					// workaround for tiny NEF images
+					image = nil;
+				}
+				if (exifOrientation == 0)
+					exifOrientation = CGImageSourceOrientationAtIndex(src, idx);
 				CFRelease(ref);
+			} else {
+				// workaround for ARW files
+				image = nil;
 			}
 		}
 		CFRelease(src);
 	}
-	return image;
+	if (image == nil) image = [[NSImage alloc] initWithContentsOfFile:path];
+	if (image) {
+		pixelSize = image.size;
+		quality = DYImageQualityFull;
+	}
+}
+
+static CGImageRef CreateScaledNicer(CGImageRef ref, NSSize boundingSize) {
+	CGImageRef result = NULL;
+	CGColorSpaceRef colorSpace = CGImageGetColorSpace(ref);
+	if (colorSpace) {
+		CGSize imgSize = {CGImageGetWidth(ref),CGImageGetHeight(ref)}, newSize = boundingSize;
+		if ((newSize.height > newSize.width) != (imgSize.height > imgSize.width)) {
+			newSize.width = boundingSize.height;
+			newSize.height = boundingSize.width;
+		}
+		CGFloat w_ratio = newSize.width/imgSize.width, h_ratio = newSize.height/imgSize.height;
+		if (w_ratio < h_ratio) {
+			newSize.height = (int)(imgSize.height*w_ratio);
+		} else {
+			newSize.width = (int)(imgSize.width*h_ratio);
+		}
+		CGContextRef ctx = CGBitmapContextCreate(NULL, newSize.width, newSize.height, CGImageGetBitsPerComponent(ref), 0, colorSpace, CGImageGetBitmapInfo(ref));
+		if (ctx) {
+			CGContextSetInterpolationQuality(ctx, kCGInterpolationHigh);
+			CGContextDrawImage(ctx, (CGRect){CGPointZero,newSize}, ref);
+			result = CGBitmapContextCreateImage(ctx);
+			CFRelease(ctx);
+		}
+	}
+	return result;
+}
+
+- (void)loadHighInterpolationImage:(NSSize)boundingSize {
+	CGImageSourceRef src = CGImageSourceCreateFromPath(path);
+	if (src) {
+		size_t idx = CGImageSourceGetPrimaryImageIndex(src);
+		CGImageRef ref = CGImageSourceCreateImageAtIndex(src, idx, NULL);
+		if (ref) {
+			CGImageRef scaled = CreateScaledNicer(ref, boundingSize);
+			if (scaled) {
+				image = [[NSImage alloc] initWithCGImage:scaled size:NSZeroSize];
+				CFRelease(scaled);
+			}
+			CFRelease(ref);
+		}
+		CFRelease(src);
+	}
+	quality = DYImageQualityHigh;
 }
 
 #pragma mark NSDiscardableContent
@@ -104,8 +177,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	_Atomic BOOL cachingShouldStop;
 
 	NSUInteger _maxCount;
-	NSMutableOrderedSet<NSString *> *stupidKeys;
-	NSMutableDictionary<NSString *, DYImageInfo *> *stupidCacheWorkaround;
+	DYImageInfo *_stupidCacheWorkaround; // see note under addImage:forFile:
 }
 - (instancetype)init NS_UNAVAILABLE;
 @end
@@ -119,10 +191,6 @@ NSString *FileSize2String(unsigned long long fileSize) {
 		images.evictsObjectsWithDiscardedContent = YES;
 		pending = [[NSMutableSet alloc] init];
 		_maxCount = n;
-		if (_maxCount < 20) {
-			stupidKeys = [NSMutableOrderedSet orderedSetWithCapacity:n];
-			stupidCacheWorkaround = [NSMutableDictionary dictionaryWithCapacity:n];
-		}
 		
 		cacheLock = [[NSLock alloc] init];
 		pendingLock = [[NSConditionLock alloc] initWithCondition:0];
@@ -183,6 +251,7 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 		}
 	}
 	imgInfo.image = result;
+	imgInfo->quality = DYImageQualityHigh;
 }
 
 + (NSData *)createNewThumbFromFile:(NSString *)path getSize:(NSSize *)outSize {
@@ -209,6 +278,13 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 	return result;
 }
 
+static CGImageRef CreateScaledFaster(CGImageSourceRef src, size_t idx, NSSize boundingSize) {
+	CGFloat max = boundingSize.width > boundingSize.height ? boundingSize.width : boundingSize.height;
+	return CGImageSourceCreateThumbnailAtIndex(src, idx, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceCreateThumbnailFromImageAlways:@YES, (__bridge NSString *)kCGImageSourceThumbnailMaxPixelSize:@(max)});
+}
+
+#define REALLYBIG_FILESIZE 35000000
+// let's say 35MB is big
 static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo *imgInfo, BOOL fastThumbnails) {
 	size_t idx = CGImageSourceGetPrimaryImageIndex(orig);
 	NSString *type = (__bridge NSString *)CGImageSourceGetType(orig);
@@ -219,55 +295,44 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 
 		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(orig) > 1) {
 			// special case for animated gifs
-			imgInfo.image = [[NSImage alloc] initWithContentsOfFile:ResolveAliasToPath(imgInfo.path)];
+			imgInfo.image = [[NSImage alloc] initWithContentsOfFile:imgInfo.path];
+			imgInfo->quality = DYImageQualityFull;
 		} else if (!fastThumbnails) {
 			CGFloat maxLen = 1.5*boundingSize.width;
 			if (imgInfo->pixelSize.width < maxLen && imgInfo->pixelSize.height < maxLen) {
 				imgInfo.image = [[NSImage alloc] initWithCGImage:full size:NSZeroSize];
+				imgInfo->quality = DYImageQualityFull;
 			} else {
 				// if the image is significantly bigger than the bounding size, we should scale it down for speed/memory
-				CGColorSpaceRef colorSpace = CGImageGetColorSpace(full);
-				if (colorSpace) {
-					CGSize newSize = boundingSize;
-					if ((newSize.height > newSize.width) != (imgInfo->pixelSize.height > imgInfo->pixelSize.width)) {
-						newSize.width = boundingSize.height;
-						newSize.height = boundingSize.width;
-					}
-					CGFloat w_ratio = newSize.width/fullSize.width, h_ratio = newSize.height/fullSize.height;
-					if (w_ratio < h_ratio) {
-						newSize.height = (int)(fullSize.height*w_ratio);
-					} else {
-						newSize.width = (int)(fullSize.width*h_ratio);
-					}
-					CGContextRef ctx = CGBitmapContextCreate(NULL, newSize.width, newSize.height, CGImageGetBitsPerComponent(full), 0, colorSpace, CGImageGetBitmapInfo(full));
-					if (ctx) {
-						CGContextSetInterpolationQuality(ctx, kCGInterpolationHigh);
-						CGContextDrawImage(ctx, (CGRect){CGPointZero,newSize}, full);
-						CGImageRef ref = CGBitmapContextCreateImage(ctx);
-						if (ref) {
-							imgInfo.image = [[NSImage alloc] initWithCGImage:ref size:NSZeroSize];
-							CFRelease(ref);
-						}
-						CFRelease(ctx);
-					}
+				BOOL isBig = imgInfo->fileSize > REALLYBIG_FILESIZE;
+				CGImageRef scaled = isBig ? CreateScaledFaster(orig, idx, boundingSize) : CreateScaledNicer(full, boundingSize);
+				if (scaled) {
+					imgInfo.image = [[NSImage alloc] initWithCGImage:scaled size:NSZeroSize];
+					imgInfo->quality = isBig ? DYImageQualityLow : DYImageQualityHigh;
+					CFRelease(scaled);
 				}
 			}
+			if ([type isEqualToString:@"public.tiff"]) {
+				NSImage *img = [[NSImage alloc] initByReferencingFile:imgInfo.path];
+				NSSize expectedSize = img.size;
+				// CGImageSourceCreateImageAtIndex returns tiny images for certain raw files (.NEF), so we work around it
+				// by calling ScaleImage below.
+				if (abs((int)(expectedSize.width - fullSize.width)) > 1000)
+					imgInfo.image = nil;
+			}
+		}
+		if (imgInfo->exifOrientation == 0) {
+			// in case we encounter some file type with EXIF info that we hadn't anticipated
+			imgInfo->exifOrientation = CGImageSourceOrientationAtIndex(orig, idx);
 		}
 		CFRelease(full);
-		if ([type isEqualToString:@"public.tiff"]) {
-			NSImage *img = [[NSImage alloc] initByReferencingFile:imgInfo.path];
-			NSSize expectedSize = img.size;
-			// CGImageSourceCreateImageAtIndex returns tiny images for certain raw files (.NEF), so we work around it
-			if (abs((int)(expectedSize.width - fullSize.width)) > 1000)
-				imgInfo.image = nil;
-		}
 		if (imgInfo.image != nil) return;
 	}
 	if (!fastThumbnails) {
 		// certain raw images don't seem to play well with CGImageSourceCreateImageAtIndex
 		// so we fall back to NSImage
 		imgInfo->exifOrientation = 0; // except now we let NSImage auto-rotate. Curiously enough, trying NSImage's -initWithDataIgnoringOrientation: runs into the same problem as using CGImage (tiny images)
-		ScaleImage([[NSImage alloc] initByReferencingFile:imgInfo.path], boundingSize, YES, imgInfo);
+		ScaleImage([[NSImage alloc] initWithContentsOfFile:imgInfo.path], boundingSize, YES, imgInfo);
 		return;
 	}
 	BOOL isJpeg = [type isEqualToString:@"public.jpeg"];
@@ -351,16 +416,46 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 - (void)createScaledImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0)
 		return;  // nsimage crashes on zero-length files
-	NSString *path = ResolveAliasToPath(imgInfo.path);
+	NSString *path = imgInfo.path;
 	NSString *ext = path.pathExtension.lowercaseString;
+	char *data;
+	size_t len;
+	unsigned short thumbW, thumbH, rawW, rawH, orientation;
+	enum dcraw_type thumbType;
+	if (_fastThumbnails && IsRaw(ext) && (data = ExtractThumbnailFromRawFile(path.fileSystemRepresentation, &len, &thumbW, &thumbH, &thumbType, &rawW, &rawH, &orientation))) {
+		imgInfo->exifOrientation = orientation; // this needs to be set before
+		NSString *hint;
+		switch (thumbType) {
+			case dc_jpeg: hint = @"public.jpeg"; break;
+			case dc_tiff: hint = @"public.tiff"; break;
+			default:      hint = @"public.pbm"; break;
+		}
+		NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceTypeIdentifierHint: hint};
+		CGImageSourceRef orig = CGImageSourceCreateWithData((__bridge CFDataRef)[NSData dataWithBytesNoCopy:data length:len freeWhenDone:NO], (__bridge CFDictionaryRef)opts);
+		if (orig) {
+			ScaleCGImage(orig, boundingSize, imgInfo, YES);
+			CFRelease(orig);
+		}
+		imgInfo->pixelSize.width = rawW; // these need to be set after (otherwise the width/height are for the thumb)
+		imgInfo->pixelSize.height = rawH;
+		free(data);
+#if 0
+		if (imgInfo.image) NSLog(@"got orientation %i, size %ix%i, thumb %ix%i for %@", orientation, rawW, rawH,thumbW,thumbH, path.lastPathComponent);
+	}
+	if (_fastThumbnails && IsRaw(ext) && !imgInfo.image) NSLog(@"no preview for %@", path.lastPathComponent);
+#else
+	}
+#endif
+	if (imgInfo.image) return;
 	if (IsNotCGImage(ext)) {
 		NSImage *img = [[NSImage alloc] initWithContentsOfFile:path];
 		if (_fastThumbnails) {
-			ScaleImage(img, boundingSize, _rotatable, imgInfo);
+			ScaleImage(img, boundingSize, NO, imgInfo);
 		} else {
 			// return vector graphics in their non-pixelated glory
 			imgInfo.image = img;
 			imgInfo->pixelSize = img.size;
+			imgInfo->quality = DYImageQualityFull;
 		}
 	} else {
 		CGImageSourceRef orig = CGImageSourceCreateFromPath(path);
@@ -373,48 +468,32 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	}
 }
 
-- (void)createScaledImage:(DYImageInfo *)imgInfo fromData:(NSData *)data ofType:(enum dcraw_type)dataType {
-	NSString *hint;
-	switch (dataType) {
-		case dc_jpeg:
-			hint = @"public.jpeg"; break;
-		case dc_tiff:
-			hint = @"public.tiff"; break;
-		default:
-			hint = @"public.pbm"; break;
-	}
-	NSDictionary *opts = @{(__bridge NSString *)kCGImageSourceTypeIdentifierHint: hint};
-	CGImageSourceRef orig = CGImageSourceCreateWithData((__bridge CFDataRef)data, (__bridge CFDictionaryRef)opts);
-	if (orig) {
-		ScaleCGImage(orig, boundingSize, imgInfo, YES);
-		CFRelease(orig);
-	}
-}
-
 - (void)createFullsizeImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0) return;
-	NSString *path = ResolveAliasToPath(imgInfo.path);
+	NSString *path = imgInfo.path;
 	if (IsNotCGImage(path.pathExtension.lowercaseString)) {
 		NSImage *img = [[NSImage alloc] initWithContentsOfFile:path];
 		imgInfo.image = img;
 		imgInfo->pixelSize = img.size;
+		imgInfo->quality = DYImageQualityFull;
 	} else {
 		imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
 		[imgInfo loadFullSizeImage];
-		imgInfo->pixelSize = imgInfo.image.size;
 	}
 }
 
 
-// see usage note in the .h file.
+// cacheFile consists of the following three steps
+// 1. attemptLockOnFile:
+// 2. createScaledImage:
+// 3. addImage:/dontAddFile: (which simply removes from pending)
+// you MUST call addImage or dontAdd if attemptLock returns YES
+
 #define CacheContains(x)	([images objectForKey:x] != nil)
 #define PendingContains(x)  ([pending containsObject:x])
-//#define LOGCACHING 1
-- (void)cacheFile:(NSString *)s {
-	[self cacheFile:s fullSize:NO];
-}
-- (void)cacheFile:(NSString *)s fullSize:(BOOL)fullSize {
-	if (![self attemptLockOnFile:s]) return;
+#define LOGCACHING 0
+- (BOOL)cacheFile:(NSString *)s fullSize:(BOOL)fullSize {
+	if (![self attemptLockOnFile:s checkCache:YES]) return NO;
 	
 	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
 	if (fullSize)
@@ -422,14 +501,24 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	else
 		[self createScaledImage:result];
 	if (result.image == nil)
-		result.image = [NSImage imageNamed:@"brokendoc.tif"];
+		result.image = _fallbackImage;
 
-	[self addImage:result forFile:s];
+	if (result.image) {
+		[self addImage:result forFile:s];
+		return YES;
+	} else {
+		[self dontAddFile:s];
+		return NO;
+	}
 }
 
-- (BOOL)attemptLockOnFile:(NSString *)s { // add s to the "pending" array
+// Lock so we're the only thread working on this file.
+// We do this by adding the file name to the "pending" array.
+// (If another thread sees that the file is already being worked on, it will sleep until we're done, then return NO.)
+// Returns NO if already cached or we've been told to stop caching operations.
+- (BOOL)attemptLockOnFile:(NSString *)s checkCache:(BOOL)checkCache {
 	[cacheLock lock];
-	if (CacheContains(s) || cachingShouldStop) {
+	if ((checkCache && CacheContains(s)) || cachingShouldStop) {
 		// abort if already cached OR slideshow ended
 		[cacheLock unlock];
 		return NO;
@@ -468,16 +557,16 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	[cacheLock lock];
 	[pending removeObject:s];
 	if (!cachingShouldStop) {
-		[images setObject:imgInfo forKey:s];
-		if (stupidKeys && [images objectForKey:s] == nil) {
-			// for some reason, very occasionally you can add an object to the cache but it doesn't stick. This results in sort of infinite looping in the slideshow as it creates a cached image which gets immediately discarded, over and over. The slideshow just shows a blank screen with the message "loading...". This should work around that.
-			if (stupidKeys.count == _maxCount) {
-				[stupidCacheWorkaround removeObjectForKey:stupidKeys[0]];
-				[stupidKeys removeObjectAtIndex:0];
-			}
-			[stupidKeys addObject:s];
-			stupidCacheWorkaround[s] = imgInfo;
-		}
+		// for some reason, very occasionally you can add an object to the cache but it doesn't stick. This results in sort of infinite looping in the slideshow as it creates a cached image which gets immediately discarded, over and over. The slideshow just shows a blank screen with the message "loading...".
+		// This could also happen to the thumbnail cache, in which case you'll get a broken doc even if it's a valid file.
+		// To work around this we call setObject: repeatedly until it does stick. In testing this appears to be successful with just one additional attempt.
+		NSUInteger i = 0;
+		do {
+			[images setObject:imgInfo forKey:s];
+		} while ([images objectForKey:s] == nil && i++ < 10000);
+		// If after myriad attempts it is still unsuccessful, hang on to the object to return on the subsequent call to infoForKey/imageForKey. I don't expect this to ever be necessary, but better to avoid any infinite loop.
+		if ([images objectForKey:s] == nil)
+			_stupidCacheWorkaround = imgInfo;
 	}
 	[cacheLock unlock];
 	[pendingLock lock];
@@ -492,29 +581,47 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	[pendingLock unlockWithCondition:s.hash];
 }
 
+// assuming the cache already contains a scaled image,
+// load the full size version but using the same lock mechanism as above
+- (BOOL)loadFullSizeImageForCached:(DYImageInfo *)info {
+	NSString *s = info.path;
+	if (![self attemptLockOnFile:s checkCache:NO]) return NO;
+	[info loadFullSizeImage];
+	[self dontAddFile:s];
+	return YES;
+}
+
+- (BOOL)loadHighInterpolationImageForCached:(DYImageInfo *)info {
+	NSString *s = info.path;
+	if (![self attemptLockOnFile:s checkCache:NO]) return NO;
+	[info loadHighInterpolationImage:boundingSize];
+	[self dontAddFile:s];
+	return YES;
+}
+
 - (DYImageInfo *)infoForKey:(NSString *)s {
-	if (stupidKeys) return stupidCacheWorkaround[s] ?: [images objectForKey:s];
-	return [images objectForKey:s];
+	DYImageInfo *i = [images objectForKey:s];
+	if (i == nil) {
+		i = _stupidCacheWorkaround;
+		_stupidCacheWorkaround = nil;
+	}
+	return i;
 }
 
 - (NSImage *)imageForKey:(NSString *)s {
-	return [images objectForKey:s].image;
+	return [self infoForKey:s].image;
 }
 
 - (NSImage *)imageForKeyInvalidatingCacheIfNecessary:(NSString *)s {
 	DYImageInfo *imgInfo = [images objectForKey:s];
 	if (imgInfo) {
-		// must resolve alias before getting mod time
-		// b/c that's what we do in scaleImage
 		struct stat buf;
-		time_t modTime = stat(ResolveAliasToPath(s).fileSystemRepresentation, &buf) ? 0 : buf.st_mtimespec.tv_sec;
+		time_t modTime = stat(s.fileSystemRepresentation, &buf) ? 0 : buf.st_mtimespec.tv_sec;
 
 		// == nil if file doesn't exist
 		if (modTime == imgInfo->modTime)
 			return imgInfo.image;
 		[self removeImageForKey:s];
-	} else if (stupidKeys && stupidCacheWorkaround[s]) {
-		return stupidCacheWorkaround[s].image;
 	}
 	return nil;
 }
@@ -531,10 +638,6 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 			[cacheLock lock];
 		}
 		[images removeObjectForKey:s];
-		if (stupidKeys) {
-			[stupidKeys removeObject:s];
-			[stupidCacheWorkaround removeObjectForKey:s];
-		}
 	}
 	[cacheLock unlock];
 }
@@ -543,6 +646,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	[cacheLock lock];
 	[images removeAllObjects];
 	[pending removeAllObjects];
+	_stupidCacheWorkaround = nil;
 	[cacheLock unlock];
 }
 
