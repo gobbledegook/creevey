@@ -174,7 +174,6 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 											 selector:@selector(resize:)
 												 name:NSViewFrameDidChangeNotification
 											   object:self.enclosingScrollView];
-	[self.enclosingScrollView.contentView setPostsBoundsChangedNotifications:YES];
 	NSUserDefaults *udf = NSUserDefaults.standardUserDefaults;
 	float padding = [udf floatForKey:@"thumbPadding"];
 	_vPadding = _hPadding = padding < 0 ? 0 : padding > PADDING ? PADDING : padding;
@@ -537,9 +536,17 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 }
 
-- (void)resize:(id)anObject { // called by notification center
+- (void)resize:(id)anObject {
+	NSRect myFrame = self.frame;
+	if (anObject) {
+		// called from NSViewFrameDidChangeNotification.
+		// for some reason screen resolution/size changes trigger the notification,
+		// but fail to update our width
+		myFrame.size.width = self.superview.bounds.size.width;
+		self.frame = myFrame;
+	}
 	[self calculateCellSizes];
-	NSSize mySize = self.frame.size;
+	NSSize mySize = myFrame.size;
 	NSUInteger numRows = numCells == 0 ? 0 : (numCells-1)/numCols + 1;
 	float h = MAX(floorf(numRows*area_h), [[self superview] frame].size.height);
 	if (mySize.height != h) {
