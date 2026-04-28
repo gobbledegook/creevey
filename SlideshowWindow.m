@@ -1162,8 +1162,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	return filenames[idx];
 }
-- (NSString *)basePath {
-	return basePath;
+- (NSURL *)baseURL {
+	return [NSURL fileURLWithPath:basePath isDirectory:YES];
 }
 - (unsigned short)currentOrientation {
 	NSString *theFile = filenames[self.currentIndex];

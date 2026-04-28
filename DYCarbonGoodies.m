@@ -73,6 +73,28 @@ BOOL FileIsJPEG(NSString *s) {
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
 
+@implementation NSArray (DYPathToURLHelper)
+
+- (NSArray<NSURL *> *)asFileURLs {
+	NSUInteger n = self.count;
+	NSMutableArray *urls = [NSMutableArray arrayWithCapacity:n];
+	for (NSUInteger i = 0; i < n; ++i) {
+		[urls addObject:[NSURL fileURLWithPath:self[i] isDirectory:NO]];
+	}
+	return [urls copy];
+}
+
+- (NSArray<NSString *> *)asFilePaths {
+	NSUInteger n = self.count;
+	NSMutableArray *paths = [NSMutableArray arrayWithCapacity:n];
+	for (NSUInteger i = 0; i < n; ++i) {
+		[paths addObject:[self[i] path]];
+	}
+	return [paths copy];
+}
+
+@end
+
 CGImageSourceRef _Nullable CGImageSourceCreateFromPath(NSString *path) {
 	NSData *data = [NSData dataWithContentsOfFile:path];
 	if (data) return CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);

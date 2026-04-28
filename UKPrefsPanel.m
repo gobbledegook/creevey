@@ -273,9 +273,7 @@
 
 -(NSArray*) toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
-	return [itemsList.allKeys arrayByAddingObjectsFromArray:@[NSToolbarSeparatorItemIdentifier,
-				NSToolbarSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier,
-				NSToolbarCustomizeToolbarItemIdentifier] ];
+	return [itemsList.allKeys arrayByAddingObjectsFromArray:@[NSToolbarSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier] ];
 }
 
 @end

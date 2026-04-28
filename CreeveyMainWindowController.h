@@ -20,8 +20,9 @@
 - (IBAction)setRecurseSubfolders:(id)sender;
 
 // accessors
-@property (nonatomic, readonly, copy) NSString *path;
-@property (nonatomic, readonly, copy) NSArray *currentSelection;
+@property (nonatomic, readonly) NSString *path;
+@property (nonatomic, readonly) NSURL *URL;
+@property (nonatomic, readonly) NSArray *currentSelection;
 @property (nonatomic, readonly) NSIndexSet *selectedIndexes;
 - (void)selectIndex:(NSUInteger)i;
 @property (nonatomic, readonly) NSArray *displayedFilenames;

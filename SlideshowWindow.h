@@ -25,7 +25,7 @@
 
 @property (nonatomic, readonly) NSUInteger currentIndex;
 @property (nonatomic, readonly) NSString *currentFile;
-@property (nonatomic, readonly) NSString *basePath;
+@property (nonatomic, readonly) NSURL *baseURL;
 @property (nonatomic, readonly) unsigned short currentOrientation; // returns an EXIF orientation
 @property (nonatomic, readonly) unsigned short currentFileExifOrientation;
 - (void)displayImage; // to reload current file, assuming the mod date is different (oops - don't use this anymore)

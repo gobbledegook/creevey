@@ -35,11 +35,11 @@
 	// set defaults
 	[self.transformMenu selectItemAtIndex:0];
 	self.trimBtn.enabled = NO;
-	self.trimBtn.state = NSOffState;
-	self.grayscaleBtn.state = NSOffState;
+	self.trimBtn.state = NSControlStateValueOff;
+	self.grayscaleBtn.state = NSControlStateValueOff;
 	[self.markersMenu selectItemAtIndex:0];
-	self.progressiveBtn.state = NSOffState;
-	self.optimizeBtn.state = NSOffState;
+	self.progressiveBtn.state = NSControlStateValueOff;
+	self.optimizeBtn.state = NSControlStateValueOff;
 	
 	// run dialog
 	NSModalResponse n = [NSApp runModalForWindow:self.transformMenu.window];

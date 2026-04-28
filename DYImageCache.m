@@ -55,10 +55,7 @@ NSString *FileSize2String(unsigned long long fileSize) {
 	NSString *myPath = ResolveAliasToPath(path);
 	CGImageSourceRef src = CGImageSourceCreateFromPath(myPath);
 	if (src) {
-		size_t idx;
-		if (@available(macOS 10.14, *))
-			idx = CGImageSourceGetPrimaryImageIndex(src);
-		else idx = 0;
+		size_t idx = CGImageSourceGetPrimaryImageIndex(src);
 		NSString *type = (__bridge NSString *)CGImageSourceGetType(src);
 		if (([type isEqualToString:@"com.compuserve.gif"]) && CGImageSourceGetCount(src) > 1) {
 			// special case for animated gifs
@@ -213,10 +210,7 @@ static void ScaleImage(NSImage *orig, NSSize boundingSize, BOOL _rotatable, DYIm
 }
 
 static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo *imgInfo, BOOL fastThumbnails) {
-	size_t idx;
-	if (@available(macOS 10.14, *))
-		idx = CGImageSourceGetPrimaryImageIndex(orig);
-	else idx = 0;
+	size_t idx = CGImageSourceGetPrimaryImageIndex(orig);
 	NSString *type = (__bridge NSString *)CGImageSourceGetType(orig);
 	CGImageRef full = CGImageSourceCreateImageAtIndex(orig, idx, fastThumbnails ? (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCache:@NO} : NULL);
 	if (full) {

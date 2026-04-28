@@ -7,6 +7,7 @@
 
 #import "DYCreeveyBrowser.h"
 #import "CreeveyMainWindowController.h"
+#import "DYCarbonGoodies.h"
 
 @interface DYBrowserCell : NSBrowserCell {
 	NSString *title;
@@ -33,7 +34,7 @@
 
 @end
 
-@interface DYCreeveyBrowserMatrix : NSMatrix
+@interface DYCreeveyBrowserMatrix : NSMatrix <NSMenuItemValidation>
 @end
 @implementation DYCreeveyBrowserMatrix
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
@@ -91,7 +92,7 @@
 		self.prefersAllColumnUserResizing = NO;
 		
 		typedString = [[NSMutableString alloc] init];
-		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
+		[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 		greyview = [[DYTransparentGreyView alloc] initWithFrame:NSZeroRect];
 	}
 	return self;
@@ -132,7 +133,7 @@
 
 #pragma mark dragging stuff
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
-    if ([sender.draggingPasteboard.types containsObject:NSFilenamesPboardType]) {
+    if ([sender.draggingPasteboard.types containsObject:NSPasteboardTypeFileURL]) {
         if (sender.draggingSourceOperationMask & NSDragOperationGeneric) {
 			greyview.frame = self.bounds;
 			[self addSubview:greyview];
@@ -164,14 +165,12 @@
 }
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender {
-    NSPasteboard *pboard;
-    NSDragOperation sourceDragMask;
-    sourceDragMask = sender.draggingSourceOperationMask;
-    pboard = sender.draggingPasteboard;
-    if ( [pboard.types containsObject:NSFilenamesPboardType] ) {
-        NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
-        if (sourceDragMask & NSDragOperationGeneric)
-            [(CreeveyMainWindowController *)self.window.delegate openFiles:files withSlideshow:NO];
+	NSPasteboard *pboard = sender.draggingPasteboard;
+	NSArray *urlc = @[[NSURL class]];
+	if ((sender.draggingSourceOperationMask & NSDragOperationGeneric)
+		&& [pboard canReadObjectForClasses:urlc options:NULL]) {
+		NSArray *files = [pboard readObjectsForClasses:urlc options:NULL].asFilePaths;
+        [(CreeveyMainWindowController *)self.window.delegate openFiles:files withSlideshow:NO];
     }
     return YES;
 }

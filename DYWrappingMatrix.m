@@ -72,9 +72,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 #pragma mark - DYWrappingMatrix -
 
-@interface DYWrappingMatrix () <NSDraggingSource>
+@interface DYWrappingMatrix () <NSDraggingSource,NSMenuItemValidation>
 - (void)resize:(id)anObject; // called to recalc, set frame height
-@property (nonatomic, strong) NSArray *openWithAppIdentifiers; // saved in mouseDown for subsequent use by the context menu
+@property (nonatomic, strong) NSArray *openWithAppURLs; // saved in mouseDown for subsequent use by the context menu
 @end
 
 @implementation DYWrappingMatrix
@@ -121,7 +121,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		@"thumbPadding": @(PADDING),
 	}];
 	
-    id sendTypes = @[NSFilenamesPboardType];
+    id sendTypes = @[NSPasteboardTypeFileURL];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:@[]];
 }
 + (NSSize)maxCellSize {
@@ -131,7 +131,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 - (id)validRequestorForSendType:(NSString *)sendType
 					 returnType:(NSString *)returnType {
-    if (!returnType && [sendType isEqual:NSFilenamesPboardType]) {
+    if (!returnType && [sendType isEqual:NSPasteboardTypeFileURL]) {
 		if (selectedIndexes.count > 0)
 			return self;
 	}
@@ -140,12 +140,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard
 							 types:(NSArray *)types {
-    if (![types containsObject:NSFilenamesPboardType])
+	if (![types containsObject:NSPasteboardTypeFileURL])
         return NO;
- 	[pboard declareTypes:@[NSFilenamesPboardType]
-				   owner:nil];
-	return [pboard setPropertyList:[filenames objectsAtIndexes:selectedIndexes]
-						   forType:NSFilenamesPboardType];
+	return [pboard writeObjects:[filenames objectsAtIndexes:selectedIndexes].asFileURLs];
 }
 
 #pragma mark init stuff
@@ -166,7 +163,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		textHeight = DEFAULT_TEXTHEIGHT;
 		autoRotate = YES;
 		
-		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
+		[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 	}
 	return self;
 }
@@ -231,7 +228,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		self.maxCellWidth = [NSUserDefaults.standardUserDefaults integerForKey:@"DYWrappingMatrixMaxCellWidth"];
 	} else if ([keyPath isEqualToString:@"values.DYWrappingMatrixBgColor"]) {
 		bgColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"DYWrappingMatrixBgColor"] error:NULL];
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 	}
 }
 
@@ -365,7 +362,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		textHeight = 0;
 	}
 	[self resize:nil];
-	[self setNeedsDisplay]; // you need this because it doesn't redraw if there's not enough items in the window to make it look like the scrollview changed
+	self.needsDisplay = YES; // you need this because it doesn't redraw if there's not enough items in the window to make it look like the scrollview changed
 	
 	// restore scrollpoint
 	[self scrollPoint:NSMakePoint(0, row*area_h + dy)];
@@ -960,7 +957,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     sourceDragMask = sender.draggingSourceOperationMask;
 	pboard = sender.draggingPasteboard;
 	
-    if ( [pboard.types containsObject:NSFilenamesPboardType] ) {
+    if ( [pboard.types containsObject:NSPasteboardTypeFileURL] ) {
         if (sourceDragMask & NSDragOperationGeneric) {
 			dragEntered = YES;
 			[self setNeedsDisplay:YES];
@@ -986,8 +983,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
     NSDragOperation sourceDragMask;
     sourceDragMask = sender.draggingSourceOperationMask;
     pboard = sender.draggingPasteboard;
-    if ( [pboard.types containsObject:NSFilenamesPboardType] ) {
-        NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
+	NSArray *urlc = @[[NSURL class]];
+	if ([pboard canReadObjectForClasses:urlc options:NULL]) {
+		NSArray *files = [pboard readObjectsForClasses:urlc options:NULL].asFilePaths;
 		
 
         if (sourceDragMask & NSDragOperationGeneric) {
@@ -1005,15 +1003,19 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 - (void)openWith:(NSMenuItem *)sender
 {
 	NSInteger index = [sender.menu indexOfItem:sender];
-	if (index < 0 || index >= self.openWithAppIdentifiers.count) return;
-	NSString *appIdentifier = self.openWithAppIdentifiers[index];
+	if (index < 0 || index >= self.openWithAppURLs.count) return;
 	NSArray *paths = self.selectedFilenames;
-	NSMutableArray *urls = [NSMutableArray arrayWithCapacity:paths.count];
-	for (NSString *path in paths) {
-		[urls addObject:[NSURL fileURLWithPath:path isDirectory:NO]];
-	}
-	[NSWorkspace.sharedWorkspace openURLs:urls withAppBundleIdentifier:appIdentifier options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
-	self.openWithAppIdentifiers = nil;
+	[NSWorkspace.sharedWorkspace openURLs:paths.asFileURLs withApplicationAtURL:self.openWithAppURLs[index] configuration:[NSWorkspaceOpenConfiguration configuration] completionHandler:NULL];
+	self.openWithAppURLs = nil;
+}
+
+static NSMenu *menuWithUnavailableSubmenu(void) {
+	NSMenu *menu = [(id)NSApp.delegate thumbnailContextMenu];
+	NSMenu *openWithMenu = [[NSMenu alloc] init];
+	NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"None Available", @"") action:NULL keyEquivalent:@""];
+	[openWithMenu addItem:item];
+	[menu itemAtIndex:0].submenu = openWithMenu;
+	return menu;
 }
 
 - (NSMenu *)menuForEvent:(NSEvent *)event
@@ -1041,36 +1043,31 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 	NSURL *firstFile = [NSURL fileURLWithPath:filenames[selectedIndexes.firstIndex] isDirectory:NO];
 	NSArray *allApplications = (NSArray *)CFBridgingRelease(LSCopyApplicationURLsForURL((__bridge CFURLRef)firstFile, kLSRolesViewer|kLSRolesEditor));
+	if (allApplications == nil) {
+		// fail gracefully if the file is not openable
+		return menuWithUnavailableSubmenu();
+	}
 	NSMutableArray *filteredApplications = [NSMutableArray array];
 	NSString *selfIdentifier = NSBundle.mainBundle.bundleIdentifier;
 	NSWorkspace *ws = NSWorkspace.sharedWorkspace;
-	NSURL *defaultAppURL = [ws URLForApplicationToOpenURL:firstFile];
-	if (allApplications == nil || defaultAppURL == nil) {
-		// fail gracefully if the file is not openable
-		NSMenu *menu = [appDelegate thumbnailContextMenu];
-		NSMenu *openWithMenu = [[NSMenu alloc] init];
-		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"None Available", @"") action:NULL keyEquivalent:@""];
-		[openWithMenu addItem:item];
-		[menu itemAtIndex:0].submenu = openWithMenu;
-		return menu;
-	}
-	NSString *defaultIdentifier = [NSBundle bundleWithURL:defaultAppURL].bundleIdentifier;
-	NSMutableSet *appIdentifiers = [NSMutableSet setWithCapacity:allApplications.count]; // don't duplicate app identifiers
 	NSCountedSet *displayNames = [NSCountedSet setWithCapacity:allApplications.count]; // disambiguate identical display names if necessary
 	NSFileManager *fm = NSFileManager.defaultManager;
 	for (NSURL *app in allApplications) {
-		NSString *appIdentifier = [NSBundle bundleWithURL:app].bundleIdentifier;
-		if (appIdentifier.length == 0 || [appIdentifier isEqualToString:selfIdentifier] || [appIdentifier isEqualToString:defaultIdentifier])
+		if ([[NSBundle bundleWithURL:app].bundleIdentifier isEqualToString:selfIdentifier])
 			continue;
-		if (![appIdentifiers containsObject:appIdentifier]) {
-			[appIdentifiers addObject:appIdentifier];
-			[displayNames addObject:[fm displayNameAtPath:app.path]];
-			[filteredApplications addObject:app];
-		}
+		[displayNames addObject:[fm displayNameAtPath:app.path]];
+		[filteredApplications addObject:app];
 	}
-	// In macOS 10.15 and later, the returned array is sorted with the first element containing the best available apps for opening the specified URL.
-	// So we should be able to get rid of the above loop when we drop support for <10.15
-	NSArray *sortedApplications = [filteredApplications sortedArrayUsingComparator:^NSComparisonResult(NSURL *obj1, NSURL *obj2) {
+	if (filteredApplications.count == 0) {
+		return menuWithUnavailableSubmenu();
+	}
+	// In macOS 10.15 and later, the first element should be the "best available" app, but the rest of the list still needs to be sorted.
+	NSURL *defaultApp = nil;
+	if (![allApplications.firstObject isEqual:NSBundle.mainBundle.bundleURL]) {
+		defaultApp = filteredApplications.firstObject;
+		[filteredApplications removeObjectAtIndex:0];
+	}
+	NSMutableArray *sortedApplications = [[filteredApplications sortedArrayUsingComparator:^NSComparisonResult(NSURL *obj1, NSURL *obj2) {
 		NSString *path1 = obj1.path;
 		NSString *path2 = obj2.path;
 		NSString *a = [fm displayNameAtPath:path1];
@@ -1081,33 +1078,27 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			result = [path1 compare:path2];
 		}
 		return result;
-	}];
-	NSMutableArray *sortedAppIdentifiers = [NSMutableArray arrayWithCapacity:appIdentifiers.count];
-	NSMenu *openWithMenu = [[NSMenu alloc] init];
-	if (![selfIdentifier isEqualToString:defaultIdentifier]) {
-		[sortedAppIdentifiers addObject:defaultIdentifier];
-		NSString *path = defaultAppURL.path;
-		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:[fm displayNameAtPath:path] action:@selector(openWith:) keyEquivalent:@""];
-		item.image = [ws iconForFile:path];
-		item.image.size = NSMakeSize(16, 16);
-		[openWithMenu addItem:item];
-		[sortedAppIdentifiers addObject:@""];
-		[openWithMenu addItem:[NSMenuItem separatorItem]];
+	}] mutableCopy];
+	if (defaultApp) {
+		[sortedApplications insertObject:defaultApp atIndex:0];
 	}
+	NSMenu *openWithMenu = [[NSMenu alloc] init];
 	for (NSURL *app in sortedApplications) {
 		NSString *path = app.path;
 		NSString *displayName = [fm displayNameAtPath:path];
-		NSString *appIdentifier = [NSBundle bundleWithURL:app].bundleIdentifier;
-		[sortedAppIdentifiers addObject:appIdentifier];
 		if ([displayNames countForObject:displayName] > 1) {
-			displayName = [displayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", appIdentifier]];
+			displayName = [displayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", path.stringByDeletingLastPathComponent]];
 		}
 		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:displayName action:@selector(openWith:) keyEquivalent:@""];
 		item.image = [ws iconForFile:path];
 		item.image.size = NSMakeSize(16, 16);
 		[openWithMenu addItem:item];
 	}
-	self.openWithAppIdentifiers = [sortedAppIdentifiers copy];
+	if (defaultApp && sortedApplications.count > 1) {
+		[sortedApplications insertObject:defaultApp atIndex:1];
+		[openWithMenu insertItem:[NSMenuItem separatorItem] atIndex:1];
+	}
+	self.openWithAppURLs = [sortedApplications copy];
     NSMenu *menu = [appDelegate thumbnailContextMenu];
 	[menu itemAtIndex:0].submenu = openWithMenu;
 	return menu;

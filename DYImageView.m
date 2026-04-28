@@ -135,8 +135,8 @@
 				gifTimer = [NSTimer scheduledTimerWithTimeInterval:frameDuration target:self selector:@selector(animateWebp:) userInfo:_webpImageSource repeats:NO];
 				gifTimer.tolerance = frameDuration*0.1;
 			}
+			CFRelease(webpFrame);
 		}
-		CFRelease(webpFrame);
 	}
 	[toDraw drawInRect:destinationRect fromRect:srcRect operation:NSCompositingOperationSourceOver fraction:1.0];
 	cg.imageInterpolation = oldInterp;

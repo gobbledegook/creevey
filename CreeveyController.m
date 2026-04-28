@@ -87,7 +87,15 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 @end
 
-@interface CreeveyController ()
+@interface DYColorToDataTransformer : NSSecureUnarchiveFromDataTransformer
+@end
+@implementation DYColorToDataTransformer
++ (NSArray<Class> *)allowedTopLevelClasses {
+	return [[super allowedTopLevelClasses] arrayByAddingObject:[NSColor class]];
+}
+@end
+
+@interface CreeveyController () <NSMenuItemValidation>
 @property (nonatomic) BOOL appDidFinishLaunching;
 @property (nonatomic) BOOL filesWereOpenedAtLaunch;
 @property (nonatomic) BOOL windowsWereRestoredAtLaunch;
@@ -251,8 +259,6 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	}];
 }
 
-- (BOOL)macos1014available { if (@available(macOS 10.14, *)) return YES; return NO; }
-
 - (void)dealloc {
 	NSUserDefaultsController *u = NSUserDefaultsController.sharedUserDefaultsController;
 	[u removeObserver:self forKeyPath:@"values.slideshowBgColor"];
@@ -329,18 +335,14 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 			NSString *s = slidesWindow.currentFile;
 			[NSWorkspace.sharedWorkspace selectFile:s inFileViewerRootedAtPath:s.stringByDeletingLastPathComponent];
 		} else {
-			[NSWorkspace.sharedWorkspace openFile:slidesWindow.basePath];
+			[NSWorkspace.sharedWorkspace openURL:slidesWindow.baseURL];
 		}
 	} else {
 		NSArray *a = frontWindow.currentSelection;
 		if (a.count) {
-			NSMutableArray *b = [NSMutableArray arrayWithCapacity:a.count];
-			for (NSString *s in a) {
-				[b addObject:[NSURL fileURLWithPath:s isDirectory:NO]];
-			}
-			[NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:b];
+			[NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:a.asFileURLs];
 		} else {
-			[NSWorkspace.sharedWorkspace openFile:frontWindow.path];
+			[NSWorkspace.sharedWorkspace openURL:frontWindow.URL];
 		}
 	}
 }
@@ -491,8 +493,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 }
 
 - (void)moveSelectedFilesTo:(NSURL *)dest {
-	NSString *curr = slidesWindow.isMainWindow ? slidesWindow.basePath : frontWindow.path;
-	if ([dest isEqual:[NSURL fileURLWithPath:curr]]) return;
+	NSURL *curr = slidesWindow.isMainWindow ? slidesWindow.baseURL : frontWindow.URL;
+	if ([dest isEqual:curr]) return;
 
 	NSArray *files = slidesWindow.isMainWindow ? @[slidesWindow.currentFile] : frontWindow.currentSelection;
 	NSMutableArray<NSString*> *paths = [NSMutableArray array];
@@ -937,9 +939,9 @@ enum {
 	for (NSInteger i = 201; i <= SORT_EXIF_DATE; ++i) {
 		NSMenuItem *item = [m itemWithTag:i];
 		if (i == tag) {
-			item.state = sortNum > 0 ? NSOnState : NSMixedState;
+			item.state = sortNum > 0 ? NSControlStateValueOn : NSControlStateValueMixed;
 		} else {
-			item.state = NSOffState;
+			item.state = NSControlStateValueOff;
 		}
 	}
 }
@@ -987,7 +989,7 @@ enum {
 		_prefWinNibItems = arr;
 		// non-NSMatrix based radio buttons don't seem to have a way to bind values
 		NSButton *btn = [NSUserDefaults.standardUserDefaults integerForKey:@"slideshowDefaultMode"] ? [self.slideshowDefaultModeFullscreenBtn.superview viewWithTag:1] : self.slideshowDefaultModeFullscreenBtn;
-		btn.state = NSOnState;
+		btn.state = NSControlStateValueOn;
 	}
     [prefsWin makeKeyAndOrderFront:nil];
 }
@@ -1057,12 +1059,10 @@ static void SendAction(NSMenuItem *sender) {
 }
 
 - (void)updateAppearance {
-	if (@available(macOS 10.14, *)) {
-		switch ([NSUserDefaults.standardUserDefaults integerForKey:@"appearance"]) {
-			case 1: NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua]; break;
-			case 2: NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua]; break;
-			default: NSApp.appearance = nil; break;
-		}
+	switch ([NSUserDefaults.standardUserDefaults integerForKey:@"appearance"]) {
+		case 1: NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua]; break;
+		case 2: NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua]; break;
+		default: NSApp.appearance = nil; break;
 	}
 }
 
@@ -1210,8 +1210,8 @@ static void SendAction(NSMenuItem *sender) {
 	// make sure menu items are checked properly (code copied from windowChanged:)
 	NSMenu *m = [NSApp.mainMenu itemWithTag:VIEW_MENU].submenu;
 	[self updateMenuItemsForSorting:sortOrder];
-	[m itemWithTag:SHOW_FILE_NAMES].state = wc.imageMatrix.showFilenames ? NSOnState : NSOffState;
-	[m itemWithTag:AUTO_ROTATE].state = wc.imageMatrix.autoRotate ? NSOnState : NSOffState;
+	[m itemWithTag:SHOW_FILE_NAMES].state = wc.imageMatrix.showFilenames ? NSControlStateValueOn : NSControlStateValueOff;
+	[m itemWithTag:AUTO_ROTATE].state = wc.imageMatrix.autoRotate ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
 - (IBAction)newWindow:(id)sender {
@@ -1246,8 +1246,8 @@ static void SendAction(NSMenuItem *sender) {
 	short int sortOrder = frontWindow.sortOrder;
 	NSMenu *m = [NSApp.mainMenu itemWithTag:VIEW_MENU].submenu;
 	[self updateMenuItemsForSorting:sortOrder];
-	[m itemWithTag:SHOW_FILE_NAMES].state = frontWindow.imageMatrix.showFilenames ? NSOnState : NSOffState;
-	[m itemWithTag:AUTO_ROTATE].state = frontWindow.imageMatrix.autoRotate ? NSOnState : NSOffState;
+	[m itemWithTag:SHOW_FILE_NAMES].state = frontWindow.imageMatrix.showFilenames ? NSControlStateValueOn : NSControlStateValueOff;
+	[m itemWithTag:AUTO_ROTATE].state = frontWindow.imageMatrix.autoRotate ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
 - (IBAction)versionCheck:(id)sender {

@@ -247,6 +247,7 @@ static time_t ExifDateFromFile(NSString *s) {
 }
 
 - (NSString *)path { return [dirBrowserDelegate path]; }
+- (NSURL *)URL { return [NSURL fileURLWithPath:[dirBrowserDelegate path] isDirectory:YES]; }
 
 // returns NO if doesn't exist, useful for applicationDidFinishLaunching
 - (BOOL)setPath:(NSString *)s {
@@ -770,7 +771,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 
 - (IBAction)setRecurseSubfolders:(id)sender {
 	NSButton *button = sender;
-	self.wantsSubfolders = (button.state == NSOnState);
+	self.wantsSubfolders = (button.state == NSControlStateValueOn);
 	// remember where we started recursing subfolders
 	if (self.wantsSubfolders) {
 		NSString *path = [dirBrowserDelegate path];

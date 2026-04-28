@@ -172,7 +172,6 @@
                                                 </menu>
                                             </popUpButtonCell>
                                             <connections>
-                                                <binding destination="-2" name="enabled" keyPath="macos1014available" id="U2K-1q-Wqa"/>
                                                 <binding destination="551" name="selectedIndex" keyPath="values.appearance" id="vht-td-m0h"/>
                                             </connections>
                                         </popUpButton>
@@ -186,7 +185,7 @@
                                             <connections>
                                                 <binding destination="551" name="value" keyPath="values.DYWrappingMatrixBgColor" id="699">
                                                     <dictionary key="options">
-                                                        <string key="NSValueTransformerName">NSKeyedUnarchiveFromData</string>
+                                                        <string key="NSValueTransformerName">DYColorToDataTransformer</string>
                                                     </dictionary>
                                                 </binding>
                                             </connections>
@@ -551,7 +550,7 @@
                                             <connections>
                                                 <binding destination="551" name="value" keyPath="values.slideshowBgColor" id="an4-2H-ET0">
                                                     <dictionary key="options">
-                                                        <string key="NSValueTransformerName">NSKeyedUnarchiveFromData</string>
+                                                        <string key="NSValueTransformerName">DYColorToDataTransformer</string>
                                                     </dictionary>
                                                 </binding>
                                             </connections>
