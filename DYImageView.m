@@ -25,6 +25,71 @@
 	float zoomF;
 }
 
+- (NSRect)boundsRectForZoomCalculation {
+	return [self convertRect:self.bounds toView:nil];
+}
+
+- (NSAffineTransform *)imageTransformForBoundsRect:(NSRect)boundsRect {
+	float centerX = (int)(boundsRect.size.width/2);
+	float centerY = (int)(boundsRect.size.height/2);
+	NSAffineTransform *transform = [NSAffineTransform transform];
+	[transform translateXBy:centerX yBy:centerY];
+	if (rotation != 0) [transform rotateByDegrees:rotation];
+	if (isImageFlipped) [transform scaleXBy:-1 yBy:1];
+	[transform translateXBy:-centerX yBy:-centerY];
+	return transform;
+}
+
+- (void)getCurrentDisplaySourceRect:(NSRect *)outSourceRect destinationRect:(NSRect *)outDestinationRect boundsRect:(NSRect *)outBoundsRect {
+	if (!image) return;
+
+	NSRect boundsRect = [self boundsRectForZoomCalculation];
+	float centerX = (int)(boundsRect.size.width/2);
+	float centerY = (int)(boundsRect.size.height/2);
+	NSRect source = NSZeroRect;
+	NSRect destination = NSZeroRect;
+
+	if (zoomF) {
+		source = sourceRect;
+		destination.size = destSize;
+	} else {
+		NSSize fitSize = boundsRect.size;
+		if (rotation == 90 || rotation == -90) {
+			float tmp = fitSize.width;
+			fitSize.width = fitSize.height;
+			fitSize.height = tmp;
+		}
+
+		source.origin = NSZeroPoint;
+		source.size = image.size;
+
+		if (!scalesUp
+			&& source.size.width <= fitSize.width
+			&& source.size.height <= fitSize.height)
+		{
+			destination.size.width = (int)(source.size.width);
+			destination.size.height = (int)(source.size.height);
+		} else {
+			float wRatio = fitSize.width / source.size.width;
+			float hRatio = fitSize.height / source.size.height;
+			if (wRatio < hRatio) {
+				destination.size.height = (int)(source.size.height * wRatio);
+				destination.size.width = (int)(fitSize.width);
+			} else {
+				destination.size.width = (int)(source.size.width * hRatio);
+				destination.size.height = (int)(fitSize.height);
+			}
+		}
+	}
+
+	destination.origin.x = (int)(centerX - destination.size.width/2);
+	destination.origin.y = (int)(centerY - destination.size.height/2);
+
+	if (outSourceRect) *outSourceRect = source;
+	if (outDestinationRect) *outDestinationRect = destination;
+	if (outBoundsRect) *outBoundsRect = boundsRect;
+}
+
 // helper method to calculate appropriate zoom factor
 - (float)zoomForFit {
 	float tmp;
@@ -56,50 +121,12 @@
 - (void)drawRect:(NSRect)rect {
 	if (!image) return; //don't draw if nil
 	
-	NSRect srcRect, destinationRect;
+	NSRect srcRect, destinationRect, boundsRect;
 	float zoom = zoomF;
-	NSRect boundsRect = [self convertRect:self.bounds toView:nil];
-	float centerX, centerY; float tmp;
-	centerX = (int)(boundsRect.size.width/2);
-	centerY = (int)(boundsRect.size.height/2);
-	if (zoomF) {
-		srcRect = sourceRect;
-		destinationRect.size = destSize;
-	} else {
-		if (rotation == 90 || rotation == -90) {
-			tmp = boundsRect.size.width;
-			boundsRect.size.width = boundsRect.size.height;
-			boundsRect.size.height = tmp;
-		}
-		
-		srcRect.origin = NSZeroPoint;
-		srcRect.size = image.size;
-		
-		if (!scalesUp
-			&& srcRect.size.width <= boundsRect.size.width
-			&& srcRect.size.height <= boundsRect.size.height)
-		{
-			destinationRect.size.width = (int)(srcRect.size.width);
-			destinationRect.size.height = (int)(srcRect.size.height);
-			zoom = 1;
-		} else {
-			float w_ratio, h_ratio;
-			w_ratio = boundsRect.size.width/srcRect.size.width;
-			h_ratio = boundsRect.size.height/srcRect.size.height;
-			if (w_ratio < h_ratio) { // the side w/ bigger ratio needs to be shrunk
-				destinationRect.size.height = (int)(srcRect.size.height*w_ratio);
-				destinationRect.size.width = (int)(boundsRect.size.width);
-				zoom = w_ratio;
-			} else {
-				destinationRect.size.width = (int)(srcRect.size.width*h_ratio);
-				destinationRect.size.height = (int)(boundsRect.size.height);
-				zoom = h_ratio;
-			}
-		}
+	[self getCurrentDisplaySourceRect:&srcRect destinationRect:&destinationRect boundsRect:&boundsRect];
+	if (!zoomF) {
+		zoom = destinationRect.size.width / srcRect.size.width;
 	}
-	
-	destinationRect.origin.x = (int)(centerX - destinationRect.size.width/2);
-	destinationRect.origin.y = (int)(centerY - destinationRect.size.height/2);
 	
 	[NSColor.whiteColor set]; // make a nice background for transparent gifs, etc.
 	if (rotation == 0 || rotation == 180) {
@@ -110,11 +137,7 @@
 		// will sometimes lead to white lines on the right side of 180-degree turned images.
 		// not sure why. so we put a call here for 180, and later on for +/-90
 	}
-	NSAffineTransform *transform = [NSAffineTransform transform];
-	[transform translateXBy:centerX yBy:centerY];
-	if (rotation != 0) [transform rotateByDegrees:rotation]; //isImageFlipped ? -rotation : rotation]; // order matters! if you switch flipping with rotation, you need to switch 90-degree rotations too
-	if (isImageFlipped) [transform scaleXBy:-1 yBy:1]; // [transform translateXBy:-centerX*2 yBy:0]; // move over by the screen width; don't use value of boundsRect.size.width, because it might have been switched with the height (above)
-	[transform translateXBy:-centerX yBy:-centerY];
+	NSAffineTransform *transform = [self imageTransformForBoundsRect:boundsRect];
 	[transform concat];
 	
 	if (rotation == 90 || rotation == -90) { // see comment above
@@ -403,9 +426,11 @@
 - (void)setZoomF:(float)f curLocation:(NSPoint)curLocation {
 	if (!image) return;
 	NSSize imgSize = image.size;
+	NSRect currentSourceRect, currentDestinationRect, boundsRect;
+	[self getCurrentDisplaySourceRect:&currentSourceRect destinationRect:&currentDestinationRect boundsRect:&boundsRect];
 
 	float tmp;
-	NSSize bSize = [self convertRect:self.bounds toView:nil].size;
+	NSSize bSize = boundsRect.size;
 	if (rotation == 90 || rotation == -90) {
 		tmp = bSize.height;
 		bSize.height = bSize.width;
@@ -426,15 +451,18 @@
 		destSize.height = (int)(s.height*zoomF);
 	}
 
-	if (curLocation.x > 0 && curLocation.y > 0 &&
-		curLocation.x < self.frame.size.width &&
-		curLocation.y < self.frame.size.height) {
+	if (NSPointInRect(curLocation, self.bounds)) {
+		NSPoint cursorInWindow = [self convertPoint:curLocation toView:nil];
+		NSAffineTransform *inverseTransform = [self imageTransformForBoundsRect:boundsRect];
+		[inverseTransform invert];
+		NSPoint untransformedCursor = [inverseTransform transformPoint:cursorInWindow];
 
-		// curLocation is in view coordinates and inside the view.
-		// Compute normalized position within the destination (view) sized area.
-		// destSize was set above to the view size (possibly swapped for rotation).
-		float nx = destSize.width  > 0 ? (curLocation.x / destSize.width) : 0.5f;
-		float ny = destSize.height > 0 ? (curLocation.y / destSize.height) : 0.5f;
+		float nx = currentDestinationRect.size.width > 0
+			? ((untransformedCursor.x - currentDestinationRect.origin.x) / currentDestinationRect.size.width)
+			: 0.5f;
+		float ny = currentDestinationRect.size.height > 0
+			? ((untransformedCursor.y - currentDestinationRect.origin.y) / currentDestinationRect.size.height)
+			: 0.5f;
 		if (nx < 0)
 			nx = 0;
 		else if (nx > 1)
@@ -444,16 +472,12 @@
 		else if (ny > 1)
 			ny = 1;
 
-		// Compute the image pixel that is currently under the cursor (before zoom)
-		float imgX = sourceRect.origin.x + nx * sourceRect.size.width;
-		float imgY = sourceRect.origin.y + ny * sourceRect.size.height;
+		float imgX = currentSourceRect.origin.x + nx * currentSourceRect.size.width;
+		float imgY = currentSourceRect.origin.y + ny * currentSourceRect.size.height;
 
-		// After changing the source rect size to 's' we want imgX/imgY to
-		// remain under the same normalized cursor position. Solve for new origin:
 		float newOriginX = imgX - nx * s.width;
 		float newOriginY = imgY - ny * s.height;
 
-		// Clamp to image bounds
 		if (newOriginX < 0)
 			newOriginX = 0;
 		if (newOriginY < 0)
@@ -469,26 +493,26 @@
 	} else {
 		// new x
 		if (s.width < imgSize.width) {
-			if (sourceRect.size.width == imgSize.width)
+			if (currentSourceRect.size.width == imgSize.width)
 				// special case for when smaller than screen becomes larger than screen
 				sourceRect.origin.x = (imgSize.width - s.width)/2;
-			else if (sourceRect.origin.x == imgSize.width - sourceRect.size.width) // must cast to int, for edge cases
+			else if (currentSourceRect.origin.x == imgSize.width - currentSourceRect.size.width) // must cast to int, for edge cases
 				sourceRect.origin.x = imgSize.width - s.width;
-			else if (sourceRect.origin.x > 0)
+			else if (currentSourceRect.origin.x > 0)
 				// leave 0 if 0
-				sourceRect.origin.x += (sourceRect.size.width - s.width)/2.0;
+				sourceRect.origin.x = currentSourceRect.origin.x + (currentSourceRect.size.width - s.width)/2.0;
 		} else {
 			sourceRect.origin.x = 0;
 		}
 
 		// new y
 		if (s.height < imgSize.height) {
-			if (sourceRect.size.height == imgSize.height)
+			if (currentSourceRect.size.height == imgSize.height)
 				sourceRect.origin.y = (imgSize.height - s.height)/2;
-			else if (sourceRect.origin.y == imgSize.height - sourceRect.size.height)
+			else if (currentSourceRect.origin.y == imgSize.height - currentSourceRect.size.height)
 				sourceRect.origin.y = imgSize.height - s.height;
-			else if (sourceRect.origin.y > 0)
-				sourceRect.origin.y += (sourceRect.size.height - s.height)/2.0;
+			else if (currentSourceRect.origin.y > 0)
+				sourceRect.origin.y = currentSourceRect.origin.y + (currentSourceRect.size.height - s.height)/2.0;
 		} else {
 			sourceRect.origin.y = 0;
 		}
