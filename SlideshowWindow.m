@@ -45,7 +45,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 @end
 
 
-@interface SlideshowWindow () <DYFileWatcherDelegate>
+@interface SlideshowWindow () <DYFileWatcherDelegate, DYImageViewDelegate>
 @property (nonatomic, copy) NSComparator comparator;
 
 - (void)jump:(NSInteger)n;
@@ -135,6 +135,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[self.contentView addSubview:imgView];
 	imgView.frame = self.contentView.frame;
 	imgView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(imgViewResized:) name:NSViewFrameDidChangeNotification object:imgView];
+	imgView.delegate = self;
 	
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld];
@@ -181,6 +183,10 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		default:
 			break;
 	}
+}
+
+- (void)dealloc {
+	[NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (void)setFullscreenMode:(BOOL)b {
@@ -521,29 +527,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 #pragma mark display stuff
-- (float)calcZoom:(NSSize)sourceSize {
-	// calc here b/c larger images have already been cached & shrunk!
-	NSRect boundsRect = imgView.bounds;
-	int rotation = imgView.rotation;
-	if (rotation == 90 || rotation == -90) {
-		CGFloat tmp = boundsRect.size.width;
-		boundsRect.size.width = boundsRect.size.height;
-		boundsRect.size.height = tmp;
-	}
-	
-	if (!imgView.scalesUp
-		&& sourceSize.width <= boundsRect.size.width
-		&& sourceSize.height <= boundsRect.size.height)
-	{
-		return 1;
-	} else {
-		float w_ratio, h_ratio;
-		w_ratio = boundsRect.size.width/sourceSize.width;
-		h_ratio = boundsRect.size.height/sourceSize.height;
-		return w_ratio < h_ratio ? w_ratio : h_ratio;
-	}
-}
-
 - (void)updateExifFld {
 	if (currentIndex >= filenames.count) return;
 	NSMutableAttributedString *attStr;
@@ -562,6 +545,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	exifFld.textColor = NSColor.whiteColor;
 }
 
+- (void)imgViewResized:(id)obj {
+	[self performSelectorOnMainThread:@selector(updateInfoFld) withObject:nil waitUntilDone:NO];
+}
+
+- (void)imageViewDragged:(DYImageView *)theImageView {
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])];
+	if (info) [self saveZoomAndLoadFullSize:info];
+}
 
 - (void)updateInfoFld {
 	if (currentIndex > filenames.count) return;
@@ -578,7 +569,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		default: dir = @"";
 	}
 	if (r < 0) r = -r;
-	float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
+	float zoom = imgView.currentZoom;
 	infoFld.stringValue = [NSString stringWithFormat:@"[%lu/%lu] %@%@ - %@%@%@%@ %@",
 		currentIndex+1, (unsigned long)filenames.count,
 		_fullscreenMode ? [[self currentShortFilename] stringByAppendingString:@" - "] : @"",
@@ -641,7 +632,18 @@ scheduledTimerWithTimeInterval:timerIntvl
 		BOOL imgFlipped = [flips[theFile] boolValue];
 		
 		if (hideInfoFld) infoFld.hidden = YES; // this must happen before setImage, for redraw purposes
-		imgView.image = img;
+		DYImageInfo *info = [imgCache infoForKey:resolvedPath];
+		if (autoRotate && !rot && !imgFlipped && info->exifOrientation > 1) {
+			// auto-rotate by exif orientation
+			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
+			rotations[theFile] = @(r);
+			flips[theFile] = @(imgFlipped);
+		}
+		if ((zoomInfo || imgView.showActualSize) && !info.hasFullSizeImage)
+			[self loadFullSizeImage];
+		else if (info->quality == DYImageQualityLow)
+			[self loadNicerImage];
+		[imgView setImage:img withSize:info->pixelSize rotated:r flipped:imgFlipped zoomInfo:zoomInfo];
 		if ([theFile.pathExtension.lowercaseString isEqualToString:@"webp"]) {
 			// check for animated webp
 			CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:theFile isDirectory:NO], NULL);
@@ -652,27 +654,6 @@ scheduledTimerWithTimeInterval:timerIntvl
 					CFRelease(src);
 			}
 		}
-		if (r) imgView.rotation = r;
-		if (imgFlipped) imgView.imageFlipped = YES;
-		DYImageInfo *info = [imgCache infoForKey:resolvedPath];
-		if (autoRotate && !rot && !imgFlipped && info->exifOrientation > 1) {
-			// auto-rotate by exif orientation
-			exiforientation_to_components(info->exifOrientation, &r, &imgFlipped);
-			rotations[theFile] = @(r);
-			flips[theFile] = @(imgFlipped);
-			imgView.rotation = r;
-			imgView.imageFlipped = imgFlipped;
-		}
-		// if zoom has been manually set, or if the the image size is larger than the view size, we need to set the zoom to something other than fit-to-view
-		if (zoomInfo || (imgView.showActualSize && !(info->pixelSize.width <= imgView.bounds.size.width && info->pixelSize.height <= imgView.bounds.size.height))) {
-			if (!info.hasFullSizeImage)
-				[self loadFullSizeImage];
-			[imgView setImage:info.image
-					  zooming:zoomInfo ? DYImageViewZoomModeManual : DYImageViewZoomModeActualSize];
-			if (zoomInfo) imgView.zoomInfo = zoomInfo;
-		}
-		else if (info->quality == DYImageQualityLow)
-			[self loadNicerImage];
 		[self updateInfoFld];
 		if (!exifFld.enclosingScrollView.hidden) [self updateExifFld];
 		if (timerIntvl) [self runTimer];
@@ -774,8 +755,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 }
 
 - (void)saveZoomAndLoadFullSize:(DYImageInfo *)info {
-	if (imgView.zoomInfoNeedsSaving)
-		zooms[filenames[currentIndex]] = imgView.zoomInfo;
+	DYImageViewZoomInfo *zInfo = imgView.zoomInfo;
+	if (zInfo) zooms[filenames[currentIndex]] = zInfo;
 	[self updateInfoFld];
 	if (info.image == imgView.image && !info.hasFullSizeImage)
 		[self loadFullSizeImage];
@@ -1125,8 +1106,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSString *filename = filenames[currentIndex];
 	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filename)];
 	if (info) {
-		float zoom = imgView.zoomMode ? imgView.zoomF : [self calcZoom:info->pixelSize];
-		[imgView setZoomF:zoom * (1.0 + event.magnification)];
+		[imgView zoomBy:event.magnification atPoint:event.locationInWindow];
 		[self saveZoomAndLoadFullSize:info];
 	}
 }

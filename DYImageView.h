@@ -1,4 +1,4 @@
-//Copyright 2005-2023 Dominic Yu. Some rights reserved.
+//Copyright 2005-2026 Dominic Yu. Some rights reserved.
 //This work is licensed under the Creative Commons
 //Attribution-NonCommercial-ShareAlike License. To view a copy of this
 //license, visit http://creativecommons.org/licenses/by-nc-sa/2.0/ or send
@@ -8,47 +8,39 @@
 //  Created by d on 2005.04.01.
 
 @import Cocoa;
+@class DYImageView;
+@class DYImageViewZoomInfo;
 
-@interface DYImageViewZoomInfo : NSObject {
-	@public
-	NSRect sourceRect;
-	NSSize destSize;
-	float zoomF;
-}
+@protocol DYImageViewDelegate <NSObject>
+- (void)imageViewDragged:(DYImageView *)theImageView;
 @end
 
-typedef NS_ENUM(char, DYImageViewZoomMode) {
-	DYImageViewZoomModeZoomOut,
-	DYImageViewZoomModeZoomIn,
-	DYImageViewZoomModeActualSize,
-	DYImageViewZoomModeManual,
-};
-
 @interface DYImageView : NSView
+// image properties/methods
 @property (nonatomic) NSImage *image;
+- (void)setImage:(NSImage *)anImage withSize:(NSSize)aSize rotated:(int)degrees flipped:(BOOL)flipped zoomInfo:(DYImageViewZoomInfo *)zInfo;
 @property (nonatomic) id webpImageSource; // CGImageSourceRef
-@property (nonatomic) int rotation;
-@property (nonatomic) BOOL scalesUp;
-@property (nonatomic) BOOL showActualSize;
-@property (nonatomic, getter=isImageFlipped) BOOL imageFlipped;
-@property (nonatomic, readonly) float zoomF;
-
-- (void)setImage:(NSImage *)anImage zooming:(DYImageViewZoomMode)zoomMode;
+@property (nonatomic, readonly) int rotation;
+@property (nonatomic, readonly) BOOL imageFlipped;
+@property (nonatomic, readonly) DYImageViewZoomInfo *zoomInfo;
 - (int)addRotation:(int)r;
 - (BOOL)toggleFlip;
-- (void)zoomOff;
+
+// zoom
+@property (nonatomic, readonly) float currentZoom;
 - (void)zoomActualSize;
 - (void)zoomIn;
 - (void)zoomOut;
-- (void)setZoomF:(float)f;
+- (void)zoomBy:(float)magnification atPoint:(NSPoint)locationInWindow;
 - (void)fakeDragX:(float)x y:(float)y;
-
 @property (nonatomic, readonly) BOOL zoomMode;
-@property (nonatomic, readonly) BOOL zoomInfoNeedsSaving;
-
 @property (nonatomic, readonly) BOOL dragMode;
+
+// general view properties
+@property (nonatomic) BOOL scalesUp;
+@property (nonatomic) BOOL showActualSize;
+@property (nonatomic) NSColor *imageBackgroundColor;
+@property (nonatomic, weak) id<DYImageViewDelegate> delegate;
+
 - (void)setCursor;
-
-@property (nonatomic) DYImageViewZoomInfo *zoomInfo;
-
 @end
