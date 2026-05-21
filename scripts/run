@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Run the project without building it
+set -Eeuo pipefail
+trap 'echo "${BASH_SOURCE[0]}: line $LINENO: $BASH_COMMAND: exitcode $?"' ERR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# Parse configuration argument (default to Debug)
+CONFIG="Debug"
+if [ $# -gt 0 ]; then
+    case "${1,,}" in
+        r|rel|release)
+            CONFIG="Release"
+            ;;
+        d|deb|debug)
+            CONFIG="Debug"
+            ;;
+        *)
+            echo "Unknown configuration: $1"
+            echo "Usage: $0 [d|debug|r|release]"
+            exit 1
+            ;;
+    esac
+fi
+
+# Kill any running instances of Phoenix Slides
+pkill -f "Phoenix Slides" 2>/dev/null || true
+
+# Give it a moment to shut down cleanly
+sleep 0.1
+
+open "./build/$CONFIG/Phoenix Slides.app"

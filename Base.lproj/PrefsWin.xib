@@ -18,20 +18,20 @@
         <window title="Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="394" userLabel="Prefs Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="121" y="439" width="493" height="476"/>
+            <rect key="contentRect" x="121" y="439" width="650" height="476"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="213" height="107"/>
             <view key="contentView" id="395">
-                <rect key="frame" x="0.0" y="0.0" width="493" height="476"/>
+                <rect key="frame" x="0.0" y="0.0" width="650" height="476"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <tabView drawsBackground="NO" translatesAutoresizingMaskIntoConstraints="NO" id="587">
-                        <rect key="frame" x="-7" y="-10" width="507" height="492"/>
+                        <rect key="frame" x="-7" y="-10" width="664" height="492"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="General" identifier="general" id="588">
                                 <view key="view" id="590">
-                                    <rect key="frame" x="10" y="33" width="487" height="448"/>
+                                    <rect key="frame" x="10" y="33" width="644" height="448"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="398">
@@ -353,7 +353,7 @@
                             </tabViewItem>
                             <tabViewItem label="Slideshow" identifier="slideshow" id="589">
                                 <view key="view" id="591">
-                                    <rect key="frame" x="10" y="33" width="487" height="446"/>
+                                    <rect key="frame" x="10" y="33" width="644" height="446"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="595">
@@ -624,7 +624,7 @@
                             </tabViewItem>
                             <tabViewItem label="File Types" identifier="multipledocs" id="lds-PP-VGR">
                                 <view key="view" id="6cs-hl-yOr">
-                                    <rect key="frame" x="10" y="33" width="487" height="446"/>
+                                    <rect key="frame" x="10" y="33" width="644" height="446"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="q81-3A-Deg">

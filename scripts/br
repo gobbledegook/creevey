@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Build and run
+set -Eeuo pipefail
+trap 'echo "${BASH_SOURCE[0]}: line $LINENO: $BASH_COMMAND: exitcode $?"' ERR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Pass configuration argument to both build and run scripts
+"$SCRIPT_DIR/build" "$@" && exec "$SCRIPT_DIR/run" "$@"

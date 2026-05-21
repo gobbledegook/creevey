@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Build the project
+set -Eeuo pipefail
+trap 'echo "${BASH_SOURCE[0]}: line $LINENO: $BASH_COMMAND: exitcode $?"' ERR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+START_TIME=$(date +%s.%N)
+
+# Parse configuration argument (default to Debug)
+CONFIG="Debug"
+if [ $# -gt 0 ]; then
+    case "${1,,}" in
+        r|rel|release)
+            CONFIG="Release"
+            ;;
+        d|deb|debug)
+            CONFIG="Debug"
+            ;;
+        *)
+            echo "Unknown configuration: $1"
+            echo "Usage: $0 [d|debug|r|release]"
+            exit 1
+            ;;
+    esac
+fi
+
+echo "Building $CONFIG configuration..."
+if [ "$CONFIG" = "Debug" ]; then
+    # For Debug builds, only build for the current architecture
+    xcodebuild -quiet -project creevey.xcodeproj -configuration "$CONFIG" ONLY_ACTIVE_ARCH=NO
+else
+    # For Release builds, build for all architectures
+    xcodebuild -quiet -project creevey.xcodeproj -configuration "$CONFIG"
+fi
+
+END_TIME=$(date +%s.%N)
+ELAPSED_TIME=$(echo "$END_TIME - $START_TIME" | bc --mathlib | xargs printf "%.2f\n")
+echo "✅ Build completed in $ELAPSED_TIME seconds!"

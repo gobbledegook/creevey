@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Copy the application to /Applications
+set -Eeuo pipefail
+trap 'echo "${BASH_SOURCE[0]}: line $LINENO: $BASH_COMMAND: exitcode $?"' ERR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# Parse configuration argument (default to Release)
+CONFIG="Release"
+if [ $# -gt 0 ]; then
+    case "${1,,}" in
+        r|rel|release)
+            CONFIG="Release"
+            ;;
+        d|deb|debug)
+            CONFIG="Debug"
+            ;;
+        *)
+            echo "Unknown configuration: $1"
+            echo "Usage: $0 [d|debug|r|release]"
+            exit 1
+            ;;
+    esac
+fi
+
+APP_NAME="Phoenix Slides.app"
+SOURCE_PATH="./build/$CONFIG/$APP_NAME"
+DEST_PATH="/Applications/$APP_NAME"
+
+# Check if the app exists in the build directory
+if [[ ! -d "$SOURCE_PATH" ]]; then
+    echo "Error: $SOURCE_PATH does not exist"
+    echo "Please build the application first using: scripts/build ${1:-}"
+    exit 1
+fi
+
+# Kill any running instances of Phoenix Slides
+pkill -f "Phoenix Slides" 2>/dev/null || true
+
+# Give it a moment to shut down cleanly
+sleep 0.1
+
+# Remove existing app if present
+if [[ -d "$DEST_PATH" ]]; then
+    echo "Removing existing application at $DEST_PATH"
+    rm -rf "$DEST_PATH"
+fi
+
+# Copy the app to /Applications
+echo "Copying $CONFIG build to /Applications..."
+cp -R "$SOURCE_PATH" "$DEST_PATH"
+
+echo "Successfully published Phoenix Slides ($CONFIG) to /Applications"

@@ -573,7 +573,13 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + _vPadding/2);
 	NSRect cellRect;
 	NSWindow *myWindow = self.window;
-	myTextCell.font = [NSFont systemFontOfSize:cellWidth >= 160 ? 12 : 4+cellWidth/20]; // ranges from 6 to 12: 6 + 6*(cellWidth-40)/(160-40)
+	// Use font size from preferences, or automatic sizing if not set
+	CGFloat fontSize = [NSUserDefaults.standardUserDefaults floatForKey:@"thumbnailLabelFontSize"];
+	if (fontSize <= 0) {
+		// Automatic sizing: ranges from 6 to 12 based on cell width
+		fontSize = cellWidth >= 160 ? 12 : 4+cellWidth/20;
+	}
+	myTextCell.font = [NSFont systemFontOfSize:fontSize];
 	myTextCell.textColor = bgColor.bestTextColor;
 	for (i=0; i<numCells; ++i) {
 		row = i/numCols;

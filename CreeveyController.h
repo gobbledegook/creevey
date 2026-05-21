@@ -58,6 +58,10 @@ NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders)
 - (IBAction)applySlideshowPrefs:(id)sender;
 - (IBAction)slideshowDefaultsChanged:(id)sender;
 - (IBAction)chooseDefaultSlideshowMode:(id)sender;
+- (IBAction)folderBrowserFontSizeChanged:(id)sender;
+- (IBAction)thumbnailLabelFontSizeChanged:(id)sender;
+- (IBAction)resetFolderBrowserFontSize:(id)sender;
+- (IBAction)resetThumbnailLabelFontSize:(id)sender;
 
 // info window
 - (IBAction)openGetInfoPanel:(id)sender;

@@ -16,6 +16,7 @@
 #import "DYJpegtranPanel.h"
 #import "DYVersChecker.h"
 #import "DYExiftags.h"
+#import "UKPrefsPanel.h"
 
 // The thumbs cache should always store images using the resolved filename as the key.
 // This prevents duplication somewhat, but it means when you look things up
@@ -166,6 +167,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"startupSlideshowSuppressNewWindows":@NO,
 		@"slideshowDefaultMode":@0,
 		@"MainWindowSplitViewTopHeight":@151.0f,
+		@"folderBrowserFontSize":@0.0f, // 0 means use default (NSFont.systemFontSize)
+		@"thumbnailLabelFontSize":@0.0f, // 0 means use automatic sizing
 	}];
 
 	// migrate old RBSplitView pref
@@ -1076,6 +1079,86 @@ static void SendAction(NSMenuItem *sender) {
 - (IBAction)chooseDefaultSlideshowMode:(id)sender {
 	[NSUserDefaults.standardUserDefaults setInteger:[sender tag] forKey:@"slideshowDefaultMode"];
 	[self updateAlternateSlideshowMenuItem];
+}
+
+- (IBAction)folderBrowserFontSizeChanged:(id)sender {
+	CGFloat fontSize = [sender floatValue];
+	[NSUserDefaults.standardUserDefaults setFloat:fontSize forKey:@"folderBrowserFontSize"];
+	// Update the label in preferences
+	NSTextField *label = [prefsWin.contentView viewWithTag:1001];
+	if (label) {
+		label.stringValue = [NSString stringWithFormat:@"%.0f pt", fontSize];
+	}
+	// Notify all windows to update their folder browser font
+	[creeveyWindows makeObjectsPerformSelector:@selector(updateFolderBrowserFont)];
+}
+
+- (IBAction)thumbnailLabelFontSizeChanged:(id)sender {
+	CGFloat fontSize = [sender floatValue];
+	[NSUserDefaults.standardUserDefaults setFloat:fontSize forKey:@"thumbnailLabelFontSize"];
+	// Update the label in preferences
+	NSTextField *label = [prefsWin.contentView viewWithTag:1002];
+	if (label) {
+		if (fontSize <= 0) {
+			label.stringValue = NSLocalizedString(@"Auto", @"");
+		} else {
+			label.stringValue = [NSString stringWithFormat:@"%.0f pt", fontSize];
+		}
+	}
+	// Notify all windows to update their thumbnail label font
+	[creeveyWindows makeObjectsPerformSelector:@selector(updateThumbnailLabelFont)];
+}
+
+- (IBAction)resetFolderBrowserFontSize:(id)sender {
+	[NSUserDefaults.standardUserDefaults setFloat:0.0f forKey:@"folderBrowserFontSize"];
+	// Update the slider and label
+	for (NSView *view in prefsWin.contentView.subviews) {
+		if ([view isKindOfClass:[NSTabView class]]) {
+			NSTabView *tabView = (NSTabView *)view;
+			for (NSTabViewItem *item in tabView.tabViewItems) {
+				if ([item.identifier isEqualToString:@"fonts"]) {
+					for (NSView *subview in item.view.subviews) {
+						if ([subview isKindOfClass:[NSSlider class]]) {
+							NSSlider *slider = (NSSlider *)subview;
+							if (slider.action == @selector(folderBrowserFontSizeChanged:)) {
+								slider.floatValue = NSFont.systemFontSize;
+								[self folderBrowserFontSizeChanged:slider];
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	// Notify all windows to update their folder browser font
+	[creeveyWindows makeObjectsPerformSelector:@selector(updateFolderBrowserFont)];
+}
+
+- (IBAction)resetThumbnailLabelFontSize:(id)sender {
+	[NSUserDefaults.standardUserDefaults setFloat:0.0f forKey:@"thumbnailLabelFontSize"];
+	// Update the slider and label
+	for (NSView *view in prefsWin.contentView.subviews) {
+		if ([view isKindOfClass:[NSTabView class]]) {
+			NSTabView *tabView = (NSTabView *)view;
+			for (NSTabViewItem *item in tabView.tabViewItems) {
+				if ([item.identifier isEqualToString:@"fonts"]) {
+					for (NSView *subview in item.view.subviews) {
+						if ([subview isKindOfClass:[NSSlider class]]) {
+							NSSlider *slider = (NSSlider *)subview;
+							if (slider.action == @selector(thumbnailLabelFontSizeChanged:)) {
+								slider.floatValue = 0.0;
+								[self thumbnailLabelFontSizeChanged:slider];
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	// Notify all windows to update their thumbnail label font
+	[creeveyWindows makeObjectsPerformSelector:@selector(updateThumbnailLabelFont)];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath

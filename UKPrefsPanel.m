@@ -26,6 +26,7 @@
    ========================================================================== */
 
 #import "UKPrefsPanel.h"
+#import "CreeveyController.h"
 
 @interface UKPrefsPanel ()
 @property (nonatomic) NSString *autosaveName;	///< Identifier used for saving toolbar state and current selected page of prefs window.
@@ -64,7 +65,10 @@
 	}
 	NSWindow *w = tabView.window;
 	r = w.frame;
-	r.size.width = maxX + 20;
+	// Ensure minimum width of 550 to accommodate all toolbar icons
+	float desiredWidth = maxX + 20;
+	if (desiredWidth < 550) desiredWidth = 550;
+	r.size.width = desiredWidth;
 	maxY += 16 + (NSHeight(r) - NSHeight(w.contentView.frame));
 	r.origin.y -= (maxY - r.size.height);
 	r.size.height = maxY;
@@ -88,22 +92,25 @@
 
 -(void)	awakeFromNib
 {
+	// Add Fonts tab before creating toolbar
+	[self addFontsTab];
+
 	// Generate a string containing the window's title so we can display the original window title plus the selected pane:
 	NSString *wndTitle = tabView.window.title;
 	if( wndTitle.length > 0 )
 	{
 		baseWindowName = [NSString stringWithFormat:@"%@ : ", wndTitle];
 	}
-	
+
 	// Make sure our autosave-name is based on the one of our prefs window:
 	self.autosaveName = tabView.window.frameAutosaveName; // defined below -DY
-	
+
 	// Select the preferences page the user last had selected when this window was opened:
 	NSString *key = [NSString stringWithFormat:@"%@.prefspanel.recenttab", autosaveName];
 	NSInteger index = [NSUserDefaults.standardUserDefaults integerForKey:key];
 	if (index >= tabView.numberOfTabViewItems) index = 0; // prevent crash if number of items has changed
 	[tabView selectTabViewItemAtIndex:index];
-	
+
 	// Actually hook up our toolbar and the tabs:
 	[self mapTabsToToolbar];
 	
@@ -274,6 +281,133 @@
 -(NSArray*) toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
 	return [itemsList.allKeys arrayByAddingObjectsFromArray:@[NSToolbarSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier] ];
+}
+
+- (void)addFontsTab {
+	// Check if Font Settings tab already exists
+	for (NSTabViewItem *item in tabView.tabViewItems) {
+		if ([item.identifier isEqualToString:@"fonts"]) {
+			return; // Already exists
+		}
+	}
+
+	// Create Font Settings tab
+	NSTabViewItem *fontTab = [[NSTabViewItem alloc] initWithIdentifier:@"fonts"];
+	fontTab.label = NSLocalizedString(@"Fonts", @"Font settings tab");
+
+	// Create the content view for the tab
+	NSView *fontView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 487, 448)];
+
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+	// Folder Browser Font Size
+	NSTextField *folderLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 380, 200, 20)];
+	folderLabel.stringValue = NSLocalizedString(@"Folder Browser Font Size:", @"");
+	folderLabel.bezeled = NO;
+	folderLabel.drawsBackground = NO;
+	folderLabel.editable = NO;
+	folderLabel.selectable = NO;
+	[fontView addSubview:folderLabel];
+
+	NSSlider *folderSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(20, 350, 300, 20)];
+	folderSlider.minValue = 10.0;
+	folderSlider.maxValue = 24.0;
+	CGFloat folderFontSize = [defaults floatForKey:@"folderBrowserFontSize"];
+	if (folderFontSize <= 0) folderFontSize = NSFont.systemFontSize;
+	folderSlider.floatValue = folderFontSize;
+	folderSlider.target = [NSApp delegate];
+	folderSlider.action = @selector(folderBrowserFontSizeChanged:);
+	folderSlider.continuous = YES;
+	[fontView addSubview:folderSlider];
+
+	NSTextField *folderSizeLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(330, 350, 50, 20)];
+	folderSizeLabel.stringValue = [NSString stringWithFormat:@"%.0f pt", folderFontSize];
+	folderSizeLabel.bezeled = NO;
+	folderSizeLabel.drawsBackground = NO;
+	folderSizeLabel.editable = NO;
+	folderSizeLabel.selectable = NO;
+	folderSizeLabel.tag = 1001; // Tag for updating
+	[fontView addSubview:folderSizeLabel];
+
+	NSButton *folderResetBtn = [[NSButton alloc] initWithFrame:NSMakeRect(390, 345, 80, 30)];
+	folderResetBtn.title = NSLocalizedString(@"Reset", @"");
+	folderResetBtn.bezelStyle = NSBezelStyleRounded;
+	folderResetBtn.target = [NSApp delegate];
+	folderResetBtn.action = @selector(resetFolderBrowserFontSize:);
+	[fontView addSubview:folderResetBtn];
+
+	// Thumbnail Label Font Size
+	NSTextField *thumbLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 280, 200, 20)];
+	thumbLabel.stringValue = NSLocalizedString(@"Thumbnail Label Font Size:", @"");
+	thumbLabel.bezeled = NO;
+	thumbLabel.drawsBackground = NO;
+	thumbLabel.editable = NO;
+	thumbLabel.selectable = NO;
+	[fontView addSubview:thumbLabel];
+
+	NSSlider *thumbSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(20, 250, 300, 20)];
+	thumbSlider.minValue = 0.0; // 0 means automatic
+	thumbSlider.maxValue = 18.0;
+	CGFloat thumbFontSize = [defaults floatForKey:@"thumbnailLabelFontSize"];
+	thumbSlider.floatValue = thumbFontSize;
+	thumbSlider.target = [NSApp delegate];
+	thumbSlider.action = @selector(thumbnailLabelFontSizeChanged:);
+	thumbSlider.continuous = YES;
+	[fontView addSubview:thumbSlider];
+
+	NSTextField *thumbSizeLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(330, 250, 50, 20)];
+	if (thumbFontSize <= 0) {
+		thumbSizeLabel.stringValue = NSLocalizedString(@"Auto", @"");
+	} else {
+		thumbSizeLabel.stringValue = [NSString stringWithFormat:@"%.0f pt", thumbFontSize];
+	}
+	thumbSizeLabel.bezeled = NO;
+	thumbSizeLabel.drawsBackground = NO;
+	thumbSizeLabel.editable = NO;
+	thumbSizeLabel.selectable = NO;
+	thumbSizeLabel.tag = 1002; // Tag for updating
+	[fontView addSubview:thumbSizeLabel];
+
+	NSButton *thumbResetBtn = [[NSButton alloc] initWithFrame:NSMakeRect(390, 245, 80, 30)];
+	thumbResetBtn.title = NSLocalizedString(@"Reset", @"");
+	thumbResetBtn.bezelStyle = NSBezelStyleRounded;
+	thumbResetBtn.target = [NSApp delegate];
+	thumbResetBtn.action = @selector(resetThumbnailLabelFontSize:);
+	[fontView addSubview:thumbResetBtn];
+
+	// Info text
+	NSTextField *infoLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 180, 450, 40)];
+	infoLabel.stringValue = NSLocalizedString(@"Note: Changes apply immediately to all windows. Thumbnail label size of 'Auto' adjusts based on thumbnail width.", @"");
+	infoLabel.bezeled = NO;
+	infoLabel.drawsBackground = NO;
+	infoLabel.editable = NO;
+	infoLabel.selectable = NO;
+	infoLabel.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+	infoLabel.textColor = [NSColor secondaryLabelColor];
+	[fontView addSubview:infoLabel];
+
+	fontTab.view = fontView;
+	[tabView addTabViewItem:fontTab];
+
+	// Create a fonts icon if it doesn't exist
+	if (![NSImage imageNamed:@"fonts"]) {
+		NSImage *fontsIcon = nil;
+		if (@available(macOS 11.0, *)) {
+			// Use SF Symbol on macOS 11+
+			fontsIcon = [NSImage imageWithSystemSymbolName:@"textformat.size" accessibilityDescription:@"Fonts"];
+		}
+		if (!fontsIcon) {
+			// Fallback: create a simple text-based icon
+			fontsIcon = [[NSImage alloc] initWithSize:NSMakeSize(32, 32)];
+			[fontsIcon lockFocus];
+			NSFont *font = [NSFont boldSystemFontOfSize:20];
+			NSDictionary *attributes = @{NSFontAttributeName: font,
+										NSForegroundColorAttributeName: [NSColor labelColor]};
+			[@"Aa" drawAtPoint:NSMakePoint(3, 5) withAttributes:attributes];
+			[fontsIcon unlockFocus];
+		}
+		[fontsIcon setName:@"fonts"];
+	}
 }
 
 @end

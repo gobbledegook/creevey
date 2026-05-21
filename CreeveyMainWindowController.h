@@ -46,6 +46,8 @@
 - (void)fileWasDeleted:(NSString *)s;
 - (void)filesWereUndeleted:(NSArray *)a;
 - (void)updateExifInfo;
+- (void)updateFolderBrowserFont;
+- (void)updateThumbnailLabelFont;
 
 @end
 

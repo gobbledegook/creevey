@@ -2,4 +2,5 @@
 .DS_Store
 project.xcworkspace/
 xcuserdata/
+/.DerivedData
 

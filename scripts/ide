@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Run the IDE
+set -Eeuo pipefail
+trap 'echo "${BASH_SOURCE[0]}: line $LINENO: $BASH_COMMAND: exitcode $?"' ERR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+open -a Xcode "creevey.xcodeproj"

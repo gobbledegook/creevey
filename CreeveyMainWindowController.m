@@ -923,6 +923,32 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 	[self updateExifInfo:nil];
 }
 
+- (void)updateFolderBrowserFont {
+	// Update the folder browser font size
+	CGFloat fontSize = [NSUserDefaults.standardUserDefaults floatForKey:@"folderBrowserFontSize"];
+	if (fontSize <= 0) fontSize = NSFont.systemFontSize;
+
+	// Save the current path
+	NSString *currentPath = dirBrowser.path;
+
+	// Update the cell prototype font
+	NSFont *font = [NSFont systemFontOfSize:fontSize];
+	[dirBrowser.cellPrototype setFont:font];
+
+	// Reload the browser to apply the new font
+	[dirBrowser loadColumnZero];
+
+	// Restore the path if needed
+	if (currentPath) {
+		[dirBrowser setPath:currentPath];
+	}
+}
+
+- (void)updateThumbnailLabelFont {
+	// Force the image matrix to redraw with new font size
+	[imgMatrix setNeedsDisplay:YES];
+}
+
 #pragma mark splitview delegate
 
 - (void)splitViewDidResizeSubviews:(NSNotification *)notification
