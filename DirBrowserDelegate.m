@@ -21,13 +21,13 @@ static NSString *defaultPath(void) {
 }
 
 @interface DirBrowserDelegate () <VDKQueueDelegate, DYCreeveyBrowserDelegate>
-@property (nonatomic, strong) NSString *rootVolumeName;
 @property (strong) NSString *currPath;
 @property (nonatomic, strong) NSURL *currFileRef;
 @end
 
 @implementation DirBrowserDelegate
 {
+	NSMutableDictionary<NSString *, NSString *> *_volumePaths;
 	NSMutableArray *cols, *colsInternal;
 	BOOL browserInited; // work around NSBrowser bug
 
@@ -36,10 +36,11 @@ static NSString *defaultPath(void) {
 	VDKQueue *kq;
 	id _mountVolumeObserver, _unmountVolumeObserver, _renameVolumeObserver;
 }
-@synthesize rootVolumeName, currPath, currFileRef, revealedDirectories;
+@synthesize currPath, currFileRef, revealedDirectories;
 
 - (instancetype)init {
     if (self = [super init]) {
+		_volumePaths = [[NSMutableDictionary alloc] init];
 		cols = [[NSMutableArray alloc] init];
 		colsInternal = [[NSMutableArray alloc] init];
 		
@@ -129,17 +130,18 @@ static NSString *defaultPath(void) {
 	}
 }
 
-#pragma mark public
 // use to convert result from path or pathToColumn
 -(NSString*)browserpath2syspath:(NSString *)s {
-	if (!rootVolumeName)
-		[self loadDir:_Volumes inCol:0]; // init rootVolumeName
-	if ([rootVolumeName isEqualToString:s])
-		return @"/";
-	if ([rootVolumeName isEqualToString:[_b pathToColumn:1]]) {
-		return [s substringFromIndex:rootVolumeName.length];
+	if (_volumePaths.count == 0)
+		[self loadVolumes]; // init volume info
+	NSString *bName = [[_b pathToColumn:1] substringFromIndex:1]; // chop off the '/' at the start
+	NSString *path = _volumePaths[bName] ?: [NSString stringWithFormat:@"%@/%@", _Volumes, bName];
+	NSString *remainder = [s substringFromIndex:1 + bName.length];
+	if ([path isEqualToString:@"/"]) {
+		if (remainder.length == 0) return @"/";
+		return remainder;
 	}
-	return [_Volumes stringByAppendingString:s];
+	return [path stringByAppendingString:remainder];
 }
 
 -(NSString*)path {
@@ -153,17 +155,26 @@ static NSString *defaultPath(void) {
 	[self setPath:s];
 }
 -(void)setPath:(NSString *)aPath {
+	NSURL *url = [NSURL fileURLWithPath:aPath];
+	NSURL __autoreleasing *vol;
+	if (![url getResourceValue:&vol forKey:NSURLVolumeURLKey error:NULL]) return;
+	NSString __autoreleasing *volName;
+	if (![vol getResourceValue:&volName forKey:NSURLVolumeNameKey error:NULL]) volName = vol.lastPathComponent;
+	NSString *bRoot = [@"/" stringByAppendingString:volName], *volPath = vol.path;
+	if (_volumePaths.count && ![_volumePaths[volName] isEqualToString:volPath]) {
+		// in the highly unlikely event that there are multiple mounted volumes with the same name, and we found the wrong one, find the correct browser path
+		for (NSString *bName in _volumePaths) {
+			if ([_volumePaths[bName] isEqualToString:volPath]) {
+				bRoot = [@"/" stringByAppendingString:bName];
+				break;
+			}
+		}
+	}
 	NSString *s;
-	NSRange r = [aPath rangeOfString:_Volumes];
-	if (r.location == 0) {
-		s = [aPath substringFromIndex:r.length];
+	if ([volPath isEqualToString:@"/"]) {
+		s = [bRoot stringByAppendingString:aPath];
 	} else {
-		if (!rootVolumeName)
-			[self loadDir:_Volumes inCol:0]; // init rootVolumeName
-		if ([aPath isEqualToString:@"/"])
-			s = rootVolumeName;
-		else
-			s = [rootVolumeName stringByAppendingString:aPath];
+		s = [aPath stringByReplacingCharactersInRange:NSMakeRange(0, volPath.length) withString:bRoot];
 	}
 	// save currPath here so browser can look ahead for invisible directories when loading
 	currBrowserPathComponents = s.pathComponents;
@@ -181,39 +192,73 @@ static NSString *defaultPath(void) {
 	currBrowserPathComponents = nil;
 }
 
-#pragma mark private
-// puts array of directory names located in path
-// into our display and internal arrays
-- (NSInteger)loadDir:(NSString *)path inCol:(NSInteger)n {
+- (NSString *)uniqueNameforVolume:(NSURL *)u {
+	NSString *name;
+	if (![u getResourceValue:&name forKey:NSURLVolumeNameKey error:NULL]) return nil;
+	if (_volumePaths[name]) {
+		NSUInteger i = 0;
+		NSString *original = name;
+		do {
+			name = [NSString stringWithFormat:@"%@ (%lu)", original, ++i];
+		} while (_volumePaths[name]);
+	}
+	return name;
+}
+
+- (NSMutableArray *)loadVolumes {
 	NSFileManager *fm = NSFileManager.defaultManager;
+	[_volumePaths removeAllObjects];
+	NSArray *mountedVolumes = [fm mountedVolumeURLsIncludingResourceValuesForKeys:@[NSURLVolumeIsBrowsableKey,NSURLVolumeNameKey,NSURLLocalizedNameKey] options:0];
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:mountedVolumes.count];
+	for (NSURL *url in mountedVolumes) {
+		NSNumber __autoreleasing *val;
+		if ([url getResourceValue:&val forKey:NSURLVolumeIsBrowsableKey error:NULL] && val && !val.boolValue) continue;
+		NSString *name = [self uniqueNameforVolume:url], __autoreleasing *displayName;
+		if (name == nil) continue;
+		_volumePaths[name] = url.path;
+		if (![url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:NULL]) displayName = name;
+		if ([url getResourceValue:&val forKey:NSURLIsReadableKey error:NULL] && val && !val.boolValue)
+			displayName = [@"⛔️" stringByAppendingString:name];
+		[result addObject:@[displayName, name]];
+	}
+	return result;
+}
+
+#pragma mark NSBrowser delegate methods
+- (NSInteger)browser:(NSBrowser *)sender numberOfRowsInColumn:(NSInteger)n {
 	while (cols.count < n+1) {
 		[cols addObject:[NSMutableArray arrayWithCapacity:15]];
 		[colsInternal addObject:[NSMutableArray arrayWithCapacity:15]];
 	}
-	NSMutableArray *sortArray = [NSMutableArray arrayWithCapacity:15];
-	NSString *nextColumn = nil;
-	if (currBrowserPathComponents.count > n+1)
-		nextColumn = currBrowserPathComponents[n+1];
-	
-	// ignore NSError here, forin can handle both nil and empty arrays
-	for (NSURL *url in [fm contentsOfDirectoryAtURL:[NSURL fileURLWithPath:path isDirectory:YES] includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsHiddenKey] options:0 error:NULL]) {
-		NSString *filename = url.lastPathComponent;
-		if (n==0 && [[fm destinationOfSymbolicLinkAtPath:url.path error:NULL] isEqualToString:@"/"]) {
-			// initialize rootVolumeName here
-			self.rootVolumeName = [@"/" stringByAppendingString:filename];
-		}
-		if (n==1 && [url.path isEqualToString:_Volumes]) continue; // always skip /Volumes
-		NSNumber *val;
-		if (([filename characterAtIndex:0] == '.' && n > 0) || ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue)) {
-			if (nextColumn && [filename isEqualToString:nextColumn])
-				[revealedDirectories addObject:url];
-			// skip invisible directories unless we've specifically navigated to one
-			if (![revealedDirectories containsObject:url]) continue;
-		}
-		NSString *displayName = filename;
-		if (n == 0 || ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue)) {
-			[url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:NULL];
-			[sortArray addObject:@[displayName, filename]];
+	NSMutableArray *sortArray;
+	if (n == 0) {
+		sortArray = [self loadVolumes];
+	} else {
+		NSString *path = [self browserpath2syspath:[sender pathToColumn:n]];
+		NSFileManager *fm = NSFileManager.defaultManager;
+		NSString *nextColumn = nil;
+		if (currBrowserPathComponents.count > n+1)
+			nextColumn = currBrowserPathComponents[n+1];
+		// ignore NSError here, forin can handle both nil and empty arrays
+		NSArray *directoryContents = [fm contentsOfDirectoryAtURL:[NSURL fileURLWithPath:path isDirectory:YES] includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsHiddenKey] options:0 error:NULL];
+		sortArray = [NSMutableArray arrayWithCapacity:directoryContents.count];
+		for (NSURL *url in directoryContents) {
+			NSString *filename = url.lastPathComponent;
+			if (n==1 && [url.path isEqualToString:_Volumes]) continue; // always skip /Volumes
+			NSNumber *val;
+			if ([filename characterAtIndex:0] == '.' || ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue)) {
+				if (nextColumn && [filename isEqualToString:nextColumn])
+					[revealedDirectories addObject:url];
+				// skip invisible directories unless we've specifically navigated to one
+				else if (![revealedDirectories containsObject:url]) continue;
+			}
+			if ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue) {
+				NSString __autoreleasing *displayName;
+				if (![url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:NULL]) displayName = filename;
+				if ([url getResourceValue:&val forKey:NSURLIsReadableKey error:NULL] && val && !val.boolValue)
+					displayName = [@"⛔️" stringByAppendingString:displayName];
+				[sortArray addObject:@[displayName, filename]];
+			}
 		}
 	}
 	// sort it so it makes sense! the OS doesn't always give directory contents in a convenient order
@@ -229,14 +274,6 @@ static NSString *defaultPath(void) {
 		[filesystemNames addObject:nameArray[1]];
 	}
 	return displayNames.count;
-}
-
-#pragma mark NSBrowser delegate methods
-- (NSInteger)browser:(NSBrowser *)b numberOfRowsInColumn:(NSInteger)c {
-	return [self loadDir:(c == 0
-						  ? _Volumes
-						  : [self browserpath2syspath:[b pathToColumn:c]])
-				   inCol:c];
 }
 
 - (void)browser:(NSBrowser *)b willDisplayCell:(id)cell atRow:(NSInteger)row column:(NSInteger)column {
