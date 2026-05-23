@@ -9,6 +9,8 @@
 #import "DYExiftags.h"
 
 #import "SlideshowWindow.h"
+#import "DYImageView.h"
+#import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
@@ -106,6 +108,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 // MAX_CACHED must be bigger than the number of items you plan to have cached!
 #define MAX_REPEATING_CACHED 6
 // when key is held down, max to cache before skipping over
+#define SLIDE_MIN_WIDTH 240
+#define SLIDE_MIN_HEIGHT 160
 
 - (instancetype)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
 	// full screen window, force it to be NSBorderlessWindowMask
@@ -122,6 +126,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
  		self.backgroundColor = NSColor.blackColor;
 		self.opaque = NO;
 		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
+		[self setMinSize:NSMakeSize(SLIDE_MIN_WIDTH, SLIDE_MIN_HEIGHT)];
 		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
 		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
 		currentIndex = NSNotFound;
@@ -189,6 +194,17 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
+- (void)setTransparentImageBgColor:(NSColor *)aColor {
+	imgView.imageBackgroundColor = aColor;
+}
+
+- (void)setFitWindowToImage:(BOOL)b {
+	if (b != _fitWindowToImage) {
+		_fitWindowToImage = b;
+		[self resizeWindowToFit];
+	}
+}
+
 - (void)setFullscreenMode:(BOOL)b {
 	_fullscreenMode = b;
 	if (b) {
@@ -244,7 +260,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	_sortType = abs(sortOrder);
 }
 
-- (void)loadFilenamesFromPath:(NSString *)s fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder {
+// either files or dir can be empty
+- (void)loadFilenames:(NSArray *)files fromPath:(NSString *)dir fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder {
 	static dispatch_queue_t _loadQueue;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
@@ -266,7 +283,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	uint64_t timeStamp = blockTime = mach_absolute_time();
 	dispatch_async(_loadQueue, ^{
 		if (timeStamp == blockTime)
-			[self loadImages:s subfolders:b];
+			[self loadDirectory:dir selectedFiles:files subfolders:b];
 	});
 }
 
@@ -589,6 +606,44 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[infoFld sizeToFit];
 }
 
+- (void)resizeWindowToFit {
+	if (_fullscreenMode || !_fitWindowToImage) return;
+	if (currentIndex >= filenames.count) return;
+	
+	NSString *theFile = filenames[currentIndex];
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(theFile)];
+	if (!info) return;
+	
+	NSNumber *rot = rotations[theFile];
+	int r = rot.intValue;
+	NSRect myFrame = self.frame;
+	CGFloat oldY = NSMaxY(myFrame), titleBarHeight = myFrame.size.height - self.contentView.frame.size.height;
+	NSSize max = self.screen.visibleFrame.size, imgSize = info->pixelSize;
+	max.height -= titleBarHeight;
+	if (r == 90 || r == -90) {
+		CGFloat tmp = imgSize.width;
+		imgSize.width = imgSize.height;
+		imgSize.height = tmp;
+	}
+	if (imgSize.width > max.width || imgSize.height > max.height) {
+		if (imgView.showActualSize) {
+			myFrame.size.width = MIN(imgSize.width, max.width);
+			myFrame.size.height = MIN(imgSize.height, max.height);
+		} else {
+			float w_ratio = max.width/imgSize.width, h_ratio = max.height/imgSize.height;
+			float f = MIN(w_ratio, h_ratio);
+			myFrame.size = NSMakeSize(roundf(imgSize.width*f), roundf(imgSize.height*f));
+		}
+	} else {
+		myFrame.size = imgSize;
+	}
+	myFrame.size.width = MAX(myFrame.size.width, SLIDE_MIN_WIDTH);
+	myFrame.size.height += titleBarHeight;
+	myFrame.size.height = MAX(myFrame.size.height, SLIDE_MIN_HEIGHT);
+	myFrame.origin.y = oldY - myFrame.size.height;
+	[self setFrame:myFrame display:YES];
+}
+
 - (void)redisplayImage {
 	if (currentIndex == NSNotFound) return;
 	NSString *theFile = filenames[currentIndex];
@@ -639,6 +694,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 			rotations[theFile] = @(r);
 			flips[theFile] = @(imgFlipped);
 		}
+		[self resizeWindowToFit];
 		if ((zoomInfo || imgView.showActualSize) && !info.hasFullSizeImage)
 			[self loadFullSizeImage];
 		else if (info->quality == DYImageQualityLow)
@@ -766,6 +822,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	n = [imgView addRotation:n];
 	rotations[filenames[currentIndex]] = @(n);
 	[self updateInfoFld];
+	[self resizeWindowToFit];
 }
 
 - (void)toggleFlip {
@@ -1397,6 +1454,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (!info.hasFullSizeImage)
 			[self loadFullSizeImage];
 	}
+	[self resizeWindowToFit];
 }
 
 - (void)updateStatusOnMainThread:(NSString * (^)(void))f {
@@ -1410,25 +1468,34 @@ scheduledTimerWithTimeInterval:timerIntvl
 	});
 }
 
-- (void)loadImages:(NSString *)path subfolders:(BOOL)recurseSubfolders {
+- (void)loadDirectory:(NSString *)path selectedFiles:(NSArray *)selectedFiles subfolders:(BOOL)recurseSubfolders {
 	_stopLoading = NO;
 	@autoreleasepool {
 		CreeveyController *appDelegate = (CreeveyController *)NSApp.delegate;
-		NSUInteger i = 0;
 		NSString *loadingMsg = NSLocalizedString(@"Getting filenames...", @"");
 		[self updateStatusOnMainThread:^NSString *{ return loadingMsg; }];
 		NSMutableArray *files = [NSMutableArray array];
-		NSDirectoryEnumerator *e = CreeveyEnumerator(path, recurseSubfolders);
-		for (NSURL *url in e) {
-			@autoreleasepool {
-				if ([appDelegate handledDirectory:url subfolders:recurseSubfolders e:e])
-					continue;
-				if ([appDelegate shouldShowFile:url]) {
-					[files addObject:url.path];
-					if (++i % 100 == 0) [self updateStatusOnMainThread:^NSString *{ return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i]; }];
+		if (path && selectedFiles.count <= 1) {
+			NSUInteger i = 0;
+			NSDirectoryEnumerator *e = CreeveyEnumerator(path, recurseSubfolders);
+			for (NSURL *url in e) {
+				@autoreleasepool {
+					if ([appDelegate handledDirectory:url subfolders:recurseSubfolders e:e])
+						continue;
+					if ([appDelegate shouldShowFile:url]) {
+						[files addObject:url.path];
+						if (++i % 100 == 0) [self updateStatusOnMainThread:^NSString *{ return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i]; }];
+					}
+					if (_stopLoading)
+						return;
 				}
-				if (_stopLoading)
-					return;
+			}
+		} else {
+			if (!path) path = [selectedFiles[0] stringByDeletingLastPathComponent];
+			for (NSString *aPath in selectedFiles) {
+				if ([appDelegate shouldShowFile:[NSURL fileURLWithPath:aPath]])
+					[files addObject:aPath];
+				path = [path commonPrefixWithString:aPath options:0];
 			}
 		}
 		if (files.count) {
@@ -1436,13 +1503,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 				return [NSString stringWithFormat:NSLocalizedString(@"Sorting %lu filenames…", @""), files.count];
 			}];
 			[files sortUsingComparator:self.comparator];
+			NSUInteger startIndex = (selectedFiles.count != 1) ? NSNotFound : [files indexOfObject:selectedFiles[0] inSortedRange:NSMakeRange(0, files.count) options:0 usingComparator:_comparator];
 			if (_stopLoading) return;
 			dispatch_async(dispatch_get_main_queue(), ^{
 				NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 				[self setFilenames:files basePath:path wantsSubfolders:recurseSubfolders comparator:_comparator sortOrder:_sortType];
 				self.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
 				self.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
-				[self startSlideshowAtIndex:NSNotFound];
+				[self startSlideshowAtIndex:startIndex];
 			});
 		} else {
 			[self updateStatusOnMainThread:^NSString *{

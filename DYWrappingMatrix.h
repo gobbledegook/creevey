@@ -31,6 +31,7 @@
 @interface DYWrappingMatrix : NSControl
 @property (weak) IBOutlet id delegate;
 @property (weak, nonatomic) NSImage *loadingImage;
+@property (nonatomic) NSColor *imageBackgroundColor;
 
 @property (class, readonly) NSSize maxCellSize;
 

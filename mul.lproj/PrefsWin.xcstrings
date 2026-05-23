@@ -127,6 +127,48 @@
         }
       }
     },
+    "7Tz-RA-x3j.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Open new browser window if there is none\"; ObjectID = \"7Tz-RA-x3j\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne ein neues Miniaturbild-Fenster, falls noch keines vorhanden ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open new browser window if there is none"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra nueva ventana de miniaturas si no hay ninguna"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez nouvelle fenêtre de vignettes s'il n'y en a pas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri nuova finestra delle miniature, se non ne è presente alcuna"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開新瀏覽視窗（如沒有）"
+          }
+        }
+      }
+    },
     "9tJ-oS-0Hh.title" : {
       "comment" : "Class = \"NSButtonCell\"; title = \"Window\"; ObjectID = \"9tJ-oS-0Hh\";",
       "extractionState" : "extracted_with_value",
@@ -567,48 +609,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Box"
-          }
-        }
-      }
-    },
-    "732.title" : {
-      "comment" : "Class = \"NSMenu\"; title = \"OtherViews\"; ObjectID = \"732\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "OtherViews"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
           }
         }
       }
@@ -1705,44 +1705,44 @@
         }
       }
     },
-    "I1V-Fz-GHo.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Text Cell\"; ObjectID = \"I1V-Fz-GHo\";",
+    "IAe-SL-QzW.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Size Window to Fit Image\"; ObjectID = \"IAe-SL-QzW\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ""
+            "value" : "Fenstergröße an Bild anpassen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Text Cell"
+            "value" : "Size Window to Fit Image"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ""
+            "value" : "Ajustar el tamaño de la ventana a la imagen"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ""
+            "value" : "Redimensionner la fenêtre pour s'adapter à l'image"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ""
+            "value" : "Ridimensiona la finestra per adattarla all'immagine"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ""
+            "value" : "調整視窗大小以適應影像"
           }
         }
       }
@@ -1831,6 +1831,48 @@
         }
       }
     },
+    "MDl-xv-aQo.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Choose a color with 0 opacity to use the slideshow/browser background color.\"; ObjectID = \"MDl-xv-aQo\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie eine Farbe mit 0% Deckkraft, um die Hintergrundfarbe der Slideshow bzw. des Browsers zu verwenden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose a color with 0 opacity to use the slideshow/browser background color."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige un color con un 0% de opacidad para utilizar el color de fondo de la pase de diapositivas o del navegador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez une couleur avec une opacité de 0% pour utiliser la couleur d'arrière-plan du diaporama ou du navigateur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli un colore con opacità dello 0% per utilizzare il colore di sfondo della presentazione o del browser."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇 0% 不透明度的顏色以使用幻燈片或瀏覽視窗的背景顏色。"
+          }
+        }
+      }
+    },
     "nvb-DG-NSv.title" : {
       "comment" : "Class = \"NSTextFieldCell\"; title = \"Default mode:\"; ObjectID = \"nvb-DG-NSv\";",
       "extractionState" : "extracted_with_value",
@@ -1915,6 +1957,48 @@
         }
       }
     },
+    "OpN-pF-T68.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Transparent Image Background Color\"; ObjectID = \"OpN-pF-T68\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundfarbe transparenter Bilder"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Transparent Image Background Color"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de fondo de las imágenes transparentes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur d'arrière-plan des images transparentes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore di sfondo delle immagini trasparenti"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透明影像的背景顏色"
+          }
+        }
+      }
+    },
     "PhQ-fN-PXx.title" : {
       "comment" : "Class = \"NSTextFieldCell\"; title = \"When opening files from the Finder:\"; ObjectID = \"PhQ-fN-PXx\";",
       "extractionState" : "extracted_with_value",
@@ -1953,48 +2037,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "從 Finder 打開檔案時："
-          }
-        }
-      }
-    },
-    "pTa-e0-6zR.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Text Cell\"; ObjectID = \"pTa-e0-6zR\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Text Cell"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
           }
         }
       }

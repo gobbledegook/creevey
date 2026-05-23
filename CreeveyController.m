@@ -152,6 +152,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"slideshowScaleUp": @NO,
 		@"slideshowActualSize": @NO,
 		@"slideshowBgColor": [NSKeyedArchiver archivedDataWithRootObject:NSColor.blackColor requiringSecureCoding:YES error:NULL],
+		@"transparentImageBgColor": [NSKeyedArchiver archivedDataWithRootObject:NSColor.clearColor requiringSecureCoding:YES error:NULL],
+		@"slideshowWindowFitToImage": @NO,
 		@"exifThumbnailShow": @NO,
 		@"showFilenames": @YES,
 		@"sortBy": @1, // sort by filename, ascending
@@ -161,6 +163,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 		@"autoRotateByOrientationTag": @YES,
 		@"openFilesDoSlideshow": @YES,
 		@"openFilesIgnoreAutoadvance": @NO,
+		@"openFilesOpensBrowserWindowIfNone": @YES,
 		@"startupSlideshowFromFolder":@NO,
 		@"startupSlideshowSubfolders":@NO,
 		@"startupSlideshowSuppressNewWindows":@NO,
@@ -253,6 +256,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	
 	NSUserDefaultsController *ud = NSUserDefaultsController.sharedUserDefaultsController;
 	[ud addObserver:self forKeyPath:@"values.slideshowBgColor" options:0 context:NULL];
+	[ud addObserver:self forKeyPath:@"values.transparentImageBgColor" options:0 context:NULL];
+	[ud addObserver:self forKeyPath:@"values.slideshowWindowFitToImage" options:0 context:NULL];
 	[ud addObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth" options:0 context:NULL];
 	[ud addObserver:self forKeyPath:@"values.appearance" options:0 context:NULL];
 	localeChangeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSCurrentLocaleDidChangeNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
@@ -263,6 +268,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 - (void)dealloc {
 	NSUserDefaultsController *u = NSUserDefaultsController.sharedUserDefaultsController;
 	[u removeObserver:self forKeyPath:@"values.slideshowBgColor"];
+	[u removeObserver:self forKeyPath:@"values.transparentImageBgColor"];
+	[u removeObserver:self forKeyPath:@"values.slideshowWindowFitToImage"];
 	[u removeObserver:self forKeyPath:@"values.DYWrappingMatrixMaxCellWidth"];
 	[u removeObserver:self forKeyPath:@"values.appearance"];
 	[NSNotificationCenter.defaultCenter removeObserver:localeChangeObserver];
@@ -330,20 +337,29 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	[self startSlideshowFullscreen:fullscreen];
 }
 
+static void ShowDirectoryContentsIfPossible(NSURL *u) {
+	// apparently it's not possible to tell the Finder to show the top level contents of a package like .app or .rtfd?
+	NSWorkspace *ws = NSWorkspace.sharedWorkspace;
+	if ([ws isFilePackageAtPath:u.path])
+		[ws activateFileViewerSelectingURLs:@[u]];
+	else
+		[ws openURL:u];
+}
+
 - (IBAction)revealSelectedFilesInFinder:(id)sender {
 	if (slidesWindow.isMainWindow) {
 		if (slidesWindow.currentFile) {
 			NSString *s = slidesWindow.currentFile;
 			[NSWorkspace.sharedWorkspace selectFile:s inFileViewerRootedAtPath:s.stringByDeletingLastPathComponent];
 		} else {
-			[NSWorkspace.sharedWorkspace openURL:slidesWindow.baseURL];
+			ShowDirectoryContentsIfPossible(slidesWindow.baseURL);
 		}
 	} else {
 		NSArray *a = frontWindow.currentSelection;
 		if (a.count) {
 			[NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:a.asFileURLs];
 		} else {
-			[NSWorkspace.sharedWorkspace openURL:frontWindow.URL];
+			ShowDirectoryContentsIfPossible(frontWindow.URL);
 		}
 	}
 }
@@ -748,10 +764,28 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 	if ([NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDir] && isDir) {
 		BOOL fullScreen = ![u boolForKey:@"startupSlideshowInWindow"];
 		short int sortOrder = [u integerForKey:@"sortBy"];
-		[slidesWindow loadFilenamesFromPath:path fullScreen:fullScreen wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder(sortOrder) sortOrder:sortOrder];
+		[slidesWindow loadFilenames:nil fromPath:path fullScreen:fullScreen wantsSubfolders:[u boolForKey:@"startupSlideshowSubfolders"] comparator:ComparatorForSortOrder(sortOrder) sortOrder:sortOrder];
 		return YES;
 	}
 	return NO;
+}
+
+- (void)slideshowFromDraggedPaths:(NSArray *)filenames {
+	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
+	BOOL fullScreen = slidesWindow.visible ? slidesWindow.fullscreenMode : [u integerForKey:@"slideshowDefaultMode"] == 0;
+	short int sortOrder = [u integerForKey:@"sortBy"];
+	NSString *dir = nil;
+	if (filenames.count == 1) {
+		NSString *thePath = filenames[0];
+		BOOL isDir;
+		if ([NSFileManager.defaultManager fileExistsAtPath:thePath isDirectory:&isDir] && isDir) {
+			dir = thePath;
+			filenames = nil;
+		} else {
+			dir = [thePath stringByDeletingLastPathComponent];
+		}
+	}
+	[slidesWindow loadFilenames:filenames fromPath:dir fullScreen:fullScreen wantsSubfolders:NO comparator:ComparatorForSortOrder(sortOrder) sortOrder:sortOrder];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
@@ -769,6 +803,8 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 	[self applySlideshowPrefs:nil];
 	[self updateSlideshowBgColor];
+	[self updateTransparentImageBgColor];
+	[self updateSlideshowFitToImage];
 	BOOL doSlideshow = [u boolForKey:@"startupSlideshowFromFolder"];
 	BOOL suppressNewWindow = doSlideshow && [u boolForKey:@"startupSlideshowSuppressNewWindows"];
 	if (doSlideshow) {
@@ -833,13 +869,19 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 - (void)openFilesCoalesced {
 	BOOL doSlideshow = [NSUserDefaults.standardUserDefaults boolForKey:@"openFilesDoSlideshow"];
-	[frontWindow openFiles:_coalescedFilesToOpen withSlideshow:doSlideshow];
+	if (creeveyWindows.count)
+		[frontWindow openFiles:_coalescedFilesToOpen withSlideshow:doSlideshow];
+	else
+		[self slideshowFromDraggedPaths:[_coalescedFilesToOpen copy]];
 	[_coalescedFilesToOpen removeAllObjects];
 }
 
 - (void)openFiles:(NSArray *)files {
-	if (!creeveyWindows.count) [self newWindow:nil];
-	[frontWindow.window makeKeyAndOrderFront:nil];
+	NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;
+	if (![ud boolForKey:@"openFilesDoSlideshow"] || [ud boolForKey:@"openFilesOpensBrowserWindowIfNone"]) {
+		if (!creeveyWindows.count) [self newWindow:nil];
+		[frontWindow.window makeKeyAndOrderFront:nil];
+	}
 	if (!_appDidFinishLaunching)
 		_filesWereOpenedAtLaunch = YES;
 	[_coalescedFilesToOpen addObjectsFromArray:files];
@@ -1111,6 +1153,19 @@ static void SendAction(NSMenuItem *sender) {
 
 - (void)updateSlideshowBgColor {
 	slidesWindow.backgroundColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"slideshowBgColor"] error:NULL];
+	slidesWindow.contentView.needsDisplay = YES;
+}
+
+- (void)updateTransparentImageBgColor {
+	NSColor *theColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:[NSUserDefaults.standardUserDefaults dataForKey:@"transparentImageBgColor"] error:NULL];
+	for (CreeveyMainWindowController *w in creeveyWindows) {
+		w.imgMatrix.imageBackgroundColor = theColor;
+	}
+	[slidesWindow setTransparentImageBgColor:theColor];
+}
+
+- (void)updateSlideshowFitToImage {
+	slidesWindow.fitWindowToImage = [NSUserDefaults.standardUserDefaults boolForKey:@"slideshowWindowFitToImage"];
 }
 
 - (void)updateAppearance {
@@ -1146,7 +1201,10 @@ static void SendAction(NSMenuItem *sender) {
 		}
 	} else if ([keyPath isEqualToString:@"values.slideshowBgColor"]) {
 		[self updateSlideshowBgColor];
-		[slidesWindow.contentView setNeedsDisplay:YES];
+	} else if ([keyPath isEqualToString:@"values.transparentImageBgColor"]) {
+		[self updateTransparentImageBgColor];
+	} else if ([keyPath isEqualToString:@"values.slideshowWindowFitToImage"]) {
+		[self updateSlideshowFitToImage];
 	} else if ([keyPath isEqualToString:@"values.appearance"]) {
 		[self updateAppearance];
 	}

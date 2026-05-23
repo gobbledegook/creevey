@@ -308,6 +308,13 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 										   x+area_w-x2,r.size.height)]; // right
 }
 
+- (void)setImageBackgroundColor:(NSColor *)aColor {
+	if (_imageBackgroundColor != aColor) {
+		_imageBackgroundColor = aColor;
+		self.needsDisplay = YES;
+	}
+}
+
 #pragma mark NSDraggingSource stuff
 - (NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
 	if (context == NSDraggingContextWithinApplication) return NSDragOperationNone;
@@ -614,8 +621,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 			//NSLog(@"skipped cell %i", i);
 			continue;
 		}
-		[NSColor.whiteColor set]; // white bg for transparent imgs
-		NSRectFill(NSInsetRect(NSIntegralRectWithOptions(cellRect, NSAlignAllEdgesNearest), 1.0, 1.0));
+		[_imageBackgroundColor set]; // for transparent images
+		[NSBezierPath fillRect:[self backingAlignedRect:cellRect options:NSAlignAllEdgesInward]];
 		if (autoRotate) {
 			unsigned short orientation = [self exifOrientationForIndex:i];
 			int r = 0; BOOL imgFlipped = NO;

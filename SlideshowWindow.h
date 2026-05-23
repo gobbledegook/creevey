@@ -6,17 +6,17 @@
 //California 94305, USA.
 
 @import Cocoa;
-#import "DYImageView.h"
-#import "DYImageCache.h"
 
 @interface SlideshowWindow : NSWindow
 @property (nonatomic) BOOL fullscreenMode;
+@property (nonatomic) BOOL fitWindowToImage; // resize window to image (in window mode)
 
+- (void)setTransparentImageBgColor:(NSColor *)aColor;
 - (void)setCats:(NSMutableSet * __strong *)newCats;
 
 - (void)setFilenames:(NSArray *)files basePath:(NSString *)s comparator:(NSComparator)block sortOrder:(short int)sortOrder; // call this before starting the slideshow
 - (void)setFilenames:(NSArray *)files basePath:(NSString *)s wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder; // or this version to watch the directory and update with directory changes during slideshow
-- (void)loadFilenamesFromPath:(NSString *)s fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder;
+- (void)loadFilenames:(NSArray *)files fromPath:(NSString *)s fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder;
 - (void)startSlideshow;
 - (void)startSlideshowAtIndex:(NSUInteger)n;
 - (void)endSlideshow;
