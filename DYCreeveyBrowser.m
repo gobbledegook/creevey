@@ -86,7 +86,7 @@
 		self.titled = NO;
 		self.hasHorizontalScroller = YES;
 		[self setCellClass:[DYBrowserCell class]];
-		[self.cellPrototype setFont:[NSFont systemFontOfSize:NSFont.smallSystemFontSize-1]];
+		[self.cellPrototype setFont:[NSFont systemFontOfSize:NSFont.smallSystemFontSize]];
 		self.allowsEmptySelection = NO;
 		self.columnResizingType = NSBrowserUserColumnResizing;
 		self.prefersAllColumnUserResizing = NO;
