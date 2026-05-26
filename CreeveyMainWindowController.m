@@ -16,6 +16,7 @@
 #import "DYImageCache.h"
 #import "DYWrappingMatrix.h"
 #import <sys/stat.h>
+#include <sys/attr.h>
 #import "DYExiftags.h"
 
 @implementation NSString (DateModifiedCompare)
@@ -23,6 +24,14 @@
 /* Using file attributes to sort file paths and then rely on the sort order staying the same
  * is somewhat dangerous because the file might have been modified (changing the modification date)
  * or moved (making the path invalid). We try to mitigate this by watching for changes to the filesystem. */
+
+- (NSComparisonResult)lastPathComponentCompare:(NSString *)other {
+	NSString *aName = self.lastPathComponent, *bName = other.lastPathComponent;
+	NSComparisonResult result = [aName localizedStandardCompare:bName];
+	if (result != NSOrderedSame)
+		return result;
+	return [self localizedStandardCompare:other];
+}
 
 - (NSComparisonResult)dateModifiedCompare:(NSString *)other
 {
@@ -35,6 +44,33 @@
 			return aTime < bTime ? NSOrderedAscending : NSOrderedDescending;
 	}
 	// use file name comparison as fallback; filenames are guaranteed to be unique, but mod times are not
+	return [self localizedStandardCompare:other];
+}
+
+- (NSComparisonResult)fileSizeCompare:(NSString *)other {
+	struct stat aBuf, bBuf;
+	if (stat(self.fileSystemRepresentation, &aBuf) == 0 &&
+		stat(other.fileSystemRepresentation, &bBuf) == 0) {
+		off_t aSize = aBuf.st_size;
+		off_t bSize = bBuf.st_size;
+		if (aSize != bSize)
+			return aSize < bSize ? NSOrderedAscending : NSOrderedDescending;
+	}
+	return [self localizedStandardCompare:other];
+}
+
+- (NSComparisonResult)fileTypeCompare:(NSString *)other {
+	NSString *aPath = ResolveAliasToPath(self);
+	NSString *bPath = ResolveAliasToPath(other);
+	NSString *aType = aPath.pathExtension.lowercaseString ?: NSHFSTypeOfFile(aPath);
+	NSString *bType = bPath.pathExtension.lowercaseString ?: NSHFSTypeOfFile(bPath);
+	if (aType != bType) {
+		if (!aType) return NSOrderedAscending;
+		if (!bType) return NSOrderedDescending;
+		NSComparisonResult result = [aType compare:bType];
+		if (result != NSOrderedSame)
+			return result;
+	}
 	return [self localizedStandardCompare:other];
 }
 
@@ -89,6 +125,32 @@ static time_t ExifDateFromFile(NSString *s) {
 		(bTime = ExifDateFromFile(other)) != -1 &&
 		aTime != bTime) {
 		return aTime < bTime ? NSOrderedAscending : NSOrderedDescending;
+	}
+	return [self localizedStandardCompare:other];
+}
+
+typedef struct {
+	u_int32_t length;
+	struct timespec c, a;
+} __attribute__((aligned(4), packed)) times_buf_t;
+
+- (NSComparisonResult)dateAddedCompare:(NSString *)other {
+	struct attrlist attrlist;
+	memset(&attrlist, 0, sizeof(attrlist));
+	attrlist.bitmapcount = ATTR_BIT_MAP_COUNT;
+	attrlist.commonattr = ATTR_CMN_CRTIME|ATTR_CMN_ADDEDTIME;
+	times_buf_t aBuf, bBuf;
+	if (getattrlist(self.fileSystemRepresentation, &attrlist, &aBuf, sizeof(aBuf), 0) == 0 &&
+		getattrlist(other.fileSystemRepresentation, &attrlist, &bBuf, sizeof(bBuf), 0) == 0) {
+		time_t aTime = aBuf.a.tv_sec;
+		time_t bTime = bBuf.a.tv_sec;
+		if (aTime != bTime)
+			return aTime < bTime ? NSOrderedAscending : NSOrderedDescending;
+		// fall back to creation time
+		aTime = aBuf.c.tv_sec;
+		bTime = bBuf.c.tv_sec;
+		if (aTime != bTime)
+			return aTime < bTime ? NSOrderedAscending : NSOrderedDescending;
 	}
 	return [self localizedStandardCompare:other];
 }
@@ -304,34 +366,28 @@ static time_t ExifDateFromFile(NSString *s) {
 - (NSUInteger)indexOfFilename:(NSString *)s {
 	return [displayedFilenames indexOfObject:s inSortedRange:NSMakeRange(0, displayedFilenames.count) options:0 usingComparator:self.comparator];
 }
+typedef NSComparisonResult (*compIMP)(id, SEL, id);
 NSComparator ComparatorForSortOrder(short sortOrder) {
-	switch (sortOrder) {
-		case 1:
-		default:
-			return ^NSComparisonResult(id a, id b) {
-				return [a localizedStandardCompare:b];
-			};
-		case 2:
-			return ^NSComparisonResult(id a, id b) {
-				return [a dateModifiedCompare:b];
-			};
-		case -1:
-			return ^NSComparisonResult(id a, id b) {
-				return [b localizedStandardCompare:a];
-			};
-		case -2:
-			return ^NSComparisonResult(id a, id b) {
-				return [b dateModifiedCompare:a];
-			};
-		case 3:
-			return ^NSComparisonResult(id a, id b) {
-				return [a exifDateCompare:b];
-			};
-		case -3:
-			return ^NSComparisonResult(id a, id b) {
-				return [b exifDateCompare:a];
-			};
+	BOOL descending = sortOrder < 0;
+	if (descending) sortOrder = -sortOrder;
+	SEL sel; switch (sortOrder) {
+		case 1: sel = @selector(lastPathComponentCompare:); break;
+		case 2: sel = @selector(dateModifiedCompare:); break;
+		case 3: sel = @selector(exifDateCompare:); break;
+		case 4: sel = @selector(dateAddedCompare:); break;
+		case 5: sel = @selector(fileTypeCompare:); break;
+		case 6: sel = @selector(fileSizeCompare:); break;
+		case 7: sel = @selector(localizedStandardCompare:); break;
+		default: sel = @selector(compare:);
 	}
+	if (descending) return ^NSComparisonResult(id a, id b) {
+		compIMP f = (compIMP)[b methodForSelector:sel];
+		return f(b, sel, a);
+	};
+	return ^NSComparisonResult(id a, id b) {
+		compIMP f = (compIMP)[a methodForSelector:sel];
+		return f(a, sel, b);
+	};
 }
 - (NSComparator)comparator {
 	return ComparatorForSortOrder(sortOrder);
@@ -382,13 +438,20 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 	[_internalLock unlock];
 }
 
+// we handle reasonable real-world scenarios here:
+// if the name changes, it will be deleted and added
+// if we are sorted by mod time/size and that attribute changes, we need to update the list
+// we do *not* handle the case where the EXIF date has changed (why would you ever do this?),
+// or where "date added" changes without the user actually moving the file away and back into the folder,
+// nor do we handle the user changing a file modification date to *before* the previous value
 - (void)watcherFiles:(NSArray *)files deleted:(NSArray *)deleted {
 	if (!filenamesDone) return;
-	BOOL sortByModTime = abs(self.sortOrder) == 2;
+	short int sortType = abs(self.sortOrder);
+	BOOL sortByModTime = sortType == 2, sortBySize = sortType == 6;
 	for (NSString *s in files) {
 		NSUInteger count = filenames.count;
 		struct stat buf;
-		if (sortByModTime && !stat(s.fileSystemRepresentation, &buf) && buf.st_mtimespec.tv_sec > matrixModTime) {
+		if (sortBySize || (sortByModTime && !stat(s.fileSystemRepresentation, &buf) && buf.st_mtimespec.tv_sec > matrixModTime)) {
 			// when sorting by mod time, file list needs to be adjusted if the file's mod time has changed!
 			NSUInteger oldIdx, idx = [filenames updateIndexOfObject:s usingComparator:self.comparator oldIndex:&oldIdx];
 			if (idx != NSNotFound) {

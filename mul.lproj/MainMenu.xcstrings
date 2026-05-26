@@ -337,6 +337,48 @@
         }
       }
     },
+    "76V-Iq-UDv.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Sort by File Path\"; ObjectID = \"76V-Iq-UDv\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausrichten nach Dateipfad"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by File Path"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por ruta de archivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangement - Chemin de fichier"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organizza per percorso file"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據檔案路徑排序"
+          }
+        }
+      }
+    },
     "81.title" : {
       "comment" : "Class = \"NSMenu\"; title = \"File\"; ObjectID = \"81\";",
       "extractionState" : "extracted_with_value",
@@ -3721,6 +3763,48 @@
         }
       }
     },
+    "BhH-W5-yzd.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Sort by Type\"; ObjectID = \"BhH-W5-yzd\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausrichten nach Art"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by Type"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por tipo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangement - Type"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organizza per tipo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據種類排列"
+          }
+        }
+      }
+    },
     "c0g-qO-OVm.title" : {
       "comment" : "Class = \"NSMenuItem\"; title = \"Move To Folder Again\"; ObjectID = \"c0g-qO-OVm\";",
       "extractionState" : "extracted_with_value",
@@ -3927,6 +4011,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搬移⋯⋯"
+          }
+        }
+      }
+    },
+    "Uvs-oj-ZHE.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Sort by Date Added\"; ObjectID = \"Uvs-oj-ZHE\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausrichten nach Hinzufügedatum"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by Date Added"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por fecha en que se agregó"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangement - Date de l’ajout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organizza per data di aggiunta"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據加入日期排列"
+          }
+        }
+      }
+    },
+    "ZHD-gx-gwW.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Sort by Size\"; ObjectID = \"ZHD-gx-gwW\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausrichten nach Größe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by Size"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por tamaño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangement - Taille"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organizza per dimensioni"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據大小排列"
           }
         }
       }

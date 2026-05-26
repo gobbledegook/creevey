@@ -946,6 +946,10 @@ enum {
 	SORT_NAME = 201,
 	SORT_DATE_MODIFIED = 202,
 	SORT_EXIF_DATE = 203,
+	SORT_ADDED_DATE,
+	SORT_TYPE,
+	SORT_SIZE,
+	SORT_FILEPATH,
 	SHOW_FILE_NAMES = 251,
 	AUTO_ROTATE = 261,
 	SLIDESHOW_MENU = 1001,
@@ -969,6 +973,8 @@ enum {
 		}
 		test_t = JPEG_OP;
 	}
+	if (t > SORT_NAME && t <= SORT_FILEPATH)
+		test_t = SORT_NAME;
 	if (!creeveyWindows.count) frontWindow = nil;
 	NSUInteger numSelected = frontWindow ? frontWindow.selectedIndexes.count : 0;
 	BOOL writable, isjpeg;
@@ -1020,8 +1026,6 @@ enum {
 			return YES;
 		case GET_INFO:
 		case SORT_NAME:
-		case SORT_DATE_MODIFIED:
-		case SORT_EXIF_DATE:
 		case SHOW_FILE_NAMES:
 			return !slidesWindow.isMainWindow;
 		default:
@@ -1033,7 +1037,7 @@ enum {
 	short int sortType = abs(sortNum);
 	NSInteger tag = 200 + sortType;
 	NSMenu *m = [NSApp.mainMenu itemWithTag:VIEW_MENU].submenu;
-	for (NSInteger i = 201; i <= SORT_EXIF_DATE; ++i) {
+	for (NSInteger i = 201; i <= SORT_FILEPATH; ++i) {
 		NSMenuItem *item = [m itemWithTag:i];
 		if (i == tag) {
 			item.state = sortNum > 0 ? NSControlStateValueOn : NSControlStateValueMixed;
@@ -1044,14 +1048,13 @@ enum {
 }
 
 - (IBAction)sortThumbnails:(id)sender {
-	short int newSort, oldSort;
-	oldSort = frontWindow.sortOrder;
-	newSort = [sender tag] - 200;
+	NSInteger tag = [sender tag];
+	short int oldSort = frontWindow.sortOrder, newSort = tag - 200;
 	
 	if (newSort == abs(oldSort)) {
 		newSort = -oldSort; // reverse the sort if user selects it again
 	} else {
-		if (newSort == 2) newSort = -2; // default to reverse sort if sorting by date
+		if (tag >= SORT_DATE_MODIFIED && tag <= SORT_ADDED_DATE) newSort = -newSort; // default to reverse sort if sorting by date
 	}
 	[self updateMenuItemsForSorting:newSort];
 	[frontWindow changeSortOrder:newSort];

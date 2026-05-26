@@ -452,13 +452,13 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 - (void)watcherFiles:(NSArray *)files deleted:(NSArray *)deleted {
 	if (currentIndex == NSNotFound) return;
 	BOOL needUpdate = NO;
-	BOOL sortByModTime = _sortType == 2;
+	BOOL sortByModTime = _sortType == 2, sortBySize = _sortType == 6;
 	for (NSString *s in files) {
-		if (!sortByModTime && [self.currentFile isEqualToString:s]) {
+		if (!sortByModTime && !sortBySize && [self.currentFile isEqualToString:s]) {
 			[self redisplayImage];
 			continue;
 		}
-		if (sortByModTime) {
+		if (sortByModTime || sortBySize) {
 			// modification time has changed, so it needs to be re-sorted
 			NSUInteger idx = [filenames indexOfObject:s];
 			if (idx != NSNotFound)
