@@ -619,13 +619,25 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 	if (!error)
 		return 1;
 	NSAlert *alert = [[NSAlert alloc] init];
-	alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file %@ could not be moved to the trash because an error of %i occurred.", @""), fullpath.lastPathComponent, (int)error.code];
+	alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file %@ could not be moved to the trash because an error occurred: %@\n\nDo you want to delete the file immediately? This operation cannot be undone!", @""), fullpath.lastPathComponent, error.localizedDescription];
+	alert.icon = [thumbsCache imageForKey:ResolveAliasToPath(fullpath)];
 	[alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"")];
+	NSButton *deleteButton = [alert addButtonWithTitle:NSLocalizedString(@"Delete", @"Delete Immediately Button")];
+	deleteButton.hasDestructiveAction = YES;
 	if (numFiles > 1)
-		[alert addButtonWithTitle:NSLocalizedString(@"Continue", @"")];
+		[alert addButtonWithTitle:NSLocalizedString(@"Skip", @"after move to trash failed")];
 	NSModalResponse response = [alert runModal];
 	if (response == NSAlertFirstButtonReturn)
 		return 2;
+	if (response == NSAlertSecondButtonReturn) {
+		if ([NSFileManager.defaultManager removeItemAtURL:url error:&error]) {
+			*newURL = nil;
+			return 1;
+		}
+		alert = [[NSAlert alloc] init];
+		alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The file %@ could not be deleted because an error occurred: %@", @""), fullpath.lastPathComponent, error.localizedDescription];
+		[alert runModal];
+	}
 	return 0;
 }
 
@@ -640,26 +652,29 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 			if (!IsAliasFilePath(s))
 				[thumbsCache removeImageForKey:s];
 			[slidesWindow removeImageForFile:s];
-			NSUInteger idx = slidesWindow.currentIndex;
-			NSUndoManager *um = slidesWindow.undoManager;
-			[um registerUndoWithTarget:self handler:^(id target) {
-				NSError * __autoreleasing err;
-				if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:&err]) {
-					if (slidesWindow.isMainWindow)
-						[slidesWindow insertFile:s atIndex:idx];
-					[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:@[s]];
-					if (!doTrash) {
-						[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:u.path];
+			// u will be nil if the user deleted the file successfully after a failed move-to-trash attempt
+			if (u) {
+				NSUInteger idx = slidesWindow.currentIndex;
+				NSUndoManager *um = slidesWindow.undoManager;
+				[um registerUndoWithTarget:self handler:^(id target) {
+					NSError * __autoreleasing err;
+					if ([NSFileManager.defaultManager moveItemAtPath:u.path toPath:s error:&err]) {
 						if (slidesWindow.isMainWindow)
-							[slidesWindow removeImageForFile:u.path];
+							[slidesWindow insertFile:s atIndex:idx];
+						[creeveyWindows makeObjectsPerformSelector:@selector(filesWereUndeleted:) withObject:@[s]];
+						if (!doTrash) {
+							[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:u.path];
+							if (slidesWindow.isMainWindow)
+								[slidesWindow removeImageForFile:u.path];
+						}
+					} else {
+						NSAlert *alert = [[NSAlert alloc] init];
+						alert.informativeText = [NSString stringWithFormat:doTrash ? NSLocalizedString(@"The file \"%@\" could not be restored from the trash because of an error: %@", @"") : NSLocalizedString(@"The file “%@” could not be moved because of an error: %@", @""), s.lastPathComponent, err.localizedDescription];
+						[alert runModal];
 					}
-				} else {
-					NSAlert *alert = [[NSAlert alloc] init];
-					alert.informativeText = [NSString stringWithFormat:doTrash ? NSLocalizedString(@"The file \"%@\" could not be restored from the trash because of an error: %@", @"") : NSLocalizedString(@"The file “%@” could not be moved because of an error: %@", @""), s.lastPathComponent, err.localizedDescription];
-					[alert runModal];
-				}
-			}];
-			[um setActionName:[NSString stringWithFormat:doTrash ? NSLocalizedString(@"Move to Trash",@"") : NSLocalizedString(@"Move File",@"for undo")]];
+				}];
+				[um setActionName:[NSString stringWithFormat:doTrash ? NSLocalizedString(@"Move to Trash",@"") : NSLocalizedString(@"Move File",@"for undo")]];
+			}
 		}
 	} else {
 		NSUInteger oldIndex = frontWindow.selectedIndexes.firstIndex;
@@ -676,7 +691,7 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 				[creeveyWindows makeObjectsPerformSelector:@selector(fileWasDeleted:) withObject:fullpath];
 				if (slidesWindow.visible)
 					[slidesWindow removeImageForFile:fullpath];
-				if (doTrash)
+				if (doTrash && newURL)
 					[trashedFiles addObject:@[fullpath, newURL]]; // this is a pair representing the old and new file locations
 			} else if (result == 2)
 				break;

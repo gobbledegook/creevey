@@ -1113,6 +1113,41 @@
         }
       }
     },
+    "Delete" : {
+      "comment" : "Delete Immediately Button",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即刪除"
+          }
+        }
+      }
+    },
     "End of slideshow (last file was deleted)" : {
       "localizations" : {
         "de" : {
@@ -2091,6 +2126,41 @@
         }
       }
     },
+    "Skip" : {
+      "comment" : "after move to trash failed",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überspringen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "略過"
+          }
+        }
+      }
+    },
     "Sorting %lu filenames…" : {
       "localizations" : {
         "de" : {
@@ -2239,36 +2309,82 @@
         }
       }
     },
-    "The file %@ could not be moved to the trash because an error of %i occurred." : {
+    "The file %@ could not be deleted because an error occurred: %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Datei %@ kann nicht in den Papierkorb verschoben werden! Fehler: %i."
+            "value" : "Die Datei %1$@ kann nicht gelöscht werden! Fehler: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The file %1$@ could not be deleted because an error occurred: %2$@"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El archivo %@ no pudo trasladarse a la Papelera debido al error %i."
+            "value" : "El archivo %1$@ no se pudo eliminar debido a un error: %2$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le fichier %@ n'a pas pu être déplacé dans la corbeille à cause d'une erreur %i "
+            "value" : "Le fichier %1$@ n'a pas pu être supprimé à cause d'une erreur: %2$@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non è stato possibile spostare nel cestino il file %@ a causa di un errore di tipo %i."
+            "value" : "Non è stato possibile eliminare il file %1$@ a causa di un errore: %2$@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "檔案 %@ 不能移到垃圾桶，因為發生了 %i 錯誤。"
+            "value" : "檔案 %1$@ 不能刪除，因為發生了錯誤：%2$@"
+          }
+        }
+      }
+    },
+    "The file %@ could not be moved to the trash because an error occurred: %@\n\nDo you want to delete the file immediately? This operation cannot be undone!" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei %1$@ kann nicht in den Papierkorb verschoben werden! Fehler: %2$@.\n\nMöchten Sie die Datei sofort löschen? Dieser Vorgang kann nicht rückgängig gemacht werden!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The file %1$@ could not be moved to the trash because an error occurred: %2$@\n\nDo you want to delete the file immediately? This operation cannot be undone!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo %1$@ no se pudo trasladar a la Papelera debido a un error: %2$@.\n\n¿Desea eliminar el archivo de inmediato? ¡Esta operación no se puede deshacer!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier %1$@ n'a pas pu être déplacé dans la corbeille à cause d'une erreur: %2$@\n\nVoulez-vous supprimer le fichier immédiatement ? Cette opération est irréversible !"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile spostare nel cestino il file %1$@ a causa di un errore: %2$@\n\nVuoi eliminare il file immediatamente? Questa operazione non può essere annullata!"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案 %1$@ 不能移到垃圾桶，因為發生了錯誤：%2$@\n\n你想立即刪除檔案嗎？此動作不能還原!"
           }
         }
       }
