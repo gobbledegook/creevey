@@ -373,7 +373,7 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 	}
 	(void)didFallbackToFrontWindow; // keep for possible future diagnostics; avoid unused var warnings if it changes
 	if (path.length)
-		[NSWorkspace.sharedWorkspace openFile:path];
+		[NSWorkspace.sharedWorkspace openURL:[NSURL fileURLWithPath:path isDirectory:YES]];
 	self.dirBrowserContextPath = nil;
 }
 
