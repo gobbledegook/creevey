@@ -827,6 +827,8 @@ static void ShowDirectoryContentsIfPossible(NSURL *u) {
 			// fail silently and open a new window if necessary
 			suppressNewWindow = NO;
 		}
+	} else if (![u boolForKey:@"openFilesOpensBrowserWindowIfNone"] && _filesWereOpenedAtLaunch) {
+		suppressNewWindow = YES;
 	}
 
 	// between version 1.5.3 and 1.5.8, new users would get the splitview collapsed by default,
