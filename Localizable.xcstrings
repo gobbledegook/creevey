@@ -1948,6 +1948,41 @@
         }
       }
     },
+    "Open “%@” in Finder" : {
+      "comment" : "open folder from directory browser context menu",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ im Finder öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir “%@” en el Finder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir «%@» dans le Finder"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri “%@” nel Finder"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Finder 打開 %@"
+          }
+        }
+      }
+    },
     "Other Properties:\n" : {
       "localizations" : {
         "de" : {

@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol DYCreeveyBrowserDelegate <NSBrowserDelegate>
 - (void)browser:(NSBrowser *)sender typedString:(NSString *)s inColumn:(NSInteger)column;
 - (void)browserWillSendAction:(NSBrowser *)sender;
+- (void)browser:(NSBrowser *)sender openFolderAtPath:(NSString *)browserPath;
 @end
 
 // allows typing to select items (assumes lists are sorted)

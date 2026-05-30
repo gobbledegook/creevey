@@ -334,5 +334,9 @@ static NSString *defaultPath(void) {
 
 	self.currPath = newPath;
 	self.currFileRef = [NSURL fileURLWithPath:currPath isDirectory:YES].fileReferenceURL;
+
+- (void)browser:(NSBrowser *)sender openFolderAtPath:(NSString *)browserPath {
+	NSString *path = [self browserpath2syspath:browserPath];
+	[NSWorkspace.sharedWorkspace openURL:[NSURL fileURLWithPath:path isDirectory:YES]];
 }
 @end

@@ -9,6 +9,10 @@
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
 
+@interface DYCreeveyBrowser ()
+@property (nonatomic, strong) NSMenu *contextMenu;
+@end
+
 @interface DYBrowserCell : NSBrowserCell {
 	NSString *title;
 }
@@ -34,11 +38,15 @@
 
 @end
 
-@interface DYCreeveyBrowserMatrix : NSMatrix <NSMenuItemValidation>
+@interface DYCreeveyBrowserMatrix : NSMatrix <NSMenuItemValidation,NSMenuDelegate> {
+	NSCell *_contextMenuCell;
+	BOOL _contextMenuCellOldHighlighted;
+}
 @end
 @implementation DYCreeveyBrowserMatrix
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
 	if (menuItem.action == @selector(selectAll:)) return YES;
+	if ([menuItem.target isKindOfClass:[DYCreeveyBrowser class]]) return YES;
 	return [super validateMenuItem:menuItem];
 }
 - (void)selectAll:(id)sender {
@@ -56,6 +64,33 @@
 	else
 		[super keyDown:e];
 }
+
+- (DYCreeveyBrowser *)enclosingBrowser {
+	NSView *v = self;
+	do v = v.superview; while (![v isKindOfClass:[DYCreeveyBrowser class]]);
+	return (DYCreeveyBrowser *)v;
+}
+
+- (NSMenu *)menuForEvent:(NSEvent *)e {
+	NSInteger row, col;
+	if (![self getRow:&row column:&col forPoint:[self convertPoint:e.locationInWindow fromView:nil]]) return nil;
+	NSMenu *menu = self.enclosingBrowser.contextMenu;
+	menu.delegate = self;
+	_contextMenuCell = [self cellAtRow:row column:0];
+	_contextMenuCellOldHighlighted = _contextMenuCell.highlighted;
+	_contextMenuCell.highlighted = YES;
+	NSMenuItem *item = [menu itemAtIndex:0];
+	item.title = [NSString stringWithFormat:NSLocalizedString(@"Open “%@” in Finder", @"open folder from directory browser context menu"), _contextMenuCell.title];
+	item.representedObject = self;
+	item.tag = row;
+	return menu;
+}
+
+- (void)menuDidClose:(NSMenu *)menu {
+	_contextMenuCell.highlighted = _contextMenuCellOldHighlighted;
+	_contextMenuCell = nil;
+}
+
 @end
 
 // for drag-n-drop visual feedback
@@ -76,11 +111,19 @@
 }
 @dynamic delegate; // use super.delegate
 
-- (instancetype)initWithFrame:(NSRect)frameRect {
-	if (self = [super initWithFrame:frameRect]) {
+- (void)openFolderFromContextMenu:(NSMenuItem *)item {
+	NSMatrix *m = item.representedObject;
+	NSCell *cell = [m cellAtRow:item.tag column:0];
+	NSString *filename = cell.stringValue;
 // I don't think there's an easy way to catch events/messages to first responder without using a custom matrix class
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+	NSInteger n = [self columnOfMatrix:m];
+	[self.delegate browser:self openFolderAtPath:[[self pathToColumn:n] stringByAppendingPathComponent:filename]];
+}
+
+- (instancetype)initWithFrame:(NSRect)frameRect {
+	if (self = [super initWithFrame:frameRect]) {
 		[self setMatrixClass:[DYCreeveyBrowserMatrix class]];
 #pragma GCC diagnostic pop
 		self.titled = NO;
@@ -129,6 +172,17 @@
 - (BOOL)sendAction {
 	[self.delegate browserWillSendAction:self];
 	return [super sendAction];
+}
+
+- (NSMenu *)contextMenu {
+	if (!_contextMenu) {
+		_contextMenu = [[NSMenu alloc] init];
+		NSMenuItem *item = [[NSMenuItem alloc] init];
+		item.target = self;
+		item.action = @selector(openFolderFromContextMenu:);
+		[_contextMenu addItem:item];
+	}
+	return _contextMenu;
 }
 
 #pragma mark dragging stuff
