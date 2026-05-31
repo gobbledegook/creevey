@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // returns path if it's not an alias, or if not resolvable
 NSString *ResolveAliasToPath(NSString *path);
-NSURL * _Nullable ResolveAliasURL(NSURL *url);
+NSURL *ResolveAliasURL(NSURL *url);
 BOOL IsAliasFilePath(NSString *path);
 
 // for extensions

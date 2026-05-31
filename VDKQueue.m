@@ -42,7 +42,7 @@
 	static uintptr_t gUniqueID = 0;
 	if (self = [super init]) {
 		_path = [inPath copy];
-		_watchedFD = open(_path.fileSystemRepresentation, O_EVTONLY, 0);
+		_watchedFD = open(_path.fileSystemRepresentation, O_EVTONLY|O_SYMLINK, 0);
 		if (_watchedFD < 0) {
 			self = nil;
 			return nil;

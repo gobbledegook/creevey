@@ -260,7 +260,7 @@ typedef struct {
 - (void)window:(NSWindow *)window willEncodeRestorableState:(NSCoder *)state
 {
 	BOOL collapsed = statusFld.superview.hidden;
-	NSDictionary *data = @{@"path":self.path, @"split1":@(collapsed ? 0.0 : statusFld.superview.frame.size.height)};
+	NSDictionary *data = @{@"path":dirBrowserDelegate.unresolvedPath, @"split1":@(collapsed ? 0.0 : statusFld.superview.frame.size.height)};
 	[state encodeObject:data forKey:@"creeveyWindowState"];
 }
 
@@ -315,7 +315,8 @@ typedef struct {
 - (BOOL)setPath:(NSString *)s {
 	NSFileManager *fm = NSFileManager.defaultManager;
 	BOOL isDir;
-	if (![fm fileExistsAtPath:s isDirectory:&isDir])
+	NSString *resolvedPath = ResolveAliasToPath(s);
+	if (![fm fileExistsAtPath:resolvedPath isDirectory:&isDir])
 		return NO;
 	if (!isDir)
 		s = s.stringByDeletingLastPathComponent;
@@ -344,7 +345,7 @@ typedef struct {
 }
 
 - (BOOL)pathIsVisibleThreaded:(NSString *)filename {
-	NSString *browserPath = dirBrowserDelegate.currPath;
+	NSString *browserPath = dirBrowserDelegate.currentResolvedPath;
 	if (self.wantsSubfolders) return [filename hasPrefix:[browserPath stringByAppendingString:@"/"]];
 	return [filename.stringByDeletingLastPathComponent isEqualToString:browserPath];
 }
@@ -352,7 +353,7 @@ typedef struct {
 - (void)updateDefaults {
 	NSUserDefaults *u = NSUserDefaults.standardUserDefaults;
 	if ([u integerForKey:@"startupOption"] == 0)
-		[u setObject:[dirBrowserDelegate path] forKey:@"lastFolderPath"];
+		[u setObject:dirBrowserDelegate.unresolvedPath forKey:@"lastFolderPath"];
 	[u setFloat:imgMatrix.cellWidth forKey:@"thumbCellWidth"];
 	float height = statusFld.superview.hidden ? 0 : statusFld.superview.frame.size.height;
 	[u setFloat:height forKey:@"MainWindowSplitViewTopHeight"];
@@ -794,7 +795,7 @@ NSComparator ComparatorForSortOrder(short sortOrder) {
 			[filesBeingOpened removeAllObjects];
 			if (myThreadTime == lastThreadTime && selectedIndexes.count)
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if ([thePath isEqualToString:dirBrowserDelegate.currPath])
+					if ([thePath isEqualToString:dirBrowserDelegate.currentResolvedPath])
 						[imgMatrix scrollToFirstSelected:selectedIndexes];
 				});
 		}

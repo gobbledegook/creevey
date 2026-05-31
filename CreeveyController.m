@@ -1426,14 +1426,13 @@ static void SendAction(NSMenuItem *sender) {
 NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders) {
 	return [NSFileManager.defaultManager
 			enumeratorAtURL:[NSURL fileURLWithPath:path isDirectory:YES]
-			includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsAliasFileKey,NSURLIsHiddenKey]
+			includingPropertiesForKeys:@[NSURLIsDirectoryKey,NSURLIsHiddenKey]
 			options:recurseSubfolders ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants
 			errorHandler:nil];
 }
 
 #define IS_URL_DIRECTORY ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue)
 #define IS_URL_HIDDEN    ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue)
-#define IS_URL_ALIAS     ([url getResourceValue:&val forKey:NSURLIsAliasFileKey error:NULL] && val.boolValue)
 
 - (BOOL)handledDirectory:(NSURL *)url subfolders:(BOOL)recurse e:(NSDirectoryEnumerator *)e {
 	NSNumber * __autoreleasing val;
@@ -1448,10 +1447,7 @@ NSDirectoryEnumerator *CreeveyEnumerator(NSString *path, BOOL recurseSubfolders)
 - (BOOL)shouldShowFile:(NSURL *)url {
 	NSNumber * __autoreleasing val;
 	if (IS_URL_HIDDEN) return NO;
-	if (IS_URL_ALIAS) {
-		NSURL *resolved = ResolveAliasURL(url);
-		if (resolved) url = resolved;
-	}
+	url = ResolveAliasURL(url);
 	NSString *path = url.path;
 	NSString *pathExtension = url.pathExtension.lowercaseString;
 	if (pathExtension.length == 0) return [fileostypes containsObject:NSHFSTypeOfFile(path)];

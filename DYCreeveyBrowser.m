@@ -15,6 +15,7 @@
 
 @interface DYBrowserCell : NSBrowserCell {
 	NSString *title;
+	NSInteger _tag;
 }
 // maintains a title for display (sep. from stringValue), and draws it
 @end
@@ -32,8 +33,17 @@
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
 	NSString *myStringValue = self.stringValue;
 	self.stringValue = title ?: @"";
+	if (_tag > 0) {
+		NSMutableAttributedString *as = [self.attributedStringValue mutableCopy];
+		[as applyFontTraits:NSItalicFontMask range:NSMakeRange(0, as.length)];
+		self.attributedStringValue = as;
+	}
 	[super drawInteriorWithFrame:cellFrame inView:controlView];
 	self.stringValue = myStringValue;
+}
+
+- (void)setTag:(NSInteger)tag {
+	_tag = tag;
 }
 
 @end
@@ -105,8 +115,6 @@
 
 @implementation DYCreeveyBrowser
 {
-	NSMutableString *typedString;
-	NSTimeInterval lastKeyTime;
 	DYTransparentGreyView *greyview; // for drag-and-drop
 }
 @dynamic delegate; // use super.delegate
@@ -134,39 +142,9 @@
 		self.columnResizingType = NSBrowserUserColumnResizing;
 		self.prefersAllColumnUserResizing = NO;
 		
-		typedString = [[NSMutableString alloc] init];
 		[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
-		greyview = [[DYTransparentGreyView alloc] initWithFrame:NSZeroRect];
 	}
 	return self;
-}
-
-#define KEYPRESS_INTERVAL 0.5
-
-- (void)keyDown:(NSEvent *)e {
-	unichar c = 0;
-	if (e.characters.length == 1)
-		c = [e.characters characterAtIndex:0];
-	if ((c >= 0xF700 && c <= 0xF8FF) || [[NSCharacterSet controlCharacterSet] characterIsMember:c] || [[NSCharacterSet newlineCharacterSet] characterIsMember:c]) {
-		// NSPageUpFunctionKey, NSPageDownFunctionKey, arrow keys, etc.
-		[typedString setString:@""];
-		[super keyDown:e];
-		return;
-	}
-	[self interpretKeyEvents:@[e]];
-	return;
-}
-
-- (void)insertText:(id)insertString {
-	NSString *s = insertString;
-	NSTimeInterval t = NSDate.timeIntervalSinceReferenceDate;
-	if (t - lastKeyTime < KEYPRESS_INTERVAL)
-		[typedString appendString:s];
-	else
-		[typedString setString:s];
-	lastKeyTime = t;
-	
-	[self.delegate browser:self typedString:typedString inColumn:self.selectedColumn];
 }
 
 - (BOOL)sendAction {
@@ -189,6 +167,7 @@
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
     if ([sender.draggingPasteboard.types containsObject:NSPasteboardTypeFileURL]) {
         if (sender.draggingSourceOperationMask & NSDragOperationGeneric) {
+			if (!greyview) greyview = [[DYTransparentGreyView alloc] initWithFrame:NSZeroRect];
 			greyview.frame = self.bounds;
 			[self addSubview:greyview];
             return NSDragOperationGeneric;

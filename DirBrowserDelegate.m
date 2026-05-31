@@ -7,9 +7,24 @@
 
 #import "DirBrowserDelegate.h"
 #import "DYCreeveyBrowser.h"
+#import "DYCarbonGoodies.h"
 #import "VDKQueue.h"
 
 static NSString * const _Volumes = @"/Volumes";
+
+static NSString *ResolveAliasesInPath(NSString *path) {
+	NSString *result;
+	for (NSString *s in path.pathComponents) {
+		if (!result) {
+			result = s;
+			continue;
+		}
+		result = [result stringByAppendingPathComponent:s];
+		if (IsAliasFilePath(result))
+			result = ResolveAliasToPath(result);
+	}
+	return result;
+}
 
 static NSString *defaultPath(void) {
 	NSFileManager *fm = NSFileManager.defaultManager;
@@ -130,18 +145,36 @@ static NSString *defaultPath(void) {
 	}
 }
 
+static NSString *FirstPathComponent(NSString *s) {
+	if (s.length <= 1) return s;
+	NSRange r = [s rangeOfString:@"/" options:0 range:NSMakeRange(1, s.length-1)];
+	if (r.location < s.length)
+		return [s substringWithRange:NSMakeRange(1, r.location-1)];
+	return [s substringFromIndex:1]; // chop off the '/' at the start
+}
+
 // use to convert result from path or pathToColumn
--(NSString*)browserpath2syspath:(NSString *)s {
+-(NSString*)browserpath_to_unresolvedsyspath:(NSString *)s {
 	if (_volumePaths.count == 0)
 		[self loadVolumes]; // init volume info
-	NSString *bName = [[_b pathToColumn:1] substringFromIndex:1]; // chop off the '/' at the start
-	NSString *path = _volumePaths[bName] ?: [NSString stringWithFormat:@"%@/%@", _Volumes, bName];
+	NSString *bName = FirstPathComponent(s);
+	NSString *path = _volumePaths[bName] ?: [_Volumes stringByAppendingPathComponent:bName];
 	NSString *remainder = [s substringFromIndex:1 + bName.length];
 	if ([path isEqualToString:@"/"]) {
 		if (remainder.length == 0) return @"/";
 		return remainder;
 	}
 	return [path stringByAppendingString:remainder];
+}
+
+-(NSString*)browserpath2syspath:(NSString *)s {
+	return ResolveAliasesInPath([self browserpath_to_unresolvedsyspath:s]);
+}
+
+- (NSString *)unresolvedPath {
+	NSString *s = _b.path;
+	if (!_b.loaded) return s;
+	return [self browserpath_to_unresolvedsyspath:s];
 }
 
 -(NSString*)path {
@@ -176,7 +209,7 @@ static NSString *defaultPath(void) {
 	} else {
 		s = [aPath stringByReplacingCharactersInRange:NSMakeRange(0, volPath.length) withString:bRoot];
 	}
-	// save currPath here so browser can look ahead for invisible directories when loading
+	// save current path components here so browser can look ahead for invisible directories when loading
 	currBrowserPathComponents = s.pathComponents;
 	if (!browserInited) {
 		[_b selectRow:0 inColumn:0];
@@ -245,17 +278,18 @@ static NSString *defaultPath(void) {
 		for (NSURL *url in directoryContents) {
 			NSString *filename = url.lastPathComponent;
 			if (n==1 && [url.path isEqualToString:_Volumes]) continue; // always skip /Volumes
+			NSURL *resolvedUrl = ResolveAliasURL(url);
 			NSNumber *val;
 			if ([filename characterAtIndex:0] == '.' || ([url getResourceValue:&val forKey:NSURLIsHiddenKey error:NULL] && val.boolValue)) {
 				if (nextColumn && [filename isEqualToString:nextColumn])
-					[revealedDirectories addObject:url];
+					[revealedDirectories addObject:resolvedUrl];
 				// skip invisible directories unless we've specifically navigated to one
-				else if (![revealedDirectories containsObject:url]) continue;
+				else if (![revealedDirectories containsObject:resolvedUrl]) continue;
 			}
-			if ([url getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue) {
+			if ([resolvedUrl getResourceValue:&val forKey:NSURLIsDirectoryKey error:NULL] && val.boolValue) {
 				NSString __autoreleasing *displayName;
 				if (![url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:NULL]) displayName = filename;
-				if ([url getResourceValue:&val forKey:NSURLIsReadableKey error:NULL] && val && !val.boolValue)
+				if ([resolvedUrl getResourceValue:&val forKey:NSURLIsReadableKey error:NULL] && val && !val.boolValue)
 					displayName = [@"⛔️" stringByAppendingString:displayName];
 				[sortArray addObject:@[displayName, filename]];
 			}
@@ -279,28 +313,28 @@ static NSString *defaultPath(void) {
 - (void)browser:(NSBrowser *)b willDisplayCell:(id)cell atRow:(NSInteger)row column:(NSInteger)column {
 	[cell setStringValue:colsInternal[column][row]];
 	[cell setTitle:cols[column][row]];
+	if (column > 0) {
+		NSString *resolvedDir = [self browserpath2syspath:[b pathToColumn:column]], *filename = colsInternal[column][row];
+		if (IsAliasFilePath([resolvedDir stringByAppendingPathComponent:filename]))
+			[cell setTag:1]; // show aliases/symlinks in italics
+	}
+}
+
+static BOOL IsVolume(NSString *path) {
+	NSURL *url = [NSURL fileURLWithPath:path];
+	NSNumber __autoreleasing *val;
+	if ([url getResourceValue:&val forKey:NSURLIsVolumeKey error:NULL])
+		return val.boolValue;
+	return NO;
 }
 
 #pragma mark DYCreeveyBrowserDelegate methods
-- (void)browser:(NSBrowser *)b typedString:(NSString *)s inColumn:(NSInteger)column {
-	NSMutableArray *a = cols[column]; // use cols, not colsInternal here, since we sort by display names
-	NSUInteger i, n = a.count;
-	NSUInteger inputLength = s.length;
-	for (i=0; i<n; ++i) {
-		NSString *label = a[i];
-		NSString *labelSubstring = [label substringToIndex:MIN(label.length, inputLength)];
-		if ([labelSubstring localizedStandardCompare:s] >= 0)
-			break;
-	}
-	if (i==n) --i;
-	[b selectRow:i inColumn:column];
-	[b sendAction];
-}
-
 // when the path changes, we need to update the paths that kqueue is watching. This will be called
 // from DYBrowser's sendAction: method, or (if you change the path without calling sendAction:) you can call this directly
+// We watch for any part of our selected path in case it gets renamed or deleted. We currently do not watch for changes (or additions) to other files in those directories.
 - (void)browserWillSendAction:(NSBrowser *)b {
-	NSString *newPath = [self path];
+	NSString *bPath = b.path;
+	NSString *newPath = [self browserpath_to_unresolvedsyspath:bPath];
 	if ([currPath isEqualToString:newPath]) return;
 	
 	// currPath will be nil if the window is first being instantiated. In this case we skip the removal process, and initialize s to /
@@ -319,21 +353,23 @@ static NSString *defaultPath(void) {
 	// s is now the shared prefix
 	// we will register with kqueue all the new path components
 	// but skip anything directly inside /Volumes. We will use NSWorkspace notifications to watch for mounted/renamed volumes instead.
-	if ([s isEqualToString:@"/"] && [newPath hasPrefix:@"/Volumes/"]) {
-		NSRange r = [newPath rangeOfString:@"/" options:0 range:NSMakeRange(9,newPath.length-9)]; // 9 is length of @"/Volumes/"
-		if (r.location != NSNotFound)
-			s = [newPath substringToIndex:r.location];
-		else
-			s = newPath;
-	}
 	NSString *newPathTmp = newPath;
 	while (!([newPathTmp isEqualToString:s])) {
-		[kq addPath:newPathTmp notifyingAbout:NOTE_RENAME|NOTE_DELETE];
-		newPathTmp = newPathTmp.stringByDeletingLastPathComponent;
+		if (IsVolume(newPathTmp))
+			break;
+		NSString *up = newPathTmp.stringByDeletingLastPathComponent, *resolvedDir = ResolveAliasesInPath(up);
+		if ([up isEqualToString:resolvedDir])
+			[kq addPath:newPathTmp notifyingAbout:NOTE_RENAME|NOTE_DELETE];
+		// if the path contains aliases, don't watch with kqueue because the notifications won't be for the correct path.
+		// In order to do that correctly we'd need to, e.g., modify our kqueue abstraction to store a second path to return
+		newPathTmp = up;
 	}
 
 	self.currPath = newPath;
-	self.currFileRef = [NSURL fileURLWithPath:currPath isDirectory:YES].fileReferenceURL;
+	_currentResolvedPath = ResolveAliasesInPath(newPath);
+	NSString *filePath = IsVolume(currPath) ? currPath : [ResolveAliasesInPath(currPath.stringByDeletingLastPathComponent) stringByAppendingPathComponent:currPath.lastPathComponent];
+	self.currFileRef = [NSURL fileURLWithPath:filePath].fileReferenceURL;
+}
 
 - (void)browser:(NSBrowser *)sender openFolderAtPath:(NSString *)browserPath {
 	NSString *path = [self browserpath2syspath:browserPath];

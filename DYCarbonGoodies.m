@@ -9,47 +9,59 @@
 
 #import "DYCarbonGoodies.h"
 
-NSString *ResolveAliasToPath(NSString *path) {
-	NSURL *resolved;
-	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
-	if (url == NULL) return path;
+static __inline__ BOOL IsAliasURL(NSURL *url) {
 	// unlike FSResolveAliasFile, CFURLCreateBookMarkDataFromFile and its NSURL counterpart do not check
 	// the kIsAlias flag. Apparently not all aliases/bookmarks have this bit set. But for our
 	// purposes we can check it and skip the extra steps if the flag is set.
 	Boolean isAlias = NO;
 	CFBooleanRef b;
-	if (CFURLCopyResourcePropertyForKey(url, kCFURLIsAliasFileKey, &b, NULL)) {
+	if (CFURLCopyResourcePropertyForKey((__bridge CFURLRef)url, kCFURLIsAliasFileKey, &b, NULL)) {
 		isAlias = CFBooleanGetValue(b);
 		CFRelease(b);
 	}
-	if (isAlias)
-		resolved = ResolveAliasURL((__bridge NSURL *)url);
-	CFRelease(url);
-	return resolved ? resolved.path : path;
+	return isAlias;
 }
 
-NSURL * _Nullable ResolveAliasURL(NSURL *url) {
+NSString *ResolveAliasToPath(NSString *path) {
+	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (__bridge CFStringRef)path, kCFURLPOSIXPathStyle, NO /*isDirectory*/);
+	if (url == NULL) return path;
+	NSURL *resolved = ResolveAliasURL((__bridge NSURL *)url);
+	CFRelease(url);
+	return resolved.path;
+}
+
+NSURL *ResolveAliasURL(NSURL *url) {
 	NSURL *result;
-	CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, (__bridge CFURLRef)url, NULL);
-	if (dataRef) {
-		CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
-		if (resolvedUrl) {
-			result = (NSURL *)CFBridgingRelease(resolvedUrl);
+	if (IsAliasURL(url)) {
+		// per the header file, kCFURLIsAliasFileKey is true for symlinks as well
+		Boolean isSymlink = 0;
+		CFBooleanRef b;
+		if (CFURLCopyResourcePropertyForKey((__bridge CFURLRef)url, kCFURLIsSymbolicLinkKey, &b, NULL)) {
+			if ((isSymlink = CFBooleanGetValue(b))) {
+				NSURL *newUrl = url.URLByResolvingSymlinksInPath;
+				if ([NSFileManager.defaultManager fileExistsAtPath:newUrl.path])
+					result = newUrl;
+			}
+			CFRelease(b);
 		}
-		CFRelease(dataRef);
+		if (!isSymlink) {
+			// this is the relatively slow operation
+			CFDataRef dataRef = CFURLCreateBookmarkDataFromFile(NULL, (__bridge CFURLRef)url, NULL);
+			if (dataRef) {
+				CFURLRef resolvedUrl = CFURLCreateByResolvingBookmarkData(NULL, dataRef, kCFBookmarkResolutionWithoutMountingMask|kCFBookmarkResolutionWithoutUIMask, NULL, NULL, NULL, NULL);
+				if (resolvedUrl)
+					result = (NSURL *)CFBridgingRelease(resolvedUrl);
+				CFRelease(dataRef);
+			}
+		}
 	}
-	return result;
+	return result ?: url;
 }
 
 BOOL IsAliasFilePath(NSString *path) {
-	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (CFStringRef)path, kCFURLPOSIXPathStyle, NO);
+	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, (__bridge CFStringRef)path, kCFURLPOSIXPathStyle, NO);
 	if (url == NULL) return NO;
-	Boolean isAlias = NO;
-	CFBooleanRef b;
-	if (CFURLCopyResourcePropertyForKey(url, kCFURLIsAliasFileKey, &b, NULL)) {
-		isAlias = CFBooleanGetValue(b);
-		CFRelease(b);
-	}
+	Boolean isAlias = IsAliasURL((__bridge NSURL *)url);
 	CFRelease(url);
 	return isAlias;
 }
