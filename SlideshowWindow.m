@@ -85,7 +85,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	NSTextView *helpFld;
 	NSImageView *loopImageView;
 	
-	BOOL loopMode, randomMode;
+	BOOL loopMode, randomMode, _showPath;
 	unsigned char keyIsRepeating;
 	
 	BOOL mouseDragged;
@@ -101,7 +101,8 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 + (void)initialize {
 	if (self != [SlideshowWindow class]) return;
-	[NSUserDefaults.standardUserDefaults registerDefaults:@{@"DYSlideshowWindowVisibleFields": @0}];
+	[NSUserDefaults.standardUserDefaults registerDefaults:@{@"DYSlideshowWindowVisibleFields": @0,
+															@"DYSlideshowWindowVisiblePath": @NO}];
 }
 
 #define MAX_CACHED 15
@@ -306,18 +307,20 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		contentView.notchHeight = notchHeight;
 		imgView.frame = contentView.imageRect;
 	} else {
-		NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:@"DYSlideshowWindowFrame"];
-		NSRect r;
-		if (v) {
-			r = NSRectFromString(v);
-		} else {
-			// if no saved frame, put it in the top left of the screen
-			r = screenRect;
-			r.size.width = r.size.width/2;
-			r.size.height = r.size.height/2;
-			r.origin.y = screenRect.size.height;
+		if (!self.visible) {
+			NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:@"DYSlideshowWindowFrame"];
+			NSRect r;
+			if (v) {
+				r = NSRectFromString(v);
+			} else {
+				// if no saved frame, put it in the top left of the screen
+				r = screenRect;
+				r.size.width = r.size.width/2;
+				r.size.height = r.size.height/2;
+				r.origin.y = screenRect.size.height;
+			}
+			[self setFrame:r display:NO];
 		}
-		[self setFrame:r display:NO];
 		contentView.notchHeight = 0;
 		imgView.frame = contentView.imageRect;
 	}
@@ -361,6 +364,7 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 	_stopLoading = YES;
 	[self killTimer];
 	[imgCache abortCaching];
+	[_upcomingQueue cancelAllOperations];
 	[self.undoManager removeAllActions];
 
 	// this is a half-hearted attempt to clean up. Really we just rely on the countLimit on the cache
@@ -573,7 +577,8 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)updateInfoFld {
 	if (currentIndex > filenames.count) return;
-	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])];
+	NSString *path = filenames[currentIndex];
+	DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(path)];
 	if (info == nil) {
 		// avoid crash if user tries to rotate before the image has loaded
 		return;
@@ -587,9 +592,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 	}
 	if (r < 0) r = -r;
 	float zoom = imgView.currentZoom;
+	NSString *displayedFilename = _fullscreenMode ? (_showPath ? path : [self currentShortFilename]) : (_showPath ? [[path stringByDeletingLastPathComponent] stringByAppendingString:@"/"] : @"");
+	if (displayedFilename.length) displayedFilename = [displayedFilename stringByAppendingString:@" - "];
 	infoFld.stringValue = [NSString stringWithFormat:@"[%lu/%lu] %@%@ - %@%@%@%@ %@",
 		currentIndex+1, (unsigned long)filenames.count,
-		_fullscreenMode ? [[self currentShortFilename] stringByAppendingString:@" - "] : @"",
+		displayedFilename,
 		FileSize2String(info->fileSize),
 		info.pixelSizeAsString,
 		(zoom != 1.0 || imgView.zoomMode) ? [NSString stringWithFormat:
@@ -725,13 +732,14 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (self.isMainWindow && !imgView.dragMode)
 		[NSCursor setHiddenUntilMouseMoves:YES];
 
-	BOOL fullSize = imgView.showActualSize;
+	DYImageQuality q = imgView.showActualSize ? DYImageQualityFull : DYImageQualityHigh;
 	for (short i=1; i<=2; i++) {
 		if (currentIndex+i >= filenames.count)
 			break;
 		NSString *aPath = ResolveAliasToPath(filenames[currentIndex+i]);
+		[_upcomingQueue cancelAllOperations];
 		[_upcomingQueue addOperationWithBlock:^{
-			[imgCache cacheFile:aPath fullSize:fullSize];
+			[imgCache cacheFile:aPath fullSize:q];
 		}];
 	}
 }
@@ -1021,6 +1029,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 				[NSUserDefaults.standardUserDefaults setInteger:infoFldVisible forKey:@"DYSlideshowWindowVisibleFields"];
 			}
 			break;
+		case 'p':
+			if (infoFld.hidden) {
+				infoFld.hidden = NO;
+				_showPath = YES;
+			} else {
+				_showPath = !_showPath;
+			}
+			[self updateInfoFld];
+			[NSUserDefaults.standardUserDefaults setBool:_showPath forKey:@"DYSlideshowWindowVisiblePath"];
+			break;
 		case 'h':
 		case '?':
 		case '/':
@@ -1176,7 +1194,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (img)
 		return img;
 	if (keyIsRepeating < MAX_REPEATING_CACHED || currentIndex == 0 || currentIndex == filenames.count-1) {
-		BOOL fullSize = imgView.showActualSize;
+		DYImageQuality fullSize = imgView.showActualSize ? DYImageQualityFull : DYImageQualityLow;
 		NSUInteger savedIndex = currentIndex;
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
 			@autoreleasepool {

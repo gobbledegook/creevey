@@ -9,7 +9,6 @@
 
 #import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
-#import "DYExiftags.h"
 #import <sys/stat.h>
 
 #define N_StringFromFileSize_UNITS 3
@@ -74,6 +73,7 @@ static unsigned short CGImageSourceOrientationAtIndex(CGImageSourceRef src, size
 	CGImageSourceRef src = CGImageSourceCreateFromPath(path);
 	if (src) {
 		size_t idx = CGImageSourceGetPrimaryImageIndex(src);
+		exifOrientation = CGImageSourceOrientationAtIndex(src, idx);
 		NSString *type = (__bridge NSString *)CGImageSourceGetType(src);
 		BOOL animatedGif = [type isEqualToString:@"com.compuserve.gif"] && CGImageSourceGetCount(src) > 1;
 		if (!animatedGif) {
@@ -84,8 +84,6 @@ static unsigned short CGImageSourceOrientationAtIndex(CGImageSourceRef src, size
 					// workaround for tiny NEF images
 					image = nil;
 				}
-				if (exifOrientation == 0)
-					exifOrientation = CGImageSourceOrientationAtIndex(src, idx);
 				CFRelease(ref);
 			} else {
 				// workaround for ARW files
@@ -287,6 +285,7 @@ static CGImageRef CreateScaledFaster(CGImageSourceRef src, size_t idx, NSSize bo
 // let's say 35MB is big
 static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo *imgInfo, BOOL fastThumbnails) {
 	size_t idx = CGImageSourceGetPrimaryImageIndex(orig);
+	imgInfo->exifOrientation = CGImageSourceOrientationAtIndex(orig, idx);
 	NSString *type = (__bridge NSString *)CGImageSourceGetType(orig);
 	CGImageRef full = CGImageSourceCreateImageAtIndex(orig, idx, fastThumbnails ? (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageSourceShouldCache:@NO} : NULL);
 	if (full) {
@@ -304,8 +303,8 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 				imgInfo->quality = DYImageQualityFull;
 			} else {
 				// if the image is significantly bigger than the bounding size, we should scale it down for speed/memory
-				BOOL isBig = imgInfo->fileSize > REALLYBIG_FILESIZE;
-				CGImageRef scaled = isBig ? CreateScaledFaster(orig, idx, boundingSize) : CreateScaledNicer(full, boundingSize);
+				BOOL isBig = imgInfo->fileSize > REALLYBIG_FILESIZE, wantsHigh = imgInfo->quality == DYImageQualityHigh;
+				CGImageRef scaled = (isBig && !wantsHigh) ? CreateScaledFaster(orig, idx, boundingSize) : CreateScaledNicer(full, boundingSize);
 				if (scaled) {
 					imgInfo.image = [[NSImage alloc] initWithCGImage:scaled size:NSZeroSize];
 					imgInfo->quality = isBig ? DYImageQualityLow : DYImageQualityHigh;
@@ -320,10 +319,6 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 				if (abs((int)(expectedSize.width - fullSize.width)) > 1000)
 					imgInfo.image = nil;
 			}
-		}
-		if (imgInfo->exifOrientation == 0) {
-			// in case we encounter some file type with EXIF info that we hadn't anticipated
-			imgInfo->exifOrientation = CGImageSourceOrientationAtIndex(orig, idx);
 		}
 		CFRelease(full);
 		if (imgInfo.image != nil) return;
@@ -460,8 +455,6 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	} else {
 		CGImageSourceRef orig = CGImageSourceCreateFromPath(path);
 		if (orig) {
-			// get the orientation first; it will determine if ScaleCGImage needs to auto-rotate
-			imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
 			ScaleCGImage(orig, boundingSize, imgInfo, _fastThumbnails);
 			CFRelease(orig);
 		}
@@ -477,7 +470,6 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 		imgInfo->pixelSize = img.size;
 		imgInfo->quality = DYImageQualityFull;
 	} else {
-		imgInfo->exifOrientation = [DYExiftags orientationForFile:path];
 		[imgInfo loadFullSizeImage];
 	}
 }
@@ -492,14 +484,17 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 #define CacheContains(x)	([images objectForKey:x] != nil)
 #define PendingContains(x)  ([pending containsObject:x])
 #define LOGCACHING 0
-- (BOOL)cacheFile:(NSString *)s fullSize:(BOOL)fullSize {
+- (BOOL)cacheFile:(NSString *)s fullSize:(DYImageQuality)q {
 	if (![self attemptLockOnFile:s checkCache:YES]) return NO;
 	
 	DYImageInfo *result = [[DYImageInfo alloc] initWithPath:s];
-	if (fullSize)
+	if (q == DYImageQualityFull)
 		[self createFullsizeImage:result];
 	else
+	{
+		result->quality = q; // pass in desired quality level
 		[self createScaledImage:result];
+	}
 	if (result.image == nil)
 		result.image = _fallbackImage;
 
@@ -601,7 +596,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 
 - (DYImageInfo *)infoForKey:(NSString *)s {
 	DYImageInfo *i = [images objectForKey:s];
-	if (i == nil) {
+	if (i == nil && _stupidCacheWorkaround) {
 		i = _stupidCacheWorkaround;
 		_stupidCacheWorkaround = nil;
 	}
@@ -613,7 +608,7 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 }
 
 - (NSImage *)imageForKeyInvalidatingCacheIfNecessary:(NSString *)s {
-	DYImageInfo *imgInfo = [images objectForKey:s];
+	DYImageInfo *imgInfo = [images objectForKey:s] ?: _stupidCacheWorkaround;
 	if (imgInfo) {
 		struct stat buf;
 		time_t modTime = stat(s.fileSystemRepresentation, &buf) ? 0 : buf.st_mtimespec.tv_sec;

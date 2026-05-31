@@ -82,7 +82,10 @@ static NSRect ZoomAlignedRect(NSRect r, float zoom, CGFloat backingScaleFactor) 
 }
 
 - (void)calculateRectsAndSetNeedsDisplay {
-	if (!image) return;
+	if (!image) {
+		self.needsDisplay = YES;
+		return;
+	}
 	NSSize bSize = self.bounds.size;
 	CGFloat centerX = bSize.width/2, centerY = bSize.height/2;
 	if (rotation == 90 || rotation == -90) {
@@ -155,7 +158,11 @@ static NSRect ZoomAlignedRect(NSRect r, float zoom, CGFloat backingScaleFactor) 
 }
 
 - (void)drawRect:(NSRect)rect {
-	if (!image) return; //don't draw if nil
+	if (!image) {
+		[_imageBackgroundColor set];
+		NSRectFill(NSIntersectionRect(rect, self.bounds));
+		return;
+	}
 	NSAffineTransform *transform = [self drawingTransform];
 	[transform concat];
 	

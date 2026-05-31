@@ -44,7 +44,7 @@ typedef NS_ENUM(char, DYImageQuality) {
 
 + (NSData *)createNewThumbFromFile:(NSString *)path getSize:(NSSize *)outSize;
 
-- (BOOL)cacheFile:(NSString *)s fullSize:(BOOL)fullSize; // returns YES if an image info object was added to the cache (and caller should eventually call endAccess:)
+- (BOOL)cacheFile:(NSString *)s fullSize:(DYImageQuality)q; // returns YES if an image info object was added to the cache (and caller should eventually call endAccess:)
 - (BOOL)loadFullSizeImageForCached:(DYImageInfo *)info;
 - (BOOL)loadHighInterpolationImageForCached:(DYImageInfo *)info;
 
