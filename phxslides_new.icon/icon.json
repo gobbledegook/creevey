@@ -1,0 +1,40 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.69508,0.68596,0.67872,1.00000",
+      "display-p3:0.15143,0.15143,0.15143,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "phoenix_cut_out_1024.png",
+          "name" : "phoenix_cut_out_1024",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              6.84375,
+              42.359375
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

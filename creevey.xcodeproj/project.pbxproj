@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		582CD29D2E82F940007553F1 /* phxslides_new.icon in Resources */ = {isa = PBXBuildFile; fileRef = 582CD29C2E82F940007553F1 /* phxslides_new.icon */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */ = {isa = PBXBuildFile; fileRef = F2029D2D0820B68D00CE44FA /* phxslides.icns */; };
 		F202E2B719170B9800EDDCEC /* DYJpegtranPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */; };
 		F202E2C319170DCD00EDDCEC /* CreeveyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2C119170DCD00EDDCEC /* CreeveyWindow.xib */; };
 		F202E2CB19170E4900EDDCEC /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F202E2C919170E4900EDDCEC /* MainMenu.xib */; };
@@ -108,9 +108,9 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		582CD29C2E82F940007553F1 /* phxslides_new.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = phxslides_new.icon; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Phoenix Slides.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Phoenix Slides.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F2029D2D0820B68D00CE44FA /* phxslides.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = phxslides.icns; sourceTree = "<group>"; };
 		F202E2D1191713C500EDDCEC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		F202E2D2191713C500EDDCEC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CreeveyWindow.xib; sourceTree = "<group>"; };
 		F202E2D3191713C500EDDCEC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/DYJpegtranPanel.xib; sourceTree = "<group>"; };
@@ -352,7 +352,6 @@
 			children = (
 				F28C1E1C0A86723000682516 /* general.gif */,
 				F23DC5120A86CEF7005E49FD /* slideshow.tif */,
-				F2029D2D0820B68D00CE44FA /* phxslides.icns */,
 				F29447970820946000B932C1 /* Credits.html */,
 				F2C940B508200F6F0019D0D3 /* multipledocs.gif */,
 				F261A048182B5ED4001D9336 /* loading.png */,
@@ -370,6 +369,7 @@
 				F22BDC142B435F3900F53E37 /* PrefsWin.xib */,
 				F276A7481B4095F50045E67A /* ThumbnailContextMenu.xib */,
 				F202E2B519170B9800EDDCEC /* DYJpegtranPanel.xib */,
+				582CD29C2E82F940007553F1 /* phxslides_new.icon */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -558,6 +558,7 @@
 			files = (
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				F2D2AC63080B82840075532A /* brokendoc.tif in Resources */,
+				582CD29D2E82F940007553F1 /* phxslides_new.icon in Resources */,
 				F202E2CB19170E4900EDDCEC /* MainMenu.xib in Resources */,
 				F2AC5BEC0819F61700E5E5E6 /* creeveyhelp.rtf in Resources */,
 				F21AD0D40892B49F0054EA35 /* Phoenix Slides Help in Resources */,
@@ -565,7 +566,6 @@
 				F2C940B608200F6F0019D0D3 /* multipledocs.gif in Resources */,
 				F2D40FF021989C3F00E0CFFD /* Media.xcassets in Resources */,
 				F29447980820946000B932C1 /* Credits.html in Resources */,
-				F2029D2E0820B68D00CE44FA /* phxslides.icns in Resources */,
 				F261A049182B5ED4001D9336 /* loading.png in Resources */,
 				F254E9940891A7FB00DE9C38 /* EXIF.strings in Resources */,
 				F28C1E1D0A86723000682516 /* general.gif in Resources */,
@@ -745,6 +745,7 @@
 		F25EA23D08672CB4003728C2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = phxslides_new;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = "Phoenix Slides.entitlements";
@@ -770,6 +771,7 @@
 		F25EA23E08672CB4003728C2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = phxslides_new;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = "Phoenix Slides.entitlements";
