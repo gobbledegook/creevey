@@ -198,6 +198,8 @@
 		// Set up a reasonable tooltip, and image   Note, these aren't localized, but you will likely want to localize many of the item's properties 
 		toolbarItem.toolTip = itemLabel;
 		toolbarItem.image = [NSImage imageNamed:itemIdent];
+		if (!toolbarItem.image && [itemIdent isEqualToString:@"media"])
+			toolbarItem.image = [NSImage imageWithSystemSymbolName:@"film" accessibilityDescription:itemLabel];
 		
 		// Tell the item what message to send when it is clicked 
 		toolbarItem.target = self;

@@ -16,6 +16,7 @@
 #import "DYRandomizableArray.h"
 #import "DYFileWatcher.h"
 #import "NSMutableArray+DYMovable.h"
+@import AVKit;
 
 static BOOL UsingMagicMouse(NSEvent *e) {
 	return e.phase != NSEventPhaseNone || e.momentumPhase != NSEventPhaseNone;
@@ -57,6 +58,9 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (void)killTimer;
 - (void)updateInfoFld;
 - (void)updateExifFld;
+- (void)stopVideo;
+- (void)displayVideo:(NSString *)path;
+- (BOOL)acceptsMediaFile:(NSString *)path;
 
 // cat methods
 - (void)displayCats;
@@ -67,6 +71,10 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 {
 	NSMutableSet * __strong *cats;
 	DYImageView *imgView;
+	AVPlayerView *playerView;
+	AVPlayer *videoPlayer;
+	id playbackEndObserver, playbackFailureObserver;
+	BOOL displayingVideo;
 	NSTextField *infoFld, *catsFld; BOOL hideInfoFld, moreExif;
 	NSTextView *exifFld;
 	
@@ -93,8 +101,11 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	DYRandomizableArray<NSString *> *filenames;
 	NSOperationQueue *_upcomingQueue;
 	DYFileWatcher *_fileWatcher;
+	dispatch_queue_t _loadQueue;
 
 	_Atomic BOOL _stopLoading;
+	_Atomic uint64_t _loadBlockTime;
+	_Atomic uint64_t _statusTime;
 	unsigned short int _sortType;
 }
 @synthesize autoRotate, autoadvanceTime = timerIntvl;
@@ -112,30 +123,28 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 #define SLIDE_MIN_WIDTH 240
 #define SLIDE_MIN_HEIGHT 160
 
-- (instancetype)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
-	// full screen window, force it to be NSBorderlessWindowMask
-	if (self = [super initWithContentRect:r styleMask:NSWindowStyleMaskBorderless backing:b defer:d]) {
-		filenames = [[DYRandomizableArray alloc] init];
-		rotations = [[NSMutableDictionary alloc] init];
-		flips = [[NSMutableDictionary alloc] init];
-		zooms = [[NSMutableDictionary alloc] init];
-		imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
-		imgCache.fallbackImage = [NSImage imageNamed:@"brokendoc.tif"];
-		_upcomingQueue = [[NSOperationQueue alloc] init];
-		_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
-		
- 		self.backgroundColor = NSColor.blackColor;
-		self.opaque = NO;
-		_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
-		[self setMinSize:NSMakeSize(SLIDE_MIN_WIDTH, SLIDE_MIN_HEIGHT)];
-		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
-		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
-		currentIndex = NSNotFound;
-   }
-    return self;
+- (void)commonInit {
+	if (filenames) return;
+	filenames = [[DYRandomizableArray alloc] init];
+	rotations = [[NSMutableDictionary alloc] init];
+	flips = [[NSMutableDictionary alloc] init];
+	zooms = [[NSMutableDictionary alloc] init];
+	imgCache = [[DYImageCache alloc] initWithCapacity:MAX_CACHED];
+	imgCache.fallbackImage = [NSImage imageNamed:@"brokendoc.tif"];
+	_upcomingQueue = [[NSOperationQueue alloc] init];
+	_fileWatcher = [[DYFileWatcher alloc] initWithDelegate:self];
+	_loadQueue = dispatch_queue_create("phoenixslides.slideshow.load", NULL);
+
+	self.backgroundColor = NSColor.blackColor;
+	self.opaque = NO;
+	_fullscreenMode = YES; // set this to prevent autosaving the frame from the nib
+	[self setMinSize:NSMakeSize(SLIDE_MIN_WIDTH, SLIDE_MIN_HEIGHT)];
+	self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
+	currentIndex = NSNotFound;
 }
 
-- (void)awakeFromNib {
+- (void)setupContentView {
+	if (imgView) return;
 	self.contentView = [[DYSlideshowContentView alloc] initWithFrame:NSZeroRect];
 	imgView = [[DYImageView alloc] initWithFrame:NSZeroRect];
 	[self.contentView addSubview:imgView];
@@ -143,55 +152,70 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	imgView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(imgViewResized:) name:NSViewFrameDidChangeNotification object:imgView];
 	imgView.delegate = self;
-	
+	playerView = [[AVPlayerView alloc] initWithFrame:self.contentView.frame];
+	[self.contentView addSubview:playerView];
+	playerView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+	playerView.controlsStyle = AVPlayerViewControlsStyleNone;
+	playerView.videoGravity = AVLayerVideoGravityResizeAspect;
+	playerView.hidden = YES;
+
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld];
 	infoFld.autoresizingMask = NSViewMaxXMargin|NSViewMaxYMargin;
 	infoFld.backgroundColor = NSColor.grayColor;
 	infoFld.bezeled = NO;
 	infoFld.editable = NO;
-	
+
 	catsFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,imgView.bounds.size.height-20,300,20)];
 	[imgView addSubview:catsFld];
 	catsFld.autoresizingMask = NSViewMaxXMargin|NSViewMinYMargin;
 	catsFld.backgroundColor = NSColor.grayColor;
 	catsFld.bezeled = NO;
-	catsFld.editable = NO; // **
+	catsFld.editable = NO;
 	catsFld.hidden = YES;
-	
+
 	NSSize s = imgView.bounds.size;
 	NSScrollView *sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(s.width-360,0,360,s.height-20)];
 	[imgView addSubview:sv];
 	sv.autoresizingMask = NSViewHeightSizable | NSViewMinXMargin;
-	
+
 	exifFld = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,sv.contentSize.width,20)];
 	sv.documentView = exifFld;
 	exifFld.autoresizingMask = NSViewHeightSizable | NSViewWidthSizable | NSViewMinXMargin;
-
 	sv.drawsBackground = NO;
 	sv.hasVerticalScroller = YES;
 	sv.verticalScroller = [[NSScroller alloc] init];
 	sv.verticalScroller.controlSize = NSControlSizeSmall;
 	sv.autohidesScrollers = YES;
-	//[exifFld setEditable:NO];
 	exifFld.drawsBackground = NO;
 	exifFld.selectable = NO;
-	//[exifFld setVerticallyResizable:NO];
 	sv.hidden = YES;
-	
+
 	switch ([NSUserDefaults.standardUserDefaults integerForKey:@"DYSlideshowWindowVisibleFields"]) {
-		case 0:
-			hideInfoFld = YES;
-			break;
-		case 2:
-			sv.hidden = NO;
-			break;
-		default:
-			break;
+		case 0: hideInfoFld = YES; break;
+		case 2: sv.hidden = NO; break;
+		default: break;
 	}
 }
 
+- (instancetype)initWithContentRect:(NSRect)r styleMask:(NSWindowStyleMask)m backing:(NSBackingStoreType)b defer:(BOOL)d {
+	// full screen window, force it to be NSBorderlessWindowMask
+	if (self = [super initWithContentRect:r styleMask:NSWindowStyleMaskBorderless backing:b defer:d]) {
+		[self commonInit];
+		[self setupContentView];
+		// *** Unfortunately the menubar doesn't seem to show up on the second screen... Eventually we'll want to switch to use NSView's enterFullScreenMode:withOptions:
+   }
+    return self;
+}
+
+- (void)awakeFromNib {
+	[super awakeFromNib];
+	[self commonInit];
+	[self setupContentView];
+}
+
 - (void)dealloc {
+	[self stopVideo];
 	[NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
@@ -263,11 +287,6 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 
 // either files or dir can be empty
 - (void)loadFilenames:(NSArray *)files fromPath:(NSString *)dir fullScreen:(BOOL)fullScreen wantsSubfolders:(BOOL)b comparator:(NSComparator)block sortOrder:(short int)sortOrder {
-	static dispatch_queue_t _loadQueue;
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		_loadQueue = dispatch_queue_create("phoenixslides.slideshow.load", NULL);
-	});
 	self.fullscreenMode = fullScreen;
 	[self configureScreen];
 	currentIndex = NSNotFound;
@@ -280,10 +299,9 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	self.comparator = block;
 	_sortType = abs(sortOrder);
 	_stopLoading = YES;
-	static _Atomic uint64_t blockTime;
-	uint64_t timeStamp = blockTime = mach_absolute_time();
+	uint64_t timeStamp = _loadBlockTime = mach_absolute_time();
 	dispatch_async(_loadQueue, ^{
-		if (timeStamp == blockTime)
+		if (timeStamp == _loadBlockTime)
 			[self loadDirectory:dir selectedFiles:files subfolders:b];
 	});
 }
@@ -291,6 +309,12 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 - (NSString *)currentShortFilename {
 	NSString *s = filenames[currentIndex];
 	return s.length <= basePath.length ? s : [s substringFromIndex:basePath.length];
+}
+
+- (NSString *)savedFrameKey {
+	return self.cascadeOffset == 0
+		? @"DYSlideshowWindowFrame"
+		: [NSString stringWithFormat:@"DYSlideshowWindowFrame.%lu", self.cascadeOffset + 1];
 }
 
 - (void)configureScreen // or rather, configure the window *for* the screen
@@ -306,9 +330,10 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		[self setFrame:screenRect display:NO];
 		contentView.notchHeight = notchHeight;
 		imgView.frame = contentView.imageRect;
+		playerView.frame = contentView.imageRect;
 	} else {
 		if (!self.visible) {
-			NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:@"DYSlideshowWindowFrame"];
+			NSString *v = [NSUserDefaults.standardUserDefaults objectForKey:self.savedFrameKey];
 			NSRect r;
 			if (v) {
 				r = NSRectFromString(v);
@@ -317,12 +342,14 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 				r = screenRect;
 				r.size.width = r.size.width/2;
 				r.size.height = r.size.height/2;
-				r.origin.y = screenRect.size.height;
+				r.origin.x += self.cascadeOffset * 24;
+				r.origin.y = screenRect.size.height - self.cascadeOffset * 24;
 			}
 			[self setFrame:r display:NO];
 		}
 		contentView.notchHeight = 0;
 		imgView.frame = contentView.imageRect;
+		playerView.frame = contentView.imageRect;
 	}
 }
 
@@ -363,6 +390,7 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 	}
 	_stopLoading = YES;
 	[self killTimer];
+	[self stopVideo];
 	[imgCache abortCaching];
 	[_upcomingQueue cancelAllOperations];
 	[self.undoManager removeAllActions];
@@ -381,7 +409,7 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 - (void)orderOut:(id)sender {
 	[self cleanUp];
 	if (!_fullscreenMode)
-		[NSUserDefaults.standardUserDefaults setObject:NSStringFromRect(self.frame) forKey:@"DYSlideshowWindowFrame"];
+		[NSUserDefaults.standardUserDefaults setObject:NSStringFromRect(self.frame) forKey:self.savedFrameKey];
 	[super orderOut:sender];
 }
 
@@ -435,6 +463,7 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 - (void)becomeMainWindow { // need this when switching apps
 	if (_fullscreenMode)
 		NSApp.presentationOptions = NSApplicationPresentationHideDock|NSApplicationPresentationAutoHideMenuBar;
+	[self syncMenuItemStates];
 	[super becomeMainWindow];
 }
 
@@ -458,6 +487,7 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 	BOOL needUpdate = NO;
 	BOOL sortByModTime = _sortType == 2, sortBySize = _sortType == 6;
 	for (NSString *s in files) {
+		if (![self acceptsMediaFile:s]) continue;
 		if (!sortByModTime && !sortBySize && [self.currentFile isEqualToString:s]) {
 			[self redisplayImage];
 			continue;
@@ -511,7 +541,7 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 }
 
 - (void)updateTimer {
-	if (timerIntvl > 0.0)
+	if (displayingVideo || timerIntvl > 0.0)
 		[self runTimer];
 	else
 		[self killTimer];
@@ -519,10 +549,11 @@ static NSSize BoundingSizeForScreen(NSScreen *screen) {
 
 - (void)runTimer {
 	[self killTimer]; // always remove the old timer
-	if (loopMode || currentIndex+1 < filenames.count) {
+	NSTimeInterval interval = displayingVideo ? (self.videoPlaysToEnd ? 0 : self.videoPlaybackTime) : timerIntvl;
+	if (interval > 0 && (loopMode || currentIndex+1 < filenames.count)) {
 		//NSLog(@"scheduling timer from %d", currentIndex);
 		autoTimer = [NSTimer
-scheduledTimerWithTimeInterval:timerIntvl
+scheduledTimerWithTimeInterval:interval
 						target:self
 					  selector:@selector(nextTimer:)
 					  userInfo:nil repeats:NO];
@@ -536,6 +567,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)pauseTimer {
 	[self killTimer];
+	[videoPlayer pause];
 	timerPaused = YES;
 	if (hideInfoFld) infoFld.hidden = NO;
 	[self updateInfoFld];
@@ -669,10 +701,50 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[self displayImage];
 }
 
+- (void)stopVideo {
+	if (playbackEndObserver) {
+		[NSNotificationCenter.defaultCenter removeObserver:playbackEndObserver];
+		playbackEndObserver = nil;
+	}
+	if (playbackFailureObserver) {
+		[NSNotificationCenter.defaultCenter removeObserver:playbackFailureObserver];
+		playbackFailureObserver = nil;
+	}
+	[videoPlayer pause];
+	videoPlayer = nil;
+	playerView.player = nil;
+	playerView.hidden = YES;
+	displayingVideo = NO;
+}
+
+- (void)displayVideo:(NSString *)path {
+	[self stopVideo];
+	imgView.hidden = YES;
+	playerView.hidden = NO;
+	displayingVideo = YES;
+	videoPlayer = [AVPlayer playerWithURL:[NSURL fileURLWithPath:path isDirectory:NO]];
+	playerView.player = videoPlayer;
+	__weak SlideshowWindow *weakSelf = self;
+	playbackEndObserver = [NSNotificationCenter.defaultCenter addObserverForName:AVPlayerItemDidPlayToEndTimeNotification object:videoPlayer.currentItem queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+		SlideshowWindow *strongSelf = weakSelf;
+		if (strongSelf && strongSelf->displayingVideo && strongSelf.videoPlaysToEnd)
+			[strongSelf jump:1];
+	}];
+	playbackFailureObserver = [NSNotificationCenter.defaultCenter addObserverForName:AVPlayerItemFailedToPlayToEndTimeNotification object:videoPlayer.currentItem queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+		SlideshowWindow *strongSelf = weakSelf;
+		if (strongSelf && strongSelf->displayingVideo)
+			[strongSelf jump:1];
+	}];
+	[videoPlayer play];
+	[self runTimer];
+}
+
 - (void)displayImage {
 	if (currentIndex == NSNotFound) return; // in case called after slideshow ended
 									// not necessary if s/isActive/isKeyWindow/
 	if (currentIndex == filenames.count) { // if the last image was deleted, show a blank screen
+		[self stopVideo];
+		imgView.hidden = NO;
 		catsFld.hidden = YES;
 		infoFld.hidden = NO;
 		infoFld.stringValue = NSLocalizedString(@"End of slideshow (last file was deleted)", @"");
@@ -685,6 +757,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 	NSString *theFile = filenames[currentIndex];
 	NSString *resolvedPath = ResolveAliasToPath(theFile);
 	[self setTitleWithRepresentedFilename:theFile];
+	if (FileIsMP4(resolvedPath)) {
+		[self displayCats];
+		[self displayVideo:resolvedPath];
+		return;
+	}
+	[self stopVideo];
+	imgView.hidden = NO;
 	NSImage *img = [self loadFromCache:resolvedPath];
 	[self displayCats];
 	if (img) {
@@ -738,6 +817,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		if (currentIndex+i >= filenames.count)
 			break;
 		NSString *aPath = ResolveAliasToPath(filenames[currentIndex+i]);
+		if (FileIsMP4(aPath)) continue;
 		[_upcomingQueue cancelAllOperations];
 		[_upcomingQueue addOperationWithBlock:^{
 			[imgCache cacheFile:aPath fullSize:q];
@@ -983,6 +1063,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[self setTimer:1.5];
 			break;
 		case ' ':
+			if (displayingVideo) {
+				if (videoPlayer.rate > 0) {
+					[self pauseTimer];
+				} else {
+					timerPaused = NO;
+					[videoPlayer play];
+					[self runTimer];
+				}
+				break;
+			}
 			if (timerIntvl && autoTimer) {
 				//[self setTimer:0];
 				[self pauseTimer];
@@ -1152,6 +1242,24 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (void)sendEvent:(NSEvent *)e {
 	NSEventType t = e.type;
+	if (displayingVideo) {
+		if (t == NSEventTypeKeyDown) {
+			[self keyDown:e];
+			return;
+		}
+		if (t == NSEventTypeKeyUp) {
+			[self keyUp:e];
+			return;
+		}
+		if (t == NSEventTypeLeftMouseDown) {
+			[self mouseDown:e];
+			return;
+		}
+		if (t == NSEventTypeScrollWheel) {
+			[self scrollWheel:e];
+			return;
+		}
+	}
 
 	// override to send right clicks to self
 	if (t == NSEventTypeRightMouseDown)	{
@@ -1288,6 +1396,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 - (BOOL)currentImageLoaded {
 	NSString *s = self.currentFile;
 	if (s == nil) return NO;
+	if (FileIsMP4(s)) return videoPlayer != nil;
 	return [imgCache infoForKey:ResolveAliasToPath(s)] != nil;
 }
 
@@ -1345,6 +1454,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 	BOOL subFolders = _fileWatcher.wantsSubfolders;
 	BOOL needUpdate = NO;
 	for (NSString *s in a) {
+		if (![self acceptsMediaFile:s]) continue;
 		if (subFolders ? [s hasPrefix:basePath] : [s.stringByDeletingLastPathComponent isEqualToString:path]) {
 			NSUInteger idx = [filenames insertObject:s usingComparator:_comparator atIndex:filenames.count];
 			if (!randomMode && idx <= currentIndex) {
@@ -1403,6 +1513,58 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 
 #pragma mark menu methods
+- (BOOL)loopMode { return loopMode; }
+- (void)setLoopMode:(BOOL)b {
+	loopMode = b;
+	[self updateTimer];
+}
+
+- (BOOL)randomMode { return randomMode; }
+- (void)setRandomMode:(BOOL)b {
+	BOOL oldRandomMode = randomMode;
+	randomMode = b;
+	if (currentIndex == NSNotFound || randomMode == oldRandomMode)
+		return;
+	if (randomMode) {
+		if (currentIndex == filenames.count) currentIndex = NSNotFound;
+		[filenames randomizeStartingWithObjectAtIndex:currentIndex];
+		currentIndex = 0;
+	} else {
+		if (currentIndex == filenames.count)
+			currentIndex = 0;
+		else
+			currentIndex = [filenames orderedIndexFromIndex:currentIndex];
+		[filenames derandomize];
+	}
+	[self displayImage];
+}
+
+- (BOOL)scalesUp { return imgView.scalesUp; }
+- (void)setScalesUp:(BOOL)b {
+	imgView.scalesUp = b;
+	if (currentIndex != NSNotFound && currentIndex < filenames.count)
+		[self updateInfoFld];
+}
+
+- (BOOL)showActualSize { return imgView.showActualSize; }
+- (void)setShowActualSize:(BOOL)b {
+	imgView.showActualSize = b;
+	if (b && currentIndex < filenames.count) {
+		DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])];
+		if (!info.hasFullSizeImage)
+			[self loadFullSizeImage];
+	}
+	[self resizeWindowToFit];
+}
+
+- (void)syncMenuItemStates {
+	NSMenu *menu = [NSApp.mainMenu itemWithTag:1001].submenu;
+	[menu itemWithTag:3].state = loopMode;
+	[menu itemWithTag:7].state = randomMode;
+	[menu itemWithTag:8].state = imgView.scalesUp;
+	[menu itemWithTag:9].state = imgView.showActualSize;
+}
+
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
 	if (menuItem.tag == 3) // Loop
 		return YES;
@@ -1423,66 +1585,46 @@ scheduledTimerWithTimeInterval:timerIntvl
 
 - (IBAction)toggleLoopMode:(id)sender {
 	NSMenuItem *item = sender;
-	item.state = loopMode = !item.state;
+	self.loopMode = !loopMode;
+	item.state = loopMode;
 }
 - (IBAction)toggleCheatSheet:(id)sender {
 	[self toggleHelp];
 }
 - (IBAction)toggleScalesUp:(id)sender {
 	NSMenuItem *item = sender;
-	BOOL b = !item.state;
-	item.state = b;
-	imgView.scalesUp = b;
-	if (currentIndex >= filenames.count) return;
-	if (currentIndex != NSNotFound)
-		[self updateInfoFld];
+	self.scalesUp = !imgView.scalesUp;
+	item.state = imgView.scalesUp;
 }
 - (IBAction)toggleRandom:(id)sender {
 	NSMenuItem *item = sender;
-	BOOL b = !item.state;
-	item.state = b;
-	BOOL oldRandomMode = randomMode;
-	randomMode = b;
-	if (currentIndex == NSNotFound)
-		return;
-	// slideshow is running, so we need to do some cleanup
-	if (randomMode == oldRandomMode)
-		return; // but if this is a "forced" toggle from hitting "Apply Settings", no action is required
-	if (randomMode) {
-		if (currentIndex == filenames.count) currentIndex = NSNotFound;
-		[filenames randomizeStartingWithObjectAtIndex:currentIndex];
-		currentIndex = 0;
-	} else {
-		if (currentIndex == filenames.count)
-			currentIndex = 0;
-		else
-			currentIndex = [filenames orderedIndexFromIndex:currentIndex];
-		[filenames derandomize];
-	}
-	[self displayImage];
+	self.randomMode = !randomMode;
+	item.state = randomMode;
 }
 - (IBAction)toggleShowActualSize:(id)sender {
 	NSMenuItem *item = sender;
-	BOOL b = !item.state;
-	item.state = b;
-	imgView.showActualSize = b;
-	if (b && currentIndex < filenames.count) {
-		DYImageInfo *info = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])];
-		if (!info.hasFullSizeImage)
-			[self loadFullSizeImage];
-	}
-	[self resizeWindowToFit];
+	self.showActualSize = !imgView.showActualSize;
+	item.state = imgView.showActualSize;
 }
 
 - (void)updateStatusOnMainThread:(NSString * (^)(void))f {
-	static _Atomic uint64_t statusTime;
-	uint64_t timeStamp = statusTime = mach_absolute_time();
+	uint64_t timeStamp = _statusTime = mach_absolute_time();
 	dispatch_async(dispatch_get_main_queue(), ^{
-		if (statusTime == timeStamp) {
+		if (_statusTime == timeStamp) {
 			infoFld.stringValue = f() ?: @"";
 			[infoFld sizeToFit];
 		}
 	});
+}
+
+- (BOOL)acceptsMediaFile:(NSString *)path {
+	BOOL isMP4 = FileIsMP4(path);
+	switch (self.mediaMode) {
+		case DYSlideshowMediaModeImagesAndMP4: return YES;
+		case DYSlideshowMediaModeMP4Only: return isMP4;
+		case DYSlideshowMediaModeImagesOnly: return !isMP4;
+	}
+	return NO;
 }
 
 - (void)loadDirectory:(NSString *)path selectedFiles:(NSArray *)selectedFiles subfolders:(BOOL)recurseSubfolders {
@@ -1499,7 +1641,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				@autoreleasepool {
 					if ([appDelegate handledDirectory:url subfolders:recurseSubfolders e:e])
 						continue;
-					if ([appDelegate shouldShowFile:url]) {
+					if ([appDelegate shouldShowFile:url] && [self acceptsMediaFile:url.path]) {
 						[files addObject:url.path];
 						if ((++i & 127) == 0) [self updateStatusOnMainThread:^NSString *{ return [NSString stringWithFormat:@"%@ (%lu)", loadingMsg, i]; }];
 					}
@@ -1510,7 +1652,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 		} else {
 			if (!path) path = [selectedFiles[0] stringByDeletingLastPathComponent];
 			for (NSString *aPath in selectedFiles) {
-				if ([appDelegate shouldShowFile:[NSURL fileURLWithPath:aPath]])
+			if ([appDelegate shouldShowFile:[NSURL fileURLWithPath:aPath]] && [self acceptsMediaFile:aPath])
 					[files addObject:aPath];
 				path = [path commonPrefixWithString:aPath options:0];
 			}
@@ -1527,11 +1669,13 @@ scheduledTimerWithTimeInterval:timerIntvl
 				[self setFilenames:files basePath:path wantsSubfolders:recurseSubfolders comparator:_comparator sortOrder:_sortType];
 				self.autoRotate = [u boolForKey:@"autoRotateByOrientationTag"];
 				self.autoadvanceTime = [u boolForKey:@"slideshowAutoadvance"] ? [u floatForKey:@"slideshowAutoadvanceTime"] : 0;
+				self.videoPlaybackTime = [u doubleForKey:@"slideshowVideoPlaybackTime"];
+				self.videoPlaysToEnd = [u boolForKey:@"slideshowVideoPlaysToEnd"];
 				[self startSlideshowAtIndex:startIndex];
 			});
 		} else {
 			[self updateStatusOnMainThread:^NSString *{
-				return [NSLocalizedString(@"No image files found: ", @"long filepath appended here") stringByAppendingString:path];
+				return [NSLocalizedString(@"No matching media files found: ", @"long filepath appended here") stringByAppendingString:path];
 			}];
 		}
 	}

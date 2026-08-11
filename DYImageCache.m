@@ -9,6 +9,7 @@
 
 #import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
+@import AVFoundation;
 #import <sys/stat.h>
 
 #define N_StringFromFileSize_UNITS 3
@@ -296,6 +297,24 @@ static __inline__ BOOL UnexpectedSize(NSString *type, NSString *path, size_t wid
 	return NO;
 }
 
+static void LoadMP4Preview(DYImageInfo *imgInfo, NSSize maximumSize, DYImageQuality quality) {
+	AVURLAsset *asset = [AVURLAsset URLAssetWithURL:[NSURL fileURLWithPath:imgInfo.path] options:nil];
+	AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+	generator.appliesPreferredTrackTransform = YES;
+	if (maximumSize.width > 0 && maximumSize.height > 0)
+		generator.maximumSize = maximumSize;
+	NSError *error;
+	CGImageRef frame = [generator copyCGImageAtTime:CMTimeMakeWithSeconds(0.1, 600) actualTime:NULL error:&error];
+	if (!frame)
+		frame = [generator copyCGImageAtTime:kCMTimeZero actualTime:NULL error:&error];
+	if (frame) {
+		imgInfo.image = [[NSImage alloc] initWithCGImage:frame size:NSZeroSize];
+		imgInfo->pixelSize = NSMakeSize(CGImageGetWidth(frame), CGImageGetHeight(frame));
+		imgInfo->quality = quality;
+		CGImageRelease(frame);
+	}
+}
+
 #define REALLYBIG_FILESIZE 35000000
 // let's say 35MB is big
 static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo *imgInfo, BOOL fastThumbnails) {
@@ -420,6 +439,10 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 		return;  // nsimage crashes on zero-length files
 	NSString *path = imgInfo.path;
 	NSString *ext = path.pathExtension.lowercaseString;
+	if (FileIsMP4(path)) {
+		LoadMP4Preview(imgInfo, boundingSize, DYImageQualityHigh);
+		return;
+	}
 	char *data;
 	size_t len;
 	unsigned short thumbW, thumbH, rawW, rawH, orientation;
@@ -471,6 +494,10 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 - (void)createFullsizeImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0) return;
 	NSString *path = imgInfo.path;
+	if (FileIsMP4(path)) {
+		LoadMP4Preview(imgInfo, NSZeroSize, DYImageQualityFull);
+		return;
+	}
 	if (IsNotCGImage(path.pathExtension.lowercaseString)) {
 		NSImage *img = [[NSImage alloc] initWithContentsOfFile:path];
 		imgInfo.image = img;
