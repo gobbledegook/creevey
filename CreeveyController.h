@@ -14,7 +14,7 @@ NSMutableAttributedString* Fileinfo2EXIFString(NSString *origPath, DYImageCache 
 
 #define NUM_FNKEY_CATS 11
 
-@interface CreeveyController : NSObject <NSApplicationDelegate,NSTableViewDataSource,NSWindowRestoration>
+@interface CreeveyController : NSObject <NSApplicationDelegate,NSTableViewDataSource,NSWindowRestoration,NSWindowDelegate>
 @property (strong) IBOutlet DYJpegtranPanel *jpegController;
 @property (strong) IBOutlet NSMenu *thumbnailContextMenu;
 @property (readonly) NSMutableSet *revealedDirectories; // set of invisible directories that should be shown in the browser

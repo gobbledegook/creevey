@@ -698,6 +698,130 @@
                                     </constraints>
                                 </view>
                             </tabViewItem>
+                            <tabViewItem label="Media" identifier="media" id="Vid-Media-Tab">
+                                <view key="view" id="Vid-Media-View">
+                                    <rect key="frame" x="10" y="33" width="487" height="546"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Content-Label">
+                                            <rect key="frame" x="18" y="510" width="120" height="16"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Slideshow content:" id="Vid-Content-Cell">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Mode-Popup">
+                                            <rect key="frame" x="16" y="476" width="177" height="25"/>
+                                            <popUpButtonCell key="cell" type="push" title="Images only" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Vid-Mode-Images" id="Vid-Mode-Cell">
+                                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="message"/>
+                                                <menu key="menu" id="Vid-Mode-Menu">
+                                                    <items>
+                                                        <menuItem title="Images only" state="on" id="Vid-Mode-Images"/>
+                                                        <menuItem title="Images and MP4" id="Vid-Mode-Mixed"/>
+                                                        <menuItem title="MP4 only" id="Vid-Mode-Only"/>
+                                                    </items>
+                                                </menu>
+                                            </popUpButtonCell>
+                                            <connections>
+                                                <action selector="slideshowDefaultsChanged:" target="-2" id="Vid-Mode-Action"/>
+                                                <binding destination="551" name="selectedIndex" keyPath="values.slideshowMediaMode" id="Vid-Mode-Binding"/>
+                                            </connections>
+                                        </popUpButton>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Mode-Hint">
+                                            <rect key="frame" x="18" y="448" width="420" height="16"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Content changes apply when the next slideshow is started." id="Vid-Mode-Hint-Cell">
+                                                <font key="font" metaFont="smallSystem"/>
+                                                <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Separator">
+                                            <rect key="frame" x="20" y="423" width="447" height="5"/>
+                                        </box>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Timing-Label">
+                                            <rect key="frame" x="18" y="393" width="102" height="16"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="MP4 playback:" id="Vid-Timing-Cell">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Timing-Popup">
+                                            <rect key="frame" x="16" y="359" width="202" height="25"/>
+                                            <popUpButtonCell key="cell" type="push" title="Use fixed time" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Vid-Timing-Fixed" id="Vid-Timing-Popup-Cell">
+                                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="message"/>
+                                                <menu key="menu" id="Vid-Timing-Menu">
+                                                    <items>
+                                                        <menuItem title="Use fixed time" state="on" id="Vid-Timing-Fixed"/>
+                                                        <menuItem title="Play full video" id="Vid-Timing-Full"/>
+                                                    </items>
+                                                </menu>
+                                            </popUpButtonCell>
+                                            <connections>
+                                                <action selector="slideshowDefaultsChanged:" target="-2" id="Vid-Timing-Action"/>
+                                                <binding destination="551" name="selectedIndex" keyPath="values.slideshowVideoPlaysToEnd" id="Vid-Timing-Binding"/>
+                                            </connections>
+                                        </popUpButton>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Duration-Label">
+                                            <rect key="frame" x="18" y="325" width="89" height="16"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Advance after" id="Vid-Duration-Label-Cell">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Duration-Field">
+                                            <rect key="frame" x="115" y="321" width="53" height="24"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="53" id="Vid-Duration-Width"/>
+                                            </constraints>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="center" drawsBackground="YES" id="Vid-Duration-Field-Cell">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <connections>
+                                                <action selector="slideshowDefaultsChanged:" target="-2" id="Vid-Duration-Action"/>
+                                                <binding destination="551" name="value" keyPath="values.slideshowVideoPlaybackTime" id="Vid-Duration-Binding"/>
+                                                <outlet property="formatter" destination="wFI-U8-7yA" id="Vid-Duration-Formatter"/>
+                                            </connections>
+                                        </textField>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vid-Duration-Seconds">
+                                            <rect key="frame" x="176" y="325" width="56" height="16"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="seconds" id="Vid-Duration-Seconds-Cell">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="Vid-Content-Label" firstAttribute="top" secondItem="Vid-Media-View" secondAttribute="top" constant="20" id="Vid-C1"/>
+                                        <constraint firstItem="Vid-Content-Label" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C2"/>
+                                        <constraint firstItem="Vid-Mode-Popup" firstAttribute="top" secondItem="Vid-Content-Label" secondAttribute="bottom" constant="8" id="Vid-C3"/>
+                                        <constraint firstItem="Vid-Mode-Popup" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C4"/>
+                                        <constraint firstItem="Vid-Mode-Hint" firstAttribute="top" secondItem="Vid-Mode-Popup" secondAttribute="bottom" constant="8" id="Vid-C5"/>
+                                        <constraint firstItem="Vid-Mode-Hint" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C6"/>
+                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Vid-Mode-Hint" secondAttribute="trailing" constant="20" id="Vid-C7"/>
+                                        <constraint firstItem="Vid-Separator" firstAttribute="top" secondItem="Vid-Mode-Hint" secondAttribute="bottom" constant="16" id="Vid-C8"/>
+                                        <constraint firstItem="Vid-Separator" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C9"/>
+                                        <constraint firstAttribute="trailing" secondItem="Vid-Separator" secondAttribute="trailing" constant="20" id="Vid-C10"/>
+                                        <constraint firstItem="Vid-Timing-Label" firstAttribute="top" secondItem="Vid-Separator" secondAttribute="bottom" constant="16" id="Vid-C11"/>
+                                        <constraint firstItem="Vid-Timing-Label" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C12"/>
+                                        <constraint firstItem="Vid-Timing-Popup" firstAttribute="top" secondItem="Vid-Timing-Label" secondAttribute="bottom" constant="8" id="Vid-C13"/>
+                                        <constraint firstItem="Vid-Timing-Popup" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C14"/>
+                                        <constraint firstItem="Vid-Duration-Label" firstAttribute="top" secondItem="Vid-Timing-Popup" secondAttribute="bottom" constant="12" id="Vid-C15"/>
+                                        <constraint firstItem="Vid-Duration-Label" firstAttribute="leading" secondItem="Vid-Media-View" secondAttribute="leading" constant="20" id="Vid-C16"/>
+                                        <constraint firstItem="Vid-Duration-Field" firstAttribute="baseline" secondItem="Vid-Duration-Label" secondAttribute="baseline" id="Vid-C17"/>
+                                        <constraint firstItem="Vid-Duration-Field" firstAttribute="leading" secondItem="Vid-Duration-Label" secondAttribute="trailing" constant="8" id="Vid-C18"/>
+                                        <constraint firstItem="Vid-Duration-Seconds" firstAttribute="baseline" secondItem="Vid-Duration-Label" secondAttribute="baseline" id="Vid-C19"/>
+                                        <constraint firstItem="Vid-Duration-Seconds" firstAttribute="leading" secondItem="Vid-Duration-Field" secondAttribute="trailing" constant="8" id="Vid-C20"/>
+                                    </constraints>
+                                </view>
+                            </tabViewItem>
                             <tabViewItem label="File Types" identifier="multipledocs" id="lds-PP-VGR">
                                 <view key="view" id="6cs-hl-yOr">
                                     <rect key="frame" x="10" y="33" width="487" height="552"/>

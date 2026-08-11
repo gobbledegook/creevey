@@ -23,6 +23,7 @@ BOOL IsNotCGImage(NSString *x);
 
 // for paths
 BOOL FileIsJPEG(NSString *s);
+BOOL FileIsMP4(NSString *s);
 @interface NSArray (DYPathToURLHelper)
 @property (nonatomic, readonly) NSArray<NSURL *> *asFileURLs;
 @property (nonatomic, readonly) NSArray<NSString *> *asFilePaths;

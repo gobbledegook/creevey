@@ -7,9 +7,26 @@
 
 @import Cocoa;
 
+typedef NS_ENUM(NSInteger, DYSlideshowMediaMode) {
+	DYSlideshowMediaModeImagesOnly,
+	DYSlideshowMediaModeImagesAndMP4,
+	DYSlideshowMediaModeMP4Only,
+};
+
 @interface SlideshowWindow : NSWindow
 @property (nonatomic) BOOL fullscreenMode;
 @property (nonatomic) BOOL fitWindowToImage; // resize window to image (in window mode)
+@property (nonatomic, weak) NSWindowController *sourceWindowController;
+@property (nonatomic) NSUInteger cascadeOffset;
+
+// Slideshow settings are per-window so multiple slideshows can run independently.
+@property (nonatomic) BOOL loopMode;
+@property (nonatomic) BOOL randomMode;
+@property (nonatomic) BOOL scalesUp;
+@property (nonatomic) BOOL showActualSize;
+@property (nonatomic) DYSlideshowMediaMode mediaMode;
+@property (nonatomic) NSTimeInterval videoPlaybackTime;
+@property (nonatomic) BOOL videoPlaysToEnd;
 
 - (void)setTransparentImageBgColor:(NSColor *)aColor;
 - (void)setCats:(NSMutableSet * __strong *)newCats;
@@ -38,6 +55,7 @@
 @property (nonatomic) BOOL autoRotate;
 @property (nonatomic) NSTimeInterval autoadvanceTime;
 - (void)updateTimer;
+- (void)syncMenuItemStates;
 
 // menu methods
 - (IBAction)endSlideshow:(id)sender;

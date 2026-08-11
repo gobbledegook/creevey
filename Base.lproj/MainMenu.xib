@@ -376,7 +376,7 @@ Gw
 </string>
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="endSlideshow:" target="210" id="337"/>
+                                    <action selector="endSlideshow:" target="-1" id="337"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="330">
@@ -384,13 +384,13 @@ Gw
                             </menuItem>
                             <menuItem title="Loop" tag="3" keyEquivalent="l" id="331">
                                 <connections>
-                                    <action selector="toggleLoopMode:" target="210" id="349"/>
+                                    <action selector="toggleLoopMode:" target="-1" id="349"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Random" tag="7" keyEquivalent="r" id="540">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
-                                    <action selector="toggleRandom:" target="210" id="541"/>
+                                    <action selector="toggleRandom:" target="-1" id="541"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="569">
@@ -398,12 +398,12 @@ Gw
                             </menuItem>
                             <menuItem title="Scale Up Small Images" tag="8" keyEquivalent="e" id="447">
                                 <connections>
-                                    <action selector="toggleScalesUp:" target="210" id="448"/>
+                                    <action selector="toggleScalesUp:" target="-1" id="448"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Show Large Images at Actual Size" tag="9" keyEquivalent="E" id="572">
                                 <connections>
-                                    <action selector="toggleShowActualSize:" target="210" id="573"/>
+                                    <action selector="toggleShowActualSize:" target="-1" id="573"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="417">
@@ -412,7 +412,7 @@ Gw
                             <menuItem title="Show Cheat Sheet" keyEquivalent="?" id="418">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="toggleCheatSheet:" target="210" id="419"/>
+                                    <action selector="toggleCheatSheet:" target="-1" id="419"/>
                                 </connections>
                             </menuItem>
                         </items>

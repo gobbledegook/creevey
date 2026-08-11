@@ -99,6 +99,10 @@ BOOL FileIsJPEG(NSString *s) {
 	|| [NSHFSTypeOfFile(s) isEqualToString:@"JPEG"];
 }
 
+BOOL FileIsMP4(NSString *s) {
+	return [s.pathExtension.lowercaseString isEqualToString:@"mp4"];
+}
+
 @implementation NSArray (DYPathToURLHelper)
 
 - (NSArray<NSURL *> *)asFileURLs {
