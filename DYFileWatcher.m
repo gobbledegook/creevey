@@ -73,7 +73,7 @@ static void fseventCallback(ConstFSEventStreamRef streamRef, void *info, size_t 
 			if (f & kFSEventStreamEventFlagItemIsDir) continue;
 			if (_wantsSubfolders ? [s hasPrefix:_path] : [s.stringByDeletingLastPathComponent isEqualToString:_path]) {
 				NSURL *url = [NSURL fileURLWithPath:s isDirectory:NO];
-				if (![appDelegate shouldShowFile:url]) continue;
+				if (![appDelegate shouldShowFile:url includingUnsupported:_delegate.showUnsupportedFiles]) continue;
 				if (0 == access(s.fileSystemRepresentation, R_OK))
 					[files addObject:s];
 				else

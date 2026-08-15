@@ -24,6 +24,7 @@
 		F22BDC162B435F3900F53E37 /* PrefsWin.xib in Resources */ = {isa = PBXBuildFile; fileRef = F22BDC142B435F3900F53E37 /* PrefsWin.xib */; };
 		F234C0170810E9B700175D50 /* DYImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F234C0150810E9B700175D50 /* DYImageCache.h */; };
 		F234C0180810E9B700175D50 /* DYImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F234C0160810E9B700175D50 /* DYImageCache.m */; };
+		FADC0100000000000000B001 /* KeyBindings.m in Sources */ = {isa = PBXBuildFile; fileRef = FADC0100000000000000A002 /* KeyBindings.m */; };
 		F23DC5130A86CEF7005E49FD /* slideshow.tif in Resources */ = {isa = PBXBuildFile; fileRef = F23DC5120A86CEF7005E49FD /* slideshow.tif */; };
 		F23F405A2B81979E0048E5A4 /* NSColor+TextColor.h in Headers */ = {isa = PBXBuildFile; fileRef = F23F40582B81979E0048E5A4 /* NSColor+TextColor.h */; };
 		F23F405B2B81979E0048E5A4 /* NSColor+TextColor.m in Sources */ = {isa = PBXBuildFile; fileRef = F23F40592B81979E0048E5A4 /* NSColor+TextColor.m */; };
@@ -144,6 +145,8 @@
 		F22BDC1A2B43632200F53E37 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/PrefsWin.xcstrings; sourceTree = "<group>"; };
 		F234C0150810E9B700175D50 /* DYImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DYImageCache.h; sourceTree = "<group>"; };
 		F234C0160810E9B700175D50 /* DYImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DYImageCache.m; sourceTree = "<group>"; };
+		FADC0100000000000000A001 /* KeyBindings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyBindings.h; sourceTree = "<group>"; };
+		FADC0100000000000000A002 /* KeyBindings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyBindings.m; sourceTree = "<group>"; };
 		F23DC5120A86CEF7005E49FD /* slideshow.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = slideshow.tif; sourceTree = "<group>"; };
 		F23F40582B81979E0048E5A4 /* NSColor+TextColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSColor+TextColor.h"; sourceTree = "<group>"; };
 		F23F40592B81979E0048E5A4 /* NSColor+TextColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSColor+TextColor.m"; sourceTree = "<group>"; };
@@ -260,6 +263,8 @@
 				F262D801089AE58200CD3701 /* DYVersChecker.m */,
 				F234C0150810E9B700175D50 /* DYImageCache.h */,
 				F234C0160810E9B700175D50 /* DYImageCache.m */,
+				FADC0100000000000000A001 /* KeyBindings.h */,
+				FADC0100000000000000A002 /* KeyBindings.m */,
 				F2AE88E707EB877D008F2193 /* DirBrowserDelegate.h */,
 				F2AE88E807EB877D008F2193 /* DirBrowserDelegate.m */,
 				F2AE890C07EB9BB7008F2193 /* CreeveyController.h */,
@@ -500,6 +505,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				BA5FABC600000000000000C6 /* Stamp git commit hash */,
 			);
 			buildRules = (
 			);
@@ -597,6 +603,7 @@
 				F2F54191080A3846008AE60F /* DYCreeveyBrowser.m in Sources */,
 				F2FFD7C92B2805C100036217 /* dcraw.c in Sources */,
 				F234C0180810E9B700175D50 /* DYImageCache.m in Sources */,
+				FADC0100000000000000B001 /* KeyBindings.m in Sources */,
 				F28CA6B2085DF4590045386B /* NSIndexSetSymDiffExtension.m in Sources */,
 				F2FE4FCA08842F5500550533 /* DYJpegtran.m in Sources */,
 				F23F405B2B81979E0048E5A4 /* NSColor+TextColor.m in Sources */,
@@ -630,6 +637,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		BA5FABC600000000000000C6 /* Stamp git commit hash */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Stamp git commit hash";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GitInfo.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Stamp the short git commit hash into a GitInfo.plist resource for the About panel\nHASH=$(git -C \"$SRCROOT\" rev-parse --short HEAD 2>/dev/null)\nOUT=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/GitInfo.plist\"\nrm -f \"$OUT\"\nif [ -n \"$HASH\" ]; then\n  /usr/libexec/PlistBuddy -c \"Add :GitCommitHash string $HASH\" \"$OUT\"\n  echo \"note: stamped git commit $HASH\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXVariantGroup section */
 		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
@@ -822,7 +848,7 @@
 				DEVELOPMENT_TEAM = 9436CS8LQX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -871,7 +897,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 9436CS8LQX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;

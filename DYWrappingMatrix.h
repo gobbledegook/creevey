@@ -41,6 +41,7 @@
 @property (weak) IBOutlet id delegate;
 @property (weak, nonatomic) NSImage *loadingImage;
 @property (nonatomic) NSColor *imageBackgroundColor;
+@property (nonatomic) BOOL selectionUpdatesSuppressed; // skip selection redraw/scroll (e.g. while hidden behind Quick Look)
 
 @property (class, readonly) NSSize maxCellSize;
 
@@ -60,6 +61,7 @@
 @property (nonatomic, readonly) NSString *firstSelectedFilename;
 - (IBAction)selectAll:(id)sender;
 - (IBAction)selectNone:(id)sender;
+- (IBAction)copy:(id)sender;
 - (void)selectFilenames:(NSArray *)arr comparator:(NSComparator)cmp;
 - (void)selectIndex:(NSUInteger)i;
 - (void)scrollToFirstSelected:(NSIndexSet *)x;
@@ -74,6 +76,7 @@
 @property (nonatomic, readonly) float minCellWidth;
 @property (nonatomic) float cellWidth;
 
+- (void)reloadTextSize; // re-apply the interface text size to file-name labels
 @property (nonatomic) BOOL showFilenames;
 @property (nonatomic) BOOL autoRotate;
 

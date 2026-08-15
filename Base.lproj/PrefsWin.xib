@@ -178,6 +178,72 @@
                                                 <binding destination="551" name="selectedIndex" keyPath="values.appearance" id="vht-td-m0h"/>
                                             </connections>
                                         </popUpButton>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Txt-s0-lbl">
+                                            <rect key="frame" x="214" y="284" width="66" height="16"/>
+                                            <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Text size:" id="Txt-s0-cel">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Txt-s0-pop">
+                                            <rect key="frame" x="282" y="280" width="105" height="24"/>
+                                            <popUpButtonCell key="cell" type="push" title="Small" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Txt-s0-sm" id="Txt-s0-pcl">
+                                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="message"/>
+                                                <menu key="menu" id="Txt-s0-mnu">
+                                                    <items>
+                                                        <menuItem title="Small" state="on" id="Txt-s0-sm"/>
+                                                        <menuItem title="Medium" id="Txt-s0-md"/>
+                                                        <menuItem title="Large" id="Txt-s0-lg"/>
+                                                        <menuItem title="Custom" id="Txt-s0-cst"/>
+                                                    </items>
+                                                </menu>
+                                            </popUpButtonCell>
+                                            <connections>
+                                                <binding destination="551" name="selectedIndex" keyPath="values.interfaceTextSize" id="Txt-s0-bnd"/>
+                                            </connections>
+                                        </popUpButton>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Txt-s0-fld">
+                                            <rect key="frame" x="393" y="281" width="42" height="22"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" alignment="right" borderStyle="bezel" drawsBackground="YES" id="Txt-s0-fcl">
+                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" maximumFractionDigits="0" id="Txt-s0-fmt">
+                                                    <real key="minimum" value="10"/>
+                                                    <real key="maximum" value="25"/>
+                                                </numberFormatter>
+                                                <font key="font" metaFont="message"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <connections>
+                                                <binding destination="551" name="value" keyPath="values.interfaceTextCustomSize" id="Txt-s0-fvb"/>
+                                                <binding destination="551" name="enabled" keyPath="values.interfaceTextSize" id="Txt-s0-feb">
+                                                    <dictionary key="options">
+                                                        <string key="NSValueTransformerName">DYTextSizeIsCustomTransformer</string>
+                                                    </dictionary>
+                                                </binding>
+                                            </connections>
+                                        </textField>
+                                        <stepper verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Txt-s0-stp">
+                                            <rect key="frame" x="438" y="278" width="19" height="27"/>
+                                            <stepperCell key="cell" continuous="YES" alignment="left" increment="1" minValue="10" maxValue="25" doubleValue="13" id="Txt-s0-scl"/>
+                                            <connections>
+                                                <binding destination="551" name="value" keyPath="values.interfaceTextCustomSize" id="Txt-s0-svb"/>
+                                                <binding destination="551" name="enabled" keyPath="values.interfaceTextSize" id="Txt-s0-seb">
+                                                    <dictionary key="options">
+                                                        <string key="NSValueTransformerName">DYTextSizeIsCustomTransformer</string>
+                                                    </dictionary>
+                                                </binding>
+                                            </connections>
+                                        </stepper>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Txt-s0-ptl">
+                                            <rect key="frame" x="460" y="284" width="18" height="16"/>
+                                            <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="pt" id="Txt-s0-pc2">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
                                         <colorWell translatesAutoresizingMaskIntoConstraints="NO" id="697">
                                             <rect key="frame" x="20" y="246" width="42" height="29"/>
                                             <constraints>
@@ -277,6 +343,46 @@
                                                 <binding destination="551" name="value" keyPath="values.DYWrappingMatrixAllowMove" id="694"/>
                                             </connections>
                                         </button>
+                                        <button toolTip="When on, Copy as Pathname produces shell-quoted paths (safe for spaces and special characters); when off, raw Finder-style paths." translatesAutoresizingMaskIntoConstraints="NO" id="Cpq-btn-001">
+                                            <rect key="frame" x="20" y="95" width="240" height="16"/>
+                                            <buttonCell key="cell" type="check" title="Shell-quote copied pathnames" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="Cpq-cel-002">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <binding destination="551" name="value" keyPath="values.copyPathnameShellQuoted" id="Cpq-bnd-003"/>
+                                            </connections>
+                                        </button>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ORp-lbl-001">
+                                            <rect key="frame" x="210" y="111" width="160" height="16"/>
+                                            <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Recent paths to keep:" id="ORp-lbc-001">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ORp-fld-001">
+                                            <rect key="frame" x="376" y="108" width="46" height="22"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" alignment="right" borderStyle="bezel" drawsBackground="YES" id="ORp-fcl-001">
+                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" maximumFractionDigits="0" id="ORp-fmt-001">
+                                                    <real key="minimum" value="1"/>
+                                                    <real key="maximum" value="50"/>
+                                                </numberFormatter>
+                                                <font key="font" metaFont="message"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <connections>
+                                                <binding destination="551" name="value" keyPath="values.recentFoldersMax" id="ORp-fvb-001"/>
+                                            </connections>
+                                        </textField>
+                                        <stepper verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ORp-stp-001">
+                                            <rect key="frame" x="428" y="106" width="19" height="27"/>
+                                            <stepperCell key="cell" continuous="YES" alignment="left" increment="1" minValue="1" maxValue="50" doubleValue="10" id="ORp-scl-001"/>
+                                            <connections>
+                                                <binding destination="551" name="value" keyPath="values.recentFoldersMax" id="ORp-svb-001"/>
+                                            </connections>
+                                        </stepper>
                                         <button translatesAutoresizingMaskIntoConstraints="NO" id="548">
                                             <rect key="frame" x="20" y="67" width="217" height="16"/>
                                             <buttonCell key="cell" type="check" title="Automatically check for updates" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="818">
@@ -352,7 +458,10 @@
                                         <constraint firstItem="2rn-Xo-dYj" firstAttribute="top" secondItem="4Bj-yv-gIT" secondAttribute="bottom" constant="8" symbolic="YES" id="LgP-Ej-MYf"/>
                                         <constraint firstItem="JE2-gK-vCp" firstAttribute="leading" secondItem="vJq-9X-o03" secondAttribute="leading" id="NCw-JO-QGE"/>
                                         <constraint firstItem="xKo-Ye-awl" firstAttribute="leading" secondItem="590" secondAttribute="leading" constant="20" symbolic="YES" id="Ni5-rS-kEt"/>
-                                        <constraint firstItem="574" firstAttribute="top" secondItem="689" secondAttribute="bottom" constant="6" symbolic="YES" id="Pfk-4i-1Dn"/>
+                                        <constraint firstItem="574" firstAttribute="top" secondItem="Cpq-btn-001" secondAttribute="bottom" constant="6" symbolic="YES" id="Pfk-4i-1Dn"/>
+                                        <constraint firstItem="Cpq-btn-001" firstAttribute="top" secondItem="689" secondAttribute="bottom" constant="10" symbolic="YES" id="Cpq-con-101"/>
+                                        <constraint firstItem="Cpq-btn-001" firstAttribute="leading" secondItem="590" secondAttribute="leading" constant="20" symbolic="YES" id="Cpq-con-102"/>
+                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Cpq-btn-001" secondAttribute="trailing" priority="250" constant="20" symbolic="YES" id="Cpq-con-103"/>
                                         <constraint firstItem="398" firstAttribute="leading" secondItem="689" secondAttribute="leading" priority="750" id="Pw3-fA-eke"/>
                                         <constraint firstAttribute="trailing" secondItem="575" secondAttribute="trailing" constant="20" symbolic="YES" id="Qed-5b-Wm2"/>
                                         <constraint firstItem="398" firstAttribute="leading" secondItem="697" secondAttribute="leading" id="Qhd-zx-ehV"/>
@@ -397,6 +506,14 @@
                                         <constraint firstAttribute="trailing" secondItem="403" secondAttribute="trailing" constant="20" symbolic="YES" id="xSl-3k-enI"/>
                                         <constraint firstItem="JE2-gK-vCp" firstAttribute="top" secondItem="vJq-9X-o03" secondAttribute="bottom" constant="6" symbolic="YES" id="xfG-2R-8hS"/>
                                         <constraint firstItem="xMi-Ox-Qfm" firstAttribute="leading" secondItem="xKo-Ye-awl" secondAttribute="trailing" constant="8" symbolic="YES" id="yde-Kk-wOv"/>
+                                        <constraint firstItem="ORp-lbl-001" firstAttribute="centerY" secondItem="689" secondAttribute="centerY" id="ORp-con-201"/>
+                                        <constraint firstItem="ORp-fld-001" firstAttribute="centerY" secondItem="689" secondAttribute="centerY" id="ORp-con-202"/>
+                                        <constraint firstItem="ORp-stp-001" firstAttribute="centerY" secondItem="689" secondAttribute="centerY" id="ORp-con-203"/>
+                                        <constraint firstItem="ORp-fld-001" firstAttribute="leading" secondItem="ORp-lbl-001" secondAttribute="trailing" constant="6" symbolic="YES" id="ORp-con-204"/>
+                                        <constraint firstItem="ORp-stp-001" firstAttribute="leading" secondItem="ORp-fld-001" secondAttribute="trailing" constant="6" symbolic="YES" id="ORp-con-205"/>
+                                        <constraint firstAttribute="trailing" secondItem="ORp-stp-001" secondAttribute="trailing" constant="20" symbolic="YES" id="ORp-con-206"/>
+                                        <constraint firstItem="ORp-fld-001" firstAttribute="width" constant="46" id="ORp-con-207"/>
+                                        <constraint firstItem="ORp-lbl-001" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="689" secondAttribute="trailing" constant="12" id="ORp-con-208"/>
                                     </constraints>
                                 </view>
                             </tabViewItem>

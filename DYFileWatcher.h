@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol DYFileWatcherDelegate <NSObject>
 - (void)watcherFiles:(NSArray *)files deleted:(NSArray *)deleted;
 - (void)watcherRootChanged:(NSURL *)fileRef;
+@property (nonatomic, readonly) BOOL showUnsupportedFiles;
 @end
 
 @interface DYFileWatcher : NSObject

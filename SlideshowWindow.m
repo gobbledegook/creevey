@@ -11,6 +11,7 @@
 #import "SlideshowWindow.h"
 #import "DYImageView.h"
 #import "DYImageCache.h"
+#import "KeyBindings.h"
 #import "DYCarbonGoodies.h"
 #import "CreeveyController.h"
 #import "DYRandomizableArray.h"
@@ -144,17 +145,26 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(imgViewResized:) name:NSViewFrameDidChangeNotification object:imgView];
 	imgView.delegate = self;
 	
+	CGFloat infoFontSize = round(NSFont.systemFontSize * DYInterfaceTextScale());
+	// white on a translucent dark background reads well over any image, in Light or Dark
+	NSColor *overlayBg = [NSColor colorWithCalibratedWhite:0.0 alpha:0.55];
 	infoFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,20)];
 	[imgView addSubview:infoFld];
 	infoFld.autoresizingMask = NSViewMaxXMargin|NSViewMaxYMargin;
-	infoFld.backgroundColor = NSColor.grayColor;
+	infoFld.drawsBackground = YES;
+	infoFld.backgroundColor = overlayBg;
+	infoFld.textColor = NSColor.whiteColor;
+	infoFld.font = [NSFont systemFontOfSize:infoFontSize];
 	infoFld.bezeled = NO;
 	infoFld.editable = NO;
-	
+
 	catsFld = [[NSTextField alloc] initWithFrame:NSMakeRect(0,imgView.bounds.size.height-20,300,20)];
 	[imgView addSubview:catsFld];
 	catsFld.autoresizingMask = NSViewMaxXMargin|NSViewMinYMargin;
-	catsFld.backgroundColor = NSColor.grayColor;
+	catsFld.drawsBackground = YES;
+	catsFld.backgroundColor = overlayBg;
+	catsFld.textColor = NSColor.whiteColor;
+	catsFld.font = [NSFont systemFontOfSize:infoFontSize];
 	catsFld.bezeled = NO;
 	catsFld.editable = NO; // **
 	catsFld.hidden = YES;
@@ -213,7 +223,7 @@ static BOOL UsingMagicMouse(NSEvent *e) {
 		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
 		self.hasShadow = NO; // avoid weird border from macOS 26's "liquid glass" effect
 	} else {
-		self.styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+		self.styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
 		self.collectionBehavior = NSWindowCollectionBehaviorParticipatesInCycle|NSWindowCollectionBehaviorFullScreenNone|NSWindowCollectionBehaviorMoveToActiveSpace;
 		self.hasShadow = YES;
 	}
@@ -560,6 +570,16 @@ scheduledTimerWithTimeInterval:timerIntvl
 	[attStr addAttribute:NSShadowAttributeName
 				   value:shdw
 				   range:r];
+	// scale the EXIF text to the interface text size
+	CGFloat scale = DYInterfaceTextScale();
+	if (scale != 1.0)
+		[attStr enumerateAttribute:NSFontAttributeName inRange:r options:0
+						usingBlock:^(NSFont *font, NSRange range, BOOL *stop) {
+			if (font)
+				[attStr addAttribute:NSFontAttributeName
+							   value:[NSFontManager.sharedFontManager convertFont:font toSize:font.pointSize * scale]
+							   range:range];
+		}];
 	[exifFld replaceCharactersInRange:NSMakeRange(0,exifFld.string.length)
 							  withRTF:[attStr RTFFromRange:NSMakeRange(0,attStr.length)
 										documentAttributes:@{}]];
@@ -853,6 +873,20 @@ scheduledTimerWithTimeInterval:timerIntvl
 		[self updateExifFld];
 }
 
+- (void)reloadInterfaceTextSize {
+	CGFloat sz = round(NSFont.systemFontSize * DYInterfaceTextScale());
+	infoFld.font = [NSFont systemFontOfSize:sz];
+	catsFld.font = [NSFont systemFontOfSize:sz];
+	[infoFld sizeToFit];
+	[self updateInfoFld];
+	if (!exifFld.enclosingScrollView.hidden) [self updateExifFld]; // top-right EXIF info
+	// rebuild the cheat sheet at the new size next time it's shown (or now, if visible)
+	BOOL wasVisible = helpFld && !helpFld.hidden;
+	[helpFld removeFromSuperview];
+	helpFld = nil;
+	if (wasVisible) [self toggleHelp];
+}
+
 - (void)toggleHelp {
 	if (!helpFld) {
 		helpFld = [[NSTextView alloc] initWithFrame:NSZeroRect];
@@ -862,6 +896,20 @@ scheduledTimerWithTimeInterval:timerIntvl
 			NSLog(@"couldn't load cheat sheet!");
 		helpFld.backgroundColor = NSColor.lightGrayColor;
 		helpFld.selectable = NO;
+		// scale the cheat sheet to the interface text size
+		CGFloat scale = DYInterfaceTextScale();
+		if (scale != 1.0) {
+			NSTextStorage *ts = helpFld.textStorage;
+			[ts beginEditing];
+			[ts enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, ts.length) options:0
+						 usingBlock:^(NSFont *font, NSRange range, BOOL *stop) {
+				if (font)
+					[ts addAttribute:NSFontAttributeName
+							   value:[NSFontManager.sharedFontManager convertFont:font toSize:font.pointSize * scale]
+							   range:range];
+			}];
+			[ts endEditing];
+		}
 //		NSLayoutManager *lm = [helpFld layoutManager];
 //		NSRange rnge = [lm glyphRangeForCharacterRange:NSMakeRange(0,[[helpFld textStorage] length])
 //								  actualCharacterRange:NULL];
@@ -876,6 +924,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 		s = self.contentView.frame.size;
 		r.origin.x = s.width - r.size.width - 50;
 		r.origin.y = s.height - r.size.height - 55;
+		// if the cheat sheet fits but its bottom would fall below the window, nudge it
+		// up so nothing is clipped; if it's taller than the window, leave it top-anchored
+		// (the navigation keys at the top matter most)
+		if (r.origin.y < 20 && r.size.height <= s.height - 20)
+			r.origin.y = 20;
 		helpFld.frame = NSIntegralRect(r);
 		helpFld.autoresizingMask = NSViewMinXMargin|NSViewMinYMargin;
 		return;
@@ -974,7 +1027,11 @@ scheduledTimerWithTimeInterval:timerIntvl
 	if (c == ' ' && ((e.modifierFlags & NSEventModifierFlagShift) != 0)) {
 		c = NSLeftArrowFunctionKey;
 	}
-	DYImageInfo *obj;
+	SlideshowAction act = [((CreeveyController *)NSApp.delegate).keyBindings slideshowActionForEvent:e];
+	if (act != SlideshowActionNone) {
+		[self performSlideshowAction:act];
+		return;
+	}
 	switch (c) {
 		case '!':
 			[self setTimer:0.5];
@@ -1014,7 +1071,22 @@ scheduledTimerWithTimeInterval:timerIntvl
 		case '\x1b': // escape
 			[self endSlideshow];
 			break;
-		case 'i':
+		case NSHelpFunctionKey: // the physical Help key isn't rebindable
+			[self performSlideshowAction:SlideshowActionHelp];
+			break;
+		default:
+			[super keyDown:e];
+	}
+}
+
+// The rebindable slideshow actions, dispatched by keyDown: via the config's
+// keystroke lookup. Non-rebindable navigation stays in keyDown:'s switch.
+- (void)performSlideshowAction:(SlideshowAction)action {
+	DYImageInfo *obj;
+	switch (action) {
+		case SlideshowActionNone:
+			break;
+		case SlideshowActionToggleInfo:
 			// cycles three ways: info, info + exif, none
 			hideInfoFld = !infoFld.hidden && !exifFld.enclosingScrollView.hidden;
 			if (!infoFld.hidden)
@@ -1030,7 +1102,7 @@ scheduledTimerWithTimeInterval:timerIntvl
 				[NSUserDefaults.standardUserDefaults setInteger:infoFldVisible forKey:@"DYSlideshowWindowVisibleFields"];
 			}
 			break;
-		case 'p':
+		case SlideshowActionTogglePath:
 			if (infoFld.hidden) {
 				infoFld.hidden = NO;
 				_showPath = YES;
@@ -1040,13 +1112,10 @@ scheduledTimerWithTimeInterval:timerIntvl
 			[self updateInfoFld];
 			[NSUserDefaults.standardUserDefaults setBool:_showPath forKey:@"DYSlideshowWindowVisiblePath"];
 			break;
-		case 'h':
-		case '?':
-		case '/':
-		case NSHelpFunctionKey: // doesn't work, trapped at a higher level?
+		case SlideshowActionHelp:
 			[self toggleHelp];
 			break;
-		case 'I':
+		case SlideshowActionMoreExif:
 			if (exifFld.enclosingScrollView.hidden) {
 				moreExif = YES;
 				hideInfoFld = NO;
@@ -1058,63 +1127,55 @@ scheduledTimerWithTimeInterval:timerIntvl
 			}
 			[NSUserDefaults.standardUserDefaults setInteger:2 forKey:@"DYSlideshowWindowVisibleFields"];
 			break;
-		case 'l':
+		case SlideshowActionRotateLeft:
 			[self setRotation:90];
 			break;
-		case 'r':
+		case SlideshowActionRotateRight:
 			[self setRotation:-90];
 			break;
-		case 'f':
+		case SlideshowActionRename:
+			[(CreeveyController *)NSApp.delegate renameSelectedFile:nil];
+			break;
+		case SlideshowActionMoveToTrash:
+			[(CreeveyController *)NSApp.delegate moveToTrash:nil];
+			break;
+		case SlideshowActionDeletePermanently:
+			[(CreeveyController *)NSApp.delegate deleteSelectedFilesPermanently:nil];
+			break;
+		case SlideshowActionFlip:
 			[self toggleFlip];
 			break;
-		case '=':
-			//if ([imgView showActualSize])
-			//	[zooms removeObjectForKey:[filenames objectAtIndex:currentIndex]];
-			// actually, '=' doesn't center the pic, so this is wrong
-			// if you zoom or move a pic while in actualsize mode, you're basically stuck with a non-default zoom
-			// intentional fall-through to next cases
-		case '+':
-		case '-':
+		case SlideshowActionActualSize:
+		case SlideshowActionZoomIn:
+		case SlideshowActionZoomOut:
 			if ((obj = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])])) {
-				if (c == '+') [imgView zoomIn];
-				else if (c == '-') [imgView zoomOut];
+				if (action == SlideshowActionZoomIn) [imgView zoomIn];
+				else if (action == SlideshowActionZoomOut) [imgView zoomOut];
 				else [imgView zoomActualSize];
 				[self saveZoomAndLoadFullSize:obj];
 			}
 			break;
-		case '*':
+		case SlideshowActionResetView:
 			[self redisplayImage]; // this resets zoom, rotate, and flip
 			break;
-		default:
-			[super keyDown:e];
+		case SlideshowActionScrollUp:
+		case SlideshowActionScrollDown:
+		case SlideshowActionScrollLeft:
+		case SlideshowActionScrollRight: {
+			if (!imgView.dragMode) break; // pan only when the image overflows the view
+			NSSize b = imgView.bounds.size;
+			CGFloat dx = b.width/4, dy = b.height/4; // a quarter view per press
+			if (action == SlideshowActionScrollUp)        [imgView fakeDragX:0 y:dy];
+			else if (action == SlideshowActionScrollDown) [imgView fakeDragX:0 y:-dy];
+			else if (action == SlideshowActionScrollLeft) [imgView fakeDragX:-dx y:0];
+			else                                          [imgView fakeDragX:dx y:0];
+			break;
+		}
 	}
 }
 
-- (BOOL)performKeyEquivalent:(NSEvent *)e {
-	unichar c = [e.characters characterAtIndex:0];
-	//NSLog([e charactersIgnoringModifiers]);
-	//NSLog([e characters]);
-	// charactersIgnoringModifiers is 10.4 or later, and doesn't play well with Dvorak Qwerty-cmd
-	DYImageInfo *obj;
-	switch (c) {
-		case '=':
-			if (!(e.modifierFlags & NSEventModifierFlagNumericPad))
-				c = '+';
-			// intentional fall-through
-		case '+':
-		case '-':
-			if (currentIndex >= filenames.count) { NSBeep(); return YES; }
-			if ((obj = [imgCache infoForKey:ResolveAliasToPath(filenames[currentIndex])])) {
-				if (c == '+') [imgView zoomIn];
-				else if (c == '-') [imgView zoomOut];
-				else [imgView zoomActualSize];
-				[self saveZoomAndLoadFullSize:obj];
-			}
-			return YES;
-		default:
-			return [super performKeyEquivalent:e];
-	}
-}
+// Note: single-key zoom (+ − =) and reset (*) are handled through the rebindable
+// slideshow actions in keyDown:/performSlideshowAction:, so they stay configurable.
 
 
 // mouse control added for 1.2.2 (2006 Aug)

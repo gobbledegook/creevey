@@ -22,6 +22,12 @@
                         <action selector="revealSelectedFilesInFinder:" target="-2" id="PjH-Hp-X5V"/>
                     </connections>
                 </menuItem>
+                <menuItem title="Copy as Pathname" keyEquivalent="c" id="Cpn-mi-001">
+                    <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                    <connections>
+                        <action selector="copySelectedFilePaths:" target="-2" id="Cpn-ac-002"/>
+                    </connections>
+                </menuItem>
                 <menuItem isSeparatorItem="YES" id="1zy-oe-nmR"/>
             </items>
             <point key="canvasLocation" x="611" y="532.5"/>

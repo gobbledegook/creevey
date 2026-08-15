@@ -14,6 +14,7 @@
                 <outlet property="slidesBtn" destination="368" id="497"/>
                 <outlet property="statusFld" destination="367" id="511"/>
                 <outlet property="subfoldersButton" destination="370" id="eiX-vT-wMP"/>
+                <outlet property="unsupportedButton" destination="Uns-btn-901" id="Uns-out-902"/>
                 <outlet property="window" destination="21" id="501"/>
             </connections>
         </customObject>
@@ -69,25 +70,35 @@ DQ
                                     </customView>
                                     <button toolTip="Search all subfolders for images (slower)." horizontalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="370">
                                         <rect key="frame" x="272" y="7" width="98" height="16"/>
-                                        <buttonCell key="cell" type="check" title="Subfolders ⌘F" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="517">
+                                        <buttonCell key="cell" type="check" title="Subfolders ⌘⇧F" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="517">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                            <font key="font" metaFont="smallSystem"/>
-                                            <string key="keyEquivalent">f</string>
-                                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                            <font key="font" metaFont="system"/>
                                         </buttonCell>
                                         <connections>
                                             <action selector="setRecurseSubfolders:" target="-2" id="505"/>
                                         </connections>
                                     </button>
+                                    <button toolTip="Show files the app can't display; preview them with Quick Look." horizontalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Uns-btn-901">
+                                        <rect key="frame" x="378" y="7" width="104" height="16"/>
+                                        <buttonCell key="cell" type="check" title="Unsupported ⌥⌘U" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="Uns-cel-902">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="toggleUnsupportedFilesButton:" target="-2" id="Uns-act-903"/>
+                                        </connections>
+                                    </button>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="369" firstAttribute="leading" secondItem="361" secondAttribute="leading" id="0Gt-bq-klX"/>
-                                    <constraint firstItem="370" firstAttribute="leading" secondItem="367" secondAttribute="trailing" constant="7" id="EpI-9y-Bxb"/>
+                                    <constraint firstItem="Uns-btn-901" firstAttribute="leading" secondItem="367" secondAttribute="trailing" constant="7" id="EpI-9y-Bxb"/>
                                     <constraint firstItem="368" firstAttribute="centerY" secondItem="367" secondAttribute="centerY" id="OXe-9M-d3l"/>
                                     <constraint firstItem="368" firstAttribute="centerY" secondItem="370" secondAttribute="centerY" id="PUe-ei-kG0"/>
                                     <constraint firstAttribute="bottom" secondItem="368" secondAttribute="bottom" constant="5" id="SQc-ZC-bql"/>
                                     <constraint firstItem="369" firstAttribute="top" secondItem="361" secondAttribute="top" id="UOj-BD-ab1"/>
                                     <constraint firstItem="368" firstAttribute="leading" secondItem="370" secondAttribute="trailing" constant="8" id="atT-f2-wya"/>
+                                    <constraint firstItem="370" firstAttribute="leading" secondItem="Uns-btn-901" secondAttribute="trailing" constant="8" id="Uns-con-904"/>
+                                    <constraint firstItem="Uns-btn-901" firstAttribute="centerY" secondItem="370" secondAttribute="centerY" id="Uns-con-905"/>
                                     <constraint firstAttribute="trailing" secondItem="368" secondAttribute="trailing" constant="20" id="fsf-er-yas"/>
                                     <constraint firstAttribute="trailing" secondItem="369" secondAttribute="trailing" id="l8K-Im-mmu"/>
                                     <constraint firstItem="368" firstAttribute="top" secondItem="369" secondAttribute="bottom" constant="11" id="nbD-kk-nKC"/>

@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 // supports separate display/underlying paths
 @interface DYCreeveyBrowser : NSBrowser
 @property (nullable, weak) id<DYCreeveyBrowserDelegate> delegate;
+- (void)reloadTextSize; // re-apply the interface text size
 @end
 
 NS_ASSUME_NONNULL_END

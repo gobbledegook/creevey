@@ -9,6 +9,8 @@
 #import "CreeveyMainWindowController.h"
 #import "DYCarbonGoodies.h"
 
+CGFloat DYInterfaceTextScale(void); // defined in CreeveyController.m
+
 @interface DYCreeveyBrowser ()
 @property (nonatomic, strong) NSMenu *contextMenu;
 @end
@@ -56,11 +58,16 @@
 @implementation DYCreeveyBrowserMatrix
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
 	if (menuItem.action == @selector(selectAll:)) return YES;
+	if (menuItem.action == @selector(copy:))
+		return [(CreeveyMainWindowController *)self.window.delegate selectedIndexes].count > 0;
 	if ([menuItem.target isKindOfClass:[DYCreeveyBrowser class]]) return YES;
 	return [super validateMenuItem:menuItem];
 }
 - (void)selectAll:(id)sender {
 	[(CreeveyMainWindowController *)self.window.delegate selectAll:sender]; // to pass it to image matrix
+}
+- (void)copy:(id)sender {
+	[(CreeveyMainWindowController *)self.window.delegate copy:sender]; // pass Cmd-C through to the image matrix
 }
 - (void)keyDown:(NSEvent *)e {
 	unichar c = 0;
@@ -137,7 +144,7 @@
 		self.titled = NO;
 		self.hasHorizontalScroller = YES;
 		[self setCellClass:[DYBrowserCell class]];
-		[self.cellPrototype setFont:[NSFont systemFontOfSize:NSFont.smallSystemFontSize]];
+		[self applyInterfaceTextSize];
 		self.allowsEmptySelection = NO;
 		self.columnResizingType = NSBrowserUserColumnResizing;
 		self.prefersAllColumnUserResizing = NO;
@@ -145,6 +152,34 @@
 		[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 	}
 	return self;
+}
+
+- (void)applyInterfaceTextSize {
+	// font only — this runs during initWithFrame: (nib instantiation). Setting rowHeight
+	// here (or in awakeFromNib) crashes: the browser isn't configured enough to re-tile
+	// until it's actually loaded and displayed. rowHeight is set later, in reloadTextSize.
+	[self.cellPrototype setFont:[NSFont systemFontOfSize:NSFont.smallSystemFontSize * DYInterfaceTextScale()]];
+}
+
+- (void)reloadTextSize {
+	// Legacy matrix mode: NSBrowser.rowHeight and restoring selectionIndexPath after a
+	// column reload both crash. So instead we update the font on the already-loaded cells
+	// directly and resize each column's rows to fit — no reload, no selection change.
+	[self applyInterfaceTextSize]; // updates the prototype for future columns
+	NSFont *font = [self.cellPrototype font];
+	CGFloat rowHeight = ceil([self.cellPrototype cellSize].height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+	for (NSInteger col = 0; col <= self.lastColumn; ++col) {
+		NSMatrix *m = [self matrixInColumn:col];
+		for (NSCell *cell in m.cells)
+			[cell setFont:font];
+		[m setCellSize:NSMakeSize(m.cellSize.width, rowHeight)];
+		[m sizeToCells];
+		[m setNeedsDisplay:YES];
+	}
+#pragma GCC diagnostic pop
+	[self tile];
 }
 
 - (BOOL)sendAction {

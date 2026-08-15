@@ -27,9 +27,30 @@
                             <menuItem isSeparatorItem="YES" id="196">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Preferences…" keyEquivalent="," id="129">
+                            <menuItem title="Preferences…" tag="21" keyEquivalent="," id="129">
                                 <connections>
                                     <action selector="openPrefWin:" target="207" id="411"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="cfg-sep-00">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Edit Configuration" id="cfg-ed-i00">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="editConfiguration:" target="207" id="cfg-ed-i01"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Reload Configuration" id="cfg-rl-d00">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="reloadConfiguration:" target="207" id="cfg-rl-d01"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Reveal Configuration in Finder" id="cfg-rv-l00">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="revealConfiguration:" target="207" id="cfg-rv-l01"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="143">
@@ -71,7 +92,7 @@
                 <menuItem title="File" tag="300" id="83">
                     <menu key="submenu" title="File" id="81">
                         <items>
-                            <menuItem title="New Window" keyEquivalent="n" id="494">
+                            <menuItem title="New Window" tag="18" keyEquivalent="n" id="494">
                                 <connections>
                                     <action selector="newWindow:" target="207" id="496"/>
                                 </connections>
@@ -79,6 +100,31 @@
                             <menuItem title="New Tab" tag="10" keyEquivalent="t" id="k8u-wZ-vhF">
                                 <connections>
                                     <action selector="newTab:" target="207" id="dzm-5C-yPs"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Go to Folder…" tag="24" keyEquivalent="g" id="GtF-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <connections>
+                                    <action selector="goToFolder:" target="207" id="GtF-ac-002"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Open Recent" id="ORc-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Open Recent" autoenablesItems="NO" id="ORc-menu-001">
+                                    <items>
+                                        <menuItem title="No Recent Folders" enabled="NO" id="ORc-ph-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                    <connections>
+                                        <outlet property="delegate" destination="207" id="ORc-del-001"/>
+                                    </connections>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Search" tag="29" keyEquivalent="f" id="Sch-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                <connections>
+                                    <action selector="searchImages:" target="207" id="Sch-ac-002"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Close Window" keyEquivalent="w" id="499">
@@ -94,20 +140,34 @@
                                     <action selector="openGetInfoPanel:" target="207" id="489"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="485">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Set As Desktop Picture" tag="5" keyEquivalent="d" id="391">
+                            <menuItem title="Quick Look" tag="20" id="QLk-mi-001">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+IA
+</string>
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="setDesktopPicture:" target="207" id="414"/>
+                                    <action selector="quickLook:" target="207" id="QLk-ac-002"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="79">
+                            <menuItem isSeparatorItem="YES" id="485">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Reveal In Finder" tag="1" keyEquivalent="r" id="341">
                                 <connections>
                                     <action selector="revealSelectedFilesInFinder:" target="207" id="344"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Copy as Pathname" tag="28" keyEquivalent="c" id="Cpn-me-200">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="copySelectedFilePaths:" target="207" id="Cpn-me-201"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="Fsp-a1-001"/>
+                            <menuItem title="Rename…" tag="16" id="Rn1-me-100">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="renameSelectedFile:" target="207" id="Rn2-me-102"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Move To..." tag="12" id="SpE-qb-DUd">
@@ -116,30 +176,36 @@
                                     <action selector="moveSelectedFiles:" target="207" id="1cb-Eq-3Ik"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Move To Folder Again" tag="13" keyEquivalent="m" id="c0g-qO-OVm">
-                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
-                                <connections>
-                                    <action selector="moveSelectedFilesAgain:" target="207" id="cVY-9b-EDj"/>
-                                </connections>
-                            </menuItem>
+                            <menuItem title="Move To Recent" tag="13" id="c0g-qO-OVm"/>
                             <menuItem title="Copy To..." tag="14" id="e4f-92-7kq">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="copySelectedFiles:" target="207" id="a1b-45-7c2"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Copy To Folder Again" tag="15" keyEquivalent="c" id="b2k-58-4mj">
-                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
-                                <connections>
-                                    <action selector="copySelectedFilesAgain:" target="207" id="e5p-33-1uv"/>
-                                </connections>
-                            </menuItem>
+                            <menuItem title="Copy To Recent" tag="15" id="b2k-58-4mj"/>
+                            <menuItem isSeparatorItem="YES" id="Fsp-a2-001"/>
                             <menuItem title="Move To Trash" tag="2" id="343">
                                 <string key="keyEquivalent" base64-UTF8="YES">
 CA
 </string>
                                 <connections>
                                     <action selector="moveToTrash:" target="207" id="501"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Delete Immediately" tag="17" id="Dl1-me-101">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="deleteSelectedFilesPermanently:" target="207" id="Dl2-me-103"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="Fsp-a3-001"/>
+                            <menuItem title="Set As Desktop Picture" tag="5" keyEquivalent="d" id="391">
+                                <connections>
+                                    <action selector="setDesktopPicture:" target="207" id="414"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -189,7 +255,7 @@ CA
                                     <action selector="selectAll:" target="-1" id="351"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Select None" keyEquivalent="A" id="334">
+                            <menuItem title="Select None" tag="19" keyEquivalent="A" id="334">
                                 <connections>
                                     <action selector="selectNone:" target="-1" id="388"/>
                                 </connections>
@@ -250,12 +316,67 @@ CA
                                     <action selector="doShowFilenames:" target="207" id="856"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Show Directory Browser" tag="25" keyEquivalent="b" id="FBr-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="toggleDirectoryBrowser:" target="207" id="FBr-ac-002"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show Path Bar" tag="26" keyEquivalent="p" id="PBr-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="togglePathBar:" target="207" id="PBr-ac-002"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Search Subfolders" tag="30" keyEquivalent="f" id="Sbf-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <connections>
+                                    <action selector="toggleSubfolders:" target="207" id="Sbf-ac-002"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show Unsupported Files" tag="27" keyEquivalent="u" id="Uns-mi-001">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="toggleUnsupportedFiles:" target="207" id="Uns-ac-002"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="859"/>
                             <menuItem title="Auto-Rotate by Orientation Tag" tag="261" id="860">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="doAutoRotateDisplayedImage:" target="207" id="861"/>
                                 </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="Zm0-sep-000"/>
+                            <menuItem title="Zoom" id="Zmn-par-001">
+                                <menu key="submenu" title="Zoom" id="Zmn-sub-001">
+                                    <items>
+                                        <menuItem title="Zoom In" tag="31" keyEquivalent="+" id="Zm1-in-0001">
+                                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                            <connections>
+                                                <action selector="zoomIn:" target="-1" id="Zm1-in-a001"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Zoom Out" tag="32" keyEquivalent="-" id="Zm2-ot-0001">
+                                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                            <connections>
+                                                <action selector="zoomOut:" target="-1" id="Zm2-ot-a001"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Actual Size" tag="33" keyEquivalent="0" id="Zm3-ac-0001">
+                                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                            <connections>
+                                                <action selector="zoomActualSize:" target="-1" id="Zm3-ac-a001"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Fit to Window" tag="34" keyEquivalent="9" id="Zm4-ft-0001">
+                                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                            <connections>
+                                                <action selector="zoomFitToWindow:" target="-1" id="Zm4-ft-a001"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
                             </menuItem>
                         </items>
                     </menu>
@@ -370,7 +491,7 @@ DQ
                                     <action selector="slideshowAlternateMode:" target="207" id="pLp-k2-hup"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="End Slideshow" id="329">
+                            <menuItem title="End Slideshow" tag="22" id="329">
                                 <string key="keyEquivalent" base64-UTF8="YES">
 Gw
 </string>
@@ -409,7 +530,7 @@ Gw
                             <menuItem isSeparatorItem="YES" id="417">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Show Cheat Sheet" keyEquivalent="?" id="418">
+                            <menuItem title="Show Cheat Sheet" tag="23" keyEquivalent="?" id="418">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleCheatSheet:" target="210" id="419"/>
@@ -510,9 +631,9 @@ Gw
                             <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="194" id="Iag-qm-od0"/>
                         </constraints>
                     </progressIndicator>
-                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="458">
+                    <textField tag="2" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="458">
                         <rect key="frame" x="18" y="59" width="198" height="16"/>
-                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Processing files..." id="835">
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" lineBreakMode="truncatingMiddle" title="Processing files..." id="835">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

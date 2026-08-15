@@ -12,6 +12,8 @@
 #import "NSMutableArray+DYMovable.h"
 #import "NSColor+TextColor.h"
 
+CGFloat DYInterfaceTextScale(void); // defined in CreeveyController.m
+
 #define MAX_EXIF_WIDTH  160
 #define MIN_CELL_WIDTH  40
 #define PADDING 16
@@ -99,6 +101,8 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	float cellWidth;
 	NSUInteger numCells;
 	NSMutableIndexSet *selectedIndexes;
+	NSUInteger _selAnchor, _selCursor; // keyboard range-selection pivot and moving end
+	BOOL _keyboardSelValid;            // NO after a mouse/select-all change, so keys re-sync
 	
 	BOOL dragEntered;
 	
@@ -113,6 +117,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	BOOL _respondsToLoadImageForFile, _respondsToSelectionDidChange;
 	NSMutableArray *_movedUrls, *_originPaths;
 	id __weak _appDelegate;
+
+	// instant hover tool tip for truncated file names
+	NSTrackingArea *_nameTipTracking;
+	NSWindow *_nameTipWindow;
+	NSTextField *_nameTipField;
+	NSInteger _nameTipIndex; // cell the tip is currently showing, or -1
 }
 @synthesize delegate, loadingImage;
 
@@ -170,9 +180,10 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		_originPaths = [[NSMutableArray alloc] init];
 		// cellWidth should be initialized by an external controller during awakeFromNib
 		_maxCellWidth = FLT_MAX;
-		textHeight = DEFAULT_TEXTHEIGHT;
+		textHeight = round(DEFAULT_TEXTHEIGHT * DYInterfaceTextScale());
 		autoRotate = YES;
-		
+		_nameTipIndex = -1;
+
 		[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 	}
 	return self;
@@ -212,13 +223,21 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)setMaxCellWidth:(float)w {
-	if (w < _maxCellWidth) {
-		_maxCellWidth = w; // this has to be set before we do the resizing
-		self.cellWidth = cellWidth < w ? cellWidth : w;
+	float oldMax = _maxCellWidth;
+	_maxCellWidth = w; // has to be set before we resize the cells
+	// Keep the size slider at the same fraction of its range, so a size you
+	// deliberately chose scales with the cap instead of snapping to it. When the
+	// slider was already at the maximum this still lands on the new cap.
+	if (oldMax > MIN_CELL_WIDTH && oldMax < FLT_MAX) {
+		float fraction = (cellWidth - MIN_CELL_WIDTH) / (oldMax - MIN_CELL_WIDTH);
+		self.cellWidth = MIN_CELL_WIDTH + fraction * (w - MIN_CELL_WIDTH);
 	} else {
-		_maxCellWidth = w;
-		// tell delegate to reload anything we've loaded already
-		// the delay is to wait for all the other windows to have emptied the thumbs cache before we start repopulating it
+		self.cellWidth = cellWidth < w ? cellWidth : w; // first pass: just clamp into range
+	}
+	if (w > oldMax) {
+		// Raising the cap: reload anything we've already loaded at the higher
+		// resolution. The delay is to wait for all the other windows to have
+		// emptied the thumbs cache before we start repopulating it.
 		NSUInteger n = filenames.count;
 		if (n && _respondsToLoadImageForFile) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			for (NSUInteger i = 0; i < n; ++i) {
@@ -301,6 +320,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (void)selectionNeedsDisplay:(NSUInteger)n {
+	if (_selectionUpdatesSuppressed) return; // grid is hidden (Quick Look); redraw happens on restore
 	NSUInteger row, col;
 	row = n/numCols;
 	col = n%numCols;
@@ -373,7 +393,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 
 	// show/hide filenames
 	if (b) {
-		textHeight = DEFAULT_TEXTHEIGHT;
+		textHeight = round(DEFAULT_TEXTHEIGHT * DYInterfaceTextScale());
 	} else {
 		textHeight = 0;
 	}
@@ -409,6 +429,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 #pragma mark event stuff
 - (void)mouseDown:(NSEvent *)theEvent {
 	[self.window makeFirstResponder:self];
+	_keyboardSelValid = NO; // mouse changed the selection; let keyboard re-derive its cursor
 	if (numCells == 0) return;
 	BOOL keepOn = YES;
 	char doDrag = 0;
@@ -553,6 +574,12 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	}
 }
 
+- (void)reloadTextSize {
+	textHeight = round(DEFAULT_TEXTHEIGHT * DYInterfaceTextScale());
+	[self resize:nil];
+	[self setNeedsDisplay:YES];
+}
+
 - (void)resize:(id)anObject {
 	NSRect myFrame = self.frame;
 	if (anObject) {
@@ -571,11 +598,103 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		_contentSize = mySize;
 		[self invalidateIntrinsicContentSize];
 	}
+	[self hideNameTip]; // a reflow would leave any visible name tip over the wrong cell
 }
 
 - (NSSize)intrinsicContentSize
 {
 	return _contentSize;
+}
+
+- (NSFont *)labelFont {
+	// base size ranges 6 to 12 with the thumbnail size, scaled by the interface text size
+	return [NSFont systemFontOfSize:(cellWidth >= 160 ? 12 : 4+cellWidth/20) * DYInterfaceTextScale()];
+}
+
+#pragma mark instant name tool tips
+// Reveal the full file name on hover for every thumbnail. We draw the tip
+// ourselves in a small borderless window so it appears instantly, without the
+// system tool-tip hover delay (which AppKit re-arms on entering each new cell).
+- (void)updateTrackingAreas {
+	[super updateTrackingAreas];
+	if (_nameTipTracking) [self removeTrackingArea:_nameTipTracking];
+	_nameTipTracking = [[NSTrackingArea alloc] initWithRect:NSZeroRect
+		options:NSTrackingMouseMoved|NSTrackingMouseEnteredAndExited|NSTrackingActiveInKeyWindow|NSTrackingInVisibleRect
+		owner:self userInfo:nil];
+	[self addTrackingArea:_nameTipTracking];
+}
+
+- (void)mouseMoved:(NSEvent *)e {
+	[super mouseMoved:e];
+	NSPoint p = [self convertPoint:e.locationInWindow fromView:nil];
+	NSInteger i = [self point2cellnum:p];
+	if (i < 0 || i >= (NSInteger)numCells || !NSPointInRect(p, [self cellnum2rect:i]))
+		[self hideNameTip];
+	else
+		[self showNameTip:[filenames[i] lastPathComponent] forCell:i];
+}
+
+- (void)mouseExited:(NSEvent *)e {
+	[super mouseExited:e];
+	[self hideNameTip];
+}
+
+- (void)scrollWheel:(NSEvent *)e {
+	[self hideNameTip]; // don't leave a stale tip while the content scrolls under the cursor
+	[super scrollWheel:e];
+}
+
+- (void)hideNameTip {
+	_nameTipIndex = -1;
+	[_nameTipWindow orderOut:nil];
+}
+
+- (void)showNameTip:(NSString *)name forCell:(NSInteger)i {
+	if (_nameTipWindow.isVisible && _nameTipIndex == i) return; // already showing this cell
+	_nameTipIndex = i;
+	if (!_nameTipWindow) {
+		NSView *bg = [[NSView alloc] initWithFrame:NSZeroRect];
+		bg.wantsLayer = YES;
+		bg.layer.cornerRadius = 4;
+		bg.layer.borderWidth = 0.5;
+		_nameTipField = [NSTextField labelWithString:@""];
+		_nameTipField.font = [NSFont toolTipsFontOfSize:0];
+		[bg addSubview:_nameTipField];
+		_nameTipWindow = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSWindowStyleMaskBorderless backing:NSBackingStoreBuffered defer:NO];
+		_nameTipWindow.opaque = NO;
+		_nameTipWindow.backgroundColor = NSColor.clearColor;
+		_nameTipWindow.hasShadow = YES;
+		_nameTipWindow.level = NSPopUpMenuWindowLevel;
+		_nameTipWindow.ignoresMouseEvents = YES;
+		_nameTipWindow.contentView = bg;
+	}
+	// match the current appearance, then lay out around the text
+	_nameTipWindow.appearance = self.window.effectiveAppearance;
+	NSView *bg = _nameTipWindow.contentView;
+	bg.layer.backgroundColor = NSColor.controlBackgroundColor.CGColor;
+	bg.layer.borderColor = [NSColor.gridColor colorWithAlphaComponent:0.8].CGColor;
+	_nameTipField.textColor = NSColor.controlTextColor;
+	_nameTipField.stringValue = name;
+	[_nameTipField sizeToFit];
+	const CGFloat padX = 6, padY = 3;
+	NSSize fs = _nameTipField.frame.size;
+	_nameTipField.frameOrigin = NSMakePoint(padX, padY);
+	NSRect wf = NSMakeRect(0, 0, ceil(fs.width) + padX*2, ceil(fs.height) + padY*2);
+	// anchor over the hovered cell's file-name label, centered on the cell, so the
+	// popup reads as the truncated label expanded in place
+	NSUInteger row = i / numCols, col = i % numCols;
+	CGFloat stripH = (textHeight ? textHeight : 12) + _vPadding/2;
+	NSRect label = NSMakeRect(area_w*col, area_h*row + area_h - stripH, area_w, stripH);
+	label = [self.window convertRectToScreen:[self convertRect:label toView:nil]];
+	wf.origin.x = round(NSMidX(label) - wf.size.width/2);
+	wf.origin.y = round(NSMidY(label) - wf.size.height/2); // sit directly over the label
+	NSRect vis = (self.window.screen ?: NSScreen.mainScreen).visibleFrame;
+	if (NSMaxX(wf) > NSMaxX(vis)) wf.origin.x = NSMaxX(vis) - wf.size.width;
+	if (wf.origin.x < NSMinX(vis)) wf.origin.x = NSMinX(vis);
+	if (NSMaxY(wf) > NSMaxY(vis)) wf.origin.y = NSMaxY(vis) - wf.size.height; // keep on-screen at the top
+	[_nameTipWindow setFrame:wf display:YES];
+	if (!_nameTipWindow.isVisible)
+		[_nameTipWindow orderFront:nil];
 }
 
 - (void)drawRect:(NSRect)rect {
@@ -590,7 +709,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	NSRect textCellRect = NSMakeRect(0, 0, area_w, textHeight + _vPadding/2);
 	NSRect cellRect;
 	NSWindow *myWindow = self.window;
-	myTextCell.font = [NSFont systemFontOfSize:cellWidth >= 160 ? 12 : 4+cellWidth/20]; // ranges from 6 to 12: 6 + 6*(cellWidth-40)/(160-40)
+	myTextCell.font = self.labelFont;
 	myTextCell.textColor = bgColor.bestTextColor;
 	for (i=0; i<numCells; ++i) {
 		row = i/numCols;
@@ -682,6 +801,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 - (void)scrollSelectionToVisible:(NSUInteger)n {
 	[self notifySelectionDidChange];
+	if (_selectionUpdatesSuppressed) return; // don't scroll/redraw a grid hidden behind Quick Look
 	NSRect r = [self cellnum2rect:n];
 	[self selectionNeedsDisplay:n];
 	// round down for better auto-scrolling
@@ -705,17 +825,50 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	[self notifySelectionDidChange];
 }
 
+// Replace the selection with a single cell (plain arrow / Home / End).
+- (void)setSingleSelection:(NSUInteger)n {
+	NSMutableIndexSet *dirty = [selectedIndexes mutableCopy];
+	[selectedIndexes removeAllIndexes];
+	[selectedIndexes addIndex:n];
+	[dirty addIndex:n];
+	for (NSUInteger i = dirty.firstIndex; i != NSNotFound; i = [dirty indexGreaterThanIndex:i])
+		[self selectionNeedsDisplay:i];
+	_selAnchor = _selCursor = n;
+	_keyboardSelValid = YES;
+	[self scrollSelectionToVisible:n]; // notifies + scrolls
+}
+
+// Extend the selection from the anchor to n (shift + arrow / Home / End).
+- (void)extendSelectionTo:(NSUInteger)n {
+	NSUInteger anchor = (_keyboardSelValid && _selAnchor < numCells) ? _selAnchor
+		: (selectedIndexes.count ? selectedIndexes.firstIndex : n);
+	NSMutableIndexSet *dirty = [selectedIndexes mutableCopy];
+	[selectedIndexes removeAllIndexes];
+	NSUInteger lo = MIN(anchor, n), hi = MAX(anchor, n);
+	[selectedIndexes addIndexesInRange:NSMakeRange(lo, hi - lo + 1)];
+	[dirty addIndexes:selectedIndexes];
+	for (NSUInteger i = dirty.firstIndex; i != NSNotFound; i = [dirty indexGreaterThanIndex:i])
+		[self selectionNeedsDisplay:i];
+	_selAnchor = anchor;
+	_selCursor = n;
+	_keyboardSelValid = YES;
+	[self scrollSelectionToVisible:n];
+}
+
 - (void)keyDown:(NSEvent *)e {
 	if (e.characters.length == 0) return;
 	unichar c = [e.characters characterAtIndex:0];
+	BOOL shift = (e.modifierFlags & NSEventModifierFlagShift) != 0;
 	NSRect r;
 	switch (c) {
 		case NSHomeFunctionKey:
+			if (shift && numCells) { [self extendSelectionTo:0]; return; }
 			r = [self cellnum2rect:0];
 			r.size.height = (int)r.size.height;
 			[self scrollRectToVisible:r];
 			return;
 		case NSEndFunctionKey:
+			if (shift && numCells) { [self extendSelectionTo:numCells-1]; return; }
 			r = [self cellnum2rect:filenames.count-1];
 			r.size.height = (int)r.size.height;
 			[self scrollRectToVisible:r];
@@ -726,43 +879,34 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 		case NSUpArrowFunctionKey:
 			break;
 		default:
-			[super keyDown:e];
+			// Let menu shortcuts fire before NSControl turns Space/Return into a
+			// click on our action (which starts the slideshow). This is what makes
+			// Space = Quick Look while Return still begins the slideshow. AppKit does
+			// not auto-dispatch no-modifier menu key equivalents (like plain Space).
+			if (![NSApp.mainMenu performKeyEquivalent:e])
+				[super keyDown:e];
 			return;
 	}
+	if (numCells == 0) return;
+	BOOL forward = (c == NSRightArrowFunctionKey || c == NSDownArrowFunctionKey);
+	// the moving end: the keyboard cursor, falling back to the current selection edge
+	NSUInteger base = (_keyboardSelValid && _selCursor < numCells) ? _selCursor
+		: (selectedIndexes.count ? (forward ? selectedIndexes.lastIndex : selectedIndexes.firstIndex) : NSNotFound);
 	NSUInteger n;
-	if (selectedIndexes.count == 1) {
-		n = selectedIndexes.firstIndex;
-		[self selectionNeedsDisplay:n];
+	if (base == NSNotFound) {
+		n = forward ? 0 : numCells - 1; // empty selection: enter at the near edge, no move
+	} else {
+		n = base;
 		switch (c) {
-			case NSRightArrowFunctionKey: if (n<numCells-1) n++; break;
-			case NSLeftArrowFunctionKey:  if (n>0) n--; break;
-			case NSDownArrowFunctionKey:
-				if ((numCells - 1 - n) < numCols) n = numCells-1;
-				else n += numCols;
-				break;
-			case NSUpArrowFunctionKey:
-				if (numCols > n) n = 0;
-				else n -= numCols;
-				break;
+			case NSRightArrowFunctionKey: if (n < numCells-1) n++; break;
+			case NSLeftArrowFunctionKey:  if (n > 0) n--; break;
+			case NSDownArrowFunctionKey:  n = (numCells - 1 - n) < numCols ? numCells-1 : n + numCols; break;
+			case NSUpArrowFunctionKey:    n = numCols > n ? 0 : n - numCols; break;
 			default: break;
 		}
-		[selectedIndexes removeAllIndexes];
-	} else if (selectedIndexes.count == 0 && numCells > 0) {
-		switch (c) {
-			case NSRightArrowFunctionKey:
-			case NSDownArrowFunctionKey:
-				n = 0;
-				break;
-			case NSLeftArrowFunctionKey:
-			case NSUpArrowFunctionKey:
-			default: // keep the compiler happy about n
-				n = numCells-1;
-				break;
-		}
-	} else
-		return;
-	[selectedIndexes addIndex:n];
-	[self scrollSelectionToVisible:n];
+	}
+	if (shift && base != NSNotFound) [self extendSelectionTo:n];
+	else [self setSingleSelection:n];
 }
 
 - (void)selectIndex:(NSUInteger)i {
@@ -828,7 +972,9 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 }
 
 - (NSString *)firstSelectedFilename {
-	return filenames[selectedIndexes.firstIndex];
+	NSUInteger i = selectedIndexes.firstIndex;
+	// selection can momentarily be empty or stale relative to filenames (e.g. mid-reload)
+	return i < filenames.count ? filenames[i] : nil;
 }
 
 - (IBAction)selectAll:(id)sender {
@@ -837,6 +983,7 @@ static NSRect ScaledCenteredRect(NSSize sourceSize, NSRect boundsRect) {
 	for (i=0; i<numCells; ++i) {
 		[self selectionNeedsDisplay:i];
 	}
+	_keyboardSelValid = NO;
 	[self notifySelectionDidChange];
 }
 

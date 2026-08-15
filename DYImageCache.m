@@ -10,6 +10,7 @@
 #import "DYImageCache.h"
 #import "DYCarbonGoodies.h"
 #import <sys/stat.h>
+@import QuickLookThumbnailing;
 
 #define N_StringFromFileSize_UNITS 3
 NSString *FileSize2String(unsigned long long fileSize) {
@@ -415,6 +416,27 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 	}
 }
 
+// Ask Quick Look for a thumbnail when our own decoders can't render a file.
+// Runs on the background thumbnail thread, so blocking on the async generator is fine.
+static NSImage *QuickLookThumbnail(NSString *path, NSSize boundingSize) {
+	if (boundingSize.width < 1 || boundingSize.height < 1) return nil;
+	QLThumbnailGenerationRequest *req = [[QLThumbnailGenerationRequest alloc]
+		initWithFileAtURL:[NSURL fileURLWithPath:path]
+					 size:boundingSize
+					scale:1.0
+	  representationTypes:QLThumbnailGenerationRequestRepresentationTypeAll];
+	NSMutableArray<NSImage *> *holder = [NSMutableArray array]; // heap-retained by the block, so it stays safe if we time out
+	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+	[QLThumbnailGenerator.sharedGenerator generateBestRepresentationForRequest:req
+		completionHandler:^(QLThumbnailRepresentation *rep, NSError *error) {
+			if (rep.NSImage) [holder addObject:rep.NSImage];
+			dispatch_semaphore_signal(sem);
+		}];
+	if (dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(8 * NSEC_PER_SEC))) != 0)
+		return nil; // timed out
+	return holder.firstObject;
+}
+
 - (void)createScaledImage:(DYImageInfo *)imgInfo {
 	if (imgInfo->fileSize == 0)
 		return;  // nsimage crashes on zero-length files
@@ -464,6 +486,16 @@ static void ScaleCGImage(CGImageSourceRef orig, CGSize boundingSize, DYImageInfo
 		if (orig) {
 			ScaleCGImage(orig, boundingSize, imgInfo, _fastThumbnails);
 			CFRelease(orig);
+		}
+	}
+	if (!imgInfo.image) {
+		// our decoders couldn't render it (e.g. an unsupported file shown via the
+		// browser's "Show Unsupported Files" toggle) — fall back to a Quick Look thumbnail
+		NSImage *ql = QuickLookThumbnail(path, boundingSize);
+		if (ql) {
+			imgInfo.image = ql;
+			imgInfo->pixelSize = ql.size;
+			imgInfo->quality = DYImageQualityFull;
 		}
 	}
 }
